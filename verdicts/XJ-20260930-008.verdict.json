@@ -1,0 +1,33 @@
+{
+  "id": "XJ-20260930-008",
+  "artifact": "README.md + README.zh-CN.md + CHANGELOG.md (Agent Covenant v0.1.6, commit 2abc7d9)",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "blocker_list": [
+    "B1: the disclosure overstates itself in the exact family it polices. README.md:206-207 / README.zh-CN.md:180-181 claim 'Every verdict in this repository was issued by ximo@agnes-ai', but 2 of the 6 verdict files present (XJ-20260930-005, XJ-20260930-006) carry verifier ximo@agnes without the -ai suffix; README.md:216-217 / zh:188 say 'the seven verdicts here' while six exist until this round's verdict lands. Core content (AI reviewer, independent:true as self-claim, gate checks presence not property) is accurate, placed correctly, worded without euphemism or overcorrection; the blocking defect is that the claim strings fail a literal read against verdicts/ - cancelling the disclosure's own instruction to readers. Author's stated standard: 'I would rather this round FAIL than ship a disclosure that overstates itself.' Fix is one line per language: state the signatures literally (ximo@agnes on earlier verdicts, ximo@agnes-ai since) and make the count tense-safe."
+  ],
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-09-30T15:45:19Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 84 tests in 0.646s, OK, exit 0 - matches the card",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (1 warning, VERDICT_WITHOUT_REVIEW XJ-20260930-008) - the documented pre-verdict state",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict -> exit 1, same single warning - expected per card",
+    "python tools/gate.py --require XJ-20260930-008 --artifact-map artifacts.json -> MISSING_VERDICT, exit 1 - expected until this verdict lands",
+    "python tools/gate.py --require XJ-20260930-007 --artifact-map artifacts.json -> 3x STALE_VERDICT (README.md 15:41:16Z, README.zh-CN.md 15:41:36Z, CHANGELOG.md 15:42:03Z > verdict ts 14:21:37Z) - expected and correct: this round edited a claim surface the 007 verdict covers; the REQUEST anticipates it",
+    "no retrofit: git show --stat 2abc7d9 = 5 files (.tasks/XJ-20260930-008.md new, CHANGELOG.md +33, README.md +19, README.zh-CN.md +14, artifacts.json +5 for the 008 key only); tools/, tests/, all prior maps and verdicts untouched - verified, not assumed",
+    "006 evidence intact: verdicts/XJ-20260930-006.verdict.json remains FAIL, 1 blocker, verifier ximo@agnes, ts 14:07:53Z - committed state as restored by the author",
+    "disclosure placement verified: en README 197-219 sits directly after 'What is not claimed'; zh README 172-190 mirrors position and content; wording says 'AI, not a human' (no euphemism) and 'checked for consistency and honesty by machine' (no overcorrection)",
+    "CHANGELOG 0.1.6 honest: header 'in review, not yet gated'; records the author's own UNMAPPED_CLAIM_SURFACE omission; v0.1.5 header corrected in place (visible in git show 2abc7d9 -- CHANGELOG.md)",
+    "BLOCKER B1: 'Every verdict in this repository was issued by ximo@agnes-ai' (README 206-207, zh 180-181) is falsifiable against verdicts/: XJ-20260930-005 and XJ-20260930-006 carry verifier ximo@agnes (earlier signature, same reviewer) - 2 of 6 mismatches; 'the seven verdicts here' (216-217, zh 188) reads six until this verdict lands. A reader the disclosure trains to read verifier fields literally should find the sentence confirmed, not embarrassed. Author's standard: 'I would rather this round FAIL than ship a disclosure that overstates itself.' Fix: state both signatures and make the count tense-safe",
+    "Q1 disclosure location: Status, after the 'what is not claimed' paragraph, as a titled block - correct spot, zh mirrors it; caveat the Status header itself is two releases stale (advisory A1)",
+    "Q3 same-family third limitation (advisory): evidence is self-attested - gate checks only non-empty string list, never re-runs the commands; same family as independent. Weaker members: ts is reviewer-supplied; the 007 'byte-identical command blocks' claim has no machine check. Recommend v0.1.7 disclosure extension, non-blocking",
+    "Q4 'the linter caught me' paragraph: mechanically true - UNMAPPED_CLAIM_SURFACE fires exactly when a claim-surface-style file is absent from the newest map id; single commit cannot prove the warning's timestamp, only its content, which is reproducible. Not too neat; earns its place",
+    "A1 (advisory): README Status headers still say v0.1.4 in review while v0.1.5 is gated and v0.1.6 is live - conservative direction, but three rounds of the same rot; replace hand-maintained version sentence with a newest-verdict-id reference",
+    "A2 (author deferred to me): the committed 007 verdict (ts 14:21:37Z, 8.6KB card) is my first pass; my final (ts 14:31:07Z, 175-line card, full advisory set) is authoritative and should be re-applied from the backup",
+    "A3: the 007 STALE_VERDICTs are correct and must not be 'fixed' by editing the 007 verdict - no retro-fitting",
+    "A4: evidence self-attestation deserves a named home (PM-12 or roadmap) so the next round extends the disclosure instead of rediscovering the gap",
+    "A5: verdict id sequence skips 003 - harmless, noted for the record"
+  ]
+}
