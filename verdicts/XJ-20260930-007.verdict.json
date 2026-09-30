@@ -1,0 +1,26 @@
+{
+  "id": "XJ-20260930-007",
+  "artifact": "README.md + README.zh-CN.md + CHANGELOG.md + postmortems.md + docs/lint-rules.md + tools/lint_cards.py + tests/test_lint_cards.py (Agent Covenant v0.1.5, commit 7a1b212)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-09-30T14:21:37Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 84 tests OK, exit 0 - matches the card's declared 84",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (0 errors, 1 warning); the one warning is VERDICT_WITHOUT_REVIEW XJ-20260930-007, the expected pre-verdict state; exit 0",
+    "Q4 default verified live: the run above omitted --artifact-map yet raised no UNMAPPED_CLAIM_SURFACE and no usage error - ./artifacts.json was auto-picked-up as designed",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict -> LINT: FAIL (0 errors, 1 warning), exit 1 - exactly the documented pre-verdict state",
+    "python tools/gate.py --require XJ-20260930-007 --artifact-map artifacts.json -> MISSING_VERDICT, exit 1 - correct before this verdict lands",
+    "B1 eradication verified by search, not memory: recursive scan for 'test_gate.py' shows README.md, README.zh-CN.md and .github/workflows/gate.yml clean; CHANGELOG.md hits at lines 125/127 are the false claim annotated in place as the evidence of round 5's FAIL, deliberately unedited",
+    "No retro-fit: git show --stat HEAD shows artifacts.json +10 lines only (new 007 key); 004/005/006 maps read byte-identical to prior rounds",
+    "006 evidence preserved: the FAIL verdict is committed intact in the v0.1.5 commit and legacy/REVIEW-XJ-20260930-006.md is tracked",
+    "ts bounds: newest mtime across the seven 007 artifacts = CHANGELOG.md 2026-09-30T14:19:24.231Z, matching the stated lower bound; ts 14:21:37Z is after it, before now, un-rounded",
+    "README command blocks diffed: commands byte-identical across both languages (only trailing comments localised, '# 84 tests' vs '# 84 个单测'); declared count 84 equals the observed 84",
+    "_FailedTest trigger path covered by test_failed_discovery_warns_instead_of_going_silent; default-artifact-map paths covered by three tests",
+    "5 review questions answered in REVIEW-XJ-20260930-007.md: RQ1 Q4 default is a fix (loud-narrow failure mode), RQ2 class-name dependency acceptable but unlocked by tests (hoist to constant + lock test), RQ3 FAIL was correct for B1 (direction = R3 oversell; CONDITIONAL would have laundered it)",
+    "RQ4/RQ5: PM-11's 'not machine-checkable in general' is honest, but the specific 'python tools/<file>.py inside a fenced block' shape is checkable on the same surface as the count rule - belongs as a named roadmap item, not a permanent non-goal",
+    "NON-BLOCKING but flagged for round 7: verdicts/XJ-20260930-006.verdict.json differs between HEAD (verifier ximo@agnes, ts 14:07:53Z, no blocker_list) and the working copy (ximo@agnes-ai, ts 14:12:07Z, blocker_list added); FAIL and blockers=1 intact in both, nothing laundered; .tasks/REVIEW-XJ-20260930-006.md is an untracked rewritten duplicate of the tracked legacy copy - the committed evidence for the failed round diverges from what the reviewer stands behind and should be reconciled in the open"
+  ]
+}
