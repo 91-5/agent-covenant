@@ -1,56 +1,39 @@
-# REVIEW-XJ-20260929-001-REPLY: 处置回执
+# REVIEW-001-REPLY: 处置回执（Jarvis，2026-09-29）
 
-> 对应: `verdicts/XJ-20260929-001.verdict.json`（CONDITIONAL，0 blockers，3 conditions）
-> 处置者: 15812 · 日期: 2026-09-30（UTC）
-> 任务卡: `.tasks\XJ-20260929-002.md`
+> 对应: `REVIEW-001.md`（Ximo，有条件通过，阻塞级 0）
+> 处置结果: **8/8 建议全部处理**（7 修复 + 1 defer），**T1-T6 测试全部补入 verify.ps1，27/27 PASS（exit 0）**
 
-## 三个 conditions：全部接受，无一申辩
+## 逐项处置
 
-| # | condition | 处置 | 落点 |
+| # | 建议 | 处置 | 落点 |
 |---|---|---|---|
-| 1 | §6.6 超出代码实现 | **接受。降级为 advisory**，不硬凑实现 | `ADR-0001.md`（含 revisit-trigger）；`PROTOCOL.md` §6 改为 8 条强制 + 显式 advisory 段；§10.5 写明门禁**不**校验验收覆盖 |
-| 2 | 缺证据质量底线 | **接受，但底线默认关闭** | `--evidence-must-match`（可选）；§10.6 写明 `evidence: ["ok"]` 能过是已知攻击面；理由：默认正则会训练人注水 |
-| 3 | README 第三方数字缺出处 | **接受，已修** | 两份 README 加 provenance 脚注（观测日 2026-09-29 + 9 个仓库链接） |
+| 1 | `exit 2` 改 throw，免杀调用 shell | ✅ 已修 | 全脚本 throw 化；README 注明 |
+| 2 | junction/symlink 穿透检查 | ✅ 已修 | `Resolve-SourcePath` 按真实目标判定边界；T5 双向验证（界外拒/界内放） |
+| 3 | `-Force` 二次确认 | ✅ 已修 | `Test-Gate`：ShouldProcess + ShouldContinue 必弹 |
+| 4 | `-KeepBackups` + 自动清理 | ✅ 已修 | 默认 3，restore 后轮转；T3 验证 ≤2 |
+| 5 | restore 前 diff 预览 | ✅ 已修 | 确认前输出「将删除 N 个新增 / 覆盖 M 个」 |
+| 6 | `status` 显示快照后新增数 | ✅ 已修 | 新增/变更/被删 三项 + 风险提示 |
+| 7 | `protect` 加确认 | ✅ 已修 | Test-Gate 全覆盖 |
+| 8 | 大目录并行哈希 | ⏸ defer | 理由：PS 5.1 Job 开销可能反超收益，且当前目标目录 <10K 文件；真到大目录再优化（记入 ponytail debt） |
 
-## 评审的 5 个问题：全部答完，其中一条我们错了
+## 测试补全（verify.ps1）
 
-| # | 评审结论 | 我们的动作 |
+| # | 用例 | 结果 |
 |---|---|---|
-| 1 | Claim 审计：§6.6 超出代码 | 已修（见上） |
-| 2 | 对抗门禁：没找到能让 gate 返回 0 而交付是坏的输入 | 接受。§10.3 已声明 ceiling，且**新增两个已知攻击面**（弱证据、未来时间戳） |
-| 3 | N1/N2 定 ERROR 是对的，WARN 会让 PM-1 静默通过 | 接受，无异议。ERROR 保留 |
-| 4 | 并发/lost update：**不完全**——「两个活跃卡片声明拥有同一文件」可静态 lint | **这条我们错了，已改**。postmortems 曾写"静态查不了"，只对了一半。现已加 `Owned files` 卡片字段 + `OWNED_FILES_CONFLICT` 规则（6 条测试，含目录包含、glob 前缀、CLOSED 释放） |
-| 5 | 完整性：门槛校准（最低证据质量）是空的一类 | 部分补上（见 condition 2），但**不声称已解决**；仍是 §10.6 的公开攻击面 |
+| T1 | 锁定文件 → restore 不崩、报漂移、非 0 退出、未锁文件仍恢复、解锁后可重试 | ✅ PASS（**且抓到真 bug：Get-FileHash 读锁文件曾直接崩，已修为计入漂移**） |
+| T2 | 快照目录缺失 → 拒绝执行 + 明确报错 | ✅ PASS |
+| T3 | KeepBackups=2 连续 restore → 备份数 ≤2 | ✅ PASS |
+| T4 | Unicode/空格/括号文件名全流程 | ✅ PASS |
+| T5 | junction 界外拒 / 界内放 | ✅ PASS（首轮测试夹具自身放错位置，修正后过） |
+| T6 | unprotect -Purge 后重 protect，状态干净 | ✅ PASS |
 
-## 处理评审时额外发现的两个真 bug（都是评审的真实输入喂出来的）
+## 顺带修掉的工程坑（入记忆）
 
-### 1. 未来时间戳让新鲜度检查永久失效 → `FUTURE_VERDICT`
+1. Write 工具存 ps1 无 BOM → PS 5.1 按 GBK 解析咬坏语法 → 统一转 UTF-8 BOM
+2. `-File` 模式传 `-Confirm:$false` 绑不上 SwitchParameter → 自建 `-AutoConfirm`
+3. `$ErrorActionPreference='Stop'` 会把子进程 stderr 变终止性错误 → helper 内临时降级 + ErrorRecord 转字符串
+4. `$script:AutoConfirm` 作用域：函数内读脚本级参数必须 `$script:` 前缀
 
-评审写的 `ts: 2026-09-30T00:00:00Z` 比本机时钟快 8 小时（时区不同）。**带未来 `ts` 的 verdict 永远不会被判 STALE**——最重要的那条检查被静默废掉。已加检查（`--max-clock-skew`，默认 300s）+ 3 条测试 + `postmortems.md` PM-9。
+## 结论
 
-### 2. 忘记 `--artifact-map` 时门禁静默降级 → `NOTICE`
-
-修完上面那条后我们重跑门禁，它返回 **PASS**。原因：当时没传 `--artifact-map`，新鲜度检查**根本没跑**，而输出看起来和干净的 PASS 一模一样。已加：每个未覆盖的 id 打印 `NOTICE: freshness NOT checked`（`--quiet`/`--json` 下静默，属已文档化的取舍）+ 3 条测试 + `postmortems.md` PM-10 + 仓库根 `artifacts.json`（让本仓默认以强模式自门禁）。
-
-## 诚实记录：这张卡原本预测错了
-
-`.tasks\XJ-20260929-002.md` 原写「门禁会以 FUTURE_VERDICT 拦截」。实际没有——因为等我们跑检查时，那个时间戳已经追平当下。**规则没坏，标定会漂**；而真正的问题是第二个（静默降级）。预测错得有用，已原文保留在卡里。
-
-## 当前门禁状态（真实输出）
-
-```
-$ python -m unittest discover -s tests
-Ran 61 tests ... OK                                     exit 0
-
-$ python tools/gate.py --verdict-dir verdicts --require XJ-20260929-001 \
-    --allow-conditional --artifact-map artifacts.json
-[STALE_VERDICT] XJ-20260929-001: artifact PROTOCOL.md was modified after the
-  verdict was issued (2026-09-30T06:36:42+00:00 > 2026-09-30T00:00:00+00:00)
-... (8 个产物全部 STALE)                                exit 1
-```
-
-**第一轮的 verdict 不能签第二轮**，因为产物在它写下之后动过。这是协议在正常工作，也是本轮需要一份新 verdict 的原因。
-
-## 下一轮需要评审者做什么
-
-评审 `XJ-20260929-002`（本卡的 5 个问题里有 3 个是问我的判断对不对：ADR-0001 的降级决策、`--evidence-must-match` 默认关闭是不是逃避、`FUTURE_VERDICT` 的默认 skew 是否给了刷分空间）。**请勿修改旧 verdict**——verdict 是证据，改证据正是本项目要让其可见的行为。
+REVIEW-001 闭环。deepfreeze 试点达到可交付状态。按协同手册 v3 清理规则，TASK-001 / REVIEW-001 / 本回执三张卡在 sir 过目后归档删除。

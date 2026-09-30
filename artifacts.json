@@ -1,5 +1,5 @@
 {
-  "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so.",
+  "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read.",
 
   "XJ-20260929-001": [
     "PROTOCOL.md",
@@ -8,6 +8,16 @@
     "postmortems.md",
     "docs/lint-rules.md",
     "templates/TASK.md",
+    "tools/gate.py",
+    "tools/lint_cards.py"
+  ],
+
+  "XJ-20260929-002": [
+    "PROTOCOL.md",
+    "ADR-0001.md",
+    "README.md",
+    "README.zh-CN.md",
+    "postmortems.md",
     "tools/gate.py",
     "tools/lint_cards.py"
   ]

@@ -1,0 +1,22 @@
+{
+  "id": "XJ-20260929-002",
+  "artifact": "PROTOCOL.md + ADR-0001.md + tools/gate.py + tools/lint_cards.py + postmortems.md + README.md + README.zh-CN.md (Agent Covenant v0.1, round 2)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-09-30T07:30:00Z",
+  "evidence": [
+    "Read ADR-0001.md (78 lines): demotion decision documented with revisit-trigger; all mandatory ADR sections present; traces back to REVIEW-XJ-20260929-001 condition 1",
+    "Read PROTOCOL.md §6 (lines 171-191): 8 enforced checks + explicit advisory paragraph; §6.6 no longer claims what code cannot do",
+    "Read PROTOCOL.md §4.5 (lines 143-146): future-ts rule added; §10.5 + §10.6 document the two new limitations",
+    "Read gate.py in full (331 lines): _check_timestamp_plausibility (line 157), _check_evidence_quality (line 174), NOTICE path (line 310) all present and wired into evaluate()",
+    "Read lint_cards.py in full (321 lines): OWNED_FILES_CONFLICT (line 230) with _paths_overlap heuristic (equality/directory/glob); _is_active correctly releases CLOSED cards",
+    "Read postmortems.md (228 lines): PM-9 (future ts) and PM-10 (silent degradation) added with transferable lessons; PM-3 updated with evidence-quality vector",
+    "Read README.md lines 47-59: provenance blockquote with observation date 2026-09-29 + 9 GitHub repository links",
+    "All 3 round-1 conditions verified closed: C1→ADR-0001+§6 rewrite; C2→--evidence-must-match+§10.6; C3→README provenance footnote",
+    "Answers to 5 review questions delivered in REVIEW-XJ-20260929-002.md: demotion correct, opt-in floor justified, 300s skew non-exploitable, WARN+strict design correct, no rule cuts needed",
+    "One minor observation noted (non-blocking): postmortems.md PM-5 line 162 'Not enforced by a tool' is partially stale now that OWNED_FILES_CONFLICT enforces the planning stage"
+  ]
+}
