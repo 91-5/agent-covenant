@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 门禁
 python tools/lint_cards.py --dir .tasks         # 卡片 schema 与命名检查
-python -m unittest discover -s tests            # 84 个单测
+python -m unittest discover -s tests            # 95 个单测
 ```
 
 ## 安装
@@ -170,6 +170,8 @@ python tools/gate.py --verdict-dir verdicts \
 - **`independent: true`**——作者不能给自己批
 - `evidence` 为非空列表——verdict 必须出示它干了什么
 - **新鲜度**：verdict 的 `ts` 不得早于它所评判的产物。早于代码的 verdict 是**过期**，过期即拦。（这条是团队最先省的，也最要紧）
+  - **一个例外。** 如果映射里**更晚**的 id 也列了同一个文件、**并且自己就是该文件的合法权威**——它自己有verdict、格式合法、独立、带证据、未过期未来时间、且对该文件是新鲜的——那么较早的那份记为 `SUPERSEDED`��较晚的轮次才是当前权威。没有这条规则，全链门禁永远回不到绿色：任何对 README 的修复都会活得比读过它的那份 verdict 更久。
+    后继者自身过期、或没有verdict，都什么也retire 不了，所以在审的轮次无法洗白它前一轮。后继者判`FAIL` 仍是合法权威——它会retire较早那份，同时因自己的verdict 而拦。`SUPERSEDED` 一定会被打印出来，绝不静默丢弃。
 
 ## 采纳等级——请诚实声明
 

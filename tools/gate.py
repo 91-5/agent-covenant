@@ -189,7 +189,83 @@ def _check_evidence_quality(data, pattern):
     return []
 
 
-def _check_freshness(data, artifact_paths):
+def _successor_candidates(verdict_dir, artifact_map, args):
+    """Ids that could act as a superseding authority, keyed by id -> ts.
+
+    A candidate must clear the same bar any checked id does, minus its verdict value:
+    an id with no verdict file is absent (a pending round cannot retire anything),
+    and so is one whose own verdict is malformed, non-independent, evidence-free, or
+    future-dated - otherwise a later round could launder an earlier one by being
+    *worse* than it.
+
+    A successor whose verdict is FAIL or an unacknowledged CONDITIONAL is still a
+    candidate. It is the legitimate current authority on the file, and the run that
+    checks it will block on its own verdict. Demanding PASS here would be the wrong
+    axis: it would mean a later round saying "this is worse than you thought" could
+    not retire an earlier round's claim about the file.
+    """
+    out = {}
+    if not artifact_map:
+        return out
+    for vid in artifact_map:
+        if vid.startswith("_"):
+            continue
+        data, code, _detail = load_verdict(verdict_dir, vid)
+        if code or "ts" not in data:
+            continue
+        try:
+            ts = parse_ts(data["ts"])
+        except ValueError:
+            continue
+        verdict, value_errors = _check_verdict_value(data)
+        blocking = list(value_errors)
+        blocking += _check_fields(vid, data)
+        blocking += _check_blockers(data, verdict)
+        blocking += _check_independence(data, args.allow_nonindependent)
+        blocking += _check_evidence(data)
+        blocking += _check_timestamp_plausibility(data, args.max_clock_skew)
+        if blocking:
+            continue
+        out[vid] = ts
+    return out
+
+
+def _superseded_by(rel, vid, judged_at, modified, artifact_map, successor_ts,
+                   max_clock_skew):
+    """Return the id of a later round that re-judged `rel`, or None.
+
+    A verdict older than the file it judged is stale — unless a later round also
+    lists that file, *has its own verdict*, and that verdict is itself fresh on the
+    file. That later round is the current authority, so the older verdict is
+    superseded rather than broken. Without this, every full-chain run fails forever:
+    any later fix to a README outlives the verdict that read the README, and the
+    chain can never return to green.
+
+    Requiring the successor to be fresh is what makes the relaxation safe. An earlier
+    draft accepted any later `ts`, so a successor that was *also* stale — or one
+    stamped far in the future — could retire the finding while judging nothing. That
+    is PM-9 (a future-dated verdict silently defeating the freshness rule) coming
+    back through a second door, and it passed six tests.
+    """
+    best = None
+    now = datetime.now(timezone.utc)
+    for other, other_ts in (successor_ts or {}).items():
+        if other == vid or other_ts <= judged_at:
+            continue
+        if rel not in (artifact_map.get(other) or []):
+            continue
+        # The successor is only an authority if it actually covers the current file.
+        if (modified - other_ts).total_seconds() > STALE_GRACE_SECONDS:
+            continue
+        if (other_ts - now).total_seconds() > max_clock_skew:
+            continue
+        if best is None or other_ts < successor_ts[best]:
+            best = other
+    return best
+
+
+def _check_freshness(data, artifact_paths, vid=None, artifact_map=None, successor_ts=None,
+                     max_clock_skew=300):
     if "ts" not in data:
         return []
     try:
@@ -204,15 +280,24 @@ def _check_freshness(data, artifact_paths):
             continue
         modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
         if (modified - judged_at).total_seconds() > STALE_GRACE_SECONDS:
-            out.append((
-                "STALE_VERDICT",
-                f"artifact {rel} was modified after the verdict was issued "
-                f"({modified.isoformat()} > {judged_at.isoformat()})",
-            ))
+            newer = _superseded_by(rel, vid, judged_at, modified, artifact_map,
+                                   successor_ts, max_clock_skew)
+            if newer:
+                out.append((
+                    "SUPERSEDED",
+                    f"artifact {rel} was modified after this verdict, but {newer} "
+                    f"re-judged it later and holds the current claim",
+                ))
+            else:
+                out.append((
+                    "STALE_VERDICT",
+                    f"artifact {rel} was modified after the verdict was issued "
+                    f"({modified.isoformat()} > {judged_at.isoformat()})",
+                ))
     return out
 
 
-def evaluate(vid, data, verdict_dir, args, artifact_map):
+def evaluate(vid, data, verdict_dir, args, artifact_map, successor_ts=None):
     """Return a list of (code, detail) violations for one verdict."""
     violations = []
     violations += _check_fields(vid, data)
@@ -225,7 +310,9 @@ def evaluate(vid, data, verdict_dir, args, artifact_map):
     violations += _check_independence(data, args.allow_nonindependent)
     violations += _check_evidence(data)
     violations += _check_timestamp_plausibility(data, args.max_clock_skew)
-    violations += _check_freshness(data, (artifact_map or {}).get(vid, []))
+    violations += _check_freshness(
+        data, (artifact_map or {}).get(vid, []), vid, artifact_map, successor_ts,
+        args.max_clock_skew)
     violations += _check_evidence_quality(data, args.evidence_must_match)
     return violations
 
@@ -290,6 +377,7 @@ def main(argv=None):
 
     findings = []
     unchecked = []
+    successor_ts = _successor_candidates(verdict_dir, artifact_map, args)
     for vid in ids:
         data, code, detail = load_verdict(verdict_dir, vid)
         if code:
@@ -298,12 +386,21 @@ def main(argv=None):
         if vid not in (artifact_map or {}):
             unchecked.append(vid)
         try:
-            violations = evaluate(vid, data, verdict_dir, args, artifact_map)
+            violations = evaluate(vid, data, verdict_dir, args, artifact_map, successor_ts)
         except ValueError as exc:  # e.g. a malformed --evidence-must-match regex
             print(f"[USAGE] {exc}", file=sys.stderr)
             return EXIT_USAGE
         for vcode, vdetail in violations:
-            findings.append({"id": vid, "code": vcode, "detail": vdetail})
+            # SUPERSEDED is a fact about the chain, not a failure: a later round
+            # re-judged the same file and holds the current claim. It is
+            # reported, never dropped, so the chain stays auditable.
+            if vcode == "SUPERSEDED":
+                findings.append({"id": vid, "code": vcode, "detail": vdetail, "advisory": True})
+            else:
+                findings.append({"id": vid, "code": vcode, "detail": vdetail})
+
+    blocking = [f for f in findings if not f.get("advisory")]
+    advisories = [f for f in findings if f.get("advisory")]
 
     # Never let the strongest check vanish silently: a gate that quietly degrades
     # to weaker checks because a flag was forgotten is worse than no gate.
@@ -312,17 +409,23 @@ def main(argv=None):
             print(f"[NOTICE] {vid}: freshness NOT checked - no entry in the artifact map "
                   "(pass --artifact-map to enable the staleness rule)")
 
-    ok = not findings
+    ok = not blocking
     if args.as_json:
-        print(json.dumps({"ok": ok, "checked": len(ids), "violations": findings},
+        print(json.dumps({"ok": ok, "checked": len(ids),
+                          "violations": blocking, "advisories": advisories},
                          ensure_ascii=False, indent=2))
     elif not args.quiet:
-        for item in findings:
+        for item in advisories:
             print(f"[{item['code']}] {item['id']}: {item['detail']}")
+        for item in blocking:
+            print(f"[{item['code']}] {item['id']}: {item['detail']}")
+        if advisories:
+            print(f"({len(advisories)} superseded freshness finding(s) reported; "
+                  "they do not block - a later verdict holds those files)")
         if ok:
             print(f"GATE: PASS ({len(ids)} checked)")
         else:
-            print(f"GATE: FAIL ({len(findings)} violations across {len(ids)} checked)")
+            print(f"GATE: FAIL ({len(blocking)} violations across {len(ids)} checked)")
     return EXIT_OK if ok else EXIT_VIOLATION
 
 

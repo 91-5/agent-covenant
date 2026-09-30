@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # 84 tests
+python -m unittest discover -s tests            # 95 tests
 ```
 
 ## Install
@@ -198,6 +198,15 @@ python tools/gate.py --verdict-dir verdicts \
 - `evidence` is a non-empty list
 - **Freshness:** the verdict's `ts` must not be older than the artifact it judges.
   A verdict that predates the code is stale, and stale blocks.
+  - **One exception.** If a *later* id in the map also lists that file **and is itself a
+    valid authority on it** — its own verdict on disk, well-formed, independent, with
+    evidence, not future-dated, and fresh on that file — then the older verdict is
+    `SUPERSEDED`: the later round is the current authority. Without this, no full-chain run
+    could ever go green again, because any fix to a README outlives the verdict that read
+    it. A successor that is itself stale, or that has no verdict yet, retires nothing, so
+    an in-flight round cannot whitewash the one before it. A successor that returned `FAIL`
+    is still an authority — it retires the older claim *and* blocks on its own verdict.
+    `SUPERSEDED` is always printed, never dropped.
 
 ## Conformance — claim honestly
 

@@ -4,7 +4,80 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.8] - 2026-09-30 (in review, not yet gated)
+## [0.1.9] - 2026-09-30 (in review, not yet gated)
+
+This round changes a tool. Every round before it changed prose, which is the only thing
+in this repository that had no checker.
+
+**The defect.** `gate.py` marks a verdict stale when an artifact is newer than the
+verdict's `ts`, and blocks. Correct in isolation, and unusable in practice: a full-chain
+run with no `--require` reports **41 violations across 8 ids** on this repository, and
+could never report anything else. `README.md` has been read by eight verdicts since
+round 1; every fix since then made all of them stale at once. The chain could not
+return to green no matter how correct the work was, so "the gate passes" stopped being a
+statement about anything.
+
+This is a failure mode the project already had a name for and did not apply to itself:
+a check whose result is constant carries no information. `STALE_TEST_COUNT` exists
+because a number nobody re-checks is a liability. A gate that can only ever fail is the
+same thing wearing a different hat.
+
+**The rule.** If a later id in the artifact map also lists that file **and has a verdict
+of its own**, the earlier verdict's staleness on that file becomes `SUPERSEDED`: the
+later round is the current authority on the file. Reported, never dropped - it appears
+in the human output and in a separate `advisories` array under `--json`, and the count
+is always printed, because a check that vanishes silently is worse than no check.
+
+**What keeps this from being a laundering channel.** Independent review of the first
+version of this rule returned **FAIL, 2 blockers**, and both escapes returned `exit 0`.
+The first draft accepted any later `ts` as proof of authority; two things got through:
+
+- **A successor that was itself stale retired its predecessor.** `AC-002` judged an older
+  copy of the file than the one on disk, so nobody had judged the current file, yet `AC-001`
+  came back `SUPERSEDED`. Full-chain still failed on `AC-002`, but `--require AC-001` — the
+  acceptance command — passed with zero fresh coverage.
+- **An unchecked successor laundered.** The candidate scan read only file existence and a
+  parsable `ts`: no plausibility check, no verdict-value check. A successor stamped 30 days
+  in the future retired everything. That is **PM-9 returning through a second door** — a
+  future-dated verdict silently defeating the freshness rule, now via supersession instead
+  of via its own timestamp. `independent: false` and `evidence: []` worked the same way.
+  Six tests had passed.
+
+The fix inverts the precondition: a successor must clear the same bar any checked id does,
+and must itself be fresh on that file. `_successor_candidates` runs the real `_check_*`
+helpers against each candidate and drops it if anything blocks; `_superseded_by`
+additionally requires `mtime <= successor_ts <= now + max_clock_skew`.
+
+**Requiring the successor to be PASS would have been the wrong fix**, and the reviewer said
+so unprompted. A later `FAIL` is the legitimate current authority on a file: it should
+retire the earlier claim *and* block on its own verdict. Demanding `PASS` would mean a later
+round saying "this is worse than you thought" could not retire an earlier round's claim,
+which is backwards. There is now a test that asserts exactly this, and checks that the
+successor still blocks when examined directly.
+
+**A separate defect, in my own fix.** While repairing the two escapes I wrote calls to
+`validate_verdict`, `DEFAULT_EVIDENCE_PATTERN`, `DEFAULT_MAX_CLOCK_SKEW` and
+`_NON_BLOCKING_CODES` — none of which exist in this codebase. I wrote them from memory
+instead of reading `gate.py`, and the first run died on `NameError`. Same family as the
+prose defects in rounds 5, 7 and 9: asserting a shape the code does not have. The real
+checks are the `_check_*` helpers `evaluate` already calls, and the repair calls those.
+
+**Verification.** `TestSupersededFreshness` (6) and `TestSuccessorMustEarnAuthority` (5).
+The five new tests were confirmed to **fail** against the pre-fix `gate.py` and pass after,
+so they pin the behaviour instead of trailing the implementation. 84 → 95 tests. Writing the
+first six also surfaced a bug in the tests themselves: the fixtures used a bare relative
+artifact path, which `gate.py` resolves against the process CWD, so three of them were
+quietly testing this repository's real `README.md` instead of the sample file. They passed,
+and they were checking the wrong object. The fixtures now pass absolute paths.
+
+**Effect on this repository's own chain:** 41 violations to 10. The remaining `STALE_VERDICT`
+findings all point at files this round itself touched (`PROTOCOL.md`, both `README`s,
+`tools/gate.py`, `templates/TASK.md`): verdicts 001–005 covered them, and 011 has no verdict
+yet, so they correctly stay stale until one does. The other four are real and unchanged —
+three FAIL verdicts (006, 008, 009) and one CONDITIONAL not passed through
+`--allow-conditional`.
+
+## [0.1.8] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
 Round 7 (v0.1.7) returned **FAIL, 1 blocker**, and the blocker was a typo in the
 getting-started section: `examples/deepreeze-pilot/` for a directory that is

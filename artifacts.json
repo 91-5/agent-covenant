@@ -74,5 +74,13 @@
     "README.md",
     "README.zh-CN.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20260930-011": [
+    "tools/gate.py",
+    "tests/test_gate.py",
+    "PROTOCOL.md",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md"
   ]
 }

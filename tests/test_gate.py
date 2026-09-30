@@ -320,5 +320,174 @@ class TestSilentDegradationGuard(GateTestCase):
         self.assertNotIn("freshness NOT checked", json_out)
 
 
+class TestSupersededFreshness(GateTestCase):
+    """A later round that re-judged the same file retires the earlier staleness.
+
+    Without this, a full-chain run can never return to green: any fix to a README
+    outlives the verdict that read it, so the chain accumulates STALE forever.
+
+    Artifact paths go into the map as the tmpdir path, not a bare relative name:
+    gate.py resolves a relative artifact against the process CWD, which under
+    `unittest discover` is the repository root - so a relative name would silently
+    test this repository's real README instead of the fixture.
+    """
+
+    def _aged_artifact(self, name="artifact-under-test.md"):
+        p = self.tmp / name
+        p.write_text("x", encoding="utf-8")
+        return p
+
+    def _map(self, payload):
+        mpath = self.tmp / "artifacts.json"
+        mpath.write_text(json.dumps(payload), encoding="utf-8")
+        return str(mpath)
+
+    def test_later_verdict_supersedes_earlier_staleness(self):
+        art = self._aged_artifact()
+        old = datetime.now(timezone.utc) - timedelta(days=2)
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=old.isoformat().replace("+00:00", "Z")))
+        self.write_verdict("AC-002", _verdict(id="AC-002"))
+        code, out, _ = self.run_gate(*self.base_args(
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(art)]})))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertIn("SUPERSEDED", out)
+        self.assertNotIn("STALE_VERDICT", out)
+
+    def test_supersession_is_reported_not_silently_dropped(self):
+        art = self._aged_artifact()
+        old = datetime.now(timezone.utc) - timedelta(days=2)
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=old.isoformat().replace("+00:00", "Z")))
+        self.write_verdict("AC-002", _verdict(id="AC-002"))
+        _, out, _ = self.run_gate(*self.base_args(
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(art)]})))
+        self.assertIn("re-judged it later", out)
+        self.assertIn("do not block", out)
+
+    def test_unreviewed_successor_cannot_retire_staleness(self):
+        """The gate that stops a pending round from laundering an earlier one."""
+        art = self._aged_artifact()
+        old = datetime.now(timezone.utc) - timedelta(days=2)
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=old.isoformat().replace("+00:00", "Z")))
+        # AC-002 is in the map but has NO verdict file on disk.
+        code, out, _ = self.run_gate(*self.base_args(
+            "--require", "AC-001",
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(art)]})))
+        self.assertEqual(gate.EXIT_VIOLATION, code)
+        self.assertIn("STALE_VERDICT", out)
+        self.assertNotIn("SUPERSEDED", out)
+
+    def test_earlier_verdict_does_not_supersede_a_later_one(self):
+        art = self._aged_artifact()
+        # Two verdicts stamped the same second: neither is later, so neither can
+        # retire the other's staleness. Force the artifact past both timestamps.
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        stamp = now.isoformat().replace("+00:00", "Z")
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=stamp))
+        self.write_verdict("AC-002", _verdict(id="AC-002", ts=stamp))
+        future = (now + timedelta(hours=1)).timestamp()
+        os.utime(art, (future, future))
+        code, out, _ = self.run_gate(*self.base_args(
+            "--require", "AC-002",
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(art)]})))
+        self.assertEqual(gate.EXIT_VIOLATION, code)
+        self.assertIn("STALE_VERDICT", out)
+
+    def test_successor_that_omits_the_file_does_not_supersede(self):
+        art = self._aged_artifact()
+        other = self.tmp / "other.md"
+        other.write_text("y", encoding="utf-8")
+        old = datetime.now(timezone.utc) - timedelta(days=2)
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=old.isoformat().replace("+00:00", "Z")))
+        self.write_verdict("AC-002", _verdict(id="AC-002"))
+        code, out, _ = self.run_gate(*self.base_args(
+            "--require", "AC-001",
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(other)]})))
+        self.assertEqual(gate.EXIT_VIOLATION, code)
+        self.assertIn("STALE_VERDICT", out)
+
+    def test_json_mode_separates_advisories_from_violations(self):
+        art = self._aged_artifact()
+        old = datetime.now(timezone.utc) - timedelta(days=2)
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=old.isoformat().replace("+00:00", "Z")))
+        self.write_verdict("AC-002", _verdict(id="AC-002"))
+        code, out, _ = self.run_gate(*self.base_args(
+            "--json",
+            "--artifact-map", self._map({"AC-001": [str(art)], "AC-002": [str(art)]})))
+        self.assertEqual(gate.EXIT_OK, code)
+        payload = json.loads(out)
+        self.assertTrue(payload["ok"])
+        self.assertEqual([], payload["violations"])
+        self.assertTrue(any(a["code"] == "SUPERSEDED" for a in payload["advisories"]))
+
+
+class TestSuccessorMustEarnAuthority(GateTestCase):
+    """A successor that cannot pass its own check cannot retire an earlier one.
+
+    Found by independent review of round 011, after the first version of this rule
+    shipped green with six tests. Every case below returned exit 0 before the fix.
+    The rule relaxes a blocker, so the precondition has to be as strong as the check
+    it relaxes -- otherwise the relaxation becomes the hole.
+    """
+
+    def _pair(self, art_offset, v1_offset, v2_offset, **v2_overrides):
+        art = self.tmp / "a.md"
+        art.write_text("x", encoding="utf-8")
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        t = (now + art_offset).timestamp()
+        os.utime(art, (t, t))
+
+        def stamp(off):
+            return (now + off).isoformat().replace("+00:00", "Z")
+
+        self.write_verdict("AC-001", _verdict(id="AC-001", ts=stamp(v1_offset)))
+        self.write_verdict("AC-002", _verdict(id="AC-002", ts=stamp(v2_offset), **v2_overrides))
+        mpath = self.tmp / "artifacts.json"
+        mpath.write_text(json.dumps({"AC-001": [str(art)], "AC-002": [str(art)]}),
+                         encoding="utf-8")
+        return str(mpath)
+
+    def _expect_stale(self, mpath):
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-001",
+                                                     "--artifact-map", mpath))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("STALE_VERDICT", out)
+        self.assertNotIn("SUPERSEDED", out)
+
+    def test_stale_successor_cannot_retire_an_earlier_verdict(self):
+        """The successor judged an older copy of the file, so nobody judged this one."""
+        self._expect_stale(self._pair(timedelta(hours=1), timedelta(days=-2), timedelta(days=-1)))
+
+    def test_future_dated_successor_cannot_retire(self):
+        """PM-9 through a second door: a far-future ts must not count as 'later'."""
+        self._expect_stale(self._pair(timedelta(0), timedelta(days=-2), timedelta(days=30)))
+
+    def test_nonindependent_successor_cannot_retire(self):
+        self._expect_stale(self._pair(timedelta(hours=-1), timedelta(days=-2), timedelta(0),
+                                      independent=False))
+
+    def test_evidence_free_successor_cannot_retire(self):
+        self._expect_stale(self._pair(timedelta(hours=-1), timedelta(days=-2), timedelta(0),
+                                      evidence=[]))
+
+    def test_fail_successor_can_retire(self):
+        """A later FAIL is the current authority on the file, and the run blocks on it.
+
+        Requiring the successor to be PASS would be the wrong axis: it would mean a
+        later round saying 'this is worse than you thought' could not retire an
+        earlier round's claim about the file.
+        """
+        mpath = self._pair(timedelta(hours=-1), timedelta(days=-2), timedelta(0),
+                           verdict="FAIL", blockers=1)
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-001",
+                                                     "--artifact-map", mpath))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertIn("SUPERSEDED", out)
+        # And it is not laundering: checking the successor itself still fails.
+        code2, out2, _ = self.run_gate(*self.base_args("--require", "AC-002",
+                                                      "--artifact-map", mpath))
+        self.assertEqual(gate.EXIT_VIOLATION, code2)
+        self.assertIn("VERDICT_FAIL", out2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

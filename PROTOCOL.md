@@ -140,6 +140,31 @@ The machine contract. One per review.
 - `ts` **must be ≥ the artifact's mtime** when an artifact map is supplied.
   A verdict older than the thing it judges is *stale* and blocks. This is the
   single most-skipped check in real-world review flows.
+  - **Superseded freshness.** One exception, and it exists because the rule above
+    is otherwise unusable: if a **later** id in the artifact map also lists that
+    file **and is itself a valid authority on it**, the earlier verdict's
+    staleness on that file is reported as `SUPERSEDED` and does not block. The
+    later round is the current authority on the file. Without this, a full-chain
+    run can never return to green — any fix to a README outlives the verdict that
+    read it, so the chain accumulates `STALE` forever and stops meaning anything.
+  - **"Valid authority" means the successor passes the same bar.** It must have a
+    verdict on disk, that verdict must be well-formed, independent, carry
+    evidence, and not be future-dated beyond `--max-clock-skew`; and it must be
+    **fresh on that file** — `mtime ≤ successor_ts ≤ now + skew`. A successor that
+    is itself stale, or that judged an older copy of the file, retires nothing,
+    because then nobody has judged the current file.
+    - A successor that is **FAIL, or CONDITIONAL without acknowledgement**, is still
+      a valid authority. It should retire the earlier claim *and* block on its own
+      verdict. Requiring `PASS` here would be backwards: it would stop a later
+      round from saying "this is worse than you thought".
+    - This last requirement is not decoration. The first version of this rule
+      accepted any later `ts`, and independent review reproduced two escapes at
+      `exit 0` — a stale successor retiring a predecessor, and a **future-dated**
+      successor retiring everything. The second is PM-9 reached through
+      supersession instead of through its own timestamp.
+  - `SUPERSEDED` is **reported, never dropped**: it appears in the human output and
+    in a separate `advisories` array in `--json`. The strongest check must not
+    vanish silently, so the count of superseded findings is always printed.
 - `ts` **must not be in the future** beyond a small clock-skew allowance
   (`--max-clock-skew`, default 300s). A future-dated verdict never goes stale,
   so it silently defeats the rule above. This hole was found by a real reviewer
