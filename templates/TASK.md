@@ -20,6 +20,15 @@ this section and know why they are being asked.
 - `path/to/file.ext` — what it will contain
 - behaviour: <observable change, stated as an outcome not an activity>
 
+## Owned files
+
+<!-- Paths this card exclusively owns while it is active. Two active cards
+     claiming the same path is the planning-stage form of the lost-update
+     hazard; `lint_cards.py` reports it as OWNED_FILES_CONFLICT. Use one path
+     per line. A directory claim owns everything beneath it. -->
+
+- `path/to/exclusive/file.py`
+
 ## Constraints
 
 - Files/directories that must NOT be touched

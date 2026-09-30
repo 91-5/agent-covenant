@@ -60,9 +60,74 @@ the transcript looks identical to a real review.
 
 **Rule:** R1 (independence), §4.5 (verdict must carry evidence), R3 (no silent
 success).
-**Enforced by:** `gate.py` → `NO_EVIDENCE`, `NOT_INDEPENDENT`.
-**Known limit (stated in PROTOCOL.md §10):** the gate cannot detect a rubber
-stamp. It raises the floor; it does not raise the ceiling.
+**Enforced by:** `gate.py` → `NO_EVIDENCE`, `NOT_INDEPENDENT`, and the opt-in
+`--evidence-must-match` floor.
+**Known limits (stated in PROTOCOL.md §10.3 and §10.6):** the gate cannot detect
+a rubber stamp. It raises the floor; it does not raise the ceiling. A non-empty
+evidence list passes — `evidence: ["ok"]` is a passing verdict unless the team
+opts into a pattern.
+
+---
+
+## PM-9 · A verdict dated in the future can never go stale
+
+**[ours — found by our own external reviewer, on this repository, first round]**
+
+The freshness check (§4.5) compares the verdict's `ts` against the artifact's
+mtime. It worked exactly as designed on the worked example… and then the first
+real review of this project arrived with `ts: 2026-09-30T00:00:00Z` — eight hours
+in the future, because the reviewer's clock was in a different timezone than the
+one we stamped the files with. With a future-dated `ts`:
+
+- the artifact is never newer than the verdict, so `STALE_VERDICT` can never fire;
+- the check that everyone agrees is the important one silently degrades to a
+  no-op **for that verdict, forever**;
+- nothing looks wrong. The verdict says PASS. The gate says PASS.
+
+A round number like `00:00:00Z` is the tell: nobody finishes a review at exactly
+midnight UTC. The same class of bug bit us one layer down in the worked example
+(local time labelled `Z`), which is why the lesson appears in two places — the
+example README and here.
+
+**Rule:** §4.5 — `ts` must not be in the future beyond `--max-clock-skew`
+(default 300s).
+**Enforced by:** `gate.py` → `FUTURE_VERDICT`.
+**Transferable lesson:** any check phrased as a comparison between two timestamps
+is only as good as the *direction* you check. We checked "too old" and forgot
+"not yet". Ask what a hostile or merely careless input would make vacuous.
+
+---
+
+## PM-10 · The gate quietly weakened itself when a flag was forgotten
+
+**[ours — same review round, second defect]**
+
+Hours after fixing PM-9, we ran the gate on that same verdict and it returned
+**PASS**. We had expected a block. Two causes, both instructive:
+
+1. The verdict's `ts` was a round number in the future *at review time*. By the
+   time we ran the check, the clock had caught up — which is the correct
+   behaviour of the new rule, and a reminder that a timestamp check is only as
+   stable as its calibration.
+2. **We had not passed `--artifact-map`, so the freshness rule never ran at
+   all.** Exit code 0. No warning. The strongest check in the tool was simply
+   absent, and the output looked exactly like a clean pass.
+
+A verifier that reports success while silently skipping its most important check
+is worse than no verifier, because it transfers false confidence. This is the
+same family as PM-6, one layer up: there, a checker crashed; here, a checker
+*shrank*.
+
+**Rule:** §6 — the gate prints a `NOTICE` for every checked id that has no entry
+in the artifact map, stating that freshness was not checked. Silently, under
+`--quiet`/`--json`, it is suppressed for machine consumers — which is a
+documented trade, not an oversight.
+**Enforced by:** `gate.py` notice path + three tests
+(`TestSilentDegradationGuard`).
+**Transferable lesson:** when a check is conditional on configuration, the
+configuration gap must be *loud*. A default that quietly disables the check is
+the same class of bug as a default that quietly enables destructive behaviour —
+inverted.
 
 ---
 

@@ -27,13 +27,20 @@ Policy (normative in PROTOCOL.md §6)
   * freshness: when --artifact-map is given, the artifact's mtime must not be
     newer than the verdict's `ts` (1s grace for clock granularity). A verdict
     older than the thing it judges is stale and blocks.
+  * plausibility: `ts` must not be in the future beyond --max-clock-skew
+    seconds. A future-dated verdict never goes stale, which would silently
+    defeat the freshness check (postmortems.md PM-9).
+  * evidence quality (opt-in): with --evidence-must-match, at least one
+    evidence entry must match the regex. Off by default, because a pattern
+    cannot be part of the contract without rejecting honest short evidence.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 EXIT_OK = 0
@@ -147,6 +154,41 @@ def _check_evidence(data):
     return []
 
 
+def _check_timestamp_plausibility(data, max_skew_seconds):
+    """Reject verdicts dated in the future: they can never go stale."""
+    if "ts" not in data:
+        return []
+    try:
+        judged_at = parse_ts(data["ts"])
+    except Exception:  # noqa: BLE001 - reported by _check_freshness as BAD_TIMESTAMP
+        return []
+    now = datetime.now(timezone.utc)
+    if judged_at > now + timedelta(seconds=max_skew_seconds):
+        return [("FUTURE_VERDICT",
+                 f"ts is {judged_at.isoformat()}, which is in the future "
+                 f"(now {now.isoformat()}, allowed skew {max_skew_seconds}s); a future-dated "
+                 "verdict can never be reported stale")]
+    return []
+
+
+def _check_evidence_quality(data, pattern):
+    """Optional floor on evidence specificity. Off unless --evidence-must-match."""
+    if not pattern:
+        return []
+    evidence = data.get("evidence")
+    if not isinstance(evidence, list) or not evidence:
+        return []  # emptiness is already reported as NO_EVIDENCE
+    try:
+        compiled = re.compile(pattern)
+    except re.error as exc:
+        raise ValueError(f"--evidence-must-match is not a valid regex: {exc}") from exc
+    if not any(compiled.search(str(item)) for item in evidence):
+        return [("WEAK_EVIDENCE",
+                 f"no evidence entry matches the required pattern {pattern!r}; "
+                 "evidence exists but carries no verifiable detail")]
+    return []
+
+
 def _check_freshness(data, artifact_paths):
     if "ts" not in data:
         return []
@@ -182,7 +224,9 @@ def evaluate(vid, data, verdict_dir, args, artifact_map):
     violations += _check_conditional(data, verdict, args.allow_conditional)
     violations += _check_independence(data, args.allow_nonindependent)
     violations += _check_evidence(data)
+    violations += _check_timestamp_plausibility(data, args.max_clock_skew)
     violations += _check_freshness(data, (artifact_map or {}).get(vid, []))
+    violations += _check_evidence_quality(data, args.evidence_must_match)
     return violations
 
 
@@ -200,6 +244,11 @@ def build_parser():
                         help="treat CONDITIONAL as passing (acknowledged_by still required)")
     parser.add_argument("--allow-nonindependent", action="store_true",
                         help="accept verdicts not produced independently of the author")
+    parser.add_argument("--evidence-must-match", metavar="REGEX", default=None,
+                        help="opt-in quality floor: at least one evidence entry must match "
+                             "this regex (e.g. 'exit [0-9]|passed|failed'). Off by default.")
+    parser.add_argument("--max-clock-skew", type=int, default=300, metavar="SECONDS",
+                        help="how far a verdict ts may sit in the future (default: 300)")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit machine-readable JSON")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -240,13 +289,28 @@ def main(argv=None):
         ids = sorted(p.name[: -len(VERDICT_SUFFIX)] for p in verdict_dir.glob(f"*{VERDICT_SUFFIX}"))
 
     findings = []
+    unchecked = []
     for vid in ids:
         data, code, detail = load_verdict(verdict_dir, vid)
         if code:
             findings.append({"id": vid, "code": code, "detail": detail})
             continue
-        for vcode, vdetail in evaluate(vid, data, verdict_dir, args, artifact_map):
+        if vid not in (artifact_map or {}):
+            unchecked.append(vid)
+        try:
+            violations = evaluate(vid, data, verdict_dir, args, artifact_map)
+        except ValueError as exc:  # e.g. a malformed --evidence-must-match regex
+            print(f"[USAGE] {exc}", file=sys.stderr)
+            return EXIT_USAGE
+        for vcode, vdetail in violations:
             findings.append({"id": vid, "code": vcode, "detail": vdetail})
+
+    # Never let the strongest check vanish silently: a gate that quietly degrades
+    # to weaker checks because a flag was forgotten is worse than no gate.
+    if unchecked and not args.quiet and not args.as_json:
+        for vid in unchecked:
+            print(f"[NOTICE] {vid}: freshness NOT checked - no entry in the artifact map "
+                  "(pass --artifact-map to enable the staleness rule)")
 
     ok = not findings
     if args.as_json:

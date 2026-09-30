@@ -1,0 +1,23 @@
+{
+  "id": "XJ-20260929-001",
+  "artifact": "PROTOCOL.md + tools/gate.py + tools/lint_cards.py (Agent Covenant v0.1)",
+  "verdict": "CONDITIONAL",
+  "blockers": 0,
+  "conditions": [
+    "Fix spec-implementation mismatch: PROTOCOL.md §6.6 claims the gate enforces 'every Acceptance id appears in evidence', but gate.py has no --task-card parameter and cannot check this. Either implement the cross-reference or demote §6.6 to advisory (§10).",
+    "Add minimum evidence specificity OR document the single-character-evidence attack vector in §10 as a known ceiling. Currently evidence: ['x'] passes the gate.",
+    "Add date stamps and source links to all third-party star-count claims in README.md (lines 37, 42-45), per the task card's own constraint on provenance."
+  ],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "acknowledged_by": "15812",
+  "ts": "2026-09-30T00:00:00Z",
+  "evidence": [
+    "Static code review: read gate.py (267 lines) in full, traced evaluate() + all _check_* functions; confirmed 5 of 6 PROTOCOL §6 policy points implemented, point 6 absent",
+    "Read lint_cards.py (254 lines), confirmed N1/N2 at ERROR level and the rationale chain from PM-1",
+    "Read postmortems.md (163 lines, 8 PMs), verified each maps to a rule or stated limitation",
+    "Read examples/deepfreeze-pilot/ including both verdict files and linter output; confirmed STALE_VERDICT demonstration is real and reproducible",
+    "Cross-referenced README.md claims against gate.py capabilities: 'What the gate enforces' table (5 items) matches code; PROTOCOL §6 (6 items) exceeds code by one unimplemented point",
+    "Constructed adversarial inputs for gate.py (hollow evidence, empty artifact map, mtime manipulation) — no bypass found that returns 0 on structurally valid + content-valid verdicts"
+  ]
+}

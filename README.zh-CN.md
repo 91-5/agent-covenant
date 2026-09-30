@@ -38,6 +38,18 @@ python tools/lint_cards.py --dir .tasks         # 卡片 schema 与命名检查
 
 **为什么这块是空的**：质量控制层并不拥挤。我们能找到的同类项目——`AAHP`、`agent-handoff-protocol`、`agent-acceptance-gate`——都是 **0★**，`agents-template` 5★。社区里需求喊得很响（"context loss 是多智能体协作失败第一病因"），但没人做出口碑。反观编排层，星都堆在那儿。我们是**故意挑空地**。
 
+> **第三方数字的出处**——star 数与维护状态是**快照**，不是永久主张。全部于 **2026-09-29** 经 GitHub API 观测：
+> [ruflo 73k](https://github.com/ruvnet/ruflo) ·
+> [superpowers 293k](https://github.com/obra/superpowers) ·
+> [oh-my-opencode 70k](https://github.com/code-yeongyu/oh-my-openagent) ·
+> [crewAI 59k](https://github.com/crewAIInc/crewAI) ·
+> [langgraph 41k](https://github.com/langchain-ai/langgraph) ·
+> [AAHP 0](https://github.com/homeofe/AAHP) ·
+> [agent-handoff-protocol 0](https://github.com/amkentech/agent-handoff-protocol) ·
+> [agent-acceptance-gate 0](https://github.com/yanqr213/agent-acceptance-gate) ·
+> [agents-template 5](https://github.com/pedrofuentes/agents-template)。
+> 我们第一轮外部评审正是揪出了这里缺出处，修正见 `ADR-0001.md`。
+
 **与相邻标准的边界**：MCP 是 agent↔**工具**（垂直）；A2A 是 agent↔**agent** 的传输与发现（水平）。Agent Covenant 管的是 agent↔agent 的**问责**：交付物如何被**判定**，而不是如何被传输或发现。
 
 ## 60 秒上手

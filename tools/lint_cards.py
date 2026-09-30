@@ -180,9 +180,72 @@ def check_verdict_pairs(card_ids, verdict_dir):
     return out
 
 
+def _owned_files(text):
+    """Extract declared file ownership from the card's 'Owned files' section.
+
+    A card declares what it owns exclusively; two active cards claiming the same
+    path is the planning-stage form of the lost-update hazard that no runtime lock
+    can retroactively fix (PROTOCOL.md R2, postmortems PM-5).
+    """
+    body = _section_body(text, ("owned files", "归属文件", "负责文件"))
+    if not body.strip():
+        return []
+    owned = []
+    for line in body.splitlines():
+        entry = line.strip().lstrip("-*+").strip()
+        entry = entry.lstrip("[]").lstrip("xX ").strip()
+        if not entry or entry.startswith(("<", "{")):
+            continue  # template placeholder, not a real claim
+        owned.append(entry)
+    return owned
+
+
+def _is_active(card_text):
+    status = _section_body(card_text, ("status", "状态")).strip().upper()
+    if not status:
+        return True  # no status = still open
+    for closed in ("CLOSED", "GATED", "已归档", "已完成", "已通过"):
+        if closed in status:
+            return False
+    return True
+
+
+def _paths_overlap(left, right):
+    """Heuristic overlap test: equality, directory containment, or glob prefix."""
+    a = left.strip().strip("/\\").replace("\\", "/")
+    b = right.strip().strip("/\\").replace("\\", "/")
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    a_star, b_star = "*" in a, "*" in b
+    if a_star or b_star:
+        literal = (a if a_star else b).split("*")[0]
+        other = (b if b_star else a)
+        return bool(literal) and other.startswith(literal)
+    # A bare directory claim ("tools") owns everything under it.
+    return a.startswith(b + "/") or b.startswith(a + "/")
+
+
+def check_owned_files_conflicts(claims):
+    """claims: list of (filename, [owned paths]) for active cards only."""
+    out = []
+    for i, (name_a, paths_a) in enumerate(claims):
+        for name_b, paths_b in claims[i + 1:]:
+            for path_a in paths_a:
+                for path_b in paths_b:
+                    if _paths_overlap(path_a, path_b):
+                        out.append(_finding(
+                            "OWNED_FILES_CONFLICT", "WARN", Path(name_a),
+                            f"'{path_a}' is also claimed by {name_b} as '{path_b}' — two active "
+                            "cards must not own the same file (PROTOCOL.md R2)"))
+    return out
+
+
 def lint_card_dir(card_dir):
     findings = []
     card_ids = set()
+    claims = []
     for path in sorted(card_dir.glob("*.md")):
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
@@ -190,18 +253,22 @@ def lint_card_dir(card_dir):
             findings.append(_finding("UNREADABLE_CARD", "ERROR", path, f"cannot read: {exc}"))
             continue
         kind = classify(path)
-        stem = path.stem
         if NAMESPACE_RE.match(path.name):
-            card_ids.add(stem)
+            card_ids.add(path.stem)
         findings += check_namespace(path, text)
         findings += check_bare_task_refs(path, text)
         if kind == "review":
             findings += check_review_card(path, text)
         elif kind == "task":
             findings += check_task_card(path, text)
+        if _is_active(text):
+            owned = _owned_files(text)
+            if owned:
+                claims.append((path.name, owned))
         if not path.name.isascii():
             findings.append(_finding("NON_ASCII_FILENAME", "WARN", path,
                                     "non-ASCII filename — breaks tooling on some platforms"))
+    findings += check_owned_files_conflicts(claims)
     return findings, card_ids
 
 

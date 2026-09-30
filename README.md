@@ -44,6 +44,20 @@ quality-control niche — `AAHP`, `agent-handoff-protocol`,
 stated in community write-ups ("context loss is the #1 cause of multi-agent
 failure"); nobody has shipped a reputation.
 
+> **Provenance of third-party numbers** — star counts and maintenance status are
+> a snapshot, not a claim in perpetuity. All observed **2026-09-29** via the
+> GitHub API: [ruflo 73k](https://github.com/ruvnet/ruflo) ·
+> [superpowers 293k](https://github.com/obra/superpowers) ·
+> [oh-my-opencode 70k](https://github.com/code-yeongyu/oh-my-openagent) ·
+> [crewAI 59k](https://github.com/crewAIInc/crewAI) ·
+> [langgraph 41k](https://github.com/langchain-ai/langgraph) ·
+> [AAHP 0](https://github.com/homeofe/AAHP) ·
+> [agent-handoff-protocol 0](https://github.com/amkentech/agent-handoff-protocol) ·
+> [agent-acceptance-gate 0](https://github.com/yanqr213/agent-acceptance-gate) ·
+> [agents-template 5](https://github.com/pedrofuentes/agents-template).
+> Our own first review round flagged the missing provenance here; the fix is in
+> `ADR-0001.md`'s sibling commit.
+
 **Adjacent standards.** MCP is agent↔*tool* (vertical). A2A is agent↔*agent*
 transport and discovery (horizontal). This project is agent↔*agent*
 **accountability**: how a deliverable is *judged*.

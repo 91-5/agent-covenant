@@ -84,6 +84,7 @@ All artifacts are plain files. Four kinds, fixed schemas.
 # TASK <id>: <title>
 ## Context          # what exists today, why this task exists
 ## Deliverables     # which files/behaviours will exist after
+## Owned files      # paths this card exclusively owns (R2; the linter flags conflicts)
 ## Constraints      # boundaries: what must NOT be touched
 ## Acceptance       # checkable criteria (see §5)
 ## Review questions  # 1–4 adversarial questions, not "looks good?"
@@ -139,6 +140,10 @@ The machine contract. One per review.
 - `ts` **must be ≥ the artifact's mtime** when an artifact map is supplied.
   A verdict older than the thing it judges is *stale* and blocks. This is the
   single most-skipped check in real-world review flows.
+- `ts` **must not be in the future** beyond a small clock-skew allowance
+  (`--max-clock-skew`, default 300s). A future-dated verdict never goes stale,
+  so it silently defeats the rule above. This hole was found by a real reviewer
+  in this repository's own first round — see `postmortems.md` PM-9.
 
 ---
 
@@ -170,8 +175,20 @@ Default policy (all must hold per required id):
    `acknowledged_by` present;
 3. `blockers == 0`;
 4. `independent == true` unless `--allow-nonindependent`;
-5. `ts >= artifact mtime` for every path in the artifact map;
-6. every `Acceptance` id in the task card appears in `evidence`.
+5. `evidence` is a non-empty list of strings;
+6. `ts` is not in the future beyond `--max-clock-skew` (default 300s) — a
+   future-dated verdict can never be reported stale, which would silently
+   defeat check 7;
+7. `ts >= artifact mtime` for every path in the artifact map;
+8. *(opt-in)* with `--evidence-must-match REGEX`, at least one evidence entry
+   matches the pattern. Off by default; see §10.3 for why a pattern is not part
+   of the default contract.
+
+**Advisory, not enforced:** mapping every `Acceptance` bullet in the task card to
+an evidence entry is currently the reviewer's job, performed by hand. v0.1 has no
+machine-checkable acceptance *ids* to cross-reference (see ADR-0001: the card
+schema would have to change first). Do not assume the gate has verified your
+acceptance criteria — read the evidence.
 
 Example:
 
@@ -244,6 +261,16 @@ Say which level you actually run.
    check, with evidence attached.
 4. **Adapters are documentation, not code.** Cross-harness support is
    instructions, not a runtime shim.
+5. **Acceptance mapping is advisory.** The gate does **not** verify that every
+   `Acceptance` bullet in your card is covered by an evidence entry. v0.1 has no
+   machine-readable acceptance ids to cross-check, so the reviewer does this by
+   hand and the gate checks only that *some* evidence exists. Demoted from
+   normative policy after the first review round found the spec claiming more
+   than the code did — see `ADR-0001.md`.
+6. **Evidence quality is opt-in.** A non-empty `evidence` list passes; so does
+   `evidence: ["ok"]`. We do not ship a default pattern because a regex that
+   rejects honest short evidence trains people to pad. Teams that want the floor
+   can opt in: `gate.py --evidence-must-match 'exit [0-9]|passed|failed'`.
 
 ---
 

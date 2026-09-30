@@ -237,5 +237,49 @@ class TestCliBehaviour(LintTestCase):
         self.assertEqual("", out)
 
 
+class TestOwnedFilesConflicts(LintTestCase):
+    """Two active cards must not claim the same file (PROTOCOL.md R2 / PM-5)."""
+
+    CARD_WITH_OWNED = TASK_CARD + "\n## Owned files\n- tools/gate.py\n"
+
+    def test_two_active_cards_claiming_one_file_warns(self):
+        self.write("AC-20260929-001.md", self.CARD_WITH_OWNED)
+        self.write("AC-20260929-002.md", TASK_CARD + "\n## Owned files\n- tools/gate.py\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code)  # WARN does not fail by default
+        self.assertIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_disjoint_ownership_is_clean(self):
+        self.write("AC-20260929-001.md", self.CARD_WITH_OWNED)
+        self.write("AC-20260929-002.md", TASK_CARD + "\n## Owned files\n- tools/lint_cards.py\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_closed_card_releases_its_claim(self):
+        self.write("AC-20260929-001.md", TASK_CARD.replace("OPEN", "CLOSED")
+                   + "\n## Owned files\n- tools/gate.py\n")
+        self.write("AC-20260929-002.md", self.CARD_WITH_OWNED)
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_directory_and_file_inside_it_overlap(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- tools/\n")
+        self.write("AC-20260929-002.md", self.CARD_WITH_OWNED)
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_glob_claims_overlap(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- tests/*.py\n")
+        self.write("AC-20260929-002.md", TASK_CARD + "\n## Owned files\n- tests/test_gate.py\n")
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_template_placeholder_is_not_a_claim(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- <path/to/file>\n")
+        self.write("AC-20260929-002.md", self.CARD_WITH_OWNED)
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -238,5 +238,87 @@ class TestUsageErrors(GateTestCase):
         self.assertIn("(0 checked)", out)
 
 
+class TestTimestampPlausibility(GateTestCase):
+    """A verdict dated in the future can never be reported stale (postmortems PM-9)."""
+
+    def test_future_verdict_blocks(self):
+        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+        self.write_verdict("AC-20260929-001", _verdict(ts=tomorrow.isoformat().replace("+00:00", "Z")))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("FUTURE_VERDICT", out)
+
+    def test_small_clock_skew_is_tolerated(self):
+        slightly_ahead = datetime.now(timezone.utc) + timedelta(seconds=30)
+        self.write_verdict("AC-20260929-001", _verdict(ts=slightly_ahead.isoformat().replace("+00:00", "Z")))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+    def test_wide_skew_tolerates_a_larger_jump(self):
+        ahead = datetime.now(timezone.utc) + timedelta(hours=2)
+        self.write_verdict("AC-20260929-001", _verdict(ts=ahead.isoformat().replace("+00:00", "Z")))
+        code, _, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                    "--max-clock-skew", "7200"))
+        self.assertEqual(gate.EXIT_OK, code)
+
+
+class TestEvidenceQuality(GateTestCase):
+    """Opt-in floor: evidence must carry something a pattern can recognise."""
+
+    def test_single_character_evidence_passes_without_the_flag(self):
+        self.write_verdict("AC-20260929-001", _verdict(evidence=["x"]))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+    def test_single_character_evidence_blocks_with_the_flag(self):
+        self.write_verdict("AC-20260929-001", _verdict(evidence=["x"]))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                      "--evidence-must-match", r"exit [0-9]|passed|failed"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("WEAK_EVIDENCE", out)
+
+    def test_real_evidence_satisfies_the_pattern(self):
+        self.write_verdict("AC-20260929-001", _verdict(evidence=["python -m unittest -> 45 passed, exit 0"]))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                      "--evidence-must-match", r"exit [0-9]|passed|failed"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+    def test_invalid_regex_is_a_usage_error(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, _, err = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                     "--evidence-must-match", "([unclosed"))
+        self.assertEqual(gate.EXIT_USAGE, code)
+        self.assertIn("not a valid regex", err)
+
+
+class TestSilentDegradationGuard(GateTestCase):
+    """A forgotten --artifact-map must announce itself, not quietly weaken the gate."""
+
+    def test_notice_printed_when_no_artifact_map(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code)
+        self.assertIn("freshness NOT checked", out)
+
+    def test_no_notice_when_artifact_is_mapped(self):
+        artifact = self.tmp / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        self.write_verdict("AC-20260929-001", _verdict())
+        map_path = self.tmp / "artifacts.json"
+        map_path.write_text(json.dumps({"AC-20260929-001": [str(artifact)]}), encoding="utf-8")
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                      "--artifact-map", str(map_path)))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("freshness NOT checked", out)
+
+    def test_notice_silent_under_quiet_and_json(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        _, quiet_out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001", "--quiet"))
+        self.assertNotIn("freshness NOT checked", quiet_out)
+        _, json_out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001", "--json"))
+        self.assertNotIn("freshness NOT checked", json_out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

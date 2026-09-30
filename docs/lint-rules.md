@@ -17,6 +17,7 @@ Run: `python tools/lint_cards.py --dir .tasks`
 | `ORPHAN_VERDICT` | WARN | §8 | A verdict with no card means the evidence trail is broken: nobody can reconstruct what was judged. | Delete the verdict or restore the card. |
 | `VERDICT_WITHOUT_REVIEW` | WARN | §6 | A task marked done with no verdict file is the PM-2 failure in miniature: the claim exists, the evidence doesn't. | Produce the verdict, or downgrade the status. |
 | `CLOSED_NOT_ARCHIVED` | WARN | §8 | Card directories become unsearchable attics; agents re-read stale cards instead of thinking. A card that reached `GATED` and is still there is TTL debt. | Archive or delete within one working day. |
+| `OWNED_FILES_CONFLICT` | WARN | R2 | Two **active** cards claiming the same path is the planning-stage form of the lost-update hazard (postmortems §PM-5). A directory claim owns everything beneath it; glob claims are compared on their literal prefix. Raised by our first external reviewer, who pointed out that we had written "not statically checkable" in the postmortem when the planning-stage half *is* checkable. | Give each card disjoint ownership, or close the finished one. |
 | `NON_ASCII_FILENAME` | WARN | — | Non-ASCII filenames break tooling across platforms (our own experience: legacy-codepage shells and CI). Real risk, not hypothetical. | Transliterate or accept the warning. |
 
 ## Not machine-checkable
