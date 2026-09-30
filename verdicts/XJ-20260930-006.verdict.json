@@ -1,0 +1,28 @@
+{
+  "id": "XJ-20260930-006",
+  "artifact": "README.md + README.zh-CN.md + CHANGELOG.md + templates/REVIEW.md + .github/workflows/gate.yml + PROTOCOL.md + docs/lint-rules.md + tools/lint_cards.py + tests/test_lint_cards.py (Agent Covenant v0.1.4, commit 31ad283)",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes",
+  "ts": "2026-09-30T14:07:53Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 82 tests in 0.746s OK, exit 0",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json -> LINT: PASS (1 warnings), exit 0; the one warning is VERDICT_WITHOUT_REVIEW XJ-20260930-006.md, the expected pre-verdict state",
+    "python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require XJ-20260930-006 -> GATE: FAIL (1 violations across 1 checked), MISSING_VERDICT - expected before this verdict lands",
+    "git show --stat HEAD -> artifacts.json | 12 +++ (pure insertion of the 006 key); 004/005 maps byte-identical to rounds 3-4; no retro-fitting, verified by full read of artifacts.json - the single most important check of this round, and it passes",
+    "gate.yml verified with pyyaml 6.0.3 (available on the reviewer's machine): YAML parses clean; step order confirmed - 'resolve current round id' (step 5) precedes 'gate (current round only)' (step 6); both unverified items flagged by the author are now verified",
+    "ts lower bound verified independently: max mtime across the nine mapped artifacts = 1790776797.075 = 2026-09-30T13:59:57Z (.github/workflows/gate.yml), matching the stated bound",
+    "BLOCKER B1: README.zh-CN.md line 37 still contains '- run: python tools/test_gate.py' in the CI example; tools/ contains only gate.py and lint_cards.py (directory listing + git show --stat HEAD). This is the phantom step the round claimed was 'removed rather than shipped' - it survived in the Chinese README. Cold-start readers following the zh-CN CI example fail at step 3 of 4, violating the round's acceptance criterion; and the claim of removal is false, which is the project's R3 family in the overselling direction. Full analysis in REVIEW-XJ-20260930-006.md",
+    "Q1 (STALE_TEST_COUNT ERROR severity): keep ERROR, on the stated grounds that the claim surface is part of the deliverable; sharpen the rationale to 'a claim the project makes about its own deliverable' rather than authorial motive",
+    "Q2 (linter imports test suite): accepted - in-process discovery beats a recorded count, which would create a second drifting claim surface",
+    "Q3 (silent discovery failure): recommendation - emit TEST_COUNT_UNVERIFIED WARN when discovery raises, as distinct from a project with no tests/ dir; the silent path already hid one bug and is the PM-10 pattern inverted",
+    "Q4 (UNMAPPED_CLAIM_SURFACE opt-in): half right - default to ./artifacts.json when it exists, because README.md line 12 teaches the cold reader to run the linter without --artifact-map",
+    "Q5 (CHANGELOG exempt from count, in map): coherent - numbers are dated assertions about the past; map membership is about freshness of the present file",
+    "Q6 (self-consistency of the 'caught by a check' README claim): overstated - B1 is a false command inside a fenced block that survived a round whose purpose was making prose checkable; narrow the claim to the two shapes the rules actually check",
+    "Q7 (fenced-only boundary): correct - an 'asserts current count' prose shape is not implementable at an acceptable false-positive rate; keep fenced-only plus the CHANGELOG exemption",
+    "Q8 (CI newest-id only): right trade-off, correctly documented - 22 permanent STALE_VERDICTs make full-history gating a permanently red build; what CI must assert is that the round being shipped is signed and current",
+    "Non-blocking findings recorded in the review card: F2 zh-CN gate example omits --artifact-map (PM-10 flag-forgetting re-enacted in the teaching example), F3 zh-CN lint example omits --strict, F4 README 'caught by a check' overclaim"
+  ]
+}

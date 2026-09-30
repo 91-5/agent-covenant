@@ -150,6 +150,48 @@ inverted.
 
 ---
 
+## PM-11 · Asserting a fix you did not finish, because the artifact exists in three copies
+
+**[ours — round 5, `verdicts/XJ-20260930-006.verdict.json`, FAIL, 1 blocker]**
+
+We wrote a command into a CI example naming a file that does not exist
+(`tools/test_gate.py`). We found it, deleted it, and confirmed the file was gone.
+Then we wrote the following sentence in a CHANGELOG entry and a commit message:
+
+> the phantom step was **removed rather than shipped**
+
+It was shipped. The command appeared in **three** places — `README.md`,
+`README.zh-CN.md`, and the CI workflow — and we verified the removal in two of
+them. The Chinese README kept it, in a fenced code block, for the reader least
+likely to eyeball it. The independent reviewer found it on the first pass.
+
+Two failures, not one:
+
+1. **A claim that ran ahead of the work.** The false sentence is the more
+   damaging half, and its direction matters: it claimed *more* diligence than
+   existed. This is R3's "no silent success" family pointed at ourselves. A
+   reviewer reading that CHANGELOG would have been told the defect class was
+   closed.
+2. **Fixing one instance of a duplicated artifact is not fixing the defect.**
+   The check we ran — "does the file exist?" — was the wrong check. The right one
+   enumerates every copy.
+
+**Rule:** §4.1 — acceptance criteria are stated as commands, and a fix is
+complete when every copy of the artifact satisfies them, not when one does.
+For duplicated text specifically: enumerate the copies *before* editing, so the
+count is known.
+**Enforced by:** none. This is not machine-checkable in general — verifying that
+a command in a README names a file that exists is a documentation linter, not
+this project. Stated here because the gap is deliberate and must be visible.
+**Transferable lesson:** *asserting completion is itself a claim, and it is the
+one claim nothing in your pipeline re-reads.* The irony is load-bearing: this
+defect survived inside a fenced code block through a round whose stated purpose
+was making prose checkable, and the new rule could not see it, because the rule
+reads a number and not a command. Two rules narrowed the class; the honest claim
+is "these two shapes", never "this class".
+
+---
+
 ## PM-4 · The verdict that outlived its artifact
 
 **[ours]** Reviews are point-in-time judgements. Code keeps moving. A verdict file

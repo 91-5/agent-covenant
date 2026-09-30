@@ -4,12 +4,78 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.4] — 2026-09-30 (in review, not yet gated)
+## [0.1.5] — 2026-09-30 (in review, not yet gated)
+
+Round 5 returned **FAIL, 1 blocker**. The reviewer was right on every point and
+nothing was argued. This round clears the blocker and stops claiming more than
+the tools do.
+
+### Fixed
+
+- **B1 — a README command naming a file that does not exist, asserted as removed
+  when it was not.** The command appeared in `README.md`, `README.zh-CN.md` and
+  `.github/workflows/gate.yml`; the round verified the removal in two of the three
+  and the Chinese README kept it. The CHANGELOG entry and commit message for
+  v0.1.4 both said the phantom step was "removed rather than shipped". That claim
+  was false, and it claimed *more* diligence than existed — R3's no-silent-success
+  rule, pointed at ourselves. Recorded as **PM-11**: asserting completion is
+  itself a claim, and fixing one copy of a duplicated artifact is not fixing the
+  defect.
+- **F2 / F3 — the two READMEs taught different commands.** The Chinese CI example
+  omitted `--artifact-map` (so freshness silently never ran — PM-10 re-enacted
+  inside the example meant to teach the tool) and `--strict`. Both READMEs now
+  carry byte-identical command blocks.
+- **F4 — the "caught by a check instead of by a careful reader" claim, in both
+  languages, narrowed** to the two shapes the rules actually check, with the
+  unchecked shapes named: a wrong command, a stale flag, a bad path. B1 is the
+  proof that the broader claim was false — the defect survived inside a fenced
+  code block, through the very round that added the rules.
+
+### Added
+
+- **`TEST_COUNT_UNVERIFIED` (WARN)** — `STALE_TEST_COUNT` reads its baseline by
+  importing the test suite, so "I could not run my own check" is reachable. It
+  previously reported nothing in that state, which is PM-10 inverted: a check that
+  switches itself off and looks like a pass. This rule shipped with that exact
+  bug — `top_level_dir` made discovery refuse to import a non-package `tests/`,
+  leaving the rule dead on this repository until a test caught it.
+  Detected by walking the discovered suite for `_FailedTest`, because `unittest`
+  does **not** raise on a broken import: it substitutes a placeholder and returns
+  a count. An exception-only guard would have compared a declared number against a
+  meaningless baseline — a confident answer from a broken instrument.
+- **`--artifact-map` now defaults to `./artifacts.json`** when that file exists.
+  A check that only runs when a flag is remembered is a check that will be
+  forgotten (PM-10), and the flagless invocation is what a cold reader types. A
+  project with neither the flag nor the file remains out of scope, since the rule
+  would otherwise invent a baseline.
+
+### Changed
+
+- `STALE_TEST_COUNT` rationale sharpened to state the rule's own ground — *a
+  claim the project makes about its own deliverable* — rather than the author's
+  embarrassment at shipping the wrong number. The severity stays ERROR.
+
+### Notes
+
+- Round 5's card, review card and FAIL verdict are archived to
+  `.tasks/legacy/` verbatim. They are the only record that this defect class was
+  caught by a human and not by a tool, and the 006 artifact map is left intact
+  because a FAIL is evidence, not a mistake to tidy away.
+- 84 tests.
+
+## [0.1.4] — 2026-09-30 — **superseded by 0.1.5; failed review**
 
 Three false claims shipped in the published README, and the gate that had
 certified the release never saw them — the defect class this project exists to
 prevent, occurring in the project itself. The text is corrected; more
 importantly, two rules now make the class checkable.
+
+This round was reviewed and returned **FAIL with one blocker**
+(`verdicts/XJ-20260930-006.verdict.json`): a phantom command survived in
+`README.zh-CN.md` while this changelog claimed it had been removed. See
+[0.1.5](#015--2026-09-30-in-review-not-yet-gated) for the fix. What follows is
+the record of the round as it was submitted, including the claim that turned out
+to be false.
 
 ### Fixed
 
@@ -60,6 +126,11 @@ importantly, two rules now make the class checkable.
   before checking that the file exists. It does not; the gate self-test lives in
   `tests/test_gate.py` and already runs under unittest discovery. The phantom
   step was removed rather than left as a CI failure waiting to happen.
+  **This line is the false claim that got this round a FAIL.** The step was
+  removed from `README.md` and from the workflow, and survived in
+  `README.zh-CN.md`; the independent review found it. The wording is left
+  unedited on purpose — the FAIL verdict is the evidence, and tidying the
+  sentence would repeat the failure it describes. See [PM-11](postmortems.md).
 - Consequently `XJ-20260930-005` is now STALE for the files it maps. That is the
   expected outcome of a freshness check that works, not a regression.
 

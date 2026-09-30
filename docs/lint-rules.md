@@ -6,10 +6,11 @@ and belong in your ADRs, not in a linter.
 
 Run: `python tools/lint_cards.py --dir .tasks`
 
-With the artifact map (what the gate runs, and the only way the last rule is
-enabled):
+With the artifact map. `--artifact-map` may be omitted when `artifacts.json`
+sits next to `.tasks/`, in which case it is picked up automatically:
 
     python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json
+    python tools/lint_cards.py --dir .tasks          # same, if ./artifacts.json exists
 
 | Rule | Level | Clause | Why it exists | Fix |
 |---|---|---|---|---|
@@ -24,8 +25,9 @@ enabled):
 | `CLOSED_NOT_ARCHIVED` | WARN | §8 | Card directories become unsearchable attics; agents re-read stale cards instead of thinking. A card that reached `GATED` and is still there is TTL debt. | Archive or delete within one working day. |
 | `OWNED_FILES_CONFLICT` | WARN | R2 | Two **active** cards claiming the same path is the planning-stage form of the lost-update hazard (postmortems §PM-5). A directory claim owns everything beneath it; glob claims are compared on their literal prefix. Raised by our first external reviewer, who pointed out that we had written "not statically checkable" in the postmortem when the planning-stage half *is* checkable. | Give each card disjoint ownership, or close the finished one. |
 | `NON_ASCII_FILENAME` | WARN | — | Non-ASCII filenames break tooling across platforms (our own experience: legacy-codepage shells and CI). Real risk, not hypothetical. | Transliterate or accept the warning. |
-| `STALE_TEST_COUNT` | ERROR | — | This repository shipped a README claiming **45 tests while the suite held 69**, and no rule read prose. The claim surface is part of the deliverable: a reader who trusts a stale number is misled as surely as a machine is by a bad verdict. ERROR, because the protocol is being asserted falsely about itself. `CHANGELOG.md` is deliberately exempt — a historical entry records what was true at that release, so re-counting it would punish honest history. | Update the number, or delete it. A count nobody re-checks is a liability. |
-| `UNMAPPED_CLAIM_SURFACE` | WARN | §8 | The claim surface is still listed in the v0.1.0 maps, so a "is it mapped anywhere" check would have stayed green the whole time the drift lasted: the file *was* mapped, just never by a round recent enough to be reading today's text. Round 3 and round 4 maps both omitted the READMEs, and three false claims shipped. The rule therefore compares against the **newest** id, which is the only comparison that catches the real gap. WARN, and off unless `--artifact-map` is passed — the rule has no baseline of its own, and a rule that invents one would be a rule you could not trust. | List the file under the newest id in `artifacts.json`. |
+| `STALE_TEST_COUNT` | ERROR | — | This repository shipped a README claiming **45 tests while the suite held 69**, and no rule read prose. ERROR on these grounds: *this number is the project making a claim about its own deliverable*, and the protocol's entire subject is claims about deliverables that nothing re-checks. That is the one lie a verification protocol cannot afford to be relaxed about — not the author's embarrassment at the number, which is not an argument. A count that drifts 45 → 69 → 82 → 84 across four releases is not a cosmetic slip. `CHANGELOG.md` is exempt by design: a historical entry records what was true at that release, so re-counting it would punish honest history. Only fenced code blocks are read — a number in a copy-pasteable command is a claim, a number in prose is commentary. | Update the number, or delete it. A count nobody re-checks is a liability. |
+| `TEST_COUNT_UNVERIFIED` | WARN | — | The rule above reads its baseline by importing the test suite, so "I could not run my own check" is a reachable state. Reporting nothing in that state is PM-10 inverted: there a check weakened itself when a flag was forgotten, here a check switches itself off and returns "nothing to compare". This rule shipped with exactly that bug — `top_level_dir` made discovery refuse to import a non-package `tests/`, leaving the rule dead on this very repository until a test caught it. WARN because a broken suite is a problem to report, not a verdict on the README. | Fix the suite's imports, or the discovery call. Silence here means the check is off. |
+| `UNMAPPED_CLAIM_SURFACE` | WARN | §8 | The claim surface is still listed in the v0.1.0 maps, so a "is it mapped anywhere" check would have stayed green the whole time the drift lasted: the file *was* mapped, just never by a round recent enough to be reading today's text. Round 3 and round 4 maps both omitted the READMEs, and three false claims shipped. The rule therefore compares against the **newest** id, which is the only comparison that catches the real gap. `--artifact-map` now defaults to `./artifacts.json` when that file exists: a check that only runs when a flag is remembered is a check that will be forgotten, and the flagless invocation is exactly what a cold reader types. Out of scope only for a project with no map at all, where the rule would have to invent a baseline. | List the file under the newest id in `artifacts.json`. |
 
 ## Deliberate exemptions
 
@@ -68,6 +70,8 @@ CI with nobody reading the output, these are the ones to treat as mandatory:
 - `UNMAPPED_CLAIM_SURFACE` — a file nobody re-checks is a file that will drift,
   and we have already published a drifted one. At L2 **this should be an ERROR**;
   run `--strict` so the omission cannot pass unnoticed.
+- `TEST_COUNT_UNVERIFIED` — under `--strict` a silently disabled check is worse
+  than a failing one, because nothing in the output says the rule did not run.
 
 The rest (`TASK_MISSING_*`, `CLOSED_NOT_ARCHIVED`, `NON_ASCII_FILENAME`) are
 hygiene and can stay advisory at L2 without misleading a machine.

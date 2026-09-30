@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 门禁
 python tools/lint_cards.py --dir .tasks         # 卡片 schema 与命名检查
-python -m unittest discover -s tests            # 82 个单测
+python -m unittest discover -s tests            # 84 个单测
 ```
 
 ## 安装
@@ -33,9 +33,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.9' }
       - run: python -m unittest discover -s tests
-      - run: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json
-      - run: python tools/test_gate.py
-      - run: python tools/gate.py --verdict-dir verdicts
+      - run: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict
+      - run: python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json
 ```
 
 非零退出就是失败，不是提醒。同时说清门禁能证明什么、不能证明什么：它能证明
@@ -162,7 +161,13 @@ blocker 的 PASS（`verdicts/XJ-20260930-005.verdict.json`，`independent: true`
 > 下写着"刻意尚未过门禁"。这句话错在**贬低自己**的方向，而这种错误通常一眼就能被
 > 发现。同一份 README 还写着 45 个单测，而当时测试套件里有 69 个。两处都是散文，
 > 而门禁只读 `.tasks/`。v0.1.4 补上 `STALE_TEST_COUNT` 和
-> `UNMAPPED_CLAIM_SURFACE`，让这一类缺陷由检查兜住，而不是指望一个细心的读者。
+> `UNMAPPED_CLAIM_SURFACE`，让**这两类形状**的缺陷由检查兜住，而不是指望一个细心
+> 的读者：可复制代码块里过期的测试数，以及没有任何 verdict 覆盖的声明表面。
+>
+> 比第一版听起来窄，而且是有意收窄的。同一轮里还漏掉一条指向不存在文件的命令，
+> CHANGELOG 声称它已被移除——实际只从它出现的三个地方中的两个里移掉了。独立评审
+> 抓到了这一条（`verdicts/XJ-20260930-006.verdict.json`，FAIL，1 个 blocker）。
+> 写错的命令、过期的参数、错误的路径：这些一个都不检查，本项目也不假装检查。
 
 不吹的部分：这是**一份规范加两个经测试的工具**，跑过一次真实试点
 （`examples/deepfreeze-pilot/`）和本仓库自己的历史——不是一个机队，也没有经过

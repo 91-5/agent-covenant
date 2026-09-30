@@ -234,8 +234,35 @@ def _project_root(card_dir):
     return card_dir.resolve().parent
 
 
+def _suite_has_import_failure(suite):
+    """True if discovery produced placeholder tests for modules it could not import.
+
+    `unittest` does not raise on a broken import: it substitutes a `_FailedTest`
+    and carries on. The resulting `countTestCases()` is therefore a *count of a
+    suite that cannot run* — comparing a declared number against it would report
+    a confident mismatch against a meaningless baseline, which is worse than
+    reporting nothing. Checked by class name so no private symbol is imported.
+    """
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            if _suite_has_import_failure(item):
+                return True
+        elif type(item).__name__ == "_FailedTest":
+            return True
+    return False
+
+
 def _discover_test_count(project_root):
-    """Count the suite in-process. None means "nothing to compare against".
+    """Count the suite in-process. Returns `(count, failed)`.
+
+    The `failed` flag is the whole point. A project with no `tests/` directory is
+    legitimately nothing to compare against, but a suite that cannot be imported
+    is a check that switched itself off and reported success — the inverse of
+    PM-10, where a check weakened itself when a flag was forgotten. That silent
+    path already hid a bug during this rule's own implementation:
+    `top_level_dir` made discovery refuse to import a non-package `tests/`, so the
+    rule was dead on this repository until a test caught it. Silence is not an
+    acceptable answer to "I could not run my own check".
 
     Discovery mirrors the documented run command (`python -m unittest discover -s
     tests`), so top_level_dir is deliberately left at its default: tests/ is not a
@@ -244,12 +271,14 @@ def _discover_test_count(project_root):
     """
     tests_dir = project_root / "tests"
     if not tests_dir.is_dir():
-        return None
+        return None, False
     try:
         suite = unittest.TestLoader().discover(str(tests_dir))
-        return suite.countTestCases()
     except Exception:
-        return None  # a broken test tree must never turn a lint run into a crash
+        return None, True  # a broken test tree must not crash the lint run
+    if _suite_has_import_failure(suite):
+        return None, True
+    return suite.countTestCases(), False
 
 
 def _declared_counts(text):
@@ -284,7 +313,12 @@ def check_stale_test_count(project_root):
     happened to the project itself, so the linter now reads the number back.
     """
     out = []
-    actual = _discover_test_count(project_root)
+    actual, failed = _discover_test_count(project_root)
+    if failed:
+        out.append(_finding("TEST_COUNT_UNVERIFIED", "WARN", project_root,
+                            "test suite discovery raised, so no declared count was checked - "
+                            "the rule is off, not passing"))
+        return out
     if actual is None:
         return out
     for name in COUNTED_CLAIM_FILES:
@@ -462,7 +496,8 @@ def build_parser():
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
     parser.add_argument("--artifact-map", default=None,
                         help="artifacts.json to check the public claim surface against; "
-                             "enables UNMAPPED_CLAIM_SURFACE (omitted = check not enabled)")
+                             "defaults to ./artifacts.json when that file exists "
+                             "(neither flag nor file = check not enabled)")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit JSON findings")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -485,10 +520,16 @@ def main(argv=None):
     # Prose is part of the deliverable too: a README can lie, and a README nobody
     # re-checks lies forever. Both rules read the project the cards belong to.
     project_root = _project_root(card_dir)
+    # A check that only runs when a flag is remembered is a check that will be
+    # forgotten (PM-10). When the map is simply sitting there, use it. Only a
+    # project that has no map at all is genuinely out of scope.
+    map_path = args.artifact_map
+    if map_path is None and (project_root / "artifacts.json").is_file():
+        map_path = str(project_root / "artifacts.json")
     artifact_map = None
-    if args.artifact_map:
+    if map_path:
         try:
-            artifact_map = load_artifact_map(args.artifact_map)
+            artifact_map = load_artifact_map(map_path)
         except ValueError as exc:
             print(f"[USAGE] {exc}", file=sys.stderr)
             return EXIT_USAGE

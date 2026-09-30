@@ -432,6 +432,22 @@ class TestStaleTestCount(LintTestCase):
         code, out, _ = self.run_lint()
         self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
 
+    def test_failed_discovery_warns_instead_of_going_silent(self):
+        """A check that cannot run must say so.
+
+        Regression for the exact defect this rule shipped with: `top_level_dir`
+        made discovery refuse to import a non-package tests/, and the rule
+        reported success while being dead. Silence is PM-10 inverted.
+        """
+        broken = self.tmp / "tests"
+        broken.mkdir()
+        (broken / "test_broken.py").write_text(
+            "import a_module_that_does_not_exist\n", encoding="utf-8")
+        self._readme("README.md", 45)
+        code, out, _ = self.run_lint()
+        self.assertIn("TEST_COUNT_UNVERIFIED", self.codes(out))
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
 
 class TestUnmappedClaimSurface(LintTestCase):
     """The claim surface must sit inside some verdict's map, or freshness skips it."""
@@ -458,10 +474,21 @@ class TestUnmappedClaimSurface(LintTestCase):
         self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
 
     def test_no_artifact_map_means_check_not_enabled(self):
-        """Mirror the gate: a forgotten flag disables the check loudly, never silently."""
+        """No flag and no artifacts.json in the project = the check is out of scope."""
         self._claim_surface()
         code, out, _ = self.run_lint()
         self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    def test_default_artifact_map_is_used_when_the_file_exists(self):
+        """A check that only runs when a flag is remembered will be forgotten (PM-10).
+
+        The flagless invocation must still catch the unmapped claim surface when
+        the project plainly has an artifacts.json sitting next to .tasks/.
+        """
+        self._claim_surface()
+        self._map(**{"AC-20260929-001": ["tools/gate.py"]})
+        code, out, _ = self.run_lint()
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
 
     def test_unreadable_artifact_map_is_a_usage_error(self):
         path = self.tmp / "artifacts.json"

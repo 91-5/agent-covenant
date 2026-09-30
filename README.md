@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # 82 tests
+python -m unittest discover -s tests            # 84 tests
 ```
 
 ## Install
@@ -181,8 +181,18 @@ review as of this writing; the claim below covers v0.1.3, not v0.1.4.
 > the direction that undersells the work, which is the direction most people
 > would have caught by eye. The same README claimed 45 tests while the suite held
 > 69. Both statements were in prose, and the gate only ever read `.tasks/`. The
-> v0.1.4 round adds `STALE_TEST_COUNT` and `UNMAPPED_CLAIM_SURFACE` so that this
-> class of defect is caught by a check instead of by a careful reader.
+> v0.1.4 round adds `STALE_TEST_COUNT` and `UNMAPPED_CLAIM_SURFACE` so that
+> **these two shapes** of defect are caught by a check instead of by a careful
+> reader: a stale test count in a copy-pasteable block, and a claim surface that
+> no verdict covers.
+>
+> Narrower than it first sounds, and deliberately so. The same round shipped a
+> README command naming a file that does not exist, and the CHANGELOG asserted it
+> had been removed — it had been removed from two of the three places it appeared.
+> An independent review caught it
+> (`verdicts/XJ-20260930-006.verdict.json`, FAIL, 1 blocker). A wrong command, a
+> stale flag, a bad path in prose: none of that is checked, and no rule here
+> claims otherwise.
 
 What is not claimed: this is a **spec plus two tested tools, exercised on one real
 pilot run** (`examples/deepreeze-pilot/`) and on this repository's own history —
