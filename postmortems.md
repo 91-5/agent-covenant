@@ -96,6 +96,15 @@ example README and here.
 is only as good as the *direction* you check. We checked "too old" and forgot
 "not yet". Ask what a hostile or merely careless input would make vacuous.
 
+*Occurrences, for pattern recognition:* round 1 of this repository's own review
+arrived with `ts` **+8h** (timezone confusion). Round 2 arrived with `ts`
+**+9 min** — `07:30:00Z` against a 07:23:20Z clock, because the reviewer
+timestamped to the half hour. Two rounds, two future-dated verdicts, both caught
+by this rule. Neither was malicious; both would have silently disabled the most
+important check. Treat the first two occurrences as evidence that the habit is
+systematic, not accidental — if a third arrives, fix the reviewer's prompt, not
+the clock tolerance.
+
 ---
 
 ## PM-10 · The gate quietly weakened itself when a flag was forgotten
@@ -159,9 +168,14 @@ hazards: stale read, lost update, stale correction, action–message desync.
 
 **Rule:** R2 (single write ownership) — disjoint scopes are a precondition of
 parallelism, not an optimisation.
-**Not enforced by a tool.** This one is organisational: you cannot lint your way
-out of two agents owning one file. Conformance level L2 assumes you have already
-solved it structurally.
+**Partially enforced.** The *write-time race* is not lintable — it needs a
+runtime lock. The **planning-stage declaration is lintable**: cards declare
+ownership in `## Owned files` and `lint_cards.py` reports two active cards
+claiming the same path (`OWNED_FILES_CONFLICT`). The runtime conflict remains
+organisational. An earlier version of this file claimed the whole family was
+"not enforced by a tool"; our first external reviewer caught the over-claim —
+the same defect class this catalogue documents, committed by the catalogue
+itself.
 
 ---
 

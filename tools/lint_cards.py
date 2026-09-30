@@ -71,6 +71,8 @@ def _has_section(sections, key):
 
 def classify(path):
     name = path.name
+    if name.startswith("REVIEW-REQUEST-"):
+        return "request"  # a hand-over document; it never carries a verdict by definition
     if name.startswith("REVIEW-"):
         return "review"
     if name.startswith("HANDOFF-") or name.startswith("ADR-"):

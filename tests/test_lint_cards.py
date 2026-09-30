@@ -281,5 +281,28 @@ class TestOwnedFilesConflicts(LintTestCase):
         self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
 
 
+class TestReviewRequestExemption(LintTestCase):
+    """A review REQUEST carries no verdict by definition; only a REVIEW must."""
+
+    def test_request_without_verdict_is_clean(self):
+        self.write("REVIEW-REQUEST-XJ-20260930-004.md", "# request\n\nread the card and reply\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("REVIEW_MISSING_VERDICT_LINE", self.codes(out))
+
+    def test_plain_review_without_verdict_still_fails(self):
+        self.write("REVIEW-001.md", "# REVIEW\n\n## Blockers\n0\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("REVIEW_MISSING_VERDICT_LINE", self.codes(out))
+
+    def test_request_still_obeys_the_namespace_and_path_rules(self):
+        body = "# request\n\nsee TASK-007 for context\n"
+        self.write("REVIEW-REQUEST-XJ-20260930-004.md", body)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("BARE_TASK_NAME", self.codes(out))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

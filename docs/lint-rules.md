@@ -20,6 +20,15 @@ Run: `python tools/lint_cards.py --dir .tasks`
 | `OWNED_FILES_CONFLICT` | WARN | R2 | Two **active** cards claiming the same path is the planning-stage form of the lost-update hazard (postmortems §PM-5). A directory claim owns everything beneath it; glob claims are compared on their literal prefix. Raised by our first external reviewer, who pointed out that we had written "not statically checkable" in the postmortem when the planning-stage half *is* checkable. | Give each card disjoint ownership, or close the finished one. |
 | `NON_ASCII_FILENAME` | WARN | — | Non-ASCII filenames break tooling across platforms (our own experience: legacy-codepage shells and CI). Real risk, not hypothetical. | Transliterate or accept the warning. |
 
+## Deliberate exemptions
+
+| Pattern | Exempt from | Why |
+|---|---|---|
+| `REVIEW-REQUEST-*.md` | the review-card rules (`REVIEW_MISSING_VERDICT_LINE`, `REVIEW_MISSING_BLOCKERS`) | A request is a hand-over document: it asks someone to produce a verdict, so it has none by definition. Requiring one would make every well-formed request non-conformant. The namespace rule still applies. |
+| `HANDOFF-*.md`, `ADR-*.md` | the namespace rule | Their identity is their prefix; a date-suffixed id adds nothing. |
+| `<dir>/legacy/**` | everything | Historical evidence, kept verbatim and deliberately not linted. Linting the past would force edits to evidence, which is the behaviour this project exists to prevent. |
+
+
 ## Not machine-checkable
 
 These belong in your constitution and ADRs, not in a linter:
@@ -37,3 +46,15 @@ These belong in your constitution and ADRs, not in a linter:
 ERROR means "the protocol cannot be evaluated here" — a machine reading this
 directory would be misled. WARN means "this smells" and a human may have a good
 reason. `--strict` promotes warnings to errors for teams that want a clean board.
+
+**Which WARNs matter at L2.** Under `--strict` every WARN becomes an ERROR, so
+the distinction is deployment-dependent by design. For teams running the gate in
+CI with nobody reading the output, these are the ones to treat as mandatory:
+
+- `OWNED_FILES_CONFLICT` — it guards against data loss (two agents owning one
+  file), not against style. At L2 **this should be an ERROR**; run `--strict`.
+- `VERDICT_WITHOUT_REVIEW` — a card marked done with no verdict file is the
+  §PM-2 failure in miniature.
+
+The rest (`TASK_MISSING_*`, `CLOSED_NOT_ARCHIVED`, `NON_ASCII_FILENAME`) are
+hygiene and can stay advisory at L2 without misleading a machine.
