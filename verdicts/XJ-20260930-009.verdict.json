@@ -1,0 +1,33 @@
+{
+  "id": "XJ-20260930-009",
+  "artifact": "README.md + README.zh-CN.md + CHANGELOG.md + postmortems.md (Agent Covenant v0.1.7, commit 6477b4c)",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "blocker_list": [
+    "B1: README.md:52 - the six-step 'Your first round' tutorial step 5 says the worked example is in 'examples/deepreeze-pilot/'; no such path exists (recursive glob confirms the only example map is examples/deepfreeze-pilot/artifacts.json), while three other references in the same file (L41, L68, L247) and the zh README all spell deepfreeze correctly - typo, not design. A phantom path inside the getting-started section is round-5/006's defect family reproduced; the author walked the tutorial's commands against --help but not its paths. Author's stated standard: 'I would rather fail a third time than publish prose that has not been checked.' Fix is one character; re-verify by globbing every path the section names."
+  ],
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-09-30T16:08:31Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 84 tests OK, exit 0 - matches the card",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (1 warning, VERDICT_WITHOUT_REVIEW for the in-progress 009 card), no ERROR - the documented pre-verdict state",
+    "same command with --strict -> exit 1, the single expected warning - matches the card",
+    "python tools/gate.py --require XJ-20260930-009 --artifact-map artifacts.json -> MISSING_VERDICT, exit 1 - expected until this verdict lands",
+    "ts bounds: max mtime over the 009 map = CHANGELOG.md 2026-09-30T15:59:26.121Z, matching the stated lower bound; now at stamping 16:11:43Z; ts 16:08:31Z inside the window, un-rounded",
+    "no retrofit: git show --stat 6477b4c = 8 files - both READMEs, CHANGELOG, postmortems, artifacts.json +6 (009 key only), the new 009 card, and 008 card + review card added to legacy/",
+    "BLOCKER B1: README.md:52 'examples/deepreeze-pilot/' does not exist; recursive glob of examples/ finds only examples/deepfreeze-pilot/artifacts.json; README L41/L68/L247 and README.zh-CN.md spell it correctly. Phantom path in the getting-started section, the round-5/006 family, in a round whose REQUEST states every tutorial command was walked - the paths were not. Fix: deepreeze -> deepfreeze",
+    "tutorial walk (Q2): steps 1-4 and 6 verified - tools/*.py import stdlib only (argparse,json,re,sys,unittest,datetime,pathlib,__future__); templates/TASK.md exists; examples/deepfreeze-pilot/artifacts.json exists; every flag in the step-6 commands exists in --help (gate.py has no --dir, repaired by the author); exit 0/1/2 semantics match PROTOCOL.md. Step 5's only pointer fails (B1)",
+    "008 blocker fixed by incorporation, not deletion: README.md:253-273 discloses the reviewer as AI, states the signature inconsistency itself (ximo@agnes earlier, ximo@agnes-ai later - verified against all seven verdict files), discloses evidence as self-attested claim (never re-run by the gate, matching PROTOCOL §6 policy 5), and cross-references §10.3",
+    "Status version-free (Q4): README.md:219-226 delegates the chain's state to the newest verdict file and explains why (three rounds of stale hand-maintained headers, always conservative) - a claim that cannot rot replaced claims that rotted on schedule",
+    "'Every release below has a reviewer verdict' (README.md:221) verified true: 001->v0.1, 002->v0.1.1, 004->v0.1.2, 005->v0.1.3, 006->v0.1.4, 007->v0.1.5, 008->v0.1.6, 009->v0.1.7",
+    "008 round archived verbatim: legacy/REVIEW-XJ-20260930-008.md read back = 171 lines / 11.1 KB, byte-for-byte my round-8 card (ts 15:45:19Z, FAIL, 1 blocker); the FAIL verdict untouched - the 009 REQUEST's 'archived verbatim' is true",
+    "Q3: PM-12 + one README paragraph complete the theme at the same depth as independence; PROTOCOL §6's existing advisory already reinforces it - expanding the surface would dilute it. Suggested (non-blocking): PM-12 note that ts, independent and evidence are three faces of one self-attestation family",
+    "A1 (settled, I accept): the 6477b4c commit message decides the 007-verdict question on the record - 'A2 declined: rewriting a committed verdict is the act this protocol exists to prevent, and the committed round-6 verdict is the one that disclosed the round-5 divergence.' Correct under the project's own append-only instinct; the committed first pass carries the divergence disclosure in its evidence",
+    "A2 (non-blocking): the release->verdict mapping is not self-evident (id and version series share no names); one README line or a uniform release tag in verdicts would make the claim checkable at a glance",
+    "A3 (non-blocking): extend the command walk to paths - resolve every referenced file in a getting-started section; this cost has now been paid twice",
+    "A4 (non-blocking): the 008 archive is complete on disk but mid-flight in git - 6477b4c adds the legacy copies while the active-path deletions remain uncommitted (git status: two unstaged D); content safe, but a stray git checkout . would briefly resurrect the active duplicate; one git add -A closes it",
+    "A5 (non-blocking): PROTOCOL §6 advisory ('read the evidence') and the README disclosure reinforce each other correctly - recorded for the record"
+  ]
+}

@@ -49,7 +49,7 @@ from one that covers it.
 reviewer an absolute path to the card and nothing else. The reviewer writes
 `.tasks/REVIEW-<id>.md` and `verdicts/<id>.verdict.json`; it must not touch the files
 under review. A worked example of the whole exchange, including a round that came back
-FAIL, is in `examples/deepreeze-pilot/`.
+FAIL, is in `examples/deepfreeze-pilot/`.
 
 **6. Run the gate.**
 

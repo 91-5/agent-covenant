@@ -4,7 +4,38 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.7] - 2026-09-30 (in review, not yet gated)
+## [0.1.8] - 2026-09-30 (in review, not yet gated)
+
+Round 7 (v0.1.7) returned **FAIL, 1 blocker**, and the blocker was a typo in the
+getting-started section: `examples/deepreeze-pilot/` for a directory that is
+`examples/deepfreeze-pilot/`. One character, in a file the reviewer had already verified
+six times over, named correctly three other places in the same document.
+
+**Fixed - B1.** One character. The section now resolves.
+
+**The part worth recording.** The round-7 review request stated that every command in
+`Your first round` had been walked against `--help` before being written down. That was
+true, and it was the wrong check. I verified the *commands* and not the *paths* they
+refer to, so a wrong path walked straight past a verification I described as thorough.
+The reviewer's words: *"I walked the tutorial's commands against --help but not its
+paths."*
+
+This is the third time in four rounds that a wrong path in prose survived, and the
+second time in a round whose own claim of care made it easier to miss. round 5's
+phantom command, round 8's overstated disclosure, and this were all in the same family:
+a statement about a file, in prose, that no tool reads.
+
+**Guard rails shipped:** every path named in both `Your first round` sections is now
+resolved against the working tree before this entry is written, and the reviewer
+re-verifies by glob. A3 suggested extending the walk to paths; it should have been
+there from the first version of the section.
+
+**Also closed:** the round-7 and round-8 cards and review cards are archived to
+`legacy/` in their committed form, and the two active-path deletions that were left
+uncommitted in 6477b4c are recorded here, so that a `git checkout .` cannot resurrect
+a duplicate (advisory A4).
+
+## [0.1.7] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
 Round 6 (v0.1.6) returned **FAIL, 1 blocker**, and the blocker was in the sentence
 that existed to be honest. Both fixes land here, plus the two advisories that were
