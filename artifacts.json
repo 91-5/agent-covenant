@@ -36,5 +36,17 @@
     "docs/lint-rules.md",
     "tools/lint_cards.py",
     "tests/test_lint_cards.py"
+  ],
+
+  "XJ-20260930-006": [
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "templates/REVIEW.md",
+    ".github/workflows/gate.yml",
+    "PROTOCOL.md",
+    "docs/lint-rules.md",
+    "tools/lint_cards.py",
+    "tests/test_lint_cards.py"
   ]
 }

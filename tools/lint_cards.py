@@ -8,6 +8,7 @@ Usage
 -----
     python tools/lint_cards.py --dir .tasks
     python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict
+    python tools/lint_cards.py --dir .tasks --artifact-map artifacts.json
     python tools/lint_cards.py --dir .tasks --json
 
 Exit codes
@@ -22,6 +23,7 @@ import argparse
 import json
 import re
 import sys
+import unittest
 from pathlib import Path
 
 EXIT_OK = 0
@@ -44,6 +46,16 @@ TASK_SECTION_ALIASES = {
 }
 REVIEW_Q_SECTIONS = ("review questions", "review handoff",
                      "review_questions", "review handoff", "审查问题", "审查")
+
+# The public claim surface: the files a reader trusts without running anything.
+CLAIM_SURFACE_FILES = ("README.md", "README.zh-CN.md", "CHANGELOG.md")
+# CHANGELOG is deliberately absent. A changelog entry records what was true at
+# that release, so a historical "45 tests" is correct history, not a stale claim.
+COUNTED_CLAIM_FILES = ("README.md", "README.zh-CN.md")
+TEST_COUNT_RES = (
+    re.compile(r"#\s*(\d+)\s+tests?\b"),
+    re.compile(r"(\d+)\s*个(?:单测|单元测试|测试)"),
+)
 
 
 def _safe_utf8():
@@ -212,6 +224,123 @@ def check_verdict_pairs(card_ids, verdict_dir):
     return out
 
 
+def _project_root(card_dir):
+    """The project the cards belong to: `<project>/.tasks` -> `<project>`.
+
+    Rules that inspect the claim surface read the *linted* project, not the
+    repository the linter happens to ship in, so running the linter against a
+    scratch directory does not drag that directory's README into scope.
+    """
+    return card_dir.resolve().parent
+
+
+def _discover_test_count(project_root):
+    """Count the suite in-process. None means "nothing to compare against".
+
+    Discovery mirrors the documented run command (`python -m unittest discover -s
+    tests`), so top_level_dir is deliberately left at its default: tests/ is not a
+    package, and forcing repo root as the top level makes discovery refuse to
+    import it.
+    """
+    tests_dir = project_root / "tests"
+    if not tests_dir.is_dir():
+        return None
+    try:
+        suite = unittest.TestLoader().discover(str(tests_dir))
+        return suite.countTestCases()
+    except Exception:
+        return None  # a broken test tree must never turn a lint run into a crash
+
+
+def _declared_counts(text):
+    """Yield `(line_no, number)` for counts declared in copy-pasteable blocks only.
+
+    Restricting to fenced code blocks is what keeps the rule honest: a number in
+    a command a reader can run is a claim that must stay true, while a number in
+    an explanation ("the README used to claim 45 tests") is commentary about the
+    past and re-checking it would flag the very correction this project wants to
+    make. A rule that cries wolf on its own documentation trains people to ignore
+    it, which is the PM this project exists to prevent.
+    """
+    in_block = False
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.lstrip().startswith("```"):
+            in_block = not in_block
+            continue
+        if not in_block:
+            continue
+        for pattern in TEST_COUNT_RES:
+            match = pattern.search(line)
+            if match:
+                yield number, int(match.group(1))
+                break
+
+
+def check_stale_test_count(project_root):
+    """A test count written in prose rots silently; nothing else would notice.
+
+    This repository shipped a README claiming 45 tests while the suite held 69,
+    and no rule read prose. The defect class this project exists to prevent
+    happened to the project itself, so the linter now reads the number back.
+    """
+    out = []
+    actual = _discover_test_count(project_root)
+    if actual is None:
+        return out
+    for name in COUNTED_CLAIM_FILES:
+        path = project_root / name
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for number, claimed in _declared_counts(text):
+            if claimed != actual:
+                out.append(_finding("STALE_TEST_COUNT", "ERROR", path,
+                                    f"declares {claimed} tests but the suite holds "
+                                    f"{actual} - a number in prose goes stale on the next "
+                                    "test added", number))
+    return out
+
+
+def load_artifact_map(path):
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"cannot read artifact map {path}: {exc}")
+    if not isinstance(data, dict):
+        raise ValueError(f"artifact map {path} must be a JSON object")
+    return data
+
+
+def check_unmapped_claim_surface(project_root, artifact_map):
+    """The claim surface must be mapped by the *current* round, or freshness skips it.
+
+    README.md is still listed in the v0.1.0 maps, so a "is it mapped anywhere"
+    check would have stayed green for the entire drift: the file was mapped, just
+    not by any round recent enough to be reviewing today's text. The gap that
+    matters is the newest id, and that is what this compares against.
+    """
+    out = []
+    if artifact_map is None:
+        return out
+    ids = [key for key in artifact_map if not key.startswith("_")]
+    if not ids:
+        return out
+    # The map is append-ordered by convention (oldest id first); the last id is
+    # the round whose reading is supposed to be current.
+    current = ids[-1]
+    listed = {entry.strip().replace("\\", "/").lstrip("./")
+              for entry in artifact_map[current] if isinstance(entry, str)}
+    for name in CLAIM_SURFACE_FILES:
+        if (project_root / name).is_file() and name not in listed:
+            out.append(_finding("UNMAPPED_CLAIM_SURFACE", "WARN", project_root / name,
+                                f"not listed in {current}, the newest id in artifacts.json, so "
+                                "no freshness check covers it - list it under that id"))
+    return out
+
+
 def _owned_files(text):
     """Extract declared file ownership from the card's 'Owned files' section.
 
@@ -331,6 +460,9 @@ def build_parser():
     parser.add_argument("--verdict-dir", default=None,
                         help="verdict directory (default: <dir>/../verdicts)")
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    parser.add_argument("--artifact-map", default=None,
+                        help="artifacts.json to check the public claim surface against; "
+                             "enables UNMAPPED_CLAIM_SURFACE (omitted = check not enabled)")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit JSON findings")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -349,6 +481,19 @@ def main(argv=None):
     # Cards parked in legacy/ are evidence, not linted - but they still exist, so
     # their verdicts are neither orphaned nor missing.
     findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir)
+
+    # Prose is part of the deliverable too: a README can lie, and a README nobody
+    # re-checks lies forever. Both rules read the project the cards belong to.
+    project_root = _project_root(card_dir)
+    artifact_map = None
+    if args.artifact_map:
+        try:
+            artifact_map = load_artifact_map(args.artifact_map)
+        except ValueError as exc:
+            print(f"[USAGE] {exc}", file=sys.stderr)
+            return EXIT_USAGE
+    findings += check_stale_test_count(project_root)
+    findings += check_unmapped_claim_surface(project_root, artifact_map)
 
     errors = sum(1 for f in findings if f["level"] == "ERROR")
     warnings = sum(1 for f in findings if f["level"] == "WARN")

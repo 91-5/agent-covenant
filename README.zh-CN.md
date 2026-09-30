@@ -2,12 +2,57 @@
 
 > **交付物在独立评审产出机器可校验的 verdict 并通过门禁之前，一律不算「完成」。**
 
-两个文件，零依赖：
+两个文件，零依赖（Python 3.9+）：
 
 ```bash
+git clone https://github.com/91-5/agent-covenant.git
+cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 门禁
 python tools/lint_cards.py --dir .tasks         # 卡片 schema 与命名检查
+python -m unittest discover -s tests            # 82 个单测
 ```
+
+## 安装
+
+没有东西可装。两个工具都只用标准库、没有第三方依赖，`git clone` 加一个
+`PATH` 里的 `python` 就是全部步骤——这是刻意的，好让门禁能直接跑在什么都不用
+放行的封闭 CI 镜像里。需要 Python 3.9 或更新版本。
+
+## 在 CI 里跑
+
+`.github/workflows/gate.yml` 跑的就是上面这三条命令，可以直接拿来改：
+
+```yaml
+name: covenant
+on: [push, pull_request]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.9' }
+      - run: python -m unittest discover -s tests
+      - run: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json
+      - run: python tools/test_gate.py
+      - run: python tools/gate.py --verdict-dir verdicts
+```
+
+非零退出就是失败，不是提醒。同时说清门禁能证明什么、不能证明什么：它能证明
+检查**跑过了**、且该 verdict 满足策略；它证明不了评审者是否认真，这里任何退出码
+都不该被当作"评审认真"的证据。
+
+## 怎么发起一次评审
+
+只给评审者绝对路径，别的一概不给。下面这段是真实用过的指令：
+
+> 先读 `D:\path\to\project\.tasks\<NS>-YYYYMMDD-NNN.md`。它写明了你要判断的产物
+> 和必须自己核对的验收标准。评审期间不要改动任何被评审文件；你只拥有评审卡和
+> verdict 两样产出。评审写到 `.tasks/REVIEW-<id>.md`，机器可读孪生体写到
+> `verdicts/<id>.verdict.json`。你的 `ts` 必须满足
+> **被评审产物的最新 mtime ≤ ts ≤ 当前时间**——先查 mtime，再取两者之间的时刻。
+> 发现有 blocker 就在 `## Blockers` 里写明并给 `FAIL`；一份你没挣来的绿灯比没有
+> verdict 更糟。
 
 ---
 
@@ -107,13 +152,29 @@ python tools/gate.py --verdict-dir verdicts \
 
 每个都把随版本变化的部分标为 **verify（需自行验证）**，不编造。
 
-## 状态——v0.1，诚实版
+## 状态——v0.1.4，诚实版
 
-规范 + 两个经测试的工具（45 个单测）+ 一次真实试点（`examples/deepfreeze-pilot/`）。**未经规模验证**。已知局限写在 `PROTOCOL.md` §10，包括我们拒绝粉饰的两条：基于文件的协议需要人（或轮询器）去唤醒第二个 agent；门禁能证明"检查跑过了"，但证明不了评审者是否认真。
+**本仓库已通过门禁，从 v0.1.3 起就是。** v0.1.3 那轮由独立评审者给出零
+blocker 的 PASS（`verdicts/XJ-20260930-005.verdict.json`，`independent: true`）。
+写这份 README 时 v0.1.4 仍在评审中——下面这个说法覆盖的是 v0.1.3，不是 v0.1.4。
+
+> 更正一下，也正是有教育意义的部分：上一版 README 在已经交出 PASS verdict 的情况
+> 下写着"刻意尚未过门禁"。这句话错在**贬低自己**的方向，而这种错误通常一眼就能被
+> 发现。同一份 README 还写着 45 个单测，而当时测试套件里有 69 个。两处都是散文，
+> 而门禁只读 `.tasks/`。v0.1.4 补上 `STALE_TEST_COUNT` 和
+> `UNMAPPED_CLAIM_SURFACE`，让这一类缺陷由检查兜住，而不是指望一个细心的读者。
+
+不吹的部分：这是**一份规范加两个经测试的工具**，跑过一次真实试点
+（`examples/deepfreeze-pilot/`）和本仓库自己的历史——不是一个机队，也没有经过
+规模验证。已知局限写在 `PROTOCOL.md` §10，包括我们拒绝粉饰的两条：基于文件的协议
+需要人（或轮询器）去唤醒第二个 agent；门禁能证明"检查跑过了"，但证明不了评审者
+是否认真。
 
 ## 路线图
 
 - [x] v0.1——规范、门禁、linter、模板、适配器、一个真实案例
+- [x] v0.1.1–v0.1.3——修掉 linter 假阳性、纠正评审者时间戳指引、由独立评审者对本
+      仓库过门禁并公开
 - [ ] 换一个 harness 再跑一次真实试点（可移植性证据）
 - [ ] 验证器注册表——可共享的验收检查器，需求最强烈
 - [ ] 扩充事故语料；每个已命名失败模式配一条规则

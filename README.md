@@ -6,10 +6,60 @@ machine-checkable verdict that passes a gate.**
 Zero dependencies, Python 3.9+:
 
 ```bash
+git clone https://github.com/91-5/agent-covenant.git
+cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # 45 tests
+python -m unittest discover -s tests            # 82 tests
 ```
+
+## Install
+
+There is nothing to install. Both tools are stdlib-only Python scripts and there
+are no third-party packages, so a `git clone` and a `python` on `PATH` is the
+whole setup — deliberately, so the gate can run in a locked-down CI image with
+nothing to allow-list. Python 3.9 or newer.
+
+## Run it in CI
+
+`.github/workflows/gate.yml` runs the same three commands this README does. Copy
+it as a starting point:
+
+```yaml
+name: covenant
+on: [push, pull_request]
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.9' }
+      - run: python -m unittest discover -s tests
+      - run: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict
+      - run: python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json
+```
+
+A non-zero exit is a failure, not a warning. Note what the gate can and cannot
+tell you: it proves a check *ran* and that a verdict satisfies the policy. It
+cannot tell you the reviewer was thorough, and no exit code here should be cited
+as evidence that it was.
+
+## Ask for a review
+
+Give a reviewer the absolute path and nothing else. This is the instruction that
+works, copied from a real round:
+
+> Read `D:\path\to\project\.tasks\<NS>-YYYYMMDD-NNN.md` first. It names the
+> artifacts you are judging and the acceptance criteria you must check yourself.
+> Do not modify any file under review; you own only the review card and the
+> verdict. Write the review to `.tasks/REVIEW-<id>.md` and the machine-readable
+> twin to `verdicts/<id>.verdict.json`. Your `ts` must satisfy
+> **newest reviewed artifact mtime ≤ ts ≤ now** — check the mtimes, then stamp
+> between the newest one and the present moment. If you find a blocker, say so
+> in `## Blockers` and return `FAIL`; a green verdict you did not earn is worse
+> than no verdict.
+
 
 ## Why
 
@@ -119,18 +169,33 @@ Documentation, not code, so the protocol cannot rot with a vendor's API:
 `adapters/opencode/AGENTS.snippet.md`. Each marks version-dependent details as
 **verify** rather than inventing them.
 
-## Status — v0.1, honest
+## Status — v0.1.4, honest
 
-Spec + two tested tools + one real pilot run (`examples/deepfreeze-pilot/`), **not**
-validated at scale. This repository is built with its own protocol and is
-deliberately **not gated yet**: the author does not sign their own work. Known
-limitations are in `PROTOCOL.md` §10, including two we refuse to paper over — a
-file-based protocol needs a human (or a poller) to wake the second agent, and a
-gate proves a check *ran*, not that the reviewer was thorough.
+**This repository is gated, and has been since v0.1.3.** The v0.1.3 round passed
+with zero blockers from an independent reviewer
+(`verdicts/XJ-20260930-005.verdict.json`, `independent: true`). v0.1.4 is in
+review as of this writing; the claim below covers v0.1.3, not v0.1.4.
+
+> Correction, and it is the instructive part: the previous README said
+> *"deliberately not gated yet"* while shipping a PASS verdict. It was false in
+> the direction that undersells the work, which is the direction most people
+> would have caught by eye. The same README claimed 45 tests while the suite held
+> 69. Both statements were in prose, and the gate only ever read `.tasks/`. The
+> v0.1.4 round adds `STALE_TEST_COUNT` and `UNMAPPED_CLAIM_SURFACE` so that this
+> class of defect is caught by a check instead of by a careful reader.
+
+What is not claimed: this is a **spec plus two tested tools, exercised on one real
+pilot run** (`examples/deepreeze-pilot/`) and on this repository's own history —
+not a fleet, and not validated at scale. Known limitations are in `PROTOCOL.md`
+§10, including two we refuse to paper over: a file-based protocol needs a human
+(or a poller) to wake the second agent, and a gate proves a check *ran*, not that
+the reviewer was thorough.
 
 ## Roadmap
 
 - [x] v0.1 — spec, gate, linter, templates, adapters, one unedited worked example
+- [x] v0.1.1–v0.1.3 — lint false positive removed, reviewer timestamp guidance
+      corrected, the repository gated by an independent reviewer and published
 - [ ] A second pilot on a different harness (portability evidence)
 - [ ] Verifier registry — shareable acceptance checkers
 - [ ] Postmortem corpus growth; a rule per named failure mode

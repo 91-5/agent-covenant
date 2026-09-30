@@ -1,0 +1,75 @@
+name: gate
+
+# The same checks a maintainer runs by hand, in the order a fresh clone should
+# pass them. Every step is stdlib-only Python, so there is nothing to install and
+# nothing to allow-list: deliberately, so this file also works in a locked-down
+# image.
+#
+# A non-zero exit is a failure, not a warning. Read the note at the bottom before
+# citing a green run as evidence of anything.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: unittest (includes the gate self-test)
+        run: python -m unittest discover -s tests
+
+      - name: lint cards and claim surface
+        run: >-
+          python tools/lint_cards.py
+          --dir .tasks
+          --verdict-dir verdicts
+          --artifact-map artifacts.json
+          --strict
+
+      - name: resolve current round id
+        id: current
+        # Deliberately the *newest* id, mirroring how lint_cards.py picks the
+        # current mapping: the map is append-ordered, oldest id first.
+        #
+        # Gating every historical verdict would be a permanently red build. The
+        # early rounds are CONDITIONAL and their verdicts are long since stale,
+        # which is the freshness check working, not a regression. What CI must
+        # assert is that the round being shipped is signed and current.
+        run: >-
+          echo "id=$(python -c "import json;m=json.load(open('artifacts.json'));print([k for k in m if not k.startswith('_')][-1])")"
+          >> "$GITHUB_OUTPUT"
+
+      - name: gate (current round only)
+        run: >-
+          python tools/gate.py
+          --verdict-dir verdicts
+          --artifact-map artifacts.json
+          --require "${{ steps.current.outputs.id }}"
+
+# ---------------------------------------------------------------------------
+# What a green run does and does not mean.
+#
+# It means: the test suite passed, the cards match the schema, the claim surface
+# is mapped, and the verdict for the round being shipped satisfies the policy and
+# is not older than the artifacts it judges.
+#
+# It does NOT mean the reviewer was thorough. The gate reads `independent: true`
+# as a field; it cannot verify the reviewer was independent, and it cannot tell a
+# careful review from a confident one. PROTOCOL.md §10.3 says so, and this comment
+# exists so nobody has to infer it from CI.
+#
+# On a pull request that adds an artifact the map does not yet list, expect this
+# to fail. That is the intended sequence: add the id to artifacts.json, get it
+# reviewed, then let the new verdict sign it.

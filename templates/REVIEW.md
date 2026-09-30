@@ -31,14 +31,32 @@ _Not applicable (verdict is PASS)._
 
 | Acceptance criterion | How verified | Result |
 |---|---|---|
-| `unittest` exits 0 | `python -m unittest discover -s tests` | 45 passed, exit 0 |
+| `unittest` exits 0 | `python -m unittest discover -s tests` | N passed, exit 0 |
 | gate exits 0 | `python tools/gate.py --verdict-dir verdicts` | `GATE: PASS`, exit 0 |
+
+<!-- Replace N with the real number. A count nobody re-reads is a liability, which
+     is why `STALE_TEST_COUNT` now fails the lint when a README number drifts. -->
 
 ## Independence
 
 <!-- true only if you did not author the artifact under review. -->
 
 `true`
+
+## Before you sign
+
+Check these yourself; a verdict that skips them is worth less than no verdict.
+
+- [ ] I read the task card **first**, and the artifacts it names, not the diff.
+- [ ] I did not author or edit anything under review.
+- [ ] Every `Acceptance` criterion has a line in the table above with the command
+      I ran and its actual output — not an adjective.
+- [ ] My `ts` satisfies **newest reviewed artifact mtime ≤ ts ≤ now**. I checked
+      the mtimes rather than assuming.
+- [ ] I recorded anything I could **not** verify, instead of implying I did.
+
+If you find a blocker: put it in `## Blockers` and return `FAIL`. A green verdict
+you did not earn is the failure mode this project exists to prevent.
 
 ## Machine-readable twin
 

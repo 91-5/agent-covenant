@@ -351,5 +351,150 @@ class TestLegacyPairing(LintTestCase):
         self.assertIn("ORPHAN_VERDICT", self.codes(out))
 
 
+class TestStaleTestCount(LintTestCase):
+    """A test count written in prose must match the suite, or the linter says so.
+
+    The repository shipped claiming 45 tests while holding 69. Nothing read prose,
+    so nothing complained. This is the rule that would have caught it.
+    """
+
+    def _fake_suite(self, module_name, how_many=2):
+        tests = self.tmp / "tests"
+        tests.mkdir(exist_ok=True)
+        body = "import unittest\n\n\nclass T(unittest.TestCase):\n"
+        body += "".join(f"    def test_{i}(self):\n        pass\n\n" for i in range(how_many))
+        (tests / f"{module_name}.py").write_text(body, encoding="utf-8")
+        return how_many
+
+    def _readme(self, name, declared, prose=""):
+        """A README shaped like the real ones: a fenced block carries the claim."""
+        text = f"# P\n\n```bash\npython -m unittest discover -s tests  # {declared} tests\n```\n"
+        if prose:
+            text += f"\n{prose}\n"
+        (self.tmp / name).write_text(text, encoding="utf-8")
+
+    def test_wrong_declared_count_is_an_error(self):
+        self._fake_suite("test_alpha")
+        self._readme("README.md", 45)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_correct_declared_count_is_silent(self):
+        real = self._fake_suite("test_beta")
+        self._readme("README.md", real)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_chinese_declaration_is_checked_too(self):
+        real = self._fake_suite("test_gamma")
+        (self.tmp / "README.zh-CN.md").write_text(
+            f"# P\n\n```bash\npython -m unittest discover -s tests  # {real + 7} 个单测\n```\n",
+            encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_no_test_tree_means_nothing_to_compare(self):
+        """A project without tests/ is silent, not broken."""
+        self._readme("README.md", 45)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_changelog_history_is_not_a_live_claim(self):
+        """A changelog entry records what was true then; re-counting it would be wrong."""
+        self._fake_suite("test_delta")
+        (self.tmp / "CHANGELOG.md").write_text("# C\n\n- 45 tests at v0.1.0\n", encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_prose_about_a_past_count_is_not_a_finding(self):
+        """Regression: the rule fired on the paragraph documenting the very fix.
+
+        A number inside a copy-pasteable command is a claim that must stay true.
+        A number in an explanation of what used to be claimed is commentary, and
+        flagging it would punish the correction this project wants to make.
+        """
+        real = self._fake_suite("test_epsilon")
+        self._readme("README.md", real, prose=(
+            "> Correction: the old README claimed 999 tests while the suite held\n"
+            "> fewer. That is why the rule exists."))
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
+    def test_wrong_count_outside_any_code_block_is_not_a_finding(self):
+        """A bare number in ordinary prose is not a maintenance commitment."""
+        real = self._fake_suite("test_zeta")
+        (self.tmp / "README.md").write_text(
+            f"# P\n\nThe suite grew to {real + 99} tests over four rounds.\n", encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("STALE_TEST_COUNT", self.codes(out))
+
+
+class TestUnmappedClaimSurface(LintTestCase):
+    """The claim surface must sit inside some verdict's map, or freshness skips it."""
+
+    def _claim_surface(self):
+        (self.tmp / "README.md").write_text("# P\n", encoding="utf-8")
+        (self.tmp / "CHANGELOG.md").write_text("# C\n", encoding="utf-8")
+
+    def _map(self, **entries):
+        path = self.tmp / "artifacts.json"
+        path.write_text(json.dumps(entries), encoding="utf-8")
+        return str(path)
+
+    def test_unlisted_file_warns(self):
+        self._claim_surface()
+        path = self._map(_comment="ignored", **{"AC-20260929-001": ["README.md"]})
+        code, out, _ = self.run_lint("--artifact-map", path)
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    def test_fully_mapped_claim_surface_is_silent(self):
+        self._claim_surface()
+        path = self._map(**{"AC-20260929-001": ["README.md", "CHANGELOG.md"]})
+        code, out, _ = self.run_lint("--artifact-map", path)
+        self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    def test_no_artifact_map_means_check_not_enabled(self):
+        """Mirror the gate: a forgotten flag disables the check loudly, never silently."""
+        self._claim_surface()
+        code, out, _ = self.run_lint()
+        self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    def test_unreadable_artifact_map_is_a_usage_error(self):
+        path = self.tmp / "artifacts.json"
+        path.write_text("{not json", encoding="utf-8")
+        code, _, err = self.run_lint("--artifact-map", str(path))
+        self.assertEqual(lint.EXIT_USAGE, code)
+        self.assertIn("cannot read artifact map", err)
+
+    def test_mapping_from_an_old_round_does_not_count(self):
+        """The drift that actually happened: mapped long ago, dropped by the new rounds.
+
+        README.md is still listed in the v0.1.0 maps. A "mapped anywhere" check
+        stays green forever, which is precisely why the drift went unnoticed.
+        """
+        self._claim_surface()
+        path = self._map(**{
+            "AC-20260929-001": ["README.md", "CHANGELOG.md"],
+            "AC-20260930-005": ["tools/gate.py"],
+        })
+        code, out, _ = self.run_lint("--artifact-map", path)
+        codes = self.codes(out)
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", codes)
+        self.assertIn("README.md", out)   # flagged despite being mapped in 001
+
+    def test_newest_id_covering_the_surface_is_silent(self):
+        self._claim_surface()
+        path = self._map(**{
+            "AC-20260929-001": ["README.md"],
+            "AC-20260930-005": ["README.md", "CHANGELOG.md"],
+        })
+        code, out, _ = self.run_lint("--artifact-map", path)
+        self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
