@@ -110,8 +110,8 @@ class TestNamespaceRule(LintTestCase):
 
 
 class TestBareTaskReferences(LintTestCase):
-    def test_bare_reference_in_body_is_rejected_with_line_number(self):
-        self.write("AC-20260929-001.md", TASK_CARD + "\nSee TASK-002 for context.\n")
+    def test_bare_reference_in_handover_section_is_rejected_with_line_number(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Review handoff\nRead TASK-002 please.\n")
         code, out, _ = self.run_lint()
         self.assertEqual(lint.EXIT_ERROR, code)
         self.assertIn("BARE_TASK_NAME", self.codes(out))
@@ -126,6 +126,14 @@ class TestBareTaskReferences(LintTestCase):
 
     def test_posix_path_reference_is_allowed(self):
         body = TASK_CARD + "\nRead /srv/team/.tasks/TASK-002.md first.\n"
+        self.write("AC-20260929-001.md", body)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("BARE_TASK_NAME", self.codes(out))
+
+    def test_quoting_an_incident_in_context_is_not_a_handover(self):
+        """Quoting "the TASK-002 collision" in prose is history, not an instruction."""
+        body = TASK_CARD.replace("Some context.", "Some context. See postmortems PM-1: the TASK-002 collision.")
         self.write("AC-20260929-001.md", body)
         code, out, _ = self.run_lint()
         self.assertEqual(lint.EXIT_OK, code, out)
@@ -302,6 +310,45 @@ class TestReviewRequestExemption(LintTestCase):
         code, out, _ = self.run_lint()
         self.assertEqual(lint.EXIT_ERROR, code)
         self.assertIn("BARE_TASK_NAME", self.codes(out))
+
+
+class TestLegacyPairing(LintTestCase):
+    """Cards parked in legacy/ are evidence: not linted, but still paired."""
+
+    def test_verdict_for_archived_card_is_not_orphan(self):
+        legacy = self.cards / "legacy"
+        legacy.mkdir()
+        (legacy / "AC-20260929-001.md").write_text("# archived task\n", encoding="utf-8")
+        self.verdicts = self.tmp / "verdicts"
+        self.verdicts.mkdir(exist_ok=True)
+        (self.verdicts / "AC-20260929-001.verdict.json").write_text("{}", encoding="utf-8")
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertNotIn("ORPHAN_VERDICT", self.codes(out))
+
+    def test_archived_cards_are_not_linted(self):
+        legacy = self.cards / "legacy"
+        legacy.mkdir()
+        (legacy / "TASK-001.md").write_text("# bare name evidence\n", encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("NAMESPACE_MISSING", self.codes(out))
+
+    def test_review_card_in_legacy_pairs_with_its_verdict(self):
+        """REVIEW-<id>.md in legacy/ is evidence too; its verdict is not orphaned."""
+        legacy = self.cards / "legacy"
+        legacy.mkdir()
+        (legacy / "REVIEW-XJ-20260930-004.md").write_text("# archived review\n", encoding="utf-8")
+        self.verdicts = self.tmp / "verdicts"
+        self.verdicts.mkdir(exist_ok=True)
+        (self.verdicts / "XJ-20260930-004.verdict.json").write_text("{}", encoding="utf-8")
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertNotIn("ORPHAN_VERDICT", self.codes(out))
+
+    def test_truly_orphan_verdict_still_warns(self):
+        self.verdicts = self.tmp / "verdicts"
+        self.verdicts.mkdir(exist_ok=True)
+        (self.verdicts / "AC-20260929-999.verdict.json").write_text("{}", encoding="utf-8")
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertIn("ORPHAN_VERDICT", self.codes(out))
 
 
 if __name__ == "__main__":

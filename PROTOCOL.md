@@ -144,6 +144,16 @@ The machine contract. One per review.
   (`--max-clock-skew`, default 300s). A future-dated verdict never goes stale,
   so it silently defeats the rule above. This hole was found by a real reviewer
   in this repository's own first round — see `postmortems.md` PM-9.
+- **Guidance for reviewers writing `ts`.** It must satisfy
+  **newest reviewed artifact mtime ≤ ts ≤ now**. Check the mtimes you are
+  judging (`Get-Item <f> \| Select LastWriteTimeUtc`, or `stat`), then stamp
+  *after* the newest one and *before* the present moment. Two failure modes are
+  on record in this repository: rounding to the half hour produced future-dated
+  verdicts (rounds 1–2), and "stamp conservatively early" produced a verdict
+  older than the artifacts it judged (round 3). **Do not round, and do not
+  round down.** If you genuinely cannot see the filesystem (reviewing a remote
+  diff), write the exact UTC time you finished reading and note the limitation
+  in the verdict's `evidence` — an honest approximate beats a tidy lie.
 
 ---
 

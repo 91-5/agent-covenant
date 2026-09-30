@@ -20,5 +20,13 @@
     "postmortems.md",
     "tools/gate.py",
     "tools/lint_cards.py"
+  ],
+
+  "XJ-20260930-004": [
+    "PROTOCOL.md",
+    "postmortems.md",
+    "docs/lint-rules.md",
+    "tools/lint_cards.py",
+    "tests/test_lint_cards.py"
   ]
 }

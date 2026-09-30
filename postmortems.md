@@ -99,11 +99,21 @@ is only as good as the *direction* you check. We checked "too old" and forgot
 *Occurrences, for pattern recognition:* round 1 of this repository's own review
 arrived with `ts` **+8h** (timezone confusion). Round 2 arrived with `ts`
 **+9 min** — `07:30:00Z` against a 07:23:20Z clock, because the reviewer
-timestamped to the half hour. Two rounds, two future-dated verdicts, both caught
-by this rule. Neither was malicious; both would have silently disabled the most
-important check. Treat the first two occurrences as evidence that the habit is
-systematic, not accidental — if a third arrives, fix the reviewer's prompt, not
-the clock tolerance.
+timestamped to the half hour. Round 3 arrived with `ts` **−11 min** — *older
+than the artifacts it judged* — because **the author's own handoff instruction
+told the reviewer to "stamp conservatively early"**.
+
+Three rounds, three malformed timestamps, all caught by this rule and its
+sibling. The third one deserves attention because it was not carelessness by the
+reviewer: the author wrote an instruction that *guaranteed* the failure, while
+believing they were being careful. "Be conservative with timestamps" is
+meaningless without a direction; the correct instruction is "after the newest
+thing you read, before now".
+
+**Transferable lesson:** guidance you give another agent is part of the check's
+threat surface. If your handover instruction can be satisfied in a way that
+defeats the gate you also wrote, you have shipped a bug in prose. Every such
+instruction belongs in the same test suite as the code.
 
 ---
 

@@ -53,8 +53,11 @@ CI with nobody reading the output, these are the ones to treat as mandatory:
 
 - `OWNED_FILES_CONFLICT` — it guards against data loss (two agents owning one
   file), not against style. At L2 **this should be an ERROR**; run `--strict`.
-- `VERDICT_WITHOUT_REVIEW` — a card marked done with no verdict file is the
+- `VERDICT_WITHOUT_REVIEW` — a task marked done with no verdict file is the
   §PM-2 failure in miniature.
+- `ORPHAN_VERDICT` — a verdict with no card is a broken evidence chain: somebody
+  signed something, and the thing they signed no longer exists in the record.
+  At L2 **this should be an ERROR**; run `--strict`.
 
 The rest (`TASK_MISSING_*`, `CLOSED_NOT_ARCHIVED`, `NON_ASCII_FILENAME`) are
 hygiene and can stay advisory at L2 without misleading a machine.

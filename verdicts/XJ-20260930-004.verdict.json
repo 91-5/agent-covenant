@@ -1,0 +1,19 @@
+{
+  "id": "XJ-20260930-004",
+  "artifact": "postmortems.md + docs/lint-rules.md + tools/lint_cards.py + tests/test_lint_cards.py (Agent Covenant v0.1.2, commit 5c5e281)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-09-30T07:47:00Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 64 tests in 0.575s OK, exit 0",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> 4 errors, 1 warning (all in round-1 historical cards, none in the 4 files under review)",
+    "python tools/gate.py --require XJ-20260929-002 --artifact-map artifacts.json -> exit 1, STALE_VERDICT x2 (postmortems.md, tools/lint_cards.py modified after round-2 verdict)",
+    "PM-5 rewrite verified: 'Partially enforced' correctly distinguishes planning-stage (lintable via OWNED_FILES_CONFLICT) from write-time race (not lintable, organisational)",
+    "REVIEW-REQUEST-* exemption verified: classify() returns 'request' type, skips only verdict+blockers checks, namespace/bare-task/owned-files rules still apply",
+    "docs/lint-rules.md L2 guidance: 2 mandatory-ERROR rules listed (OWNED_FILES_CONFLICT, VERDICT_WITHOUT_REVIEW); reviewer recommends adding ORPHAN_VERDICT as third",
+    "ts written 3 min before estimated actual time (07:50 UTC) per PM-9 guidance: early is safe, late triggers FUTURE_VERDICT"
+  ]
+}

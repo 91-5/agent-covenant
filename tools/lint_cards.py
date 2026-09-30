@@ -29,6 +29,7 @@ EXIT_ERROR = 1
 EXIT_USAGE = 2
 
 NAMESPACE_RE = re.compile(r"^([A-Z]{2,6})-\d{8}-\d{3}\.md$")
+ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
 VERDICT_SUFFIX = ".verdict.json"
@@ -96,14 +97,43 @@ def check_namespace(path, _text):
     return []
 
 
+HANDOVER_HEADERS = ("review handoff", "review questions", "审查", "trigger", "触发",
+                    "next single action")
+
+
+def _handover_line_numbers(text):
+    """Line numbers that live inside a handover section.
+
+    N2 exists to stop a bare task id being used *as a handover instruction*.
+    Quoting an incident in Context ("the TASK-002 collision", postmortems PM-1)
+    is not a handover, so scanning the whole body produced false positives that
+    trained people to ignore the linter. Only sections that instruct a reader to
+    go and do something are in scope.
+    """
+    lines = text.splitlines()
+    in_scope = set()
+    active = False
+    for number, line in enumerate(lines, start=1):
+        if line.strip().startswith("#"):
+            header = line.strip().lstrip("#").strip().lower()
+            active = any(alias in header for alias in HANDOVER_HEADERS)
+            continue
+        if active:
+            in_scope.add(number)
+    return in_scope
+
+
 def check_bare_task_refs(path, text):
     out = []
+    scoped = _handover_line_numbers(text)
     for number, line in enumerate(text.splitlines(), start=1):
+        if scoped and number not in scoped:
+            continue
         for match in BARE_TASK_RE.finditer(line):
             if ABS_PATH_RE.search(line):
                 continue  # referenced together with an absolute path: conformant
             out.append(_finding("BARE_TASK_NAME", "ERROR", path,
-                                f"bare {match.group(0)} reference — hand over the absolute "
+                                f"bare {match.group(0)} reference - hand over the absolute "
                                 "path instead (PROTOCOL.md N2)", number))
     return out
 
@@ -244,6 +274,24 @@ def check_owned_files_conflicts(claims):
     return out
 
 
+def _legacy_card_ids(card_dir):
+    """Card ids parked in <dir>/legacy - evidence, not linted, but still paired.
+
+    Any namespaced id found in a legacy filename counts, including review cards
+    (`REVIEW-XJ-20260930-004.md`) - a verdict's counterpart is the review card as
+    often as the task card.
+    """
+    legacy_dir = card_dir / "legacy"
+    if not legacy_dir.is_dir():
+        return set()
+    ids = set()
+    for path in legacy_dir.glob("*.md"):
+        match = ID_IN_NAME_RE.search(path.name)
+        if match:
+            ids.add(match.group(1))
+    return ids
+
+
 def lint_card_dir(card_dir):
     findings = []
     card_ids = set()
@@ -298,7 +346,9 @@ def main(argv=None):
     verdict_dir = Path(args.verdict_dir) if args.verdict_dir else card_dir.parent / "verdicts"
 
     findings, card_ids = lint_card_dir(card_dir)
-    findings += check_verdict_pairs(card_ids, verdict_dir)
+    # Cards parked in legacy/ are evidence, not linted - but they still exist, so
+    # their verdicts are neither orphaned nor missing.
+    findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir)
 
     errors = sum(1 for f in findings if f["level"] == "ERROR")
     warnings = sum(1 for f in findings if f["level"] == "WARN")
