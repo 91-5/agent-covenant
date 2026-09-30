@@ -1,0 +1,270 @@
+# Agent Covenant — Collaboration Verification Protocol
+
+**Status:** v0.1 (normative spec) · **License:** MIT · **Language of record:** English
+
+A harness-agnostic protocol for multi-agent collaboration in which **no artifact is
+"done" until an independent reviewer has produced a machine-checkable verdict that
+passes a gate.**
+
+---
+
+## 1. What this is — and what it deliberately is not
+
+| This IS | This is NOT |
+|---|---|
+| A **file-schema spec** for task/review/handoff/decision artifacts | An orchestrator (we don't schedule agents) |
+| A **verification gate** convention (verdict contract + CI-runnable checker) | A swarm/topology library (see: ruflo, crewAI) |
+| A **failure-mode catalogue** with linter rules | A model router, memory store, or vector DB |
+| Harness-agnostic (adapters, not plugins) | Bound to one vendor's plugin system |
+
+**Boundary with adjacent standards:** MCP is agent↔*tool* (vertical). A2A is
+agent↔*agent* transport & discovery (horizontal). Agent Covenant is agent↔*agent*
+**accountability** — it governs how a deliverable is *judged*, not how it is
+transmitted or discovered.
+
+**Anti-goal:** we do not want to be "another multi-agent orchestration framework".
+The orchestration layer is a red ocean (73k★, 70k★, 59k★ projects). The
+**verification layer is empty** (every prior attempt we found: 0★). We build here.
+
+---
+
+## 2. The problem this solves
+
+Empirical evidence that unverified agent handoffs fail:
+
+- **MAST** (arXiv 2503.13657, NeurIPS 2025): multi-agent failure taxonomy —
+  FC1 spec failure, FC2 inter-agent misalignment, **FC3 task verification failure**
+  (FM-3.2: no review / incomplete review).
+- **ICML 2026 position paper**: mainstream multi-agent benchmarks fail at
+  **41–87%**; **37.2%** commit prematurely due to missing synchronisation
+  barriers; concurrency hazards (stale read, lost update, stale correction,
+  action–message desync) masquerade as "coordination failure".
+- **Industry incident**: a coding agent created an isolated worktree, failed to
+  migrate changes, logged the failure, *continued anyway*, and destroyed
+  multi-day uncommitted work (vscode #289973, data loss).
+- **Lost update is invisible to tests**: a file looks fine; the only symptom is
+  that what an agent *claimed* to do is no longer there.
+
+Common thread: **an agent's own report of success is not evidence.** The protocol
+below makes evidence a first-class, checkable artifact.
+
+---
+
+## 3. Roles and the trust model
+
+| Role | May | May NOT |
+|---|---|---|
+| **Author** | create/edit code + artifacts for its task | approve its own work |
+| **Reviewer** | read, question, write verdicts | edit the author's code |
+| **Arbiter** | adjudicate disagreements, own the decision log | — |
+| **Gate** (machine) | block release on verdict policy | judge quality |
+
+**Hard rule R1 — independence.** A verdict must be produced by a party other than
+the author. Self-review is lower trust than a separate agent or a human; it is
+recorded as `independent: false` and the gate **blocks by default**.
+
+**Hard rule R2 — single write ownership.** One artifact, one owner at a time. Two
+agents editing the same file concurrently is the lost-update pattern; scope
+disjointness is a *precondition* of parallelism, not an optimisation.
+
+**Hard rule R3 — no silent success.** If an agent cannot complete a step, it must
+emit a blocking question or a FAIL verdict. Absent output is never success.
+
+---
+
+## 4. Artifacts
+
+All artifacts are plain files. Four kinds, fixed schemas.
+
+### 4.1 Task card — `<NS>-YYYYMMDD-NNN.md`
+
+`<NS>` = a namespace token (2–6 uppercase letters, unique per author/team).
+
+```markdown
+# TASK <id>: <title>
+## Context          # what exists today, why this task exists
+## Deliverables     # which files/behaviours will exist after
+## Constraints      # boundaries: what must NOT be touched
+## Acceptance       # checkable criteria (see §5)
+## Review questions  # 1–4 adversarial questions, not "looks good?"
+## Review handoff   # exact path + format the reviewer must write back
+## Status           # OPEN → IN_REVIEW → GATED → CLOSED
+```
+
+### 4.2 Review card — `REVIEW-<id>.md`
+
+```markdown
+# REVIEW <id>: <artifact>
+## Verdict          # PASS | CONDITIONAL | FAIL  (one line, machine-read too)
+## Blockers         # count + list; 0 required for PASS
+## Conditions       # what must be true for CONDITIONAL to stand
+## Evidence         # verifier name, commands run, exit codes, output refs
+## Independence     # reviewer is not the author: true/false
+```
+
+### 4.3 Handoff — `HANDOFF-<id>.md`
+
+Short, for cross-session transfer. Five sections, ≤1 page: `Done` (with evidence
+paths) / `Decisions` (with ADR refs) / `Open` / `Risks` / `Next single action`.
+
+### 4.4 Decision record — `ADR-<NNNN>.md`
+
+Context · Decision · Consequences · Revisit-trigger. **Revisit-trigger is
+mandatory** — a decision without a stated condition for reversal is a debt.
+
+### 4.5 Verdict file — `verdicts/<id>.verdict.json`
+
+The machine contract. One per review.
+
+```json
+{
+  "id": "AC-20260929-001",
+  "artifact": "src/pipeline.py",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "reviewer-agent@acme",
+  "ts": "2026-09-29T20:31:00Z",
+  "evidence": ["pytest -q → 27 passed", "linter exit 0"]
+}
+```
+
+**Field semantics (normative):**
+
+- `verdict` ∈ {`PASS`,`CONDITIONAL`,`FAIL`}. Unknown values are a policy error.
+- `blockers` must be `0` for `PASS`; `CONDITIONAL` may have `0` blockers **only**
+  with non-empty `conditions` and an `acknowledged_by` field.
+- `independent` must be `true` unless the gate runs with `--allow-nonindependent`.
+- `ts` **must be ≥ the artifact's mtime** when an artifact map is supplied.
+  A verdict older than the thing it judges is *stale* and blocks. This is the
+  single most-skipped check in real-world review flows.
+
+---
+
+## 5. Acceptance criteria must be executable
+
+A criterion is admissible only if some agent or CI job can evaluate it to
+true/false without human interpretation. Admissible: "pytest exits 0",
+"`gate.py` exits 0", "row count == 21", "no TODO in diff". Inadmissible: "code
+is clean", "works well", "reasonable error handling".
+
+**Rule A1:** every `Acceptance` bullet maps to ≥1 evidence string in the verdict.
+
+---
+
+## 6. The gate
+
+`tools/gate.py` implements this section. Contract:
+
+| Exit | Meaning |
+|---|---|
+| `0` | every required id satisfied the policy |
+| `1` | **gate violation** — machine-readable reasons on stdout/`--json` |
+| `2` | usage / input error (bad manifest, unreadable verdict) |
+
+Default policy (all must hold per required id):
+
+1. a verdict file exists and parses;
+2. `verdict == PASS`, or `CONDITIONAL` **and** `--allow-conditional` **and**
+   `acknowledged_by` present;
+3. `blockers == 0`;
+4. `independent == true` unless `--allow-nonindependent`;
+5. `ts >= artifact mtime` for every path in the artifact map;
+6. every `Acceptance` id in the task card appears in `evidence`.
+
+Example:
+
+```bash
+python tools/gate.py \
+  --verdict-dir verdicts \
+  --require AC-20260929-001 \
+  --artifact-map artifacts.json \
+  --json
+```
+
+---
+
+## 7. Naming: why cards are namespaced
+
+**Observed failure (unpublished elsewhere as far as we could find):** a
+collaboration card named `TASK-002.md` was silently hijacked by a second agent
+that had its own unrelated `TASK-002` in context. The review came back confident,
+detailed, and about the wrong artifact. Nothing errored. That is the dangerous
+part.
+
+**Rule N1:** every card filename carries a namespace token and a date:
+`<NS>-YYYYMMDD-NNN.md`. Bare `TASK-N`/`REVIEW-N` names are non-conformant.
+
+**Rule N2:** the trigger handed to a reviewing agent is the **absolute path** of
+the card, plus the instruction to read it *before* acting. Never "look at
+TASK-002".
+
+`tools/lint_cards.py` enforces N1, plus schema and orphan rules (see
+`docs/lint-rules.md`).
+
+---
+
+## 8. Cleanup / TTL — the anti-bloat rule
+
+Collaboration state is **not** memory. Without a hard rule, card directories grow
+into an unsearchable attic that agents re-read instead of thinking.
+
+- A card reaching `GATED` is **archived or deleted within one working day**.
+- Only conclusions persist: decisions → ADR; durable lessons → the project's
+  knowledge surface; process chatter → deleted.
+- Mailboxes (inbox/outbox files) are **emptied on close**, capped at N items;
+  when any mailbox exceeds the cap, the owning agent triages it unprompted.
+- Verdict files referenced by an archived card are deleted together with it.
+
+---
+
+## 9. Conformance levels
+
+| Level | Requirement | Who adopts it |
+|---|---|---|
+| **L0 Unstructured** | agents talk freely, no artifacts | the default today |
+| **L1 Carded** | namespaced cards, schemas, independence rule, human relay allowed | small teams, one repo |
+| **L2 Gated** | machine verdicts, `gate.py` in CI, no human in the gate loop | teams shipping to production |
+
+Claiming L2 with a human clicking "approve" in the loop is L1 with extra steps.
+Say which level you actually run.
+
+---
+
+## 10. Known limitations (stated honestly)
+
+1. **Relay remains human in most deployments.** A file-based protocol needs
+   something to wake the second agent. Until adapters ship a poller, a human
+   usually relays "read <path>". This is a real gap, not a detail.
+2. **A verdict proves a check ran, not that the work is good.** Gates raise the
+   floor; they do not raise the ceiling.
+3. **Reviewer quality variance.** A lazy reviewer produces a green verdict. The
+   gate cannot detect a rubber stamp; it only guarantees someone *claimed* to
+   check, with evidence attached.
+4. **Adapters are documentation, not code.** Cross-harness support is
+   instructions, not a runtime shim.
+
+---
+
+## 11. Repository map
+
+```
+PROTOCOL.md            this document (normative)
+postmortems.md         failure-mode catalogue → each maps to a rule or lint
+docs/lint-rules.md     rule-by-rule rationale
+tools/gate.py          verdict gate (CI-runnable)
+tools/lint_cards.py    card/schema linter
+templates/             TASK / REVIEW / HANDOFF / ADR starting points
+adapters/              per-harness integration notes (claude-code, codex, opencode)
+examples/              a real, messy pilot run end-to-end
+tests/                 the tools' own tests (the tools obey §5 too)
+```
+
+## 12. Contributing
+
+Read `PROTOCOL.md`, then `postmortems.md` — the second one is why this project
+exists. Adapters and verifiers are the two most welcome contributions. See
+`CONTRIBUTING.md`.
+
+Licensed under MIT. See `LICENSE`.

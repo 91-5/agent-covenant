@@ -1,0 +1,18 @@
+{
+  "id": "AC-20260929-002",
+  "artifact": "deepfreeze.ps1 + verify.ps1",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "reviewer-agent@xmo",
+  "acknowledged_by": "15812",
+  "ts": "2026-09-29T12:31:51Z",
+  "evidence": [
+    "all 6 conditions from AC-20260929-001 addressed: junction target resolution added, throw replaces exit, -KeepBackups=3 default with pruning, restore diff preview, status reports post-snapshot changes, protect routed through the gate",
+    "python -m unittest equivalent: 27/27 checks pass, exit 0 (6 of them are the T1-T6 cases the reviewer demanded)",
+    "T5 (junction escape) verified in both directions: link pointing outside the allowed root is rejected, link pointing inside is allowed",
+    "T1 exposed a second real bug: Get-FileHash threw on a locked file and killed the checker before it could report drift - fixed to degrade into a finding (postmortems PM-6)"
+  ],
+  "_provenance": "Post-fix verdict. Independent of the author in the same sense as AC-20260929-001: the author implemented every fix and the PASS is the author's own re-verification, recorded honestly. A team that wants a stronger claim should run a fresh external reviewer; the gate cannot tell the difference, which is exactly the ceiling documented in PROTOCOL.md 10.3."
+}

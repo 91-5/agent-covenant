@@ -1,0 +1,4 @@
+{
+  "AC-20260929-001": ["artifacts/deepfreeze.ps1", "artifacts/verify.ps1"],
+  "AC-20260929-002": ["artifacts/deepfreeze.ps1", "artifacts/verify.ps1"]
+}

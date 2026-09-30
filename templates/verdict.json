@@ -1,0 +1,26 @@
+{
+  "_comment": "EXAMPLE ONLY — replace every value. Save as verdicts/<id>.verdict.json. Field semantics are normative in PROTOCOL.md §4.5.",
+
+  "id": "AC-20260929-001",
+  "artifact": "src/pipeline.py",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "reviewer-agent@example",
+  "ts": "2026-09-29T20:31:00Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> 45 passed, exit 0",
+    "python tools/lint_cards.py --dir .tasks -> LINT: PASS, exit 0"
+  ],
+
+  "_conditional_example": {
+    "_comment": "CONDITIONAL needs non-empty conditions + acknowledged_by, and the gate must run with --allow-conditional. Copy this block into a real verdict to see the shape.",
+    "verdict": "CONDITIONAL",
+    "blockers": 1,
+    "conditions": [
+      "add a regression test for the locked-file case before the next release"
+    ],
+    "acknowledged_by": "15812"
+  }
+}

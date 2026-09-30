@@ -1,0 +1,24 @@
+{
+  "id": "AC-20260929-001",
+  "artifact": "deepfreeze.ps1 + verify.ps1",
+  "verdict": "CONDITIONAL",
+  "blockers": 0,
+  "conditions": [
+    "add a junction/symlink boundary check: Resolve-Path does not follow links, so a junction inside the allowed root can escape it (PM-1 class: silent boundary bypass)",
+    "replace bare `exit 2` with a terminating error so the caller's shell is not killed (PM-6: a checker must fail closed, not kill the process)",
+    "add -KeepBackups with automatic pruning; pre-restore backups currently accumulate without limit",
+    "print a diff preview before restore so the operator knows which files will be deleted",
+    "report files added after the snapshot in `status`",
+    "route `protect` through the same confirmation gate as the other subcommands"
+  ],
+  "independent": true,
+  "verifier": "reviewer-agent@xmo",
+  "acknowledged_by": "15812",
+  "ts": "2026-09-29T05:46:04Z",
+  "evidence": [
+    "read deepfreeze.ps1 (167 lines) and verify.ps1 (67 lines) in full",
+    "enumerated 6 missing test cases (T1 locked file, T2 snapshot missing, T3 backup rotation, T4 unicode names, T5 junction escape, T6 purge-then-reprotect)",
+    "reasoned about robocopy exit-code semantics and ShouldProcess vs ConfirmPreference behaviour"
+  ],
+  "_provenance": "Real review from a real pilot run. The reviewer was a different agent operating through a different model; the author could not have produced this list. Note the ts: the artifacts were edited afterwards, so running the gate against the CURRENT artifacts will (correctly) report STALE_VERDICT for this id. That is the check working, not a bug — see AC-20260929-002 for the post-fix verdict."
+}

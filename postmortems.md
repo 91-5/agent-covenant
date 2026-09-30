@@ -1,0 +1,162 @@
+# Postmortems — the failure catalogue
+
+Every rule in `PROTOCOL.md` exists because something went wrong. This file is the
+"why". Provenance is marked honestly: **[ours]** = observed in our own runs,
+**[literature]** = documented elsewhere and cited.
+
+---
+
+## PM-1 · Task-ID collision produced a confident review of the wrong artifact
+
+**[ours]** A collaboration card named `TASK-002.md` was written for a memory-plugin
+selection task. A second agent had its own unrelated `TASK-002` (a dorm-allocator
+script project) in context. It reviewed *that*.
+
+The dangerous part was not the mistake — it was that **nothing errored**. The
+review came back long, specific, well-structured, with 3 blockers, 5 suggestions
+and 8 test cases. All of it about files the reviewer had never been asked to look
+at. A less careful reader would have merged it.
+
+Root causes, in order of damage:
+1. **No namespace.** `TASK-002` is a name two agents can both legitimately hold.
+2. **The trigger was a bare name** ("read TASK-002"), not a path, so the reviewer
+   resolved it against its own context instead of the filesystem.
+3. **No cross-check that the artifact under review matched the task.** Nothing in
+   the protocol forced the reviewer to prove it was looking at the right thing.
+
+**Rules:** N1 (namespaced card ids), N2 (hand over absolute paths), R2 (single
+write ownership).
+**Enforced by:** `lint_cards.py` → `NAMESPACE_MISSING`, `BARE_TASK_NAME`.
+**Search note:** we could not find any published postmortem for this specific
+mode. The nearest public material covers lost updates and context drift, not
+identifier collision. If you have seen it, please open an issue — the rule set is
+better with more evidence.
+
+---
+
+## PM-2 · The gate that was never run
+
+**[literature + ours]** In the ICML 2026 position paper on multi-agent systems,
+37.2% of failures come from committing before the coordination barrier is
+satisfied; the MAST taxonomy (arXiv 2503.13657) names the same class as
+*FM-3.2 — no review or incomplete review*. Meanwhile the default state of most
+agent setups is L0: no artifacts, no verdict, everybody trusts the transcript.
+
+The failure is not that a human lied. It is that **"the agent said it was done"**
+is the only evidence that exists.
+
+**Rule:** §5 (acceptance criteria must be executable), §6 (the gate).
+**Enforced by:** `gate.py` — no verdict file means no pass, and a missing
+required id is a violation, not a skip.
+
+---
+
+## PM-3 · A rubber-stamp verdict
+
+**[literature + ours]** Existing harnesses ship review as an *optional* role: a
+consulting architect agent, a `code-reviewer` subagent, a human clicking approve.
+A reviewer that has not actually read the diff still produces a green run, and
+the transcript looks identical to a real review.
+
+**Rule:** R1 (independence), §4.5 (verdict must carry evidence), R3 (no silent
+success).
+**Enforced by:** `gate.py` → `NO_EVIDENCE`, `NOT_INDEPENDENT`.
+**Known limit (stated in PROTOCOL.md §10):** the gate cannot detect a rubber
+stamp. It raises the floor; it does not raise the ceiling.
+
+---
+
+## PM-4 · The verdict that outlived its artifact
+
+**[ours]** Reviews are point-in-time judgements. Code keeps moving. A verdict file
+that said PASS last week still sits in the directory, still green, while the
+artifact underneath it has been rewritten twice — possibly by the very agent the
+review was supposed to constrain.
+
+This is the quietest failure in the whole catalogue, because every individual
+step looked correct. The review was valid; the verdict just wasn't *about the
+current thing any more*.
+
+**Rule:** §4.5 — `ts` must be ≥ the artifact's mtime.
+**Enforced by:** `gate.py` → `STALE_VERDICT`, `ARTIFACT_MISSING`.
+This is the check we expect teams to skip first, and the one that matters most.
+
+---
+
+## PM-5 · Lost update: the file looks fine
+
+**[literature]** Documented across worktree-based multi-agent setups: agent A
+creates a file, agent B runs a clean checkout and wipes it. The characteristic
+property, noted in community write-ups, is that **you cannot catch it with tests
+or a diff — the file looks fine**; the only symptom is that something an agent
+claimed to do is no longer there. MAST classifies the family as concurrency
+hazards: stale read, lost update, stale correction, action–message desync.
+
+**Rule:** R2 (single write ownership) — disjoint scopes are a precondition of
+parallelism, not an optimisation.
+**Not enforced by a tool.** This one is organisational: you cannot lint your way
+out of two agents owning one file. Conformance level L2 assumes you have already
+solved it structurally.
+
+---
+
+## PM-6 · A verifier that crashes on hostile input is not a verifier
+
+**[ours]** The first version of our restore-checker hashed every file after a
+restore. With one file held open by another process, the hash call *threw* — and
+because the script ran with `$ErrorActionPreference = 'Stop'`, the process died
+**before it could report anything**. The check that was supposed to catch
+"something did not restore" was itself the thing that failed, silently, with a
+non-zero exit code that looked like a pass to any CI step reading only the exit
+status of the caller.
+
+The lesson generalises: **a verifier must degrade to a finding, never to a
+crash.** Any input it cannot read is itself a finding ("unreadable → drift"),
+because unreadable means unverified.
+
+**Rules:** §5 (criteria must be executable *by the checker*), §6 (exit codes are
+a public contract: 0 pass, 1 violation, 2 usage error — never an accidental
+third meaning).
+**Enforced by:** the gate's own test suite, which asserts the exit-code contract
+explicitly.
+
+---
+
+## PM-7 · Encoding and platform rot
+
+**[ours]** A PowerShell 5.1 script written as UTF-8 without a BOM was parsed as
+GBK; the mangled bytes broke the parser, not the text. Separately, a CLI invoked
+through `powershell.exe -File` cannot bind `-Confirm:$false` (string → switch
+conversion), which pushed us into designing an explicit `-AutoConfirm` instead
+of leaning on the host default.
+
+**Rule:** §5 in practice — a criterion whose *checker* depends on an implicit
+environment is not executable. Make the environment explicit or the check is a
+coin flip.
+**Guard rails shipped:** non-ASCII-safe stdout in both tools; stdlib-only
+implementation; the linter flags non-ASCII filenames.
+
+---
+
+## PM-8 · The human in the switchboard
+
+**[ours, and still true]** Our file-based mailbox works because a human says
+"read `<path>`". Two agents do not, on their own, wake each other. Every
+deployment we can think of either has a human relay or a poller daemon. We
+chose not to ship a daemon: it turns a spec repository into a service with
+lifecycle, upgrades and failure modes.
+
+**Stated as a limitation, not hidden:** PROTOCOL.md §10.1, and L1 in the
+conformance table is explicitly "human relay allowed". A project that claims L2
+while a person clicks approve is doing L1 with extra steps.
+**When it changes:** if a second harness adapter plus a wake mechanism land,
+this entry becomes a design note instead of a limitation.
+
+---
+
+## How to use this file
+
+Adding a postmortem is the highest-value contribution this project accepts. A
+good one names the failure, shows that it was **silent**, identifies the layer
+where it should have been caught, and states honestly whether a tool can catch
+it at all. "Not enforceable by a tool" is a valid and welcome answer.
