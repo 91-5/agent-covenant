@@ -4,7 +4,38 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.5] — 2026-09-30 (in review, not yet gated)
+## [0.1.6] — 2026-09-30 (in review, not yet gated)
+
+No rule, tool, or check changed in this round. One disclosure was added, and the
+linter caught the omission that produced it.
+
+**Added:** both READMEs now state, in the Status section, that the reviewer recorded
+in `verdicts/` is `ximo@agnes-ai` — **an AI, not a human** — and that
+`independent: true` is a claim the reviewer makes about itself rather than a property
+this repository verifies. `PROTOCOL.md` §10.3 has said so since v0.1; the point of
+this round is that a limitation documented only in the appendix is not disclosed. The
+gate checks that the field is present and not `false`. It cannot check the thing the
+word implies.
+
+**Why now:** the repository is going public. Seven verdicts carrying
+`independent: true`, read from outside, read as verified independence. That inference
+is available to any reader and false, which makes it this project's own defect class —
+a claim surface that outruns the tools. Round 006 was such a claim in the
+overselling direction; this one is in the direction people mistake for modesty, which
+is why it survived as long as it did.
+
+**Caught by the tooling, in this round:** `CHANGELOG.md` was not listed under the new
+id, so `UNMAPPED_CLAIM_SURFACE` warned that no freshness check covered the file this
+entry lives in — written while editing two READMEs three lines above. The rule from
+v0.1.4 fired on its own author in the same round it was meant to catch. It is recorded
+here rather than left as a passing log line, because a warning that is only ever fixed
+in the diff is a warning that is not yet a habit.
+
+**Corrected:** the v0.1.5 header below said *"in review, not yet gated"* after round 6
+returned `PASS` with zero blockers. False in the conservative direction — the harmless
+direction, and the one that still needed fixing.
+
+## [0.1.5] — 2026-09-30 (gated: PASS, 0 blockers, round 6)
 
 Round 5 returned **FAIL, 1 blocker**. The reviewer was right on every point and
 nothing was argued. This round clears the blocker and stops claiming more than

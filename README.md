@@ -195,11 +195,28 @@ review as of this writing; the claim below covers v0.1.3, not v0.1.4.
 > claims otherwise.
 
 What is not claimed: this is a **spec plus two tested tools, exercised on one real
-pilot run** (`examples/deepreeze-pilot/`) and on this repository's own history —
+pilot run** (`examples/deepfreeze-pilot/`) and on this repository's own history —
 not a fleet, and not validated at scale. Known limitations are in `PROTOCOL.md`
 §10, including two we refuse to paper over: a file-based protocol needs a human
 (or a poller) to wake the second agent, and a gate proves a check *ran*, not that
 the reviewer was thorough.
+
+> ### The reviewer in `verdicts/` is an AI, and `independent: true` is its claim about itself
+>
+> Every verdict in this repository was issued by `ximo@agnes-ai` — **an AI reviewer,
+> not a human.** Each carries `independent: true`, and that field is a **claim the
+> reviewer makes about itself**, not a property this repository verifies. Nothing in
+> the format distinguishes a reviewer that genuinely never touched the work from one
+> that did; `PROTOCOL.md` §10.3 states this at greater length, and this note exists so
+> that a reader does not have to go looking for it.
+>
+> What the gate actually checks is that the field is *present and readable* — that
+> `independent` is not `false`. It cannot check the thing the word implies.
+>
+> So read the seven verdicts here as **one AI reviewing another**, checked for
+> consistency and honesty by machine, not as seven independent human sign-offs. We
+> consider a limitation documented only in the appendix to be undisclosed, which is why
+> it is here rather than only in §10.3.
 
 ## Roadmap
 
