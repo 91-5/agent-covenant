@@ -1,0 +1,20 @@
+{
+  "id": "XJ-20260930-005",
+  "artifact": "PROTOCOL.md §4.5 + postmortems.md PM-9 + docs/lint-rules.md + tools/lint_cards.py + tests/test_lint_cards.py (Agent Covenant v0.1.3)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes",
+  "ts": "2026-09-30T09:05:12Z",
+  "evidence": [
+    "python -m unittest discover -s tests → Ran 69 tests OK, exit 0 (card expected 68; off by one, minor bookkeeping)",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts → 0 errors, 1 warning (VERDICT_WITHOUT_REVIEW for this in-progress card — expected, resolves on commit of this verdict)",
+    "PROTOCOL.md §4.5 guidance verified: 'newest mtime ≤ ts ≤ now, do not round or round down' + remote-diff fallback ('honest approximate beats a tidy lie')",
+    "postmortems.md PM-9 third occurrence recorded: round 3 −11 min, root cause = author's own 'stamp conservatively early' instruction; transferable lesson: 'guidance you give another agent is part of the check's threat surface'",
+    "lint_cards.py BARE_TASK_NAME scoping verified: HANDOVER_HEADERS tuple + _handover_line_numbers() limits scan to trigger sections; historical citations in Context are correctly excluded",
+    "legacy/ pairing verified: _legacy_card_ids() extracts IDs from .tasks/legacy/*.md and unions with active card_ids for check_verdict_pairs; legacy files not linted for content (by design: editing evidence = falsifying history)",
+    "docs/lint-rules.md L2-mandatory list now includes ORPHAN_VERDICT (3rd entry), with rationale: 'broken evidence chain indistinguishable from fabricated verdict'",
+    "4 review questions answered in REVIEW-XJ-20260930-004-ROUND2.md: Q1 scoping sound, Q2 guidance correct (one minor gap noted), Q3 legacy carve-out sound, Q4 self-catch strengthens §5 claim"
+  ]
+}
