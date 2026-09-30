@@ -18,6 +18,46 @@ python -m unittest discover -s tests            # 84 个单测
 `PATH` 里的 `python` 就是全部步骤——这是刻意的，好让门禁能直接跑在什么都不用
 放行的封闭 CI 镜像里。需要 Python 3.9 或更新版本。
 
+## 你的第一轮
+
+六步，大约十分钟。只打算读这份规范的话，下面都可以跳过。
+
+**1. 复制工具。** `tools/gate.py` 和 `tools/lint_cards.py` 是独立脚本，只用标准库。
+原样复制到你自己的项目即可，它们不从本仓库 import 任何东西。
+
+**2. 选一个命名空间。** 两个或更多大写字母，按作者或团队唯一——`AC`、`MYTEAM`、
+`SIR`。这个前缀会出现在每张卡的 id 里。裸的 `TASK-001.md` 会被别的 agent 冒名顶替，
+所以是故意拒绝的（`NAMESPACE_MISSING`）。
+
+**3. 写第一张任务卡。** 把 `templates/TASK.md` 复制成 `.tasks/<NS>-YYYYMMDD-001.md`，
+填好 Context、Deliverables、Owned files 和 Acceptance。评审者读的就是这张卡——它要是
+没写清"做完"意味着什么，评审者就只能猜，而猜测不是评审。
+
+**4. 声明被评审的文件面。** 以 `examples/deepfreeze-pilot/artifacts.json` 为起点，把
+评审要判断的每个文件都列进去。往后你修改了但**没**列进去的文件，没有任何新鲜度检查
+覆盖它，`lint_cards.py` 会就这件事报警（`UNMAPPED_CLAIM_SURFACE`）。正是这个文件让
+门禁的新鲜度规则真正生效——没有它，门禁分不出哪份 verdict 早于你的代码、哪份覆盖了它。
+
+**5. 请求评审。** 下一节那段提示词就是能用的那种。只把任务卡的绝对路径给评审者，别给
+别的。评审者产出 `.tasks/REVIEW-<id>.md` 和 `verdicts/<id>.verdict.json`，且不得改动
+被评审的文件。完整的一次往返——包含一个判FAIL 的轮次——在
+`examples/deepfreeze-pilot/` 里。
+
+**6. 跑门禁。**
+
+```bash
+python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict
+python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require <NS>-YYYYMMDD-001
+```
+
+退出码 `0` 表示 verdict 满足策略。`1` 表示不满足——去读打印出来的原因，而不是重试。
+`2` 是用法错误，不算通过。
+
+然后把同样这两条命令接进 CI（下一节），让答案是被强制的，而不是靠记性。
+
+所有产物的模板都在 `templates/`；一次完整的真实流程（含其中的 FAIL 轮次）在
+`examples/deepfreeze-pilot/`。
+
 ## 在 CI 里跑
 
 `.github/workflows/gate.yml` 跑的就是上面这三条命令，可以直接拿来改：
@@ -151,11 +191,13 @@ python tools/gate.py --verdict-dir verdicts \
 
 每个都把随版本变化的部分标为 **verify（需自行验证）**，不编造。
 
-## 状态——v0.1.4，诚实版
+## 状态——诚实版，且有意不写版本号
 
-**本仓库已通过门禁，从 v0.1.3 起就是。** v0.1.3 那轮由独立评审者给出零
-blocker 的 PASS（`verdicts/XJ-20260930-005.verdict.json`，`independent: true`）。
-写这份 README 时 v0.1.4 仍在评审中——下面这个说法覆盖的是 v0.1.3，不是 v0.1.4。
+**本仓库已通过门禁。**下面每一个发布版本在 `verdicts/` 里都有一份评审 verdict，
+而这条证据链的当前状态就是最新那份 verdict 文件所说的——去读它，而不是相信散文里
+手打的版本号。这句话是刻意的：手工维护的版本标题连续三轮都是陈旧的（写着
+"v0.1.4，评审中"，而 v0.1.5 其实已过门禁），而且每次都错在保守的方向——这正是
+它能躲过评审的原因。
 
 > 更正一下，也正是有教育意义的部分：上一版 README 在已经交出 PASS verdict 的情况
 > 下写着"刻意尚未过门禁"。这句话错在**贬低自己**的方向，而这种错误通常一眼就能被
@@ -177,17 +219,20 @@ blocker 的 PASS（`verdicts/XJ-20260930-005.verdict.json`，`independent: true`
 
 > ### `verdicts/` 里的评审者是 AI，而 `independent: true` 是它对自己的声明
 >
-> 本仓库的每一份 verdict 都由 `ximo@agnes-ai` 出具——**是 AI 评审者，不是人。**
-> 每份都带 `independent: true`，而这个字段是**评审者对自己的声明**，不是本仓库
+> 本目录下的每一份 verdict 都由同一位评审者出具——**是 AI，不是人。** 它在不同轮次
+> 里的签名并不一致（早期是 `ximo@agnes`，后期是 `ximo@agnes-ai`），而本仓库没有任何
+> 工具检查这个签名字段。请把这里的 verdict 读作**一个 AI 在评审另一个 AI**，由机器
+> 检查了一致性与诚实性，而不是独立的人类签字。
+>
+> 每份 verdict 都带 `independent: true`，而这个字段是**评审者对自己的声明**，不是本仓库
 > 验证过的属性。格式里没有任何东西能区分"确实没碰过这份工作的评审者"和"碰过的"；
 > `PROTOCOL.md` §10.3 有更长的说明，这里写这一段，是为了让读者不必自己去翻。
 >
 > 门禁真正检查的只是这个字段**存在且可读**——也就是 `independent` 不是 `false`。
-> 它检查不了这个词所暗示的那件事。
+> 它检查不了这个词所暗示的那件事。`evidence` 同理：那是评审者自述"我跑过"的命令
+> 清单，门禁从不复跑。证据是声明，不是收据。
 >
-> 所以这里的七份 verdict 请读作**一个 AI 在评审另一个 AI**，由机器检查了一致性与
-> 诚实性，而不是七次独立的人类签字。我们认为只写在附录里的局限等于没披露，所以才写
-> 在这里，而不只是留在 §10.3。
+> 我们认为只写在附录里的局限等于没披露，所以才写在这里，而不只是留在 §10.3。
 
 ## 路线图
 

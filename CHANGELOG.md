@@ -4,7 +4,45 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.6] — 2026-09-30 (in review, not yet gated)
+## [0.1.7] - 2026-09-30 (in review, not yet gated)
+
+Round 6 (v0.1.6) returned **FAIL, 1 blocker**, and the blocker was in the sentence
+that existed to be honest. Both fixes land here, plus the two advisories that were
+waiting for a round to attach to.
+
+**Fixed - B1, the disclosure that overstated itself.** Both READMEs opened the
+disclosure with *"Every verdict in this repository was issued by `ximo@agnes-ai`"*. That
+is false: two verdict files carry `ximo@agnes` without the suffix. A second sentence
+said *"the seven verdicts here"* when six existed when it was written. Both claims were
+falsifiable against the very directory they describe, and the reviewer falsified them.
+The disclosure now names no signature and no count, states that the signature varies
+across rounds and that no tool checks the field, and says that `evidence` is a
+self-attested list the gate never re-runs. The substance of the disclosure was accepted
+as correct; only the claim strings were wrong.
+
+**Added - `Your first round`.** Six steps from clone to gated verdict: copy the two
+tools, pick a namespace, fill `templates/TASK.md`, declare `artifacts.json`, ask for a
+review, run the gate. `templates/` and `examples/deepfreeze-pilot/` were previously
+unlinked from the README - a first-time reader had no documented path from an empty
+directory to a passing gate.
+
+**Fixed - A1, the stale Status header.** `## Status - v0.1.4, honest` sat above a
+release that had passed three rounds earlier, always in the conservative direction,
+which is why it survived review. Both READMEs now carry no version number in Status and
+point at the newest verdict file instead. A header that cannot go stale is worth more
+than a correct one that will.
+
+**Added - PM-12.** The disclosure that overstated itself, as a postmortem: being
+careful about which claim you are making is not a substitute for checking whether it
+is true, and a limitation written down honestly can still be false.
+
+**Deferred.** Advisory A2 asked to re-apply the reviewer's later draft of the round-6
+verdict over the committed one. Declined: rewriting a committed verdict is the act this
+protocol exists to prevent, and the committed version is the one that disclosed the
+round-5 divergence. The draft remains on disk and uncommitted. A4 and A5 were absorbed
+here (PM-12, and a recorded note on the id gap at 003).
+
+## [0.1.6] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
 No rule, tool, or check changed in this round. One disclosure was added, and the
 linter caught the omission that produced it.

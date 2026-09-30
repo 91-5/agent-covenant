@@ -20,6 +20,53 @@ are no third-party packages, so a `git clone` and a `python` on `PATH` is the
 whole setup — deliberately, so the gate can run in a locked-down CI image with
 nothing to allow-list. Python 3.9 or newer.
 
+## Your first round
+
+Six steps, about ten minutes. Nothing below is required to *read* this repo — skip it
+if you are only here for the spec.
+
+**1. Copy the tools.** `tools/gate.py` and `tools/lint_cards.py` are standalone and
+stdlib-only. Copy them into your own project as-is; they do not import anything from
+this repository.
+
+**2. Pick a namespace.** Two or more uppercase letters, unique per author or team —
+`AC`, `MYTEAM`, `SIR`. This token prefixes every card id. A bare `TASK-001.md` can be
+hijacked by another agent, so it is rejected on purpose (`NAMESPACE_MISSING`).
+
+**3. Write the first task card.** Copy `templates/TASK.md` to
+`.tasks/<NS>-YYYYMMDD-001.md` and fill in Context, Deliverables, Owned files and
+Acceptance. The card is what the reviewer reads — if it does not say what "done" means,
+the reviewer has to guess, and a guess is not a review.
+
+**4. Declare the artifact surface.** Copy `examples/deepfreeze-pilot/artifacts.json` as
+a starting point and list every file the reviewer is judging. Anything you later change
+that is *not* on this list has no freshness check covering it, and `lint_cards.py` warns
+about exactly that (`UNMAPPED_CLAIM_SURFACE`). This file is what makes the gate's
+freshness rule bite — without it the gate cannot tell a verdict that predates your code
+from one that covers it.
+
+**5. Ask for a review.** The prompt in the next section is the one that works. Give the
+reviewer an absolute path to the card and nothing else. The reviewer writes
+`.tasks/REVIEW-<id>.md` and `verdicts/<id>.verdict.json`; it must not touch the files
+under review. A worked example of the whole exchange, including a round that came back
+FAIL, is in `examples/deepreeze-pilot/`.
+
+**6. Run the gate.**
+
+```bash
+python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict
+python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require <NS>-YYYYMMDD-001
+```
+
+Exit `0` means the verdict satisfies the policy. Exit `1` means it does not — read the
+printed reason rather than retrying. Exit `2` is a usage error, which is not a pass.
+
+Then wire the same two commands into CI (next section) so the answer is enforced rather
+than remembered.
+
+Templates for every artifact live in `templates/`; a complete worked run, with its FAIL
+round included, in `examples/deepfreeze-pilot/`.
+
 ## Run it in CI
 
 `.github/workflows/gate.yml` runs the same three commands this README does. Copy
@@ -169,12 +216,14 @@ Documentation, not code, so the protocol cannot rot with a vendor's API:
 `adapters/opencode/AGENTS.snippet.md`. Each marks version-dependent details as
 **verify** rather than inventing them.
 
-## Status — v0.1.4, honest
+## Status — honest, and version-free on purpose
 
-**This repository is gated, and has been since v0.1.3.** The v0.1.3 round passed
-with zero blockers from an independent reviewer
-(`verdicts/XJ-20260930-005.verdict.json`, `independent: true`). v0.1.4 is in
-review as of this writing; the claim below covers v0.1.3, not v0.1.4.
+**This repository is gated.** Every release below has a reviewer verdict in
+`verdicts/`, and the current state of that chain is whatever the newest verdict file
+says — read it rather than trusting a version number typed in prose. That sentence is
+deliberate: hand-maintained version headers went stale for three consecutive rounds
+(`v0.1.4, in review` while v0.1.5 was gated), always in the conservative direction,
+which is exactly why they survived review.
 
 > Correction, and it is the instructive part: the previous README said
 > *"deliberately not gated yet"* while shipping a PASS verdict. It was false in
@@ -203,20 +252,25 @@ the reviewer was thorough.
 
 > ### The reviewer in `verdicts/` is an AI, and `independent: true` is its claim about itself
 >
-> Every verdict in this repository was issued by `ximo@agnes-ai` — **an AI reviewer,
-> not a human.** Each carries `independent: true`, and that field is a **claim the
-> reviewer makes about itself**, not a property this repository verifies. Nothing in
-> the format distinguishes a reviewer that genuinely never touched the work from one
-> that did; `PROTOCOL.md` §10.3 states this at greater length, and this note exists so
-> that a reader does not have to go looking for it.
+> Every verdict in this directory was issued by the same reviewer — **an AI, not a
+> human.** It signs itself inconsistently across rounds (`ximo@agnes` on the earlier
+> ones, `ximo@agnes-ai` on later ones), and no tool here checks the signature field.
+> Read the verdicts here as **one AI reviewing another**, checked for consistency and
+> honesty by machine, not as independent human sign-offs.
+>
+> Each verdict carries `independent: true`, and that field is a **claim the reviewer
+> makes about itself**, not a property this repository verifies. Nothing in the format
+> distinguishes a reviewer that genuinely never touched the work from one that did;
+> `PROTOCOL.md` §10.3 states this at greater length, and this note exists so that a
+> reader does not have to go looking for it.
 >
 > What the gate actually checks is that the field is *present and readable* — that
-> `independent` is not `false`. It cannot check the thing the word implies.
+> `independent` is not `false`. It cannot check the thing the word implies. The same
+> holds for `evidence`: a self-attested list of commands the reviewer says it ran,
+> never re-run by the gate. The evidence is a claim, not a receipt.
 >
-> So read the seven verdicts here as **one AI reviewing another**, checked for
-> consistency and honesty by machine, not as seven independent human sign-offs. We
-> consider a limitation documented only in the appendix to be undisclosed, which is why
-> it is here rather than only in §10.3.
+> We consider a limitation documented only in the appendix to be undisclosed, which is
+> why it is here rather than only in §10.3.
 
 ## Roadmap
 

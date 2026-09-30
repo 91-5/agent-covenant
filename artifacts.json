@@ -63,5 +63,11 @@
     "README.md",
     "README.zh-CN.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20260930-009": [
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "postmortems.md"
   ]
 }

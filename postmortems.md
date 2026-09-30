@@ -209,6 +209,53 @@ This is the check we expect teams to skip first, and the one that matters most.
 
 ---
 
+## PM-12 · The disclosure that overstated itself
+
+**[ours — round 7, `verdicts/XJ-20260930-008.verdict.json`, FAIL, 1 blocker]**
+
+We added a disclosure to both READMEs stating that the reviewer in `verdicts/` is an
+AI and that `independent: true` is the reviewer's claim about itself, not a verified
+property. The point was to stop a reader inferring a verification that never happens.
+
+The disclosure opened with:
+
+> Every verdict in this repository was issued by `ximo@agnes-ai`
+
+That is false, and falsifiable against `verdicts/` itself: two of the verdict files
+carry `verifier: ximo@agnes`, without the suffix. A second sentence said *"the seven
+verdicts here"* when six existed at the moment of writing.
+
+Both sentences were checked by the reviewer against the directory they describe, and
+both failed a literal read. The substantive disclosure — AI reviewer, self-asserted
+independence, gate checks presence not property — was accepted as correct, correctly
+placed, and free of euphemism. Only the claim strings were wrong.
+
+**What makes this one instructive.** Round 5's blocker was a claim that *oversold* our
+work, and the instinct on the next round is to police that direction. This defect sits
+in the opposite direction — an understatement of a limitation — and we still shipped it,
+because "I am being scrupulously honest here" felt like a direction that could not
+fail. It could, and it did, in the same family the README now polices.
+
+Writing a disclosure is a claim surface like any other. Being careful about *which* claim
+is not a substitute for checking whether it is **true**.
+
+**Rule:** a disclosure that names specific values is making a stronger claim than a
+disclosure that names the shape. Prefer the shape, then say that the specifics vary.
+`gate.py` does not check the signature field; `evidence` is a self-attested list the
+gate never re-runs; `ts` is reviewer-supplied. All three are claims. Say so without
+pinning a value that the next round will move.
+
+**Guard rails shipped:** the README no longer names a signature or a verdict count, and
+states plainly that the signature varies across rounds and that the evidence list is
+self-attested. `lint_cards.py` and `gate.py` still cannot verify any of it — this entry
+names the gap so the next round extends the disclosure instead of rediscovering it.
+
+**Not enforced:** everything above is prose. A machine check for "the README's claims
+about `verdicts/` still match `verdicts/`" would need the README's assertions in a
+form a tool can evaluate, which is a larger design question than this entry settles.
+
+---
+
 ## PM-5 · Lost update: the file looks fine
 
 **[literature]** Documented across worktree-based multi-agent setups: agent A
