@@ -1,8 +1,13 @@
 # Ledger note — 015 verdict retention, and the contradiction it creates
 
 **Round:** 015 · **Verdict:** PASS, 0 blockers, 2 conditions · **Verdict `ts`:** 2026-10-01T11:03:34.304331Z
-**Committed at:** `dbc55b4` (verdict + `LEDGER-015-CONDITIONS.md`), retained byte-for-byte
+**Committed at:** `dbc55b4` (verdict + `ledger/LEDGER-015-CONDITIONS.md`), retained byte-for-byte
 **CWD of every measurement below:** `D:\15812\projects\agent-covenant`
+
+**Why this file is in `ledger/`:** see `ledger/LEDGER-015-CONDITIONS.md`, whose header records the
+full measurement — `LEDGER-*` names draw `NAMESPACE_MISSING` (2 errors) from rule N1, and renaming to
+`XJ-20261001-00N.md` draws 14 task-card warnings instead, because either name inside `.tasks/` reads
+as a round and this project has no note category.
 
 ## What was decided
 
@@ -28,7 +33,7 @@ draft. The correction belongs in a card or a ledger note, both of which are appe
 
 Two committed records now disagree, on two points:
 
-| | `.tasks/LEDGER-015-CONDITIONS.md` (`dbc55b4`) | `.tasks/REVIEW-XJ-20260930-015.md` §"Reviewer disclosure" |
+| | `ledger/LEDGER-015-CONDITIONS.md` (`dbc55b4`) | `.tasks/REVIEW-XJ-20260930-015.md` §"Reviewer disclosure" |
 |---|---|---|
 | Was the verdict's evidence amended? | **No** — retained byte-for-byte | "The verdict file's evidence line was amended" |
 | Has the real-tree run happened? | **Yes** — `LINT: PASS (1 warnings)`, 0 `UNMAPPED_CLAIM_SURFACE` | "remains a follow-up for the next round" |

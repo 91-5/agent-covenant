@@ -4,6 +4,18 @@
 **Verdict file:** `verdicts/XJ-20260930-015.verdict.json` (unamended, as written by the reviewer)
 **CWD of every measurement below:** `D:\15812\projects\agent-covenant`
 
+**Why this file is in `ledger/` and not `.tasks/`:** a note is not a round. `PROTOCOL.md` rule N1
+requires every `.tasks/*.md` filename to be `<NS>-YYYYMMDD-NNN.md`, and `tools/lint_cards.py`
+derives a round's identity from that filename — so any note inside `.tasks/` is read as a task card
+and judged against the task-card schema. These notes were first written as `LEDGER-*.md`, which the
+linter rejected with `NAMESPACE_MISSING` (2 errors); renaming them to `XJ-20261001-001/002.md` to
+satisfy N1 traded those 2 errors for 14 warnings (`VERDICT_WITHOUT_REVIEW`,
+`TASK_MISSING_SECTION`, `TASK_MISSING_REVIEW_QUESTIONS`) because the renamed id *is* a round. Neither
+name can satisfy the rule, because the rule has no category for a note. `check_verdict_pairs` and the
+card scan both read `--dir` non-recursively, so a sibling directory needs no code change. The gap is
+recorded for 016: the project has no note category, and `PROTOCOL.md` §11's layout does not say where
+one belongs.
+
 This note exists instead of edits to `.tasks/XJ-20260930-015.md`. The card is the eighth entry in
 015's own artifact map, and its mtime (`2026-10-01T10:56:06.826640Z`) currently sits *before* this
 round's verdict `ts`. Editing it would push its mtime past `ts` and make the card a
