@@ -1,0 +1,22 @@
+{
+  "id": "XJ-20260930-014",
+  "artifact": "tools/gate.py CWD context binding + TestCwdContext (Agent Covenant v0.1.12, commit f5deb9e)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-10-01T08:36:21.368940Z",
+  "evidence": [
+    "git rev-parse HEAD -> f5deb9ea0c7a0c14a7050764da23af7cce684a4e, git status --short -> clean (no pre-existing modifications before this review)",
+    "python -m unittest discover -s tests -> 'Ran 99 tests in 1.236s' + 'OK', exit 0 - observed 99 by execution, not copied from the request",
+    "git diff f5deb9e~1 f5deb9e -- tools/gate.py -> 1 line removed / 32 lines added; the single removed line is the json.dumps literal rewritten to absorb **cwd_context; zero added or removed 'def' lines match evaluate|_check_*|_successor_*|_superseded_by|parse_ts|load_verdict; zero removed lines touch STALE_VERDICT|SUPERSEDED|st_mtime|max_skew|judged_at > now; _check_freshness body absent from the diff -> verdict schema gains only cwd + split_run keys, judgement semantics untouched as claimed",
+    "split-run probe (verdict-dir outside the repo): subprocess.run(['python','-X','utf8','tools/gate.py','--verdict-dir','D:\\\\15812\\\\mo brain\\\\ximo\\\\.tasks','--artifact-map','artifacts.json','--json'], cwd=D:\\\\15812\\\\projects\\\\agent-covenant) -> JSON {'cwd': 'D:\\\\15812\\\\projects\\\\agent-covenant', 'split_run': True} and, in human mode, the first non-empty stdout line is '[CWD] running from D:\\\\15812\\\\projects\\\\agent-covenant with verdicts in D:\\\\15812\\\\mo brain\\\\ximo\\\\.tasks - relative artifact paths in the map resolve against the CWD, not the verdict directory; counts may not describe the checkout you think you are testing' - banner present and first, as the request requires",
+    "same-tree probe: tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --json, cwd=repo root -> {'split_run': False, 'cwd': 'D:\\\\15812\\\\projects\\\\agent-covenant'}, stdout contains no '[CWD]' line - clean runs unaffected",
+    "the banner is advisory, not a check: split-run call exited 0 while runring with zero verdicts found in the external dir (checked=0, violations=0, advisories=0), and same-tree runs still exit with the gate's real status (ok=False on the 40-violation working tree) - Q2 (laundering): nothing can be laundered by citing the banner, because the banner only announces split_run=true, which is a risk marker, never a pass marker",
+    "known-gap probe (self-run, separates the two CWD modes): (a) foreign-CWD worktree form - subprocess(cwd=D:\\\\15812\\\\projects\\\\agent-covenant) running D:\\\\15812\\\\mo brain\\\\ximo\\\\wt-013\\\\tools\\\\gate.py with absolute flags -> the real historical 013 failure form, splits verdict-dir from CWD, 014 reports split_run=true and would banner; (b) ancestor-CWD form - subprocess(cwd=D:\\\\15812\\\\projects) running the repo's gate with absolute flags -> {'split_run': False}, no banner, violations=64 {ARTIFACT_MISSING: 58, VERDICT_FAIL: 5, CONDITIONAL_NOT_ALLOWED: 1}, advisories=0 - the gap is real for that form (map file and verdict-dir both inside the ancestor CWD) and the request declares it honestly at 'Known gap, stated not buried'",
+    "sibling reproduction for the ledger's off-by-one claim (also 013's verification input): 9928bec clean checkout with CWD at the parent of the worktree -> checked=9, violations=59 {CONDITIONAL_NOT_ALLOWED: 1, ARTIFACT_MISSING: 54, VERDICT_FAIL: 4}, advisories=0 - same total and same four blocking codes as the in-root run's 54 STALE_VERDICT, defect type swapped, no warning from the pre-014 gate (split_run field absent: 'None' from d.get('split_run')) - matches CHANGELOG [0.1.11] L71-77 exactly",
+    "README test counts at HEAD: git grep -n '99 tests' HEAD -- README.md README.zh-CN.md -> README.md:13 and README.zh-CN.md:12 ('# 99 个单元测试'); git grep -c '95 tests' HEAD -- README.md README.zh-CN.md -> no matches - the 95 -> 99 update landed in both locales (STALE_TEST_COUNT fired, as the request states)",
+    "ts floor verified: max mtime over the 014 artifact-map entry = 2026-10-01T07:30:24.642417+00:00 (README.zh-CN.md); this ts is strictly later, un-rounded, and written on 2026-10-01 (UTC)"
+  ]
+}

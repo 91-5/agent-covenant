@@ -346,8 +346,10 @@ Say which level you actually run.
    verdict: staleness approaches its maximum and nothing is `SUPERSEDED`, because a
    successor can never itself be fresh on the file it would retire. In this
    repository, commit `9928bec` reports 59 blocking / 0 advisories in a clean
-    checkout and 7 blocking / 42 advisories in the author's working tree — same tree,
-    same command, different CWD. Two consequences for anyone citing a number from
+   checkout (4 `VERDICT_FAIL`, 1 `CONDITIONAL_NOT_ALLOWED`, 54 `STALE_VERDICT`),
+   while the working tree at `05a1e42` — after the 012 verdict landed — reports
+   7 blocking / 42 advisories, and at `eed7ff7` 20 blocking / 31 advisories.
+   Different trees, different commits, different CWDs, different answers. Two consequences for anyone citing a number from
     this gate: **a reproducibility claim needs three coordinates — a commit, a command,
     and a CWD** — and any count quoted without all three is not evidence, however
     plausible it looks. This is a limitation of the mtime-based freshness design, not a

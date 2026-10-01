@@ -11,6 +11,15 @@ one defect — the gate prints a number without saying which directory produced 
 makes the gate bind that coordinate to every number it emits. First change to `tools/` since
 `0003db4`.
 
+**Post-review note (FAIL on 013, fixed here).** Ximo's 013 verdict (`FAIL, 1 blocker`) caught
+that the `0aec1f9` fix had corrected the `[0.1.9]` paragraph but left the identical
+wrong-commit figure standing in `PROTOCOL.md §10` item 7 — the same "same tree" sentence,
+inside the very item that installs the three-coordinate rule. This entry's original publication
+therefore shipped a fifth coordinate error in an authoritative location; the sentence above is
+now corrected to carry each figure's own commit (59/0 at `9928bec` clean checkout; 7/42 at
+`05a1e42` working tree; 20/31 at `eed7ff7`). The fix is committed under the 013 FAIL verdict —
+not silently folded into a round that already returned FAIL — and the next review re-checks it.
+
 **What the gate does now.** Every run resolves the process CWD and reports it: the JSON
 output carries `cwd` and a `split_run` flag, and when the verdict directory or the artifact
 map sits outside the CWD's subtree — the exact shape of 012's mixed-CWD run, where worktree
