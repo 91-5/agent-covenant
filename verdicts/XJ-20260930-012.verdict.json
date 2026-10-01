@@ -1,0 +1,28 @@
+{
+  "id": "XJ-20260930-012",
+  "artifact": "CHANGELOG.md [0.1.9] + PROTOCOL.md 6.1 and 6 item 7 (Agent Covenant v0.1.10, commit 9928bec)",
+  "verdict": "FAIL",
+  "blockers": 2,
+  "blocker_list": [
+    "B1 - CHANGELOG.md [0.1.9] effect paragraph (L73-76), labelled 'stated reproducibly': none of its three figures is reachable from a clean checkout of the recorded commit 9928bec, which yields 17 blocking violations across 9 checked ids and 31 SUPERSEDED advisories - matching none of them. '41 blocking violations across 8 ids', '28 violations and 17 advisories', and '6 blocking violations across 9 ids, plus 40 superseded advisories' are all measurement-time artifacts: _check_freshness compares artifact mtime against the verdict's ts, and a checkout rewrites every mtime to the current time, so any count measured in the past is unreachable afterwards. The round's own deliverable was 'the effect paragraph restated with counts a reader can reproduce', under the constraint 'Every number in the corrected paragraph must be reproducible by running the gate at the recorded commit'; all three figures fail it, and the headline label itself is false. Same species and same severity as 011 B1-i, which failed this project on two unreachable figures - this round replaced two with three.",
+    "B2 - the projected post-verdict advisory count is wrong, not merely unreachable: at commit 9928bec the 12 current STALE findings split 11 retirable (on CHANGELOG.md and PROTOCOL.md, both inside the 012 map) and 1 still blocking (XJ-20260929-001 x templates/TASK.md, absent from the map). Post-verdict advisories are therefore 31 + 11 = 42, not the ledger's 40. A wrong number is a stronger defect than an unreachable one: 011 B1-i failed on figures no run could produce, while this figure contradicts the run that does exist. The same sentence's 'across 9 ids' is equally unstable: once this verdict lands, the checked chain is 10 ids, not 9."
+  ],
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-10-01T05:04:19Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> OK, 95 tests, exit 0 - matches the request's expected state",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (2 warnings: VERDICT_WITHOUT_REVIEW XJ-20260930-010.md and XJ-20260930-012.md), exit 0",
+    "python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json -> GATE: FAIL (17 violations across 9 checked): 4 VERDICT_FAIL (006/008/009/011), 1 CONDITIONAL_NOT_ALLOWED (001), 12 STALE_VERDICT; '31 superseded freshness finding(s) reported; they do not block' - the pre-verdict state at 9928bec, identical to the request author's clean-checkout run",
+    "python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --json -> checked=9, violation codes {VERDICT_FAIL: 4, STALE_VERDICT: 12, CONDITIONAL_NOT_ALLOWED: 1}, advisories {SUPERSEDED: 31} - figures counted by code path, not inferred",
+    "the 12 STALE findings map: 11 on CHANGELOG.md / PROTOCOL.md (both in the 012 map, retirable by this verdict) + 1 on templates/TASK.md (XJ-20260929-001, absent from the 012 map, still blocking) - basis for the derived post-verdict 6 blocking / 42 advisories",
+    "git diff 9928bec^ 9928bec --stat -- tools tests -> empty; the 286-line tools/tests delta between 6477b4c and 9928bec belongs to commit e75ea0f (the v0.1.9 rule itself), not to this round - 'tools/gate.py and tests/test_gate.py untouched' verified",
+    "git show --stat 9928bec -> 4 files (.tasks/XJ-20260930-012.md, CHANGELOG.md, PROTOCOL.md, artifacts.json) - ledger-only confirmed",
+    "git show --stat e75ea0f -> records the 011 verdict and archives the 011 card to legacy/; git log --oneline -2 -- verdicts/XJ-20260930-011.verdict.json -> only e75ea0f touches it (the 011 verdict was not rewritten)",
+    "max mtime over the 012 map (CHANGELOG.md, PROTOCOL.md, README.md, README.zh-CN.md) = PROTOCOL.md 2026-10-01T04:22:10.212088+00:00, matching the declared bound; verdict ts taken after it, before the moment of writing, un-rounded",
+    "PROTOCOL.md L223-251 (6.1 'Superseded freshness') states the exception, the valid-authority bar, the FAIL-successor case and never-dropped reporting; 6 item 7 (L217-218) points at 6.1 - the rule now lives where the 011 card said it belonged, no retrofit",
+    "CHANGELOG.md L83-88 blockquote names the false draft ('41 violations to 10'; templates/TASK.md wrongly listed as touched) instead of silently overwriting - the correction method is sound; the corrected figures are not",
+    "accepted as passing: unittest 95/95 exit 0; lint PASS with only the two expected pre-verdict VERDICT_WITHOUT_REVIEW warnings; ledger-only scope; 011 verdict intact; fresh check (worktree run in the addendum, matching my working-tree run) 17/31 at 9928bec"
+  ]
+}
