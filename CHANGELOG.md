@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.9] - 2026-09-30 (in review, not yet gated)
+## [0.1.9] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
 This round changes a tool. Every round before it changed prose, which is the only thing
 in this repository that had no checker.
@@ -70,12 +70,22 @@ artifact path, which `gate.py` resolves against the process CWD, so three of the
 quietly testing this repository's real `README.md` instead of the sample file. They passed,
 and they were checking the wrong object. The fixtures now pass absolute paths.
 
-**Effect on this repository's own chain:** 41 violations to 10. The remaining `STALE_VERDICT`
-findings all point at files this round itself touched (`PROTOCOL.md`, both `README`s,
-`tools/gate.py`, `templates/TASK.md`): verdicts 001–005 covered them, and 011 has no verdict
-yet, so they correctly stay stale until one does. The other four are real and unchanged —
-three FAIL verdicts (006, 008, 009) and one CONDITIONAL not passed through
-`--allow-conditional`.
+**Effect on this repository's own chain, stated reproducibly.** Before this round a
+full-chain run reported **41 blocking violations across 8 ids**. At the moment this entry
+was first written it reported 28 violations and 17 advisories; once this round's own
+verdict landed, **6 blocking violations across 9 ids, plus 40 superseded advisories**:
+
+- four `VERDICT_FAIL` — 006, 008, 009, and this round's own 011;
+- one `CONDITIONAL_NOT_ALLOWED` on 001, not passed through `--allow-conditional`;
+- one residual `STALE_VERDICT` — 001 against `templates/TASK.md`, whose only mapper is
+  001. No round has re-judged that file since round 1.
+
+> **An earlier draft of this entry claimed "41 violations to 10" and listed
+> `templates/TASK.md` among the files this round touched.** Both were false: neither
+> count was reachable from any run, and `git show --stat 0003db4` lists nine files, not
+> including `templates/TASK.md`. The rule, the tests and both READMEs were correct and
+> are unchanged; the defect was the ledger describing them — the same failure as the prose
+> defects in rounds 5, 7 and 9, made by the author this time.
 
 ## [0.1.8] - 2026-09-30 (failed review: FAIL, 1 blocker)
 

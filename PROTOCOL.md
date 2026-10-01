@@ -214,10 +214,41 @@ Default policy (all must hold per required id):
 6. `ts` is not in the future beyond `--max-clock-skew` (default 300s) — a
    future-dated verdict can never be reported stale, which would silently
    defeat check 7;
-7. `ts >= artifact mtime` for every path in the artifact map;
+7. `ts >= artifact mtime` for every path in the artifact map, **except** where the
+   finding is `SUPERSEDED` — see §6.1;
 8. *(opt-in)* with `--evidence-must-match REGEX`, at least one evidence entry
    matches the pattern. Off by default; see §10.3 for why a pattern is not part
    of the default contract.
+
+### 6.1 Superseded freshness
+
+Check 7 is the strongest check the gate has, and applied to a chain it degenerates:
+a README read by eight verdicts goes stale the moment any of them is followed by a fix,
+so a full-chain run accumulates `STALE` forever and can never return to green. A check
+whose result is constant carries no information.
+
+**The exception.** If a **later** id in the artifact map also lists that file **and is
+itself a valid, fresh authority on it**, the earlier finding becomes `SUPERSEDED` and does
+not block. The later round is the current authority on the file.
+
+**"Valid authority" means the successor clears the same bar:**
+
+- it has a verdict file on disk, and that verdict is well-formed, passes
+  `blockers == 0`, is `independent: true`, and carries non-empty `evidence`;
+- its `ts` is not future-dated beyond `--max-clock-skew`;
+- it is **fresh on that file**: `mtime <= successor_ts <= now + skew`.
+
+A successor that is itself stale, or that judged an older copy of the file, retires
+nothing — because then nobody has judged the current file.
+
+**A `FAIL` or unacknowledged `CONDITIONAL` successor is still a valid authority.** It
+retires the earlier claim *and* blocks on its own verdict. Requiring `PASS` would be
+backwards: a later round must be able to say "this is worse than you thought".
+
+**`SUPERSEDED` is reported, never dropped.** It prints in human output, appears in a
+separate `advisories` array under `--json`, and the advisory count is printed even under
+`--quiet`. A relaxation of the strongest check must be more visible than the check it
+relaxes.
 
 **Advisory, not enforced:** mapping every `Acceptance` bullet in the task card to
 an evidence entry is currently the reviewer's job, performed by hand. v0.1 has no

@@ -1,6 +1,5 @@
 {
   "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read.",
-
   "XJ-20260929-001": [
     "PROTOCOL.md",
     "README.md",
@@ -11,7 +10,6 @@
     "tools/gate.py",
     "tools/lint_cards.py"
   ],
-
   "XJ-20260929-002": [
     "PROTOCOL.md",
     "ADR-0001.md",
@@ -21,7 +19,6 @@
     "tools/gate.py",
     "tools/lint_cards.py"
   ],
-
   "XJ-20260930-004": [
     "PROTOCOL.md",
     "postmortems.md",
@@ -29,7 +26,6 @@
     "tools/lint_cards.py",
     "tests/test_lint_cards.py"
   ],
-
   "XJ-20260930-005": [
     "PROTOCOL.md",
     "postmortems.md",
@@ -37,7 +33,6 @@
     "tools/lint_cards.py",
     "tests/test_lint_cards.py"
   ],
-
   "XJ-20260930-006": [
     "README.md",
     "README.zh-CN.md",
@@ -49,7 +44,6 @@
     "tools/lint_cards.py",
     "tests/test_lint_cards.py"
   ],
-
   "XJ-20260930-007": [
     "README.md",
     "README.zh-CN.md",
@@ -82,5 +76,11 @@
     "README.md",
     "README.zh-CN.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20260930-012": [
+    "CHANGELOG.md",
+    "PROTOCOL.md",
+    "README.md",
+    "README.zh-CN.md"
   ]
 }
