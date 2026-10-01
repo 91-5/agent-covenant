@@ -4,6 +4,54 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2026-10-01
+
+Round 012 was reviewed **FAIL, 2 blockers** — the ledger prose, not the rule. This round
+fixes that prose and records what the two failures actually taught. No `tools/` or `tests/`
+change; the rule is untouched since `0003db4`.
+
+**What the 012 review found.** The `[0.1.9]` effect paragraph was labelled *stated
+reproducibly* while none of its three figures was reachable, and the projected post-verdict
+advisory count was wrong (40, where the run gives 42). Both are corrected above.
+
+**The part worth keeping: how the wrong number was produced.** My evidence addendum for 012
+claimed "a clean checkout of `9928bec` yields 17 blocking / 31 advisories". It did not run a
+clean checkout. `gate.py` resolves `artifacts.json`'s relative paths against the process CWD,
+and the run's CWD was the main repository, so it stat'ed the working tree and called it a
+clone. A true clean checkout — CWD inside the worktree — reports **59 blocking / 0 advisories**.
+Same commit, same command, different CWD. The independent reviewer read that addendum, took
+17/31 as the clone's output, and wrote it into a signed verdict card; the error propagated
+from my evidence into someone else's evidence because neither of us checked the CWD. That
+makes this the first time in this repository's history that the author produced a false
+figure and the reviewer repeated it, and it is the exact species of defect rounds 5, 7, 8 and
+9 were all about.
+
+**The rule this yields.** A reproducibility claim needs three coordinates — a commit, a
+command, and a CWD. Naming two is how a working-tree reading becomes a "clean checkout"
+reading. Added to `PROTOCOL.md §10` as a known limitation.
+
+**A second figure, wrong in the same way.** My addendum also derived the post-verdict state
+as "6 blocking / 42 advisories". Six assumed this round's verdict would be PASS; it was FAIL,
+so the chain carries a fifth `VERDICT_FAIL` and checks 10 ids, not 9 — the reviewer measured
+7 / 10 / 42. A projection about a verdict that had not landed is not a measurement, and this
+project has now failed review twice over numbers of that kind.
+
+**Option (b) rejected — no maintenance ids.** The 012 review asked how to clear the residual
+`templates/TASK.md` staleness, whose only mapper is 001, and suggested "a maintenance id that
+re-maps `templates/TASK.md`". Rejected: a round that maps a file it never changed would
+attest freshness it did not earn, and once such a round exists, "re-map it next cycle" retires
+any staleness on demand. That is the laundering channel the `SUPERSEDED` rule exists to close,
+opened from the other side. The artifact map also carries two incompatible duties — claim-surface
+coverage (must not omit a README, or `UNMAPPED_CLAIM_SURFACE` fires) and round-scope declaration
+(a round should list what it edited) — which is why 012 had to list both READMEs it never
+touched. Splitting those duties is the honest fix and belongs to a future round that touches
+`gate.py`; 013 records the conflict and defers the change rather than quietly picking a side.
+
+> **Correction filed against the 012 evidence.** `REVIEW-EVIDENCE-CORRECTION-XJ-20260930-012.md`
+> in the reviewer's vault supersedes the clean-checkout figure in the original addendum. The
+> 012 verdict and its card are left unamended, per the no-retrofit rule; this entry is where the
+> error is recorded.
+
 ## [0.1.9] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
 This round changes a tool. Every round before it changed prose, which is the only thing
@@ -70,15 +118,26 @@ artifact path, which `gate.py` resolves against the process CWD, so three of the
 quietly testing this repository's real `README.md` instead of the sample file. They passed,
 and they were checking the wrong object. The fixtures now pass absolute paths.
 
-**Effect on this repository's own chain, stated reproducibly.** Before this round a
-full-chain run reported **41 blocking violations across 8 ids**. At the moment this entry
-was first written it reported 28 violations and 17 advisories; once this round's own
-verdict landed, **6 blocking violations across 9 ids, plus 40 superseded advisories**:
-
-- four `VERDICT_FAIL` — 006, 008, 009, and this round's own 011;
-- one `CONDITIONAL_NOT_ALLOWED` on 001, not passed through `--allow-conditional`;
-- one residual `STALE_VERDICT` — 001 against `templates/TASK.md`, whose only mapper is
-  001. No round has re-judged that file since round 1.
+**Effect on this repository's own chain: a count is a property of a checkout, not of the
+repository.** Earlier drafts of this entry carried figures — "41 blocking violations across
+8 ids", "28 violations and 17 advisories", "once this round's own verdict landed, 6 blocking
+across 9 ids plus 40 superseded advisories". A reader following that label cannot reproduce
+any of them, and the reason is mechanical rather than rhetorical. `gate.py` resolves the
+relative paths in `artifacts.json` against the **process CWD**, and `_check_freshness`
+compares `path.stat().st_mtime` against each verdict's `ts`. A checkout writes every file
+with the current time, so in a clean clone every artifact looks newer than every verdict —
+nothing can be `SUPERSEDED` (a successor is never fresh on the file it would retire), and
+staleness runs near its maximum. Measured at commit `9928bec`, in a worktree whose CWD is the
+worktree root, the chain reports **59 blocking violations across 9 checked ids and 0
+advisories** (4 `VERDICT_FAIL`, 1 `CONDITIONAL_NOT_ALLOWED`, 54 `STALE_VERDICT`). The same
+commit in the author's working tree, same command, CWD = repo root, reports 7 blocking and 42
+advisories. Same tree, same command, different CWD — different answer. What stays true across
+checkouts is the *shape*, not the tally: one `VERDICT_FAIL` per failed review (006, 008, 009,
+011, 012), one `CONDITIONAL_NOT_ALLOWED` on 001 unless `--allow-conditional` is passed, and
+one residual `STALE_VERDICT` on `templates/TASK.md`, whose only mapper is still 001 because no
+round has re-judged it since round 1. A figure is reproducible only when a commit, a command,
+**and** a CWD are named together; this project's own first addendum for this round named two of
+the three and got the third wrong — see the correction filed for the 012 review.
 
 > **An earlier draft of this entry claimed "41 violations to 10" and listed
 > `templates/TASK.md` among the files this round touched.** Both were false: neither

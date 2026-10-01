@@ -337,6 +337,21 @@ Say which level you actually run.
    `evidence: ["ok"]`. We do not ship a default pattern because a regex that
    rejects honest short evidence trains people to pad. Teams that want the floor
    can opt in: `gate.py --evidence-must-match 'exit [0-9]|passed|failed'`.
+7. **Gate counts are not reproducible across checkouts.** A violation count is a
+   property of one working directory at one moment, not a property of the repository.
+   `gate.py` resolves the relative paths in `artifacts.json` against the **process
+   CWD**, and `_check_freshness` compares `path.stat().st_mtime` against each
+   verdict's `ts`. A `git clone` or `git worktree add` writes every file with the
+   current time, so in a clean checkout every artifact looks newer than every
+   verdict: staleness approaches its maximum and nothing is `SUPERSEDED`, because a
+   successor can never itself be fresh on the file it would retire. In this
+   repository, commit `9928bec` reports 59 blocking / 0 advisories in a clean
+   checkout and 7 blocking / 42 advisories in the author's working tree — same tree,
+   same command, different CWD. Two consequences for anyone citing a number from
+   this gate: **a reproducibility claim needs three coordinates — a commit, a command,
+   and a CWD** — and any count quoted without all three is not evidence, however
+   plausible it looks. This is a limitation of the mtime-based freshness design, not a
+   bug in the rule of round 11; the rule makes staleness reportable, not fixed.
 
 ---
 
