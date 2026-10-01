@@ -1,0 +1,41 @@
+{
+  "id": "XJ-20260930-011",
+  "artifact": "tools/gate.py + tests/test_gate.py + PROTOCOL.md + README.md + README.zh-CN.md + CHANGELOG.md (Agent Covenant v0.1.9, commit 0003db4; the XJ-20260930-011 key in artifacts.json)",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "blocker_list": [
+    "B1: CHANGELOG [0.1.9] and the 011 REQUEST contain falsifiable assertions. (i) 'Full-chain state before this round: 41 violations across 8 ids, permanently. After: 10' - reproduced, the full chain reports 28 violations (24 STALE_VERDICT, 3 VERDICT_FAIL on 006/008/009, 1 CONDITIONAL_NOT_ALLOWED on 001) plus 17 SUPERSEDED advisories, and after this verdict lands the arithmetic is structurally 5 (3 VERDICT_FAIL + 1 CONDITIONAL_NOT_ALLOWED + 1 residual STALE_VERDICT for XJ-20260929-001 x templates/TASK.md, whose only mapper was 001); neither 41 nor 10 is reachable from any run. (ii) 'files this round itself touched (PROTOCOL.md, both READMEs, tools/gate.py, templates/TASK.md)' - git show --stat 0003db4 lists nine files and templates/TASK.md is not among them. (iii) 'PROTOCOL.md section 6 normative - so a cloner can learn from section 6 alone' - the SUPERSEDED normative text is at PROTOCOL.md L146/L165/L167, inside section 4.5; section 6's policy items 1-8 are unchanged, so section-6-alone discoverability is false as committed. The SUPERSEDED rule itself is correct (all four named laundering escapes closed by asserting tests, FAIL successor proven non-laundering); the failure is the ledger prose describing it."
+  ],
+  "conditions": [],
+  "independent": true,
+  "verifier": "ximo@agnes-ai",
+  "ts": "2026-10-01T04:06:31Z",
+  "evidence": [
+    "python -m unittest discover -s tests -> Ran 95 tests OK, exit 0 - matches the card's declared 95",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (2 warnings: VERDICT_WITHOUT_REVIEW XJ-20260930-010.md and XJ-20260930-011.md), no ERROR - documented pre-verdict state",
+    "python tools/gate.py --require XJ-20260930-011 --artifact-map artifacts.json -> MISSING_VERDICT, exit 1 - expected until this verdict lands",
+    "full chain pre-verdict (gate.py --json, no --require) -> ok=false, checked=8, violations=28 (24 STALE_VERDICT + 3 VERDICT_FAIL on 006/008/009 + 1 CONDITIONAL_NOT_ALLOWED on 001), advisories=17 - the counts CHANGELOG [0.1.9] calls 41 and 10 are not reachable (blocker B1-i)",
+    "ts bounds: max mtime over the 011 map = README.zh-CN.md 2026-09-30T16:45:32.632Z; now at stamping 2026-10-01T04:06:59Z; verdict ts 04:06:31Z - inside the window, un-rounded",
+    "blocker B1-ii: git show --stat 0003db4 = 9 files (.tasks/XJ-20260930-011.md, .tasks/legacy/XJ-20260930-010.md, CHANGELOG.md, PROTOCOL.md, README.md, README.zh-CN.md, artifacts.json, tests/test_gate.py, tools/gate.py) - templates/TASK.md is not touched this round, contradicting CHANGELOG's 'files this round itself touched' list",
+    "blocker B1-iii: grep SUPERSEDED in PROTOCOL.md -> only L146, L165, L167, all inside section 4.5; section 6's default-policy list (items 1-8) is unchanged - the REQUEST's 'section 6 normative' deliverable is misplaced",
+    "successor bar verified: _successor_candidates (gate.py L355-393) = _check_verdict_value AND _check_blockers AND _check_independence AND _check_timestamp_plausibility AND _check_fields AND _check_evidence; _check_conditional and _check_evidence_quality excluded as the REQUEST specified - a PASS verdict with blockers>0 cannot enter the candidate set, so the verdict/blockers disagreement door is closed at the bar, not downstream",
+    "laundering escape 1/4 closed and pinned: test_stale_successor_cannot_retire_an_earlier_verdict (test_gate.py L456-458) asserts STALE",
+    "laundering escape 2/4 closed and pinned: test_future_dated_successor_cannot_retire (L460-462) asserts STALE",
+    "laundering escape 3/4 closed and pinned: test_nonindependent_successor_cannot_retire (L464-466) asserts STALE",
+    "laundering escape 4/4 closed and pinned: test_evidence_free_successor_cannot_retire (L468-470) asserts STALE",
+    "FAIL successor proven non-laundering: test_fail_successor_can_retire (L472-489) - requiring the predecessor exits OK with SUPERSEDED printed; requiring the successor exits VIOLATION with VERDICT_FAIL - the later round is authority and blocked simultaneously",
+    "path aliases fail closed: rel in artifact_map.get(other, []) is an exact-string key match (L359) - './README.md' cannot retire 'README.md'; the gate gets stricter, never laxer",
+    "successor chains fail closed: each candidate is freshness-checked on the file itself (L368-380); a stale middle link breaks the chain - chain-shaped laundering cannot build on a weak link",
+    "clock-skew is the one non-structural surface: _check_timestamp_plausibility(max_skew) is in the bar (default 300s excludes far-future successors); widening --max-clock-skew re-opens the door by explicit operator choice - recorded as advisory A3",
+    "README disclosure verified: the 'one exception' block (added in 0003db4, both languages) enumerates successor conditions (verdict on disk, well-formed, independent, evidence, not future-dated, fresh on that file), 'stale successor or no verdict retires nothing', 'FAIL successor is still an authority', 'SUPERSEDED is always printed, never dropped' - zh mirrors all four clauses; _emit prints advisories even under --quiet (L1017)",
+    "011 map verified live: 6 files (tools/gate.py, tests/test_gate.py, PROTOCOL.md, README.md, README.zh-CN.md, CHANGELOG.md) - the REQUEST's 'seven files' count disagrees with the map (advisory A2)",
+    "A1 (advisory): two FAIL events exist only in prose - 'independent review of round 011's first version returned FAIL, 2 blockers' and CHANGELOG [0.1.8]'s '(failed review: FAIL, 1 blocker)' for round 010 - while verdicts/ holds no XJ-20260930-010.verdict.json and git log --all -- verdicts shows no commit that ever added one; the 010 FAIL is unverifiable history under the project's own pairing rule",
+    "Q1: all four laundering constructions closed (verdict/blockers disagreement closed at the bar by _check_blockers L405-406; id case exact-key; path alias exact-key fail-closed; chain freshness per-candidate); the only parameterised surface is --max-clock-skew (A3)",
+    "Q2: FAIL successor allowed - correct; test_fail_successor_can_retire proves no laundering (require predecessor OK+SUPERSEDED; require successor VIOLATION+VERDICT_FAIL); forbidding it would recreate the liveness failure the rule exists to cure",
+    "Q3: advisory defensible - round 5 criticised a defect mislabelled as a warning; this is a correct retirement labelled non-blocking, preserving audit trail; _emit prints it even under --quiet",
+    "Q4: 11 tests close the four named escapes plus the FAIL case; first addition should be a successor-chain test (A retired by B, B retired by C: require A exits 0 with two advisories, require C fails), then a fail-closed alias test",
+    "Q5: scope proportionate in code (131 lines gate.py, 169 tests, one semantic change); NOT discoverable from section 6 alone - normative is in section 4.5 (L146/165/167), section 6 untouched - part of B1",
+    "Q6: no dedicated lint rule needed - each bar member has an escape test that fails if the member is removed; durable hardening is one line in docs/lint-rules.md naming the bar membership as deliberate",
+    "fix path for B1: ledger-only - correct the 41/10 counts to reproducible ones (before = 28 violations + 17 advisories; after = 5), remove templates/TASK.md from the touched-files list, and move or duplicate the SUPERSEDED normative into PROTOCOL section 6 as the REQUEST promised; the rule, the tests and both READMEs need no change"
+  ]
+}
