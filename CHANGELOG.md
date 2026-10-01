@@ -129,9 +129,13 @@ with the current time, so in a clean clone every artifact looks newer than every
 nothing can be `SUPERSEDED` (a successor is never fresh on the file it would retire), and
 staleness runs near its maximum. Measured at commit `9928bec`, in a worktree whose CWD is the
 worktree root, the chain reports **59 blocking violations across 9 checked ids and 0
-advisories** (4 `VERDICT_FAIL`, 1 `CONDITIONAL_NOT_ALLOWED`, 54 `STALE_VERDICT`). The same
-commit in the author's working tree, same command, CWD = repo root, reports 7 blocking and 42
-advisories. Same tree, same command, different CWD — different answer. What stays true across
+advisories** (4 `VERDICT_FAIL`, 1 `CONDITIONAL_NOT_ALLOWED`, 54 `STALE_VERDICT`). The working
+tree reports something else entirely: at `05a1e42`, CWD = repo root, **7 blocking and 42
+advisories**; at `eed7ff7`, CWD = repo root, **20 blocking and 31 advisories**, because this
+round edited the two files most verdicts were mapped on. Different tree, different answer, and
+a third coordinate matters as much as the first two: run the same command with the CWD merely
+one directory off and the 54 `STALE_VERDICT` findings become 54 `ARTIFACT_MISSING` instead —
+same total, different defect. What stays true across
 checkouts is the *shape*, not the tally: one `VERDICT_FAIL` per failed review (006, 008, 009,
 011, 012), one `CONDITIONAL_NOT_ALLOWED` on 001 unless `--allow-conditional` is passed, and
 one residual `STALE_VERDICT` on `templates/TASK.md`, whose only mapper is still 001 because no
