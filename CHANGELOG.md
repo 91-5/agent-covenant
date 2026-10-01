@@ -30,6 +30,19 @@ figure and the reviewer repeated it, and it is the exact species of defect round
 command, and a CWD. Naming two is how a working-tree reading becomes a "clean checkout"
 reading. Added to `PROTOCOL.md §10` as a known limitation.
 
+**Then I broke the rule I had just written, in the paragraph that states it.** Verifying the
+rewritten `[0.1.9]` text before handing it to review — the same check the 013 card asks a
+reviewer for — turned up a fourth bad figure. It claimed *"the same commit `9928bec` in the
+author's working tree reports 7 blocking and 42 advisories"*: 59/0 is a `9928bec` clean
+checkout, 7/42 was measured at `05a1e42` two commits later, and "same commit" was simply false.
+Fixed in `0aec1f9`. The verification also reproduced the trap a third time — passing absolute
+`--verdict-dir` and `--artifact-map` paths does not help, because the relative paths *inside*
+`artifacts.json` still resolve against the process CWD. The run returned the same total, 59,
+with the same four blocking codes, and reported 54 `STALE_VERDICT` as 54 `ARTIFACT_MISSING`.
+Same total, different defect, no warning. Only `--json` and a per-code count exposed it, which
+is the strongest case yet for making the three-coordinate rule enforceable rather than merely
+documented. Review commit `0aec1f9`, not `eed7ff7`.
+
 **A second figure, wrong in the same way.** My addendum also derived the post-verdict state
 as "6 blocking / 42 advisories". Six assumed this round's verdict would be PASS; it was FAIL,
 so the chain carries a fifth `VERDICT_FAIL` and checks 10 ids, not 9 — the reviewer measured
@@ -48,9 +61,14 @@ touched. Splitting those duties is the honest fix and belongs to a future round 
 `gate.py`; 013 records the conflict and defers the change rather than quietly picking a side.
 
 > **Correction filed against the 012 evidence.** `REVIEW-EVIDENCE-CORRECTION-XJ-20260930-012.md`
-> in the reviewer's vault supersedes the clean-checkout figure in the original addendum. The
-> 012 verdict and its card are left unamended, per the no-retrofit rule; this entry is where the
-> error is recorded.
+> in the reviewer's vault supersedes the clean-checkout figure in the original addendum. An
+> earlier draft of this entry said the 012 verdict and its card were "left unamended"; the
+> reviewer has since amended both in place (`0a4be1e`) — with the verdict's decision fields
+> (FAIL, 2 blockers, `ts`) untouched, the B1 evidence line restated as the true clean-checkout
+> measurement (59/9/0), and the correction disclosed inside the amended text itself. The
+> no-retrofit rule as this project practises it protects *decisions*, not typos in evidence;
+> an evidence line can be corrected when the correction is labelled as one. That boundary is
+> now tested rather than assumed, and it held.
 
 ## [0.1.9] - 2026-09-30 (failed review: FAIL, 1 blocker)
 
