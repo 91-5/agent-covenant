@@ -4,6 +4,39 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 2026-10-01
+
+Open-sourcing made the pattern undeniable: 013 recorded **four** false figures in a row, all
+one defect — the gate prints a number without saying which directory produced it. This round
+makes the gate bind that coordinate to every number it emits. First change to `tools/` since
+`0003db4`.
+
+**What the gate does now.** Every run resolves the process CWD and reports it: the JSON
+output carries `cwd` and a `split_run` flag, and when the verdict directory or the artifact
+map sits outside the CWD's subtree — the exact shape of 012's mixed-CWD run, where worktree
+tools were driven from the main repository — the human output prints a banner stating that
+the relative paths in the map resolve against the CWD, "not the verdict directory", and that
+the counts may not describe the checkout the caller thinks they are testing. The banner is
+advisory: findings and exit codes are untouched, so no existing command's meaning changes.
+
+**Why a banner and not a hard failure.** Split runs are legitimate — CI jobs, cross-repo
+audits, and the `--require`-only invocations this project's own acceptance commands use all
+run tools from elsewhere. Refusing to count would break them; a silent count is what produced
+four bad figures. Reporting the coordinate loudly while letting the caller decide is the same
+trade the `SUPERSEDED` advisory makes, and for the same reason: a check that vanishes silently
+is worse than no check, and a check that blocks legitimately is a check nobody can run.
+
+**The residual gap, stated rather than buried.** `split_run` compares the CWD against the
+verdict directory and the map file's location; it cannot see where the *entries* of the map
+resolve. A map whose entries are absolute paths to a third tree, run with everything under
+the CWD, still reports `split_run: false`. Closing that needs the gate to resolve every
+mapped path before counting and compare each against the CWD — a bigger change to
+`_check_freshness`'s contract, deferred until there is evidence anyone runs it that way.
+
+`PROTOCOL.md` §10 item 7 now describes the output contract. Four new tests pin the JSON
+fields, the banner's presence on a split run, its silence under `--quiet`, and that it never
+changes an exit code. 95 → 99 tests.
+
 ## [0.1.11] - 2026-10-01
 
 Round 012 was reviewed **FAIL, 2 blockers** — the ledger prose, not the rule. This round

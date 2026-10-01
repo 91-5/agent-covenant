@@ -88,5 +88,13 @@
     "PROTOCOL.md",
     "README.md",
     "README.zh-CN.md"
+  ],
+  "XJ-20260930-014": [
+    "tools/gate.py",
+    "tests/test_gate.py",
+    "PROTOCOL.md",
+    "CHANGELOG.md",
+    "README.md",
+    "README.zh-CN.md"
   ]
 }

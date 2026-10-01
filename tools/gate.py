@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime, timedelta, timezone
@@ -360,15 +361,41 @@ def main(argv=None):
     _safe_utf8()
     args = build_parser().parse_args(argv)
 
+    # The gate's counts are a property of the calling directory, not of the
+    # repository: artifacts.json's relative paths resolve against the process
+    # CWD, and _check_freshness compares mtimes against verdict ts values
+    # (PROTOCOL.md §10 item 7). Every output therefore carries the CWD, so a
+    # number quoted without its coordinates cannot be mistaken for a
+    # repository-level fact.
+    cwd = Path(os.getcwd()).resolve()
+
     verdict_dir = Path(args.verdict_dir)
     if not verdict_dir.is_dir():
         print(f"[USAGE] verdict directory not found: {verdict_dir}", file=sys.stderr)
         return EXIT_USAGE
+    verdict_dir = verdict_dir.resolve()
     try:
         artifact_map = _read_artifact_map(args.artifact_map)
     except ValueError as exc:
         print(f"[USAGE] {exc}", file=sys.stderr)
         return EXIT_USAGE
+
+    # A worktree/checkout tool driven from a foreign CWD is exactly how this
+    # repository produced a "clean checkout" figure that was actually a
+    # working-tree reading (012's evidence, corrected in 013). The artifact
+    # paths inside the map resolve against the CWD; when the verdicts or the
+    # map live outside the CWD's subtree, the run is describing a different
+    # tree than the one the caller is sitting in. Say so.
+    map_path_resolved = Path(args.artifact_map).resolve() if args.artifact_map else None
+    split_run = not (
+        verdict_dir.is_relative_to(cwd)
+        and (map_path_resolved is None or map_path_resolved.is_relative_to(cwd))
+    )
+    cwd_context = {"cwd": str(cwd), "split_run": split_run}
+    if split_run and not args.quiet and not args.as_json:
+        print(f"[CWD] running from {cwd} with verdicts in {verdict_dir} - relative artifact "
+              "paths in the map resolve against the CWD, not the verdict directory; counts "
+              "may not describe the checkout you think you are testing")
 
     if args.require:
         ids = list(args.require)
@@ -412,9 +439,13 @@ def main(argv=None):
     ok = not blocking
     if args.as_json:
         print(json.dumps({"ok": ok, "checked": len(ids),
-                          "violations": blocking, "advisories": advisories},
+                          "violations": blocking, "advisories": advisories,
+                          **cwd_context},
                          ensure_ascii=False, indent=2))
     elif not args.quiet:
+        if split_run:
+            print(f"(CWD context: {cwd_context['cwd']}; counts are a property of this "
+                  "directory - see PROTOCOL.md §10)")
         for item in advisories:
             print(f"[{item['code']}] {item['id']}: {item['detail']}")
         for item in blocking:

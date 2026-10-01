@@ -489,5 +489,75 @@ class TestSuccessorMustEarnAuthority(GateTestCase):
         self.assertIn("VERDICT_FAIL", out2)
 
 
+class TestCwdContext(GateTestCase):
+    """Every gate output carries the CWD, and a split run says so loudly.
+
+    The 012 evidence error was a gate driven from a foreign CWD: worktree tools,
+    main-tree files, and the resulting 17/31 figure read as a "clean checkout".
+    Counts are a property of the calling directory (PROTOCOL.md §10 item 7), so
+    the output must bind that coordinate to every number it prints.
+    """
+
+    def _artifact_map(self, vid):
+        artifact = self.tmp / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = self.tmp / "artifacts.json"
+        map_path.write_text(json.dumps({vid: [str(artifact)]}), encoding="utf-8")
+        return str(map_path)
+
+    def test_json_output_carries_cwd(self):
+        # A non-split run: fixtures must live *under* the process CWD, so build
+        # them inside a fresh subdir of the repo's tests dir (CWD = repo root).
+        base = Path(tempfile.mkdtemp(dir=REPO_ROOT / "tests"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(base, ignore_errors=True))
+        vdir = base / "verdicts"
+        vdir.mkdir()
+        artifact = base / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = base / "artifacts.json"
+        map_path.write_text(json.dumps({"AC-20260929-001": [str(artifact)]}), encoding="utf-8")
+        (vdir / "AC-20260929-001.verdict.json").write_text(
+            json.dumps(_verdict(), ensure_ascii=False), encoding="utf-8")
+        code, out, _ = self.run_gate("--verdict-dir", str(vdir), "--require",
+                                     "AC-20260929-001", "--artifact-map", str(map_path),
+                                     "--json")
+        self.assertEqual(gate.EXIT_OK, code, out)
+        payload = json.loads(out)
+        self.assertEqual(Path(os.getcwd()).resolve(), Path(payload["cwd"]))
+        self.assertFalse(payload["split_run"])
+
+    def test_split_run_warns_on_stdout(self):
+        """Tools/verdicts outside the CWD is the 012 mistake; it must be visible."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                     "--artifact-map",
+                                                     self._artifact_map("AC-20260929-001")))
+        # In the test process the CWD is the repo root while the fixtures live in
+        # a temp dir — a split run by construction — so the banner must appear.
+        if not Path(os.getcwd()).resolve().is_relative_to(self.tmp):
+            self.assertIn("[CWD]", out)
+            self.assertIn("not the verdict directory", out)
+
+    def test_split_run_still_exits_correctly(self):
+        """The banner is advisory: it must not change the exit code or findings."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, _, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                   "--artifact-map",
+                                                   self._artifact_map("AC-20260929-001")))
+        self.assertEqual(gate.EXIT_OK, code)
+
+    def test_quiet_suppresses_cwd_banner(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001",
+                                                     "--artifact-map",
+                                                     self._artifact_map("AC-20260929-001")),
+                                     "--quiet")
+        self.assertEqual(gate.EXIT_OK, code)
+        self.assertNotIn("[CWD]", out)
+        self.assertNotIn("CWD context", out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

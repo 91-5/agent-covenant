@@ -346,12 +346,17 @@ Say which level you actually run.
    verdict: staleness approaches its maximum and nothing is `SUPERSEDED`, because a
    successor can never itself be fresh on the file it would retire. In this
    repository, commit `9928bec` reports 59 blocking / 0 advisories in a clean
-   checkout and 7 blocking / 42 advisories in the author's working tree — same tree,
-   same command, different CWD. Two consequences for anyone citing a number from
-   this gate: **a reproducibility claim needs three coordinates — a commit, a command,
-   and a CWD** — and any count quoted without all three is not evidence, however
-   plausible it looks. This is a limitation of the mtime-based freshness design, not a
-   bug in the rule of round 11; the rule makes staleness reportable, not fixed.
+    checkout and 7 blocking / 42 advisories in the author's working tree — same tree,
+    same command, different CWD. Two consequences for anyone citing a number from
+    this gate: **a reproducibility claim needs three coordinates — a commit, a command,
+    and a CWD** — and any count quoted without all three is not evidence, however
+    plausible it looks. This is a limitation of the mtime-based freshness design, not a
+    bug in the rule of round 11; the rule makes staleness reportable, not fixed.
+    Since v0.1.12 the gate helps rather than just warns in prose: every run binds
+    `cwd` (and a `split_run` flag, true when the verdict directory or artifact map
+    sits outside the CWD's subtree) into its output, and a split run prints a banner
+    saying the counts may not describe the checkout the caller thinks they are
+    testing. The banner is advisory — it never changes findings or exit codes.
 
 ---
 
