@@ -24,6 +24,7 @@ import json
 import re
 import sys
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 EXIT_OK = 0
@@ -348,13 +349,96 @@ def load_artifact_map(path):
     return data
 
 
-def check_unmapped_claim_surface(project_root, artifact_map):
-    """The claim surface must be mapped by the *current* round, or freshness skips it.
+def _verdict_index(verdict_dir):
+    """`{id: record}` for every readable verdict file; unreadable ones stay absent."""
+    records = {}
+    if not verdict_dir or not Path(verdict_dir).is_dir():
+        return records
+    for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(record, dict):
+            records[path.name[: -len(VERDICT_SUFFIX)]] = record
+    return records
+
+
+def _signed_at(record):
+    """A verdict's signature instant, or None when it carries no usable `ts`."""
+    raw = record.get("ts")
+    if not isinstance(raw, str):
+        return None
+    try:
+        stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+
+
+def _listed_files(entry):
+    """The file paths one artifact-map entry claims, normalised."""
+    if not isinstance(entry, list):
+        return set()
+    return {item.strip().replace("\\", "/").lstrip("./")
+            for item in entry if isinstance(item, str)}
+
+
+def _claim_state(name, path, artifact_map, ids, verdicts):
+    """Who, if anyone, stands behind `name`'s current text.
+
+    Returns `(holder, listed_by, blockers)`. `holder` is the id of a round that
+    lists the file and holds a PASS verdict signed at or after its mtime, or None
+    with the reason each listing round failed to qualify.
+    """
+    mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    listed_by = [vid for vid in ids if name in _listed_files(artifact_map.get(vid))]
+    blockers = []
+    for vid in listed_by:
+        record = verdicts.get(vid)
+        if record is None:
+            blockers.append(f"{vid} lists it but has no verdict file")
+            continue
+        state = str(record.get("verdict", "")).strip().upper()
+        if state != "PASS":
+            blockers.append(f"{vid} lists it but its verdict is "
+                            f"{state or 'missing the verdict field'}")
+            continue
+        stamp = _signed_at(record)
+        if stamp is None:
+            blockers.append(f"{vid} lists it and is PASS but carries no usable ts")
+        elif stamp < mtime:
+            blockers.append(f"{vid} is PASS but signed {stamp.isoformat()}, before this "
+                            f"text's mtime {mtime.isoformat()}")
+        else:
+            return vid, listed_by, []
+    return None, listed_by, blockers
+
+
+def check_unmapped_claim_surface(project_root, artifact_map, verdict_dir=None):
+    """The claim surface needs a *current PASS signature*, or freshness skips it.
 
     README.md is still listed in the v0.1.0 maps, so a "is it mapped anywhere"
     check would have stayed green for the entire drift: the file was mapped, just
-    not by any round recent enough to be reviewing today's text. The gap that
-    matters is the newest id, and that is what this compares against.
+    not by any round recent enough to be reviewing today's text.
+
+    This rule used to approximate "recent enough" with *round identity* — the
+    newest id has to list the file — and round 013 is what proved the
+    approximation wrong. A listing is not a signature. 013 listed both READMEs
+    without ever editing them (`0aec1f9` is CHANGELOG.md alone; `39d3229` is the
+    card plus CHANGELOG.md), and the gate retired `XJ-20260929-001`'s staleness on
+    both, so the fiction retired a real finding. Nothing forced that round to be
+    dishonest: `current = ids[-1]` demanded the listing, so a ledger-only round
+    either attested to files it never read or took the WARN. The same rule let 014
+    list those two files honestly, because 014 had actually edited them —
+    compliance was a function of coincidence, which is not a check.
+
+    So coverage asks about signatures instead of ids: does any round that lists
+    this file hold a verdict that is PASS *and* signed at or after the file's
+    current mtime? FAIL holds nothing, and neither does a PASS that predates the
+    text it would be vouching for. Where a project has no verdicts at all there
+    is no signature to read, and the rule degrades to the old newest-id
+    comparison rather than inventing a baseline.
     """
     out = []
     if artifact_map is None:
@@ -365,13 +449,28 @@ def check_unmapped_claim_surface(project_root, artifact_map):
     # The map is append-ordered by convention (oldest id first); the last id is
     # the round whose reading is supposed to be current.
     current = ids[-1]
-    listed = {entry.strip().replace("\\", "/").lstrip("./")
-              for entry in artifact_map[current] if isinstance(entry, str)}
+    verdicts = _verdict_index(verdict_dir)
     for name in CLAIM_SURFACE_FILES:
-        if (project_root / name).is_file() and name not in listed:
-            out.append(_finding("UNMAPPED_CLAIM_SURFACE", "WARN", project_root / name,
+        path = project_root / name
+        if not path.is_file():
+            continue
+        if verdicts:
+            holder, listed_by, blockers = _claim_state(name, path, artifact_map, ids, verdicts)
+            if holder is not None:
+                continue
+            claimed = ", ".join(listed_by) if listed_by else "no round in the map lists it"
+            out.append(_finding("UNMAPPED_CLAIM_SURFACE", "WARN", path,
+                                f"no current PASS signature covers it — {claimed}, and "
+                                f"{'; '.join(blockers) if blockers else 'nothing has signed for it'}. "
+                                "A listing retires a staleness only once a PASS verdict signed "
+                                "at or after the file's mtime stands behind it"))
+            continue
+        if name not in _listed_files(artifact_map.get(current)):
+            out.append(_finding("UNMAPPED_CLAIM_SURFACE", "WARN", path,
                                 f"not listed in {current}, the newest id in artifacts.json, so "
-                                "no freshness check covers it - list it under that id"))
+                                "no freshness check covers it - list it under that id. No verdict "
+                                "files exist, so this is the degraded newest-id comparison, not "
+                                "a signature check"))
     return out
 
 
@@ -534,7 +633,7 @@ def main(argv=None):
             print(f"[USAGE] {exc}", file=sys.stderr)
             return EXIT_USAGE
     findings += check_stale_test_count(project_root)
-    findings += check_unmapped_claim_surface(project_root, artifact_map)
+    findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)
 
     errors = sum(1 for f in findings if f["level"] == "ERROR")
     warnings = sum(1 for f in findings if f["level"] == "WARN")

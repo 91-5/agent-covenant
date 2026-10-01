@@ -10,6 +10,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -450,7 +451,7 @@ class TestStaleTestCount(LintTestCase):
 
 
 class TestUnmappedClaimSurface(LintTestCase):
-    """The claim surface must sit inside some verdict's map, or freshness skips it."""
+    """The claim surface needs a current PASS signature, or freshness skips it."""
 
     def _claim_surface(self):
         (self.tmp / "README.md").write_text("# P\n", encoding="utf-8")
@@ -460,6 +461,19 @@ class TestUnmappedClaimSurface(LintTestCase):
         path = self.tmp / "artifacts.json"
         path.write_text(json.dumps(entries), encoding="utf-8")
         return str(path)
+
+    def _verdict(self, vid, verdict="PASS", when=None):
+        """Write a verdict signed `when` (default: now, so it is never stale)."""
+        vdir = self.tmp / "verdicts"
+        vdir.mkdir(exist_ok=True)
+        stamp = when or datetime.now(timezone.utc).isoformat()
+        (vdir / f"{vid}.verdict.json").write_text(
+            json.dumps({"id": vid, "verdict": verdict, "ts": stamp}), encoding="utf-8")
+        return str(vdir)
+
+    def _aged(self, seconds=3600):
+        """An instant far enough back that it predates any file just written."""
+        return (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
 
     def test_unlisted_file_warns(self):
         self._claim_surface()
@@ -521,6 +535,59 @@ class TestUnmappedClaimSurface(LintTestCase):
         })
         code, out, _ = self.run_lint("--artifact-map", path)
         self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    # --- signature semantics -------------------------------------------------
+    # Round identity is not coverage. These cases pin the claim *holder*: the
+    # round that actually stands behind the file's current text.
+
+    def test_an_older_rounds_fresh_pass_holds_the_claim(self):
+        """The coercion this rule used to impose, removed.
+
+        A ledger-only round that never touched the READMEs must not have to list
+        them. Coverage comes from whoever really signed, not from whoever is newest.
+        """
+        self._claim_surface()
+        self._verdict("AC-20260929-001")
+        path = self._map(**{
+            "AC-20260929-001": ["README.md", "CHANGELOG.md"],
+            "AC-20260930-005": [".tasks/XJ-20260930-005.md"],
+        })
+        code, out, _ = self.run_lint("--artifact-map", path,
+                                     "--verdict-dir", str(self.tmp / "verdicts"))
+        self.assertNotIn("UNMAPPED_CLAIM_SURFACE", self.codes(out))
+
+    def test_a_fail_verdict_does_not_hold_the_claim(self):
+        self._claim_surface()
+        self._verdict("AC-20260929-001", verdict="FAIL")
+        path = self._map(**{"AC-20260929-001": ["README.md", "CHANGELOG.md"]})
+        code, out, _ = self.run_lint("--artifact-map", path,
+                                     "--verdict-dir", str(self.tmp / "verdicts"))
+        codes = self.codes(out)
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", codes)
+        self.assertIn("FAIL", out)
+
+    def test_a_pass_predating_the_file_does_not_hold_the_claim(self):
+        """A signature older than the text it would vouch for says nothing about it."""
+        self._claim_surface()
+        self._verdict("AC-20260929-001", when=self._aged())
+        path = self._map(**{"AC-20260929-001": ["README.md", "CHANGELOG.md"]})
+        code, out, _ = self.run_lint("--artifact-map", path,
+                                     "--verdict-dir", str(self.tmp / "verdicts"))
+        codes = self.codes(out)
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", codes)
+        self.assertIn("before this text's mtime", out)
+
+    def test_listing_without_any_verdict_is_not_coverage(self):
+        """The finding reports the gap rather than the round that caused it."""
+        self._claim_surface()
+        path = self._map(**{"AC-20260929-001": ["README.md", "CHANGELOG.md"]})
+        vdir = self.tmp / "verdicts"
+        vdir.mkdir()
+        self._verdict("AC-20260929-002")   # a verdict exists, for a round that maps nothing
+        code, out, _ = self.run_lint("--artifact-map", path, "--verdict-dir", str(vdir))
+        codes = self.codes(out)
+        self.assertIn("UNMAPPED_CLAIM_SURFACE", codes)
+        self.assertIn("no verdict file", out)
 
 
 if __name__ == "__main__":

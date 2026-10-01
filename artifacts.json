@@ -96,5 +96,15 @@
     "CHANGELOG.md",
     "README.md",
     "README.zh-CN.md"
+  ],
+  "XJ-20260930-015": [
+    "tools/lint_cards.py",
+    "tests/test_lint_cards.py",
+    "docs/lint-rules.md",
+    "CHANGELOG.md",
+    "README.md",
+    "README.zh-CN.md",
+    "artifacts.json",
+    ".tasks/XJ-20260930-015.md"
   ]
 }

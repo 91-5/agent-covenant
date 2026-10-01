@@ -4,6 +4,50 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2026-10-01
+
+Six rounds after the rule that was supposed to prevent it, the laundering channel opened anyway.
+`UNMAPPED_CLAIM_SURFACE` compared the claim surface against the **newest** id in `artifacts.json`
+and required that round to list every file in it. A ledger-only round therefore could not comply
+honestly. Round 013 listed `README.md` and `README.zh-CN.md` without ever editing either —
+`0aec1f9` is `CHANGELOG.md` alone, `39d3229` is the card plus `CHANGELOG.md` — and the gate
+retired `XJ-20260929-001`'s staleness on both, printing two `[SUPERSEDED]` lines naming 013 as the
+round that "re-judged it later and holds the current claim". The listing was fiction; the gate
+treated it as a signature.
+
+This is the same conclusion 013 reached when it **refused** the 012 reviewer's maintenance-id
+suggestion — a round must not map a file it never changed, because "re-map it next cycle" then
+retires any staleness on demand. The refusal was sound and it did not matter, because the rule it
+trusted was manufacturing the identical result automatically. Round 014 listed the same two files
+and was telling the truth, because 014 had actually edited them; the same coercion produced
+opposite results depending on whether the round happened to have touched the files. Compliance was
+a function of coincidence, which is not a check.
+
+**What the rule asks now.** Not *which round is newest* but *who holds the claim*: some round that
+lists the file must hold a verdict that is **PASS** and signed **at or after the file's current
+mtime**. A FAIL verdict holds nothing — 013's listing of `CHANGELOG.md` does not cover it, which
+is why that file warns today. A PASS that predates the text it would vouch for holds nothing
+either. With no verdicts anywhere in the project there is no signature to read, and the rule
+degrades to the old newest-id comparison instead of inventing a baseline; that fallback is what
+keeps the original drift regression meaningful. `tools/gate.py` is untouched.
+
+**A correction to this round's own card, found by running it.** The card asserted that because
+`tools/gate.py` is unchanged, the gate's output must not move, and recorded `12 checked / 25
+violations / 37 advisories` as a fixed baseline. That is false: it confuses the tool being
+unchanged with the output being unchanged, and the two come apart the moment a round edits any
+mapped file — which this round must. Measured at the same commit, CWD and command, the ten added
+findings are all `STALE_VERDICT` on `tools/lint_cards.py` and `tests/test_lint_cards.py`, the two
+files this round edits, across every round whose map lists either. Nothing disappeared and no
+finding changed code. That is the freshness mechanism working. The card now states the narrower
+invariant it should have stated: findings may change only in ways attributable to files this round
+edited.
+
+**Deferred.** The `edited`/`reviewed` schema split that separates round-scope declaration from
+claim-surface coverage is the more thorough fix and is deliberately **not** done here. It would
+change how `gate.py` parses the map, and one round moving two coupled things is how 013 ended up
+needing a round to audit its own audit. Removing the coercion first also changes what the split
+would have to solve.
+
 ## [0.1.12] - 2026-10-01
 
 Open-sourcing made the pattern undeniable: 013 recorded **four** false figures in a row, all
