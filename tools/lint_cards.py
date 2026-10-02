@@ -49,6 +49,26 @@ NAMESPACE_RE = re.compile(r"^([A-Z]{2,6})-\d{8}-\d{3}\.md$")
 # is not the place for general prose notes, and widening this to "any unnamespaced
 # .md" would exempt exactly the bare names N1 was written to catch.
 DIRECTORY_DOC_RE = re.compile(r"^README(\.[A-Za-z-]+)?\.md$")
+
+# A review request that carries a namespace. The canonical hand-over name is
+# `REVIEW-REQUEST-<NS>-<date>-<NNN>.md`, and rule N1 exists precisely so that a
+# request cannot be resolved against another agent's context (postmortems PM-1).
+# But N1's pattern requires the namespace token to *lead*, while `classify()`
+# requires the literal prefix `REVIEW-REQUEST-` — and no single filename can
+# satisfy both. Observed 2026-10-02 across two rounds of the deepseek-brain
+# review run: every conforming request either lost its namespace (bare
+# `REVIEW-REQUEST-XJ-...`, exempt from N1 yet nameless — the exact hijack N1
+# guards against) or tripped NAMESPACE_MISSING (namespaced `DSB-REVIEW-REQUEST-...`,
+# which `classify()` then declined to recognise as a request).
+#
+# The resolution accepts the namespaced form and treats it as a request, so the
+# namespace leads (satisfying N1) and the type is still recognised (satisfying
+# `classify()`). Deliberately narrow: the leading token must be a namespace and
+# the name must end in a date-number id, so `REVIEW-REQUEST-whatever.md` and
+# other bare names stay rejected.
+NAMESPACED_REQUEST_RE = re.compile(
+    r"^([A-Z]{2,6})-REVIEW-REQUEST-(?:[A-Z]{2,6}-)?\d{8}-\d{3}\.md$"
+)
 ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
@@ -102,6 +122,8 @@ def _has_section(sections, key):
 
 def classify(path):
     name = path.name
+    if NAMESPACED_REQUEST_RE.match(name):
+        return "request"  # namespaced hand-over; see NAMESPACED_REQUEST_RE
     if name.startswith("REVIEW-REQUEST-"):
         return "request"  # a hand-over document; it never carries a verdict by definition
     if name.startswith("REVIEW-"):
@@ -122,7 +144,9 @@ def _finding(rule, level, path, detail, line=None):
 def check_namespace(path, _text):
     if DIRECTORY_DOC_RE.match(path.name):
         return []
-    if not NAMESPACE_RE.match(path.name) and not path.name.startswith(("REVIEW-", "HANDOFF-", "ADR-")):
+    if (not NAMESPACE_RE.match(path.name)
+            and not path.name.startswith(("REVIEW-", "HANDOFF-", "ADR-"))
+            and not NAMESPACED_REQUEST_RE.match(path.name)):
         return [_finding("NAMESPACE_MISSING", "ERROR", path,
                          "filename must be <NS>-YYYYMMDD-NNN.md (PROTOCOL.md N1); "
                          f"got {path.name!r} — a bare name can be hijacked by another agent")]

@@ -279,6 +279,10 @@ part.
 **Rule N1:** every card filename carries a namespace token and a date:
 `<NS>-YYYYMMDD-NNN.md`. Bare `TASK-N`/`REVIEW-N` names are non-conformant.
 
+A review request may instead take `<NS>-REVIEW-REQUEST-<NS2>-<date>-<NNN>.md`, so that
+the namespace leads and the request type is still recognisable. Prefer this form over a
+bare `REVIEW-REQUEST-*` name whenever the request travels through a shared mailbox.
+
 **Rule N2:** the trigger handed to a reviewing agent is the **absolute path** of
 the card, plus the instruction to read it *before* acting. Never "look at
 TASK-002".

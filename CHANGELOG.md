@@ -4,6 +4,38 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.15] - 2026-10-02
+
+`NAMESPACE_MISSING` had no valid compliance path for a *namespaced* review request.
+N1 requires the namespace token to lead (`<NS>-YYYYMMDD-NNN.md`), while `classify()`
+recognises a request by the literal prefix `REVIEW-REQUEST-`. No single filename
+satisfied both, so a request had to choose which rule to break:
+
+- `REVIEW-REQUEST-XJ-20261002-003.md` — `classify()` sees a request, but it carries
+  **no namespace**, which is exactly the hijack N1 exists to prevent (PM-1).
+- `DSB-REVIEW-REQUEST-XJ-20261002-003.md` — namespaced, so N1 is satisfied, but the
+  name no longer starts with `REVIEW-REQUEST-`, so `classify()` calls it `other` and
+  `NAMESPACE_MISSING` fires anyway.
+
+Observed across two rounds of the deepseek-brain review run (2026-10-02). Round 3's
+request card was renamed to a bare task id to clear the error, which cost it the
+request type; the round's own review card hit the same wall. Twice in one session a
+conforming name had to be abandoned to satisfy a rule that could not be met.
+
+`NAMESPACED_REQUEST_RE` accepts `<NS>-REVIEW-REQUEST-<NS2>-<date>-<NNN>.md` and
+classifies it as a request, so the namespace leads *and* the type survives. The
+exemption is deliberately narrow: the leading token must be a namespace and the name
+must end in a date-number id. Tests assert that `DSB-REVIEW-REQUEST-XJ.md`,
+`REVIEW-REQUEST-whatever.md`, `NOTES.md`, and `DSB-NOTES-20261002-001.md` still fail,
+so it cannot widen to the bare names N1 was written to catch.
+
+`REVIEW-REQUEST-<NS>-<date>-<NNN>.md` remains non-conformant; the adoption path is the
+namespaced form above.
+
+Incidental repair: `README.zh-CN.md`'s test-count line had been mojibake for some time
+(`# 106 <garbage>`), so `STALE_TEST_COUNT` could not see it — a claim surface the rule
+silently skipped. The line is now valid UTF-8, and both READMEs state `109 tests`.
+
 ## [0.1.14] - 2026-10-02
 
 `NAMESPACE_MISSING` had no valid compliance path for a card directory's own README.

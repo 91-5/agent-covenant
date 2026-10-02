@@ -130,6 +130,39 @@ class TestNamespaceRule(LintTestCase):
         self.assertEqual(lint.EXIT_ERROR, code)
         self.assertIn("NAMESPACE_MISSING", self.codes(out))
 
+    def test_namespaced_review_request_is_exempt_from_n1(self):
+        """`<NS>-REVIEW-REQUEST-...` leads with a namespace, so N1 is satisfied (2026-10-02).
+
+        Regression: the deepseek-brain run named a request
+        `DSB-REVIEW-REQUEST-XJ-20261002-003.md` and got NAMESPACE_MISSING, because
+        N1's pattern requires the namespace token to lead while classify() required
+        the literal `REVIEW-REQUEST-` prefix. No one filename satisfied both.
+        """
+        self.write("DSB-REVIEW-REQUEST-XJ-20261002-003.md",
+                   "# DSB-20261002-004 (REVIEW-REQUEST)\n\nRead the card and report.\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("NAMESPACE_MISSING", self.codes(out))
+
+    def test_namespaced_review_request_is_classified_as_a_request(self):
+        """Exempting N1 must not cost the request its type: a request carries no verdict."""
+        name = "DSB-REVIEW-REQUEST-XJ-20261002-003.md"
+        self.write(name, "# request\n\nNo verdict line here on purpose.\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        # A verdict-carrying card would raise REVIEW_MISSING_VERDICT_LINE; a request
+        # must not, so the absence of that code is what proves the type was recognised.
+        self.assertNotIn("REVIEW_MISSING_VERDICT_LINE", self.codes(out))
+
+    def test_namespaced_request_exemption_does_not_widen(self):
+        """Narrow on purpose: the exemption needs both a leading NS and a date-number id."""
+        self.write("DSB-REVIEW-REQUEST-XJ.md", "# not a card id\n")
+        self.write("REVIEW-REQUEST-whatever.md", "# no id\n")
+        self.write("DSB-NOTES-20261002-001.md", "# not a request type\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("NAMESPACE_MISSING", self.codes(out))
+
 
 class TestBareTaskReferences(LintTestCase):
     def test_bare_reference_in_handover_section_is_rejected_with_line_number(self):
