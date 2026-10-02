@@ -6,35 +6,36 @@ versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.15] - 2026-10-02
 
-`NAMESPACE_MISSING` had no valid compliance path for a *namespaced* review request.
-N1 requires the namespace token to lead (`<NS>-YYYYMMDD-NNN.md`), while `classify()`
-recognises a request by the literal prefix `REVIEW-REQUEST-`. No single filename
-satisfied both, so a request had to choose which rule to break:
+Adds the project-prefixed review request as a conformant name.
+`<NS>-REVIEW-REQUEST-<NS2>-<date>-<NNN>.md` is now recognised as a request.
 
-- `REVIEW-REQUEST-XJ-20261002-003.md` — `classify()` sees a request, but it carries
-  **no namespace**, which is exactly the hijack N1 exists to prevent (PM-1).
-- `DSB-REVIEW-REQUEST-XJ-20261002-003.md` — namespaced, so N1 is satisfied, but the
-  name no longer starts with `REVIEW-REQUEST-`, so `classify()` calls it `other` and
-  `NAMESPACE_MISSING` fires anyway.
+**Correction to an earlier account of this change.** The first draft of this entry
+claimed N1 left a namespaced request no valid compliance path, i.e. that a request had
+to break either the namespace rule or the request type. That was wrong, and the
+evidence contradicted it: this repository's own convention is already conformant.
+Its requests are `REVIEW-REQUEST-XJ-<date>-<NNN>.md` and its reviews are
+`REVIEW-XJ-<date>-<NNN>.md` — both satisfy N1 through the existing `REVIEW-` prefix
+exemption, and neither carries a project prefix. The deepseek-brain run failed N1
+because *the author (this project's own orchestrator) invented a `DSB-`-prefixed
+naming scheme* that matches neither pattern. The rule was not at fault; the name was.
 
-Observed across two rounds of the deepseek-brain review run (2026-10-02). Round 3's
-request card was renamed to a bare task id to clear the error, which cost it the
-request type; the round's own review card hit the same wall. Twice in one session a
-conforming name had to be abandoned to satisfy a rule that could not be met.
+The change is kept because the need it serves is real and reproducible, just narrower
+than first stated. A mailbox shared by several agents invites project-prefixed names —
+the same mailbox already holds `REVIEW-BRIEF-XJRC-20261002-001.md`, a third type prefix
+invented independently — and `<NS>-REVIEW-REQUEST-...` gives such a request one honest
+name instead of forcing a choice between a project prefix and the recognised type.
+Projects that keep the unprefixed `REVIEW-REQUEST-<NS>-<date>-<NNN>.md` form are
+unaffected and remain conformant.
 
-`NAMESPACED_REQUEST_RE` accepts `<NS>-REVIEW-REQUEST-<NS2>-<date>-<NNN>.md` and
-classifies it as a request, so the namespace leads *and* the type survives. The
-exemption is deliberately narrow: the leading token must be a namespace and the name
-must end in a date-number id. Tests assert that `DSB-REVIEW-REQUEST-XJ.md`,
-`REVIEW-REQUEST-whatever.md`, `NOTES.md`, and `DSB-NOTES-20261002-001.md` still fail,
-so it cannot widen to the bare names N1 was written to catch.
+Deliberately narrow: the leading token must be a namespace and the name must end in a
+date-number id. Tests assert that `DSB-REVIEW-REQUEST-XJ.md`, `REVIEW-REQUEST-whatever.md`,
+`NOTES.md`, and `DSB-NOTES-20261002-001.md` still fail.
 
-`REVIEW-REQUEST-<NS>-<date>-<NNN>.md` remains non-conformant; the adoption path is the
-namespaced form above.
-
-Incidental repair: `README.zh-CN.md`'s test-count line had been mojibake for some time
-(`# 106 <garbage>`), so `STALE_TEST_COUNT` could not see it — a claim surface the rule
-silently skipped. The line is now valid UTF-8, and both READMEs state `109 tests`.
+Incidental repair, unrelated to the above: `README.zh-CN.md`'s test-count line had been
+mojibake for some time (`# 106 <garbage>`), so `STALE_TEST_COUNT` could not match it — a
+claim surface the rule silently skipped. The line is valid UTF-8 again and both READMEs
+state `109 tests`. Note the rest of that file still carries ~308 private-use characters
+from the same older corruption, which this change does not address.
 
 ## [0.1.14] - 2026-10-02
 

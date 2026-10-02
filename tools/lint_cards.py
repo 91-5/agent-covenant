@@ -50,22 +50,25 @@ NAMESPACE_RE = re.compile(r"^([A-Z]{2,6})-\d{8}-\d{3}\.md$")
 # .md" would exempt exactly the bare names N1 was written to catch.
 DIRECTORY_DOC_RE = re.compile(r"^README(\.[A-Za-z-]+)?\.md$")
 
-# A review request that carries a namespace. The canonical hand-over name is
-# `REVIEW-REQUEST-<NS>-<date>-<NNN>.md`, and rule N1 exists precisely so that a
-# request cannot be resolved against another agent's context (postmortems PM-1).
-# But N1's pattern requires the namespace token to *lead*, while `classify()`
-# requires the literal prefix `REVIEW-REQUEST-` — and no single filename can
-# satisfy both. Observed 2026-10-02 across two rounds of the deepseek-brain
-# review run: every conforming request either lost its namespace (bare
-# `REVIEW-REQUEST-XJ-...`, exempt from N1 yet nameless — the exact hijack N1
-# guards against) or tripped NAMESPACE_MISSING (namespaced `DSB-REVIEW-REQUEST-...`,
-# which `classify()` then declined to recognise as a request).
+# A review request that carries a project prefix. The canonical hand-over name here is
+# `REVIEW-REQUEST-<NS>-<date>-<NNN>.md`, which satisfies N1 through the `REVIEW-` prefix
+# exemption and carries no project prefix. That form remains both valid and preferred.
 #
-# The resolution accepts the namespaced form and treats it as a request, so the
-# namespace leads (satisfying N1) and the type is still recognised (satisfying
-# `classify()`). Deliberately narrow: the leading token must be a namespace and
-# the name must end in a date-number id, so `REVIEW-REQUEST-whatever.md` and
-# other bare names stay rejected.
+# This pattern exists because a mailbox shared by several agents invites project-prefixed
+# names, and `<NS>-REVIEW-REQUEST-...` matches neither the N1 pattern (the namespace does
+# not lead) nor `classify()`'s literal-prefix check (the name does not start with
+# `REVIEW-REQUEST-`), so it was an ERROR with no recognised type. The same mailbox
+# already held `REVIEW-BRIEF-XJRC-20261002-001.md`, a third type prefix invented
+# independently, so this is an emerging convention rather than a hypothetical.
+#
+# Observed 2026-10-02 in the deepseek-brain review run. Worth recording how that run
+# actually failed: its orchestrator invented a `DSB-` project prefix, and the resulting
+# names broke N1. The rule was working as designed -- the naming was the defect. An
+# earlier draft of this comment claimed N1 admitted no conformant namespaced request,
+# which the repository's own conventions disprove; corrected rather than left standing.
+#
+# Narrow on purpose: the leading token must be a namespace and the name must end in a
+# date-number id, so `REVIEW-REQUEST-whatever.md` and other bare names stay rejected.
 NAMESPACED_REQUEST_RE = re.compile(
     r"^([A-Z]{2,6})-REVIEW-REQUEST-(?:[A-Z]{2,6}-)?\d{8}-\d{3}\.md$"
 )
