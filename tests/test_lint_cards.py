@@ -109,6 +109,27 @@ class TestNamespaceRule(LintTestCase):
         self.assertEqual(lint.EXIT_OK, code, out)
         self.assertNotIn("NAMESPACE_MISSING", self.codes(out))
 
+    def test_directory_readme_is_exempt(self):
+        """README.md documents the card directory; it is not a card (2026-10-02)."""
+        self.write("README.md", "# Cards\n\nThis directory holds collaboration cards.\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("NAMESPACE_MISSING", self.codes(out))
+
+    def test_localised_readme_is_exempt(self):
+        self.write("README.zh-CN.md", "# 评审卡\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("NAMESPACE_MISSING", self.codes(out))
+
+    def test_readme_exemption_does_not_widen_to_other_bare_names(self):
+        """The exemption is narrow on purpose: N1's real targets stay rejected."""
+        self.write("NOTES.md", "# notes\n")
+        self.write("SUSPENDED-something-2026-10-02.md", "# notes\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("NAMESPACE_MISSING", self.codes(out))
+
 
 class TestBareTaskReferences(LintTestCase):
     def test_bare_reference_in_handover_section_is_rejected_with_line_number(self):

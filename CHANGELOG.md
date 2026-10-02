@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2026-10-02
+
+`NAMESPACE_MISSING` had no valid compliance path for a card directory's own README.
+N1 exists because a bare name gets resolved against another agent's context and the
+review lands on the wrong artifact (PM-1). That rationale does not reach a README: it
+documents the card directory, and no second agent will mint a card called `README`.
+But the rule was unconditional — `check_namespace` fires on every `*.md` in the card
+directory regardless of what the file is — so a project's own `.tasks/README.md` was
+an ERROR it could not clear.
+
+Observed in the deepseek-brain review run (2026-10-02). The only way to silence it
+there was to rename the file to something that lied about its type; a compliant name
+made the linter parse the prose as a task card, which then produced four
+`TASK_MISSING_SECTION` warnings instead of one namespace error. A rule whose only
+exit renames a file into a false statement is a rule with no honest way to pass.
+
+`README.md` and `README.<locale>.md` are now exempt from the namespace rule. The
+exemption is deliberately narrow: widening it to "any unnamespaced `.md`" would
+exempt precisely the bare names N1 was written to catch, and a test asserts that
+(`NOTES.md`, `SUSPENDED-something-2026-10-02.md` still fail).
+
+The rule that caught this change's own side effect is worth noting: adding three tests
+made `README.md`'s stated `103 tests` immediately false, and `STALE_TEST_COUNT` — an
+ERROR, the one lie this project refuses to relax — failed the build until both
+READMEs were corrected. That is the rule working as designed.
+
 ## [0.1.13] - 2026-10-01
 
 Six rounds after the rule that was supposed to prevent it, the laundering channel opened anyway.

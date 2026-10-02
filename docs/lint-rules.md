@@ -35,6 +35,7 @@ sits next to `.tasks/`, in which case it is picked up automatically:
 |---|---|---|
 | `REVIEW-REQUEST-*.md` | the review-card rules (`REVIEW_MISSING_VERDICT_LINE`, `REVIEW_MISSING_BLOCKERS`) | A request is a hand-over document: it asks someone to produce a verdict, so it has none by definition. Requiring one would make every well-formed request non-conformant. The namespace rule still applies. |
 | `HANDOFF-*.md`, `ADR-*.md` | the namespace rule | Their identity is their prefix; a date-suffixed id adds nothing. |
+| `README.md`, `README.<locale>.md` in the card directory | the namespace rule | Directory documentation, not a card. N1's rationale is hijacking (PM-1): a bare `TASK-002` resolved against another agent's context. No agent will mint a card called `README`, so the collision it prevents cannot occur. Observed 2026-10-02 in the deepseek-brain review run — the only way to silence the finding there was to rename the file to something that lied about its type, which then got parsed as a task card and produced four `TASK_MISSING_SECTION` warnings instead. Deliberately narrow: widening this to "any unnamespaced `.md`" would exempt the bare names N1 exists to catch. |
 | `<dir>/legacy/**` | everything | Historical evidence, kept verbatim and deliberately not linted. Linting the past would force edits to evidence, which is the behaviour this project exists to prevent. |
 
 

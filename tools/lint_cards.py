@@ -32,6 +32,23 @@ EXIT_ERROR = 1
 EXIT_USAGE = 2
 
 NAMESPACE_RE = re.compile(r"^([A-Z]{2,6})-\d{8}-\d{3}\.md$")
+
+# Directory documentation is not a card, so N1's hijack rationale does not reach it.
+# N1 exists because a bare name like TASK-002 gets resolved against another agent's
+# context and the review lands on the wrong artifact (postmortems PM-1); a README
+# describes the card directory, and no second agent will mint a card called
+# "README". Localized variants (README.zh-CN.md) are the same artifact.
+#
+# Observed 2026-10-02 in the deepseek-brain review run: its own `.tasks/README.md`
+# was reported NAMESPACE_MISSING, and the only way to silence that was to rename the
+# file to something that lied about what it was — which then got parsed as a task
+# card and produced four TASK_MISSING_SECTION warnings instead. A rule that can only
+# be satisfied by misnaming a file is a rule with no valid compliance path.
+#
+# Deliberately narrow: `README.md` and `README.<locale>.md` only. A card directory
+# is not the place for general prose notes, and widening this to "any unnamespaced
+# .md" would exempt exactly the bare names N1 was written to catch.
+DIRECTORY_DOC_RE = re.compile(r"^README(\.[A-Za-z-]+)?\.md$")
 ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
@@ -103,6 +120,8 @@ def _finding(rule, level, path, detail, line=None):
 
 
 def check_namespace(path, _text):
+    if DIRECTORY_DOC_RE.match(path.name):
+        return []
     if not NAMESPACE_RE.match(path.name) and not path.name.startswith(("REVIEW-", "HANDOFF-", "ADR-")):
         return [_finding("NAMESPACE_MISSING", "ERROR", path,
                          "filename must be <NS>-YYYYMMDD-NNN.md (PROTOCOL.md N1); "
