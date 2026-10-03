@@ -51,6 +51,12 @@ These belong in your constitution and ADRs, not in a linter:
   we say so in PROTOCOL.md §10.3.
 - **Reviewer quality** — a lazy reviewer produces a green verdict with plausible
   evidence strings. No static check separates a real review from a confident one.
+- **Whether the change already landed** — PROTOCOL.md §6.2 makes the push the merge
+  boundary, but a linter only reads the working tree: it cannot see `origin/main`, and
+  `git log` shows no remote state. `VERDICT_WITHOUT_REVIEW` therefore stays a WARN even
+  though "merged without a verdict" is a real violation — the check has to be a pre-push
+  hook or CI step, not this tool. Do not let the warning's severity drift into implying
+  the gate would catch it.
 
 ## Severity philosophy
 

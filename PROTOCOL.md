@@ -266,6 +266,42 @@ python tools/gate.py \
   --json
 ```
 
+### 6.2 Pre-merge review: the push *is* the merge
+
+A verdict only gates anything while it happens **before** the change reaches the trunk.
+Once code sits on `main` — or in a published repository — the review has become an audit
+of a decision already in force, which is the thing this protocol exists to prevent. Both
+retroactive reviews in this repo's own history cost real time: the shim hardening landed
+roughly a day before its first review, and a multi-point-snapshot change carried an
+assertion count ("41 assertions") that no party had actually counted.
+
+- **P1 — Verdict before push.** A required id may not be pushed to the trunk or to any
+  published repository until its verdict file exists and the gate returns `0`. **Local
+  commits are not merging**: they exist precisely so the reviewer inspects the real
+  artifact instead of a description of it. Require the id in the pre-push check.
+- **P2 — If it already landed, say so on the first screen.** A change already on the
+  trunk gets a retrospective card whose opening block states that it landed unreviewed,
+  how long ago, and what the blast radius is. A retrospective card may never be marked
+  `GATED`; until a verdict exists it is a change record, and `CLOSED` must not be read
+  as "passed review" (§4.1).
+- **P3 — Review the artifact, not the branch tip.** The verdict's `commit` is the commit
+  the reviewer actually inspected, and what merges must contain exactly that commit. If
+  the trunk moved on, §6.1 decides whether the verdict still stands — and note the limit
+  that §6.1 does not cover: a verdict on a *historical* commit says nothing about work
+  layered on top of it. Reviewing `A` and shipping `A+B+C` is an unreviewed merge.
+- **P4 — An unverified number is a defect.** Any figure in an `Acceptance` criterion
+  ("41 assertions", "N files", "M ms") must carry the method that produced it. A number
+  asserted by one party and merely re-copied by the next is a blocker: it gets inherited
+  as an expectation, which is how a wrong count survives three rounds and two reviews.
+- **P5 — The rule binds this protocol too.** This section was itself committed without
+  an independent verdict. It carries the same debt it describes and is listed in the
+  next review round rather than pretending otherwise.
+
+`lint_cards.py` reports `VERDICT_WITHOUT_REVIEW` when a `GATED`/`CLOSED` card has no
+verdict file. It stays a warning on purpose, because P2 allows honest change records.
+Raising it to an error has to wait until cards can declare `retrospective: true`
+explicitly — ADR-0001 covers why that needs a schema change first.
+
 ---
 
 ## 7. Naming: why cards are namespaced

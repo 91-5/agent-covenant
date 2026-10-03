@@ -4,6 +4,37 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.16] - 2026-10-03
+
+Documentation-only. Adds **PROTOCOL.md §6.2 "Pre-merge review: the push is the merge"**:
+a verdict only gates anything while it happens before the change reaches the trunk.
+
+Both retrospective reviews in this project's own history cost real time, and §6.2 is
+written from what they exposed:
+
+- **P1 — verdict before push.** Local commits are explicitly not merging; they exist so
+  the reviewer inspects the real artifact rather than a description of it.
+- **P2 — say so on the first screen.** A change already on the trunk gets a retrospective
+  card whose opening block states that it landed unreviewed, how long ago, and the blast
+  radius. It may never be marked `GATED`; until a verdict exists it is a change record,
+  and `CLOSED` must not be read as "passed review".
+- **P3 — review the artifact, not the branch tip.** Reviewing `A` and shipping `A+B+C`
+  is an unreviewed merge. §6.1 supersession does not cover this: it decides whether an
+  *earlier* verdict is retired, not whether a *historical* commit speaks for later work.
+- **P4 — an unverified number is a defect.** Any figure in an `Acceptance` criterion must
+  carry the method that produced it. A count asserted once and re-copied by the next party
+  survives any number of rounds, because each reader assumes someone checked.
+- **P5 — the rule binds this protocol too.** §6.2 was itself committed without an
+  independent verdict. It carries the same debt it describes and is listed in the next
+  review round instead of pretending otherwise.
+
+**Linter behaviour is unchanged on purpose.** `VERDICT_WITHOUT_REVIEW` stays a WARN,
+because P2 permits honest change records; `docs/lint-rules.md` now records under *Not
+machine-checkable* why the check cannot be here at all — a linter reads the working tree
+and cannot see `origin/main`, so enforcing this needs a pre-push hook or CI. Promoting
+that warning to an error has to wait until cards can declare `retrospective: true`
+(ADR-0001).
+
 ## [0.1.15] - 2026-10-02
 
 Adds the project-prefixed review request as a conformant name.
