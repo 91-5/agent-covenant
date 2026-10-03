@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # 117 tests
+python -m unittest discover -s tests            # 121 tests
 ```
 
 ## Install

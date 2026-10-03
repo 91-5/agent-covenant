@@ -360,6 +360,80 @@ class TestVerdictSchema(LintTestCase):
         self.assertEqual(lint.EXIT_ERROR, code)
         self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
 
+    # ---- XJ-20261003-002 review regressions (the three confirmed defects) ----
+
+    def test_future_timestamp_is_rejected_by_lint(self):
+        """Defect 3: lint now mirrors gate's future-ts plausibility check.
+
+        Before the fix, `ts` was only checked for parseability, so a future-dated
+        verdict passed lint while gate rejected it with FUTURE_VERDICT - the exact
+        'lint and gate drift' the docstring claimed never happens. A future ts is
+        now an ERROR.
+        """
+        bad = dict(self.VALID_VERDICT)
+        bad["ts"] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code, out)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+        self.assertIn("future", out)
+
+    def test_skipped_run_leaves_a_visible_trace(self):
+        """Defect 2: a bypassed check must not be silent.
+
+        With --no-verdict-schema the verdict schema check is skipped, but the run
+        must say so. A check that can be turned off and leave no trace is not a
+        check - the default (silent-skip) is what this regression guards.
+        """
+        bad = dict(self.VALID_VERDICT)
+        bad["verdict"] = "BOGUS"
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts),
+                                     "--no-verdict-schema")
+        # The bad verdict is not flagged (the check was skipped)...
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+        # ...but the skip is visible in the output.
+        self.assertIn("verdict schema check SKIPPED", out)
+        self.assertIn("--no-verdict-schema", out)
+
+    def test_conditional_pass_value_is_rejected_via_gate_source(self):
+        """Defect 1: verdict values are checked against gate's single source.
+
+        `CONDITIONAL_PASS` was the value the last real verdict in this repo used,
+        and gate rejected it with BAD_VERDICT_VALUE. Lint must reject it too, by
+        delegating to gate._check_verdict_value (the authoritative vocabulary),
+        not to a local shadow copy. If a shadow VALID_VERDICTS ever became the
+        source of truth again, this check would silently depend on it.
+        """
+        bad = dict(self.VALID_VERDICT)
+        bad["verdict"] = "CONDITIONAL_PASS"
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code, out)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_no_shadow_verdicts_constant_in_lint(self):
+        """Defect 1 (structural): lint must not keep its own verdict vocabulary.
+
+        The shadow `VALID_VERDICTS` tuple in check_verdict_schema was dead code -
+        a local copy of gate's tuple that editing never affected. The linter now
+        owns no such *definition*; the vocabulary lives only in gate.py. This
+        guards against the shadow being reintroduced. (The docstring may still name
+        the removed constant to document its removal, so the test looks for the
+        binding, not the bare word.)
+        """
+        import inspect
+        src = inspect.getsource(lint.check_verdict_schema)
+        import re as _re
+        self.assertIsNone(_re.search(r"\bVALID_VERDICTS\s*=", src),
+                          "a shadow VALID_VERDICTS definition reappeared in "
+                          "check_verdict_schema")
+        # And the module must not define an authoritative copy at top level either.
+        self.assertFalse(hasattr(lint, "VALID_VERDICTS"),
+                         "lint_cards.py must not keep its own verdict vocabulary; "
+                         "gate.py is the single source of truth")
+
 
 class TestCliBehaviour(LintTestCase):
     def test_json_output_shape(self):

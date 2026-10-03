@@ -1,0 +1,25 @@
+{
+  "id": "XJ-20261003-002",
+  "commit": "b754ae4",
+  "verdict": "CONDITIONAL",
+  "blockers": 1,
+  "conditions": [
+    "C1: the in-tree fixes for the three confirmed defects in tools/lint_cards.py (dead shadow VALID_VERDICTS removed; --no-verdict-schema now prints a visible NOTICE / json notices; ts reuses gate._check_timestamp_plausibility via LINT_MAX_CLOCK_SKEW=300) plus the 4 regression tests in tests/test_lint_cards.py are uncommitted (constraint 2 forbids commit/push). They must be committed and pushed to origin/master by 15812's independent recheck before the shipped b754ae4 is clean of the three defects."
+  ],
+  "acknowledged_by": "15812",
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-03T19:58:00+08:00",
+  "evidence": [
+    "Independent: I did not author any of the 175 lines in b754ae4; my verifier name (agnes-code@agent-covenant) is not the author's; I did not copy the self-signed XJ-20261003-001.verdict.json as a format example.",
+    "Suspicion 1 confirmed: patching the shadow VALID_VERDICTS to ('BOGUS',) left check_verdict_schema --json findings byte-identical (5==5); the constant is dead code and has been removed from the function.",
+    "Suspicion 2 confirmed: running --no-verdict-schema gave output identical to a full run minus the schema findings, with no trace; fixed so main() prints a visible [NOTICE] ... SKIPPED and --json carries a notices array. Regression: test_skipped_run_leaves_a_visible_trace.",
+    "Suspicion 3 confirmed: gate._check_timestamp_plausibility(+30d ts) returns FUTURE_VERDICT while lint's parse_ts accepted it; lint now reuses gate's validator via LINT_MAX_CLOCK_SKEW=300. Regression: test_future_timestamp_is_rejected_by_lint.",
+    "Suspicion 4 held as a deliberate stricter design choice (lint has no --allow-nonindependent); recorded as a judgment, not changed in code.",
+    "python -m pytest -q -> 121 passed, exit 0 (117 baseline + 4 new regression tests); no skipped/failed.",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (4 warnings), exit 0; STALE_TEST_COUNT green after README counts 117->121; VERDICT_WITHOUT_REVIEW for XJ-20261003-002 cleared now that the verdict file exists.",
+    "python tools/gate.py --verdict-dir verdicts -> exit 1; the 8 historical violations (5 VERDICT_FAIL + 2 CONDITIONAL_NOT_ALLOWED + XJ-20261003-001) are pre-existing; my CONDITIONAL adds CONDITIONAL_NOT_ALLOWED under a no-allow-conditional run, which is the honest steady state for a conditional round.",
+    "Reverse proof (acceptance #3): a deliberately broken verdict (verdict=BOGUS, blockers=[], independent missing) -> lint exit 1 with VERDICT_SCHEMA_NONCOMPLIANT; after deleting the temp file, lint exit 0.",
+    "Consumer cross-repo (acceptance #5): cd deepseek-brain && gate.py --verdict-dir verdicts --artifact-map artifacts.json --allow-conditional -> GATE: FAIL (2 violations across 8 checked), both the historical XJ-20261002-001/002 VERDICT_FAIL; no new violation introduced by this round."
+  ]
+}

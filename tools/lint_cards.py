@@ -24,7 +24,7 @@ import json
 import re
 import sys
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 EXIT_OK = 0
@@ -76,6 +76,13 @@ ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
 VERDICT_SUFFIX = ".verdict.json"
+
+# Must mirror gate.py's default --max-clock-skew (300s) so the future-ts
+# plausibility check cannot drift between lint and gate. Single source of
+# truth on purpose: the dead shadow VALID_VERDICTS tuple in
+# check_verdict_schema was exactly this kind of trap - a local copy of a
+# gate constant that looked like a check but changed nothing.
+LINT_MAX_CLOCK_SKEW = 300
 
 TASK_SECTIONS = ("context", "deliverables", "constraints", "acceptance", "status")
 TASK_SECTION_ALIASES = {
@@ -630,7 +637,7 @@ def lint_card_dir(card_dir):
     return findings, card_ids
 
 
-def check_verdict_schema(verdict_dir):
+def check_verdict_schema(verdict_dir, skipped=False):
     """Validate every verdict file against gate.py's schema contract.
 
     A legal verdict JSON may still violate gate.py's required fields (id,
@@ -642,8 +649,23 @@ def check_verdict_schema(verdict_dir):
     Added per DFB-20261003-007 (deepfreeze) after two rounds of cards
     shipped with schema-violating verdicts; the legacy_schema branch only
     hid the drift from lint, not from gate.
+
+    Converged in the XJ-20261003-002 review of b754ae4:
+    * the shadow VALID_VERDICTS tuple was dead code - verdict values were
+      already validated by gate._check_verdict_value against gate's single
+      source, so the local copy "looked like a check" but editing it changed
+      nothing. Removed, with a regression test that fails on reintroduction.
+    * ts was only checked for parseability while gate.py rejects future-dated
+      timestamps; the "lint and gate never drift" claim was already broken.
+      Now reuses gate._check_timestamp_plausibility, so a future ts is
+      rejected by lint too. LINT_MAX_CLOCK_SKEW mirrors gate's default.
     """
     out = []
+    if skipped:
+        # Kept pure on purpose: main() emits the visible NOTICE and the
+        # JSON payload carries one too. A check that can be switched off and
+        # leave no trace is not a check.
+        return out
     if verdict_dir is None or not Path(verdict_dir).is_dir():
         return out
     try:
@@ -658,13 +680,13 @@ def check_verdict_schema(verdict_dir):
         _check_blockers = _gate._check_blockers
         _check_evidence = _gate._check_evidence
         parse_ts = _gate.parse_ts
+        _check_ts_plausibility = _gate._check_timestamp_plausibility
     except Exception as exc:  # noqa: BLE001 - reported as a finding below
         out.append(_finding("VERDICT_SCHEMA_GATE_IMPORT", "ERROR",
                             Path(verdict_dir),
                             f"could not import gate.py helpers ({exc}); "
                             "verdict schema check skipped"))
         return out
-    VALID_VERDICTS = ("PASS", "CONDITIONAL", "FAIL")
     for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
         vid = path.name[: -len(VERDICT_SUFFIX)]
         data, err_code, err_detail = load_verdict(Path(verdict_dir), vid)
@@ -695,6 +717,14 @@ def check_verdict_schema(verdict_dir):
                 parse_ts(ts_raw)
             except Exception:  # noqa: BLE001 - report as a finding
                 problems.append(f"ts: not ISO-8601 parseable (got {ts_raw!r})")
+        # A future-dated ts can never go stale, so it silently defeats the
+        # gate's freshness rule. gate.py has this check; reusing it is what
+        # actually keeps "lint and gate never drift" true (XJ-20261003-002 fix).
+        # Lint has no --max-clock-skew flag; LINT_MAX_CLOCK_SKEW mirrors
+        # gate's default so the two cannot diverge.
+        problems.extend(
+            f"ts: {msg}" for _code, msg in _check_ts_plausibility(data, LINT_MAX_CLOCK_SKEW)
+        )
         # independent should be true (no --allow-nonindependent in lint)
         if data.get("independent") is not True:
             problems.append(f"independent: must be true (got {data.get('independent')!r})")
@@ -716,7 +746,9 @@ def build_parser():
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
     parser.add_argument("--no-verdict-schema", action="store_true",
                         help="skip the verdict schema check (only useful for "
-                             "tests that intentionally use empty verdict stubs)")
+                             "tests that intentionally use empty verdict stubs). "
+                             "Always prints a NOTICE that the check was bypassed, so a "
+                             "skipped run cannot masquerade as a full one.")
     parser.add_argument("--artifact-map", default=None,
                         help="artifacts.json to check the public claim surface against; "
                              "defaults to ./artifacts.json when that file exists "
@@ -740,7 +772,7 @@ def main(argv=None):
     # their verdicts are neither orphaned nor missing.
     findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir)
     if not getattr(args, "no_verdict_schema", False):
-        findings += check_verdict_schema(verdict_dir)
+        findings += check_verdict_schema(verdict_dir, skipped=args.no_verdict_schema)
 
     # Prose is part of the deliverable too: a README can lie, and a README nobody
     # re-checks lies forever. Both rules read the project the cards belong to.
@@ -766,12 +798,24 @@ def main(argv=None):
     failed = errors > 0 or (args.strict and warnings > 0)
 
     if args.as_json:
-        print(json.dumps({"ok": not failed, "errors": errors, "warnings": warnings,
-                          "findings": findings}, ensure_ascii=False, indent=2))
+        payload = {"ok": not failed, "errors": errors, "warnings": warnings,
+                  "findings": findings}
+        if args.no_verdict_schema and verdict_dir.is_dir():
+            payload["notices"] = [
+                "verdict schema check SKIPPED (--no-verdict-schema); verdicts NOT "
+                "validated against gate.py's contract; lint and gate may disagree"]
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
     elif not args.quiet:
         for item in findings:
             location = f"{item['file']}:{item['line']}" if item["line"] else item["file"]
             print(f"[{item['level']}] {item['rule']} {location}: {item['detail']}")
+        if args.no_verdict_schema and verdict_dir.is_dir():
+            # A check that can be turned off must leave a visible trace, or a
+            # forgotten flag silently downgrades the run and still reports PASS.
+            n = len(list(verdict_dir.glob("*" + VERDICT_SUFFIX)))
+            print("[NOTICE] verdict schema check SKIPPED (--no-verdict-schema): " +
+                  str(n) + " verdict file(s) NOT validated against gate.py's contract;"
+                  " lint and gate may disagree")
         if failed:
             print(f"LINT: FAIL ({errors} errors, {warnings} warnings)")
         else:
