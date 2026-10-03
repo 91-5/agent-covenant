@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Tests for tools/lint_cards.py — stdlib unittest only, no third-party deps.
 
 Run from the repository root:
@@ -258,22 +258,107 @@ class TestVerdictPairing(LintTestCase):
     def test_orphan_verdict_is_warned(self):
         self.write("AC-20260929-001.md")
         (self.verdicts / "AC-20260929-777.verdict.json").write_text("{}", encoding="utf-8")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertEqual(lint.EXIT_OK, code)
         self.assertIn("ORPHAN_VERDICT", self.codes(out))
 
     def test_card_without_verdict_is_warned(self):
         self.write("AC-20260929-001.md")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertEqual(lint.EXIT_OK, code)
         self.assertIn("VERDICT_WITHOUT_REVIEW", self.codes(out))
 
     def test_paired_card_and_verdict_is_clean(self):
         self.write("AC-20260929-001.md")
         (self.verdicts / "AC-20260929-001.verdict.json").write_text("{}", encoding="utf-8")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertEqual(lint.EXIT_OK, code, out)
         self.assertEqual(set(), self.codes(out) & {"ORPHAN_VERDICT", "VERDICT_WITHOUT_REVIEW"})
+
+
+class TestVerdictSchema(LintTestCase):
+    """Added with check_verdict_schema (DFB-20261003-007).
+
+    The rule reuses gate.py helpers via importlib so its contract is
+    identical to gate's, lint stays in sync with the gate it lints against.
+    """
+
+    VALID_VERDICT = {
+        "id": "AC-20260929-001",
+        "verdict": "PASS",
+        "blockers": 0,
+        "independent": True,
+        "verifier": "Test Reviewer",
+        "ts": "2026-10-03T12:00:00+08:00",
+        "evidence": ["A1: ran", "A2: clean"],
+    }
+
+    def setUp(self):
+        super().setUp()
+        self.verdicts = self.tmp / "verdicts"
+        self.verdicts.mkdir()
+        self.write("AC-20260929-001.md")
+
+    def _write_verdict(self, name, body):
+        path = self.verdicts / f"{name}.verdict.json"
+        if isinstance(body, dict):
+            path.write_text(json.dumps(body), encoding="utf-8")
+        else:
+            path.write_text(body, encoding="utf-8")
+
+    def test_valid_verdict_passes_schema(self):
+        self._write_verdict("AC-20260929-001", self.VALID_VERDICT)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_bad_verdict_value_is_error(self):
+        bad = dict(self.VALID_VERDICT); bad["verdict"] = "BAD"
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_missing_evidence_is_error(self):
+        bad = dict(self.VALID_VERDICT); bad.pop("evidence")
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_blockers_wrong_type_is_error(self):
+        bad = dict(self.VALID_VERDICT); bad["blockers"] = []
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_unparseable_ts_is_error(self):
+        bad = dict(self.VALID_VERDICT); bad["ts"] = "yesterday"
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_not_independent_is_error(self):
+        bad = dict(self.VALID_VERDICT); bad["independent"] = False
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_no_verdict_schema_flag_skips_check(self):
+        bad = dict(self.VALID_VERDICT); bad["verdict"] = "BAD"
+        self._write_verdict("AC-20260929-001", bad)
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+
+    def test_empty_dict_is_error(self):
+        self._write_verdict("AC-20260929-001", "{}")
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
 
 
 class TestCliBehaviour(LintTestCase):
@@ -377,7 +462,7 @@ class TestLegacyPairing(LintTestCase):
         self.verdicts = self.tmp / "verdicts"
         self.verdicts.mkdir(exist_ok=True)
         (self.verdicts / "AC-20260929-001.verdict.json").write_text("{}", encoding="utf-8")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertNotIn("ORPHAN_VERDICT", self.codes(out))
 
     def test_archived_cards_are_not_linted(self):
@@ -395,14 +480,14 @@ class TestLegacyPairing(LintTestCase):
         self.verdicts = self.tmp / "verdicts"
         self.verdicts.mkdir(exist_ok=True)
         (self.verdicts / "XJ-20260930-004.verdict.json").write_text("{}", encoding="utf-8")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertNotIn("ORPHAN_VERDICT", self.codes(out))
 
     def test_truly_orphan_verdict_still_warns(self):
         self.verdicts = self.tmp / "verdicts"
         self.verdicts.mkdir(exist_ok=True)
         (self.verdicts / "AC-20260929-999.verdict.json").write_text("{}", encoding="utf-8")
-        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts))
+        code, out, _ = self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
         self.assertIn("ORPHAN_VERDICT", self.codes(out))
 
 
@@ -638,7 +723,7 @@ class TestUnmappedClaimSurface(LintTestCase):
         vdir = self.tmp / "verdicts"
         vdir.mkdir()
         self._verdict("AC-20260929-002")   # a verdict exists, for a round that maps nothing
-        code, out, _ = self.run_lint("--artifact-map", path, "--verdict-dir", str(vdir))
+        code, out, _ = self.run_lint("--artifact-map", path, "--verdict-dir", str(vdir), "--no-verdict-schema")
         codes = self.codes(out)
         self.assertIn("UNMAPPED_CLAIM_SURFACE", codes)
         self.assertIn("no verdict file", out)

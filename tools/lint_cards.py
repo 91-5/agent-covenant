@@ -630,6 +630,81 @@ def lint_card_dir(card_dir):
     return findings, card_ids
 
 
+def check_verdict_schema(verdict_dir):
+    """Validate every verdict file against gate.py's schema contract.
+
+    A legal verdict JSON may still violate gate.py's required fields (id,
+    verdict, blockers, independent, verifier, ts, evidence). This check
+    reuses gate.py's load_verdict and per-field validators so lint and
+    gate never drift. Findings are ERROR level - a verdict the gate can't
+    read is not a verdict at all.
+
+    Added per DFB-20261003-007 (deepfreeze) after two rounds of cards
+    shipped with schema-violating verdicts; the legacy_schema branch only
+    hid the drift from lint, not from gate.
+    """
+    out = []
+    if verdict_dir is None or not Path(verdict_dir).is_dir():
+        return out
+    try:
+        import importlib.util as _ilu
+        _gate_path = Path(__file__).resolve().parent / "gate.py"
+        _spec = _ilu.spec_from_file_location("_gate_module", _gate_path)
+        _gate = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_gate)
+        load_verdict = _gate.load_verdict
+        _check_fields = _gate._check_fields
+        _check_verdict_value = _gate._check_verdict_value
+        _check_blockers = _gate._check_blockers
+        _check_evidence = _gate._check_evidence
+        parse_ts = _gate.parse_ts
+    except Exception as exc:  # noqa: BLE001 - reported as a finding below
+        out.append(_finding("VERDICT_SCHEMA_GATE_IMPORT", "ERROR",
+                            Path(verdict_dir),
+                            f"could not import gate.py helpers ({exc}); "
+                            "verdict schema check skipped"))
+        return out
+    VALID_VERDICTS = ("PASS", "CONDITIONAL", "FAIL")
+    for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
+        vid = path.name[: -len(VERDICT_SUFFIX)]
+        data, err_code, err_detail = load_verdict(Path(verdict_dir), vid)
+        if err_code:
+            out.append(_finding("VERDICT_SCHEMA_NONCOMPLIANT", "ERROR",
+                                path, f"{err_code}: {err_detail}"))
+            continue
+        # Reuse gate's per-field validators; accumulate all violations so
+        # one bad verdict does not hide another.
+        problems = []
+        for code, msg in _check_fields(vid, data):
+            problems.append(f"field: {msg}")
+        norm_v, v_problems = _check_verdict_value(data)
+        problems.extend(f"verdict: {m}" for _, m in v_problems)
+        if norm_v is not None:
+            b_problems = _check_blockers(data, norm_v)
+            problems.extend(f"blockers: {m}" for _, m in b_problems)
+        # _check_evidence returns a list of (code, msg); only flag negatives
+        e_problems = _check_evidence(data)
+        if e_problems:
+            problems.extend(f"evidence: {m}" for _, m in e_problems)
+        # ts must be present, non-empty, and ISO-8601 parseable
+        ts_raw = data.get("ts")
+        if not ts_raw or not isinstance(ts_raw, str):
+            problems.append(f"ts: missing or not a string (got {ts_raw!r})")
+        else:
+            try:
+                parse_ts(ts_raw)
+            except Exception:  # noqa: BLE001 - report as a finding
+                problems.append(f"ts: not ISO-8601 parseable (got {ts_raw!r})")
+        # independent should be true (no --allow-nonindependent in lint)
+        if data.get("independent") is not True:
+            problems.append(f"independent: must be true (got {data.get('independent')!r})")
+        if problems:
+            out.append(_finding("VERDICT_SCHEMA_NONCOMPLIANT", "ERROR",
+                                path,
+                                f"{vid}: " + "; ".join(problems)))
+    return out
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="lint_cards.py",
@@ -639,6 +714,9 @@ def build_parser():
     parser.add_argument("--verdict-dir", default=None,
                         help="verdict directory (default: <dir>/../verdicts)")
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    parser.add_argument("--no-verdict-schema", action="store_true",
+                        help="skip the verdict schema check (only useful for "
+                             "tests that intentionally use empty verdict stubs)")
     parser.add_argument("--artifact-map", default=None,
                         help="artifacts.json to check the public claim surface against; "
                              "defaults to ./artifacts.json when that file exists "
@@ -661,6 +739,8 @@ def main(argv=None):
     # Cards parked in legacy/ are evidence, not linted - but they still exist, so
     # their verdicts are neither orphaned nor missing.
     findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir)
+    if not getattr(args, "no_verdict_schema", False):
+        findings += check_verdict_schema(verdict_dir)
 
     # Prose is part of the deliverable too: a README can lie, and a README nobody
     # re-checks lies forever. Both rules read the project the cards belong to.
