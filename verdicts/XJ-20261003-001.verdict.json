@@ -1,0 +1,23 @@
+{
+  "id": "XJ-20261003-001",
+  "artifact": "PROTOCOL.md",
+  "verdict": "CONDITIONAL",
+  "blockers": 1,
+  "conditions": [
+    "C1: PROTOCOL.md §6.2 last paragraph and CHANGELOG.md ## [0.1.16] must (a) cite a different ADR that actually addresses retrospective-card schema, or (b) drop the ADR-0001 cross-reference and use a future-tense placeholder. The retrospective-card reasoning must be readable from the cited source."
+  ],
+  "acknowledged_by": "jarvis@agent-covenant",
+  "independent": true,
+  "verifier": "jarvis@agent-covenant",
+  "ts": "2026-10-03T11:35:00Z",
+  "evidence": [
+    "python -m pytest tests -q -> 117 passed, exit 0 (suite was 109 at e7befe0; b754ae4 added 8 verdict-schema tests after)",
+    "git diff e9a520a..HEAD --name-only -> CHANGELOG.md, PROTOCOL.md, docs/lint-rules.md (exactly 3), exit 0",
+    "git diff e9a520a..HEAD -- tools tests -> empty (linter + tests zero-diff), exit 0",
+    "Select-String -Path PROTOCOL.md -Pattern '### 6.2' -> line 269; P1~P5 at lines 278, 282, 287, 292, 296",
+    "Select-String -Path docs/lint-rules.md -Pattern '§6.2' -> line 54 (Not machine-checkable section)",
+    "Select-String -Path CHANGELOG.md -Pattern '0.1.16' -> line 7; P5 at line 27-29 ('§6.2 was itself committed without an independent verdict')",
+    "Select-String -Path ADR-0001.md -Pattern 'retrospective' -> no matches (B1 blocker)",
+    "python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (6 warnings, 0 errors), exit 0"
+  ]
+}
