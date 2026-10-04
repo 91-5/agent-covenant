@@ -112,5 +112,10 @@
     "docs/lint-rules.md",
     "CHANGELOG.md",
     ".gitignore"
+  ],
+  "XJ-20261004-002": [
+    "PROTOCOL.md",
+    "CHANGELOG.md",
+    ".tasks/XJ-20261004-002.md"
   ]
 }
