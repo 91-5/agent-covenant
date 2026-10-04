@@ -1,0 +1,28 @@
+{
+  "id": "XJ-20261004-002",
+  "artifact": "a73c77c",
+  "commit": "a73c77c",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-04T06:05:00Z",
+  "evidence": [
+    "Independent: I authored none of a73c77c (author opencode@agent-covenant); verdict written from a fresh read of the dispatch, card, and diffs; acceptance re-run at review time, not copied from the card.",
+    "A1: python -m pytest tests -q -> '121 passed in 2.14s', exit 0.",
+    "A2: git diff 5fa7120..a73c77c --name-only -> exactly .tasks/XJ-20261004-002.md, CHANGELOG.md, PROTOCOL.md.",
+    "A3: git diff 5fa7120..a73c77c -- tools tests -> empty.",
+    "A4: Select-String PROTOCOL.md 'ADR-0001 covers why' -> 0 hits; the wrong citation is gone.",
+    "A5: Select-String PROTOCOL.md,CHANGELOG.md 'No ADR covers that yet' -> 2 hits (one per file, PROTOCOL.md:303 and CHANGELOG.md:74).",
+    "A6: Select-String PROTOCOL.md 'see ADR-0001' -> 1 hit at PROTOCOL.md:255 (section 6.1), preserved as intended.",
+    "A7: Select-String ADR-0001.md 'retrospective' -> 0 hits; ADR-0001 is byte-identical to base (not in the 3-file diff), confirming no padding.",
+    "A8: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> 'LINT: PASS (12 warnings)', exit 0; all 12 warnings pre-exist this card (OWNED_FILES_CONFLICT x6, VERDICT_WITHOUT_REVIEW x3, UNMAPPED_CLAIM_SURFACE x3).",
+    "gate: python tools/gate.py --verdict-dir verdicts --require XJ-20261004-002 --artifact-map artifacts.json -> GATE: FAIL, 1 violation MISSING_VERDICT for XJ-20261004-002 at review time (verdict not yet on disk); this verdict file resolves it; author re-runs the gate after committing it.",
+    "Citation sweep (card constraint 3): all 5 remaining ADR-0001 references verified resolvable - PROTOCOL.md:255 (acceptance ids / schema migration; ADR-0001 Consequences states 'Introducing acceptance ids later is a schema migration for existing cards'), PROTOCOL.md:303 and CHANGELOG.md:74 (the new 'No ADR covers that yet' sentences, which no longer claim to be resolvable in ADR-0001), PROTOCOL.md:394 (demotion of normative policy; ADR-0001 Decision states the demotion), CHANGELOG.md:689 ([0.1.1] entry recording the demotion). No remaining citation points at content absent from ADR-0001.",
+    "Q1: option (b) upheld. The repo's own rule of origin (spec must not outclaim its tools; ADR-0001 rejects silent deletion of requirements) says the honest fix for a broken citation is to state that no ADR covers it, not to manufacture ADR-0002 for a schema migration with no evidence yet - retrospective:true has never been declared by any card, so the recurring-cost argument is not yet on record.",
+    "Q3: PROTOCOL.md:255 confirmed as a correct citation, not a missed instance.",
+    "Q4: reusable rule proposed in the review doc - fix cards record resolution via an optional 'unblocks: <cardId>.<conditionId>' field on the fix card's own verdict (here XJ-20261004-002 -> XJ-20261003-001.C1); the original CONDITIONAL verdict stays immutable; never re-emit a second verdict under the same id. Same rule applies to XJ-20261004-003 -> XJ-20261003-002.C1.",
+    "Side finding (out of card scope): the CHANGELOG [0.1.16] heading was restored by 4c3c953 after cc56473 overwrote it; at review time the B1 anchor is resolvable."
+  ]
+}

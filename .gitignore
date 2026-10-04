@@ -25,3 +25,10 @@ Thumbs.db
 # whole thing. These are local protection state, never repository content.
 .freeze/
 .freeze-snap/
+
+# Reviewer scratch. A reviewing agent may add a git worktree under .agnes/ to get an
+# isolated copy (needed to re-run a reversed-proof check without checking out an old
+# commit in the live tree). A worktree contains its own .git and its own working
+# files, so without this line `git status` reports the whole tree as untracked and
+# `git add -A` would stage a second copy of the repository.
+.agnes/
