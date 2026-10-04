@@ -19,3 +19,9 @@ Thumbs.db
 # NOTE: verdicts/ is deliberately NOT ignored.
 # Verdict files are evidence — the record of who checked what, and when.
 # Only local scratch belongs in .gitignore.
+
+# DeepFreeze protection facilities (D:\15812\projects\deepfreeze). A protect run
+# writes a full snapshot tree here; without these lines `git add -A` stages the
+# whole thing. These are local protection state, never repository content.
+.freeze/
+.freeze-snap/

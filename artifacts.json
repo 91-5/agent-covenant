@@ -106,5 +106,11 @@
     "README.zh-CN.md",
     "artifacts.json",
     ".tasks/XJ-20260930-015.md"
+  ],
+  "XJ-20261004-001": [
+    "PROTOCOL.md",
+    "docs/lint-rules.md",
+    "CHANGELOG.md",
+    ".gitignore"
   ]
 }

@@ -4,7 +4,45 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.16] - 2026-10-03
+## [0.1.17] - 2026-10-04
+
+Documentation-only. Corrects **PROTOCOL.md §8**, whose last line required a card's
+verdict to be deleted together with the archived card.
+
+**The defect was a contradiction inside the repository, not a matter of reading.**
+`tools/lint_cards.py` pairs verdicts against ids found both in the active card
+directory **and** in `<card-dir>/legacy/`, and `test_verdict_for_archived_card_is_not_orphan`
+asserts that an archived card's verdict is not an `ORPHAN_VERDICT`. The tool
+therefore assumed exactly what the sentence forbade: that the verdict survives
+archiving. Both were shipped, and neither was checked against the other.
+
+**It produced a real two-sided trap, twice.** Archiving `XJ-20261003-002` forced a
+choice between obeying the sentence (deleting a live `CONDITIONAL` verdict whose
+reviewer reserved the right to re-issue it `PASS`) and keeping a record §8 said to
+delete. In the consumer repository `deepseek-brain`, two `FAIL` verdicts sitting at
+the top level permanently block a directory-wide gate — while deleting them, as the
+sentence instructed, erases the record that those two rounds actually failed.
+
+The correction keeps the evidence and fixes the clause: **verdict files are never
+deleted with the card they judge**, and an archived card's verdict stays paired and
+is not an orphan. `ORPHAN_VERDICT` now means only a verdict with no card anywhere.
+
+**No tool or test changed, on purpose.** The tool was already the correct side of
+the disagreement; this round makes the prose match it rather than weakening a check
+to match the prose. `docs/lint-rules.md`'s `ORPHAN_VERDICT` row — whose *Fix* column
+still read "Delete the verdict or restore the card" — is corrected the same way.
+
+**The part worth recording.** The sentence was wrong for the length of this
+repository's public history and no rule could catch it, because a rule that reads
+the working tree cannot tell whether one document agrees with another. This is the
+class `docs/lint-rules.md` files under *Not machine-checkable* — and the round that
+fixes one instance of it deliberately does not attempt to make the class checkable,
+because deciding *which* pairs of files must agree is a design question this round
+has no evidence to answer.
+
+`PROTOCOL.md` §8, `docs/lint-rules.md`, `CHANGELOG.md` are the only files touched.
+
+
 
 Documentation-only. Adds **PROTOCOL.md §6.2 "Pre-merge review: the push is the merge"**:
 a verdict only gates anything while it happens before the change reaches the trunk.

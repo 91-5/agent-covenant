@@ -339,7 +339,22 @@ into an unsearchable attic that agents re-read instead of thinking.
   knowledge surface; process chatter → deleted.
 - Mailboxes (inbox/outbox files) are **emptied on close**, capped at N items;
   when any mailbox exceeds the cap, the owning agent triages it unprompted.
-- Verdict files referenced by an archived card are deleted together with it.
+- **Verdict files are never deleted with the card they judge.** A verdict is
+  evidence, and evidence does not expire when the card above it is archived: a
+  `FAIL` records that something *really did fail*, which is the one thing an
+  archive would otherwise erase. An archived card's verdict therefore stays in
+  `verdicts/` and remains paired with its id — `lint_cards.py` counts ids found
+  in `<card-dir>/legacy/` when it pairs verdicts, so such a verdict is **not** an
+  `ORPHAN_VERDICT`. `ORPHAN_VERDICT` means only this: a verdict with no card
+  anywhere — neither active nor in `legacy/`.
+
+  The earlier text said the opposite — that a card's verdict was destroyed
+  alongside it — and made archiving a two-sided trap: delete the verdict and
+  destroy the record that a round failed, or keep it and permanently block a
+  directory-wide gate. The repository's own `XJ-20261003-002` archive had to
+  violate that sentence to preserve a live review record; that is the sentence's
+  defect, not the archive's. Corrected in v0.1.17 (CHANGELOG.md) without a tool
+  change, because the tool was already the correct side of the disagreement.
 
 ---
 
