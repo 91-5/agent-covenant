@@ -1,0 +1,32 @@
+{
+  "id": "XJ-20261004-001",
+  "artifact": "cc56473",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-04T04:18:00Z",
+  "evidence": [
+    "Independent: I authored none of the 165 insertions in cc56473; my verifier name agnes-code@agent-covenant is not the author's (jarvis@agent-covenant); I did not copy the author's self-signed verdict as a format source.",
+    "A1: python -m pytest tests -q -> '121 passed in 1.95s', exit 0.",
+    "A2: git diff 58fe1ef..cc56473 --name-only -> exactly 6 files (.gitignore, .tasks/XJ-20261004-001.md, CHANGELOG.md, PROTOCOL.md, artifacts.json, docs/lint-rules.md).",
+    "A3: git diff 58fe1ef..cc56473 -- tools tests -> empty; the linter/gate and the 121-test suite are byte-identical to base.",
+    "A4: Select-String PROTOCOL.md 'deleted together' -> 0 hits.",
+    "A5: PROTOCOL.md:342-357 now states verdicts are never deleted with the card, an archived card's verdict stays paired and is not ORPHAN_VERDICT, and defines the boundary as 'a verdict with no card anywhere - neither active nor in legacy/'.",
+    "A6: Select-String docs/lint-rules.md 'Delete the verdict or restore the card' -> 0 hits; new Fix column at docs/lint-rules.md:23 is 'Restore the card (active or under legacy/), or delete the verdict of a card that never existed.'",
+    "A7: CHANGELOG.md:7 has '## [0.1.17] - 2026-10-04' and names the entry docs-only.",
+    "A8: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> 'LINT: PASS (5 warnings)', exit 0.",
+    "A9: git check-ignore .freeze .freeze-snap -> prints both '.freeze' and '.freeze-snap', exit 0.",
+    "A10: NOT RUN (declared circular); pre-verdict re-run gives GATE: FAIL (1 violations) = MISSING_VERDICT XJ-20261004-001 only, which this verdict resolves. Author must re-run A10 once before push per 6.2 P1.",
+    "Q1 tool-vs-text: check_verdict_pairs (tools/lint_cards.py:267-278) flags ORPHAN_VERDICT for verdict_ids - card_ids, and line 773 passes card_ids | _legacy_card_ids(card_dir); _legacy_card_ids (592-607) scrapes namespaced ids from <card-dir>/legacy/*.md. So an archived card's verdict is never orphan - identical to the new 8 text; regression test_verdict_for_archived_card_is_not_orphan (tests/test_lint_cards.py:532-540) asserts the same.",
+    "Q1 sweep: grepped README.md, README.zh-CN.md, ADR-0001.md, CONTRIBUTING.md, .github/workflows/gate.yml, PROTOCOL.md, docs/lint-rules.md; the only surviving copy of the deleted sentence is .tasks/legacy/XJ-20261003-002.md:210 where it is quoted as history, not guidance. No active third location teaches deletion.",
+    "Q2: the new Fix column is not over-narrowed - it preserves both paths for a true orphan (restore a card, active or legacy/, or delete the verdict of a card that never existed) and the tool still WARNs on verdict_ids - card_ids. The removed text was over-broad, not the replacement.",
+    "Q3: the deletion leaves a trace in three places (CHANGELOG [0.1.17], the new 8 body recording the prior text, and legacy/XJ-20261003-002.md); a separate postmortem is a deferred design decision, not a blocker.",
+    "Q4: the new text explicitly states the 002 archive 'had to violate that sentence ... that is the sentence's defect, not the archive's' - no retroactive conviction; the account is preserved.",
+    "Q5: scope is correctly limited to the covenant repo; deepseek-brain's own blocked gate is a consumer-side card, consistent with the card's cited 012/013 boundary.",
+    "Q6: CHANGELOG.md is exempt from STALE_TEST_COUNT by design (docs/lint-rules.md:28); full linter exit 0 with only pre-existing UNMAPPED_CLAIM_SURFACE warnings plus the not-yet-signed XJ-20261004-001. artifacts.json lists CHANGELOG.md, which is the correct claim-surface coverage; the warnings retire once this verdict signs.",
+    "Commit check: git log 58fe1ef..cc56473 --stat -> 6 files, 165 insertions, 3 deletions; cc56473 is HEAD with parent 58fe1ef; git status clean before this review.",
+    "Non-blocking: card Context cites PROTOCOL.md:342 as the old-sentence location while at HEAD 342 holds the new rule (base-revision citation, quoted verbatim, unambiguous); Fix-column phrasing 'delete the verdict of a card that never existed' is slightly recursive-sounding but semantically correct."
+  ]
+}
