@@ -1,0 +1,25 @@
+{
+  "id": "XJ-20261004-003",
+  "commit": "e175f58",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-04T14:30:00+08:00",
+  "evidence": [
+    "Independent: my verifier (agnes-code@agent-covenant) is not the commit author of e175f58 (jarvis@local / opencode@agent-covenant); I did not author any of its 125 insertions. I am the independent recheck C1(c) named.",
+    "A1: git log --oneline -1 e175f58 -> 'e175f58 fix(lint): close the three confirmed defects in b754ae4's schema check' (commit e175f586d4de3cf4b1e447c95e996976a2bacc30).",
+    "A2 (clause b): git merge-base --is-ancestor e175f58 origin/master; echo $? -> exit 0 against current origin/master=58fe1ef. e175f58 is on the trunk; C1(b) satisfied.",
+    "A3 (clause a): git show e175f58 --stat -- tools/lint_cards.py tests/test_lint_cards.py -> exactly 2 files (tools/lint_cards.py +58/-7; tests/test_lint_cards.py +74). C1(a) satisfied.",
+    "A4: git diff e175f58~1 e175f58 -- tests/test_lint_cards.py -> exactly 4 new 'def test_': test_future_timestamp_is_rejected_by_lint, test_skipped_run_leaves_a_visible_trace, test_conditional_pass_value_is_rejected_via_gate_source, test_no_shadow_verdicts_constant_in_lint.",
+    "A5: python -m pytest tests -q -> 121 passed, exit 0.",
+    "A6: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (10 pre-existing warnings, 0 errors), exit 0. VERDICT_WITHOUT_REVIEW for XJ-20261004-003 clears once this file exists.",
+    "A7 (isolated, archived): git worktree add .agnes/review-e175f58 b754ae4; git show e175f58:tests/test_lint_cards.py -> that worktree; python -m pytest tests/test_lint_cards.py -q -> 3 failed, 68 passed (the 3 new regressions red on old lint). python -m pytest ::test_conditional_pass_value_is_rejected_via_gate_source -q -> 1 passed (green on old code). findstr _check_verdict_value tools/lint_cards.py -> b754ae4 lines 657/680 already delegate to gate._check_verdict_value, confirming the 4th test is green because old code already rejected CONDITIONAL_PASS via the gate source. Worktree removed; main tree never checked out.",
+    "A8: Select-String tools/lint_cards.py -Pattern VALID_VERDICTS -> 2 hits, both comments (L82 explanatory block on LINT_MAX_CLOCK_SKEW; L654 check_verdict_schema docstring), 0 code hits. Shadow constant confirmed dead and removed.",
+    "Q1: C1(c) is self-referential; closed by option (i) - this independent PASS is the recheck C1 named. Not option (ii) (a same-id re-PASS on XJ-20261003-002 would just move the closure and hit Q2's duplication problem).",
+    "Q3: author self-report of 'independent recheck' does NOT count. Same shape in 3 places: the free-boolean `independent` field, §6.2 P5's self-admitted debt, and XJ-20261003-001 (verifier==author, signed independent:true). Minimal fix: one machine check rejecting/warning verifier==commit-author with independent:true; re-flag XJ-20261003-001 as independent:false.",
+    "Retrospective under §6.2 P2: e175f58 already on origin/master; 'verdict before push' (P1) cannot hold; recorded as a post-hoc recheck, never GATED.",
+    "Read-only recheck: no commit, no push, no code edits to tools/lint_cards.py, tests/test_lint_cards.py, PROTOCOL.md, or CHANGELOG.md."
+  ]
+}
