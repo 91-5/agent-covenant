@@ -70,8 +70,10 @@ written from what they exposed:
 because P2 permits honest change records; `docs/lint-rules.md` now records under *Not
 machine-checkable* why the check cannot be here at all — a linter reads the working tree
 and cannot see `origin/main`, so enforcing this needs a pre-push hook or CI. Promoting
-that warning to an error has to wait until cards can declare `retrospective: true`
-(ADR-0001).
+that warning to an error has to wait until cards can declare `retrospective: true`.
+No ADR covers that yet — ADR-0001 answers a different question (the acceptance
+cross-reference) — so it needs its own, because a card-schema change migrates every
+existing card.
 
 ## [0.1.15] - 2026-10-02
 

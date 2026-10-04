@@ -300,7 +300,10 @@ assertion count ("41 assertions") that no party had actually counted.
 `lint_cards.py` reports `VERDICT_WITHOUT_REVIEW` when a `GATED`/`CLOSED` card has no
 verdict file. It stays a warning on purpose, because P2 allows honest change records.
 Raising it to an error has to wait until cards can declare `retrospective: true`
-explicitly — ADR-0001 covers why that needs a schema change first.
+explicitly. No ADR covers that yet, and none of the existing ones does: ADR-0001
+demoted the acceptance cross-reference, which is a different question. This change
+needs its own ADR, precisely because a card-schema change would migrate every
+existing card.
 
 ---
 
