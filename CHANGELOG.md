@@ -42,7 +42,7 @@ has no evidence to answer.
 
 `PROTOCOL.md` §8, `docs/lint-rules.md`, `CHANGELOG.md` are the only files touched.
 
-
+## [0.1.16] - 2026-10-03
 
 Documentation-only. Adds **PROTOCOL.md §6.2 "Pre-merge review: the push is the merge"**:
 a verdict only gates anything while it happens before the change reaches the trunk.
