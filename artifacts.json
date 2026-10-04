@@ -117,5 +117,10 @@
     "PROTOCOL.md",
     "CHANGELOG.md",
     ".tasks/XJ-20261004-002.md"
+  ],
+  "XJ-20261004-003": [
+    "tools/lint_cards.py",
+    "tests/test_lint_cards.py",
+    ".tasks/XJ-20261004-003.md"
   ]
 }
