@@ -1,0 +1,33 @@
+{
+  "id": "XJ-20261004-004",
+  "commit": "a57fb7f",
+  "verdict": "CONDITIONAL",
+  "blockers": 0,
+  "conditions": [
+    "C1 (B1, from Q2): the final draft of ADR-0002 acknowledges at the decision layer (Consequences or Revisit-trigger) that two-or-more verdicts carrying the same `unblocks` value (duplicate closure of one condition) is a known hazard; arbitration belongs to the follow-up machine-check card; until then lint warns. No tool code in this card.",
+    "C2 (B2, from Q3): the final draft of ADR-0002 states in D3 by which mechanism `self_signed: true` disqualifies a verdict from being cited as independent authority - either (i) it is treated as `independent: false` inside section 6.1's valid-authority bar (recommended), or (ii) it is a documentation-layer marker only, in which case Revisit-trigger item 4's 'relied upon' test must be written machine-detectable (which tool, at what moment). As drafted, the ADR's Gains bullet is only true under reading (i).",
+    "C3 (maintenance reminder, not a gate condition): after sir accepts ADR-0002, append to ADR-0001's Revisit-trigger item 3 an instance footnote stating that ADR-0002 is a live trigger of that item (verdict schema fields moved; the acceptance-id migration's cheap window is open)."
+  ],
+  "acknowledged_by": "15812",
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-05T16:38:00+08:00",
+  "evidence": [
+    "Independent: my verifier identity (agnes-code@agent-covenant) is not the commit author of a57fb7f (15812@users.noreply.github.com); I did not participate in forming the ADR's positions and did not copy XJ-20261003-001's self-signed verdict as a format example.",
+    "A1 (redo): Test-Path ADR-0002.md -> True.",
+    "A2 (redo): python re.findall(r'^## .+$') on ADR-0002.md -> exactly ['Context','Decision','Consequences','Alternatives considered','Revisit-trigger'], in order.",
+    "A3 (redo): D1-D4 each carry an explicit decision sentence in the Decision blockquotes - D1 'not modified in any way', D2 'never added ... append-only', D3 'does not by itself block ... disqualifies from being cited as independent authority', D4 'never produces SUPERSEDED ... neither may substitute'.",
+    "A4 (redo, in-memory matching per dispatch discipline - Select-String false-zero on UTF-8, recurring-pitfalls #12): python -c \"len(re.findall('supersession', text))\" -> 1.",
+    "A5 (redo, in-memory): python -c \"[l for l in text.splitlines() if l.startswith('- **Status')]\" -> ['- **Status:** proposed'] (not accepted; Constraint 2 satisfied).",
+    "A6 (redo): git diff 8cbb8fc..a57fb7f -- tools tests PROTOCOL.md CHANGELOG.md -> empty. Full diff --name-only shows only ADR-0002.md, .tasks/XJ-20261004-004.md, artifacts.json (the latter adds only the XJ-20261004-004 artifact-map entry, +4 lines).",
+    "A7 (redo): python -m pytest tests -q -> 121 passed, exit 0.",
+    "A8 (redo): python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (26 warnings), exit 0; all 26 warnings are pre-existing OWNED_FILES_CONFLICT / VERDICT_WITHOUT_REVIEW / UNMAPPED_CLAIM_SURFACE findings on other cards, none introduced by this card.",
+    "Q1 judgment: keep D1 option (a). The backwards-discoverability cost is real but bounded and is already written into Revisit-trigger item 3 as a re-open condition ('a consumer repo asks for closure to be queryable in one direction'). Option (b) would edit the audit record after the fact - the exact failure class section 8 [0.1.17] and section 6.1 both guard against. Not a fatal flaw; recorded as C-independent of the verdict so the follow-up implementation card does not let it harden silently.",
+    "Q2 judgment: duplicate-closure hazard (two verdicts, same `unblocks` value) is not named in the ADR's Consequences; Revisit-trigger item 2 covers ambiguity only at three-or-more cards. Logged as Condition B1: decision-layer acknowledgment only, machine check deferred to the follow-up card.",
+    "Q3 judgment: 'annotate, do not block' is correct at the schema layer, but as drafted the annotation is a name card, not a gate: section 6.1's valid-authority bar is computed from `independent: true` and PROTOCOL.md (unchanged per A6) never reads `self_signed`, so a self-signed verdict still retires findings as a supersession successor. Condition B2: D3 must state which mechanism enforces the disqualification (recommended: (i) treat `self_signed: true` as `independent: false` in the valid-authority bar; if (ii) documentation-only, Revisit-trigger item 4's 'relied upon' test must be machine-detectable). Under (ii) as drafted, the ADR's own Gains bullet ('XJ-20261003-001 stops being citable as independent authority') is false until the follow-up check lands.",
+    "Q4 judgment: the D4 boundary (closure != freshness) should become machine-checkable assertions (positive: `unblocks` on a file with no later verdict leaves STALE unchanged; negative: `unblocks` never produces SUPERSEDED) in the follow-up check card's tests/test_gate.py; the ADR should say so in one sentence and fold a boundary breach into Revisit-trigger item 1.",
+    "Q5 judgment: yes - when ADR-0002 is accepted, ADR-0001's Revisit-trigger item 3 should carry an instance footnote pointing at ADR-0002 (verdict-schema fields moved; the acceptance-id cheap window is open). Recorded as non-blocking maintenance condition C3; ADR-0001 is not in this card's owned files, so no edit made here.",
+    "ts discipline: newest judged artifact mtime artifacts.json = 2026-10-05T16:17:01+08:00; ts 2026-10-05T16:38:00+08:00 satisfies mtime <= ts <= now (now ~16:35 at review start; stamped after finishing the read, not rounded).",
+    "Read-only review: no commit, no push, no edits to ADR-0002.md, tools/, tests/, PROTOCOL.md, or CHANGELOG.md. Defects recorded as conditions, not fixed in place - fixing the ADR is the author's act."
+  ]
+}
