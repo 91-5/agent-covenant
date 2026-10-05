@@ -4,6 +4,50 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.18] - 2026-10-05
+
+Documentation-only. Adds **PROTOCOL.md §6.3 "Resolution references"** and the
+`ADR-0002` decision it records: how a cleared `CONDITIONAL` condition is written down.
+
+**The gap it closes.** Three cards were stuck on it. A `CONDITIONAL` names a blocker, a
+later card fixes it, and nothing said where the discharge was recorded. The reviewer of
+`XJ-20261004-003` named the trap and the author confirmed it against the source:
+**§6.1 supersession answers "is this finding still fresh for this file", not "has this
+condition been met".** Substituting one for the other is a category error, and the
+author had made it.
+
+**Four rules, R1–R4.** The fixing card's verdict carries
+`unblocks: "<card>.<condition>"`; historical verdicts stay immutable (so the reference
+rides on the later card, not the original); `self_signed: true` is read as
+`independent: false` by every consumer computing independent authority, §6.1's
+valid-authority bar included; and closure never substitutes for freshness in either
+direction, with one machine-checked test per direction.
+
+**R3 names a mechanism, not a marker, and that distinction was a defect caught in
+review.** The first draft of `ADR-0002` claimed `XJ-20261003-001` would stop being
+citable as independent authority merely by carrying a `self_signed` field. That was
+false: no file in `tools/` read the field, `PROTOCOL.md` did not contain the string, and
+§6.1's bar was computed from `independent` alone. A field nothing reads changes nothing —
+this repository has already shipped two of those (the dead shadow `VALID_VERDICTS`
+tuple, the `--no-verdict-schema` flag). R3 therefore specifies what reads the field.
+
+**The duplicate-closure hazard is named rather than assumed away.** Two verdicts may
+claim the same `unblocks` value, and the two-card case is not exotic: a fix card plus a
+re-check card is a normal shape. Arbitration is deferred to the machine check; until it
+lands, `lint_cards.py` warns rather than passing silently.
+
+**Read direction is a known cost.** Asking "have this card's conditions been met?"
+requires searching `verdicts/` for references rather than reading the original verdict.
+`ADR-0002` records this as an accepted cost with a re-open condition, not an oversight.
+
+**No tool or test changed in this round.** `§6.3` documents rules the machine check will
+enforce later; the two `R4` tests and the `unblocks`/`self_signed` lint validation belong
+to a follow-up card. Until that lands, `unblocks` is a documented convention whose one
+existing specimen is `XJ-20261004-005`.
+
+`ADR-0002.md`, `ADR-0001.md` (revisit-trigger item 3 footnote), `PROTOCOL.md` are the
+only files touched.
+
 ## [0.1.17] - 2026-10-04
 
 Documentation-only. Corrects **PROTOCOL.md §8**, whose last line required a card's

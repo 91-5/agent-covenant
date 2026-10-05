@@ -137,6 +137,14 @@ The machine contract. One per review.
 - `blockers` must be `0` for `PASS`; `CONDITIONAL` may have `0` blockers **only**
   with non-empty `conditions` and an `acknowledged_by` field.
 - `independent` must be `true` unless the gate runs with `--allow-nonindependent`.
+- `unblocks` *(optional, added by `ADR-0002`)* — a string or list of strings of the
+  form `"<original-card-id>.<condition-id>"`, naming the conditions this verdict
+  discharges. It lives on the **fixing** card's verdict, never on the original
+  (§6.3 R1/R2). A verdict with no conditions to discharge omits the field entirely.
+- `self_signed` *(optional, added by `ADR-0002`)* — `true` when the `verifier` is the
+  author of the reviewed artifact. Every consumer computing "is this an independent
+  authority" reads it as `independent: false` (§6.3 R3). Omit the field when the
+  review is genuinely independent; `independent: true` alone does not establish that.
 - `ts` **must be ≥ the artifact's mtime** when an artifact map is supplied.
   A verdict older than the thing it judges is *stale* and blocks. This is the
   single most-skipped check in real-world review flows.
@@ -304,6 +312,55 @@ explicitly. No ADR covers that yet, and none of the existing ones does: ADR-0001
 demoted the acceptance cross-reference, which is a different question. This change
 needs its own ADR, precisely because a card-schema change would migrate every
 existing card.
+
+### 6.3 Resolution references: what closes a cleared condition
+
+**The question §6.1 does not answer.** A `CONDITIONAL` verdict names a blocker; a later
+card fixes it; §6.1 decides whether a *finding* is still fresh for a *file*. It says
+nothing about whether a *condition* has been *met*. Those are two mechanisms, and
+substituting one for the other is a category error (`ADR-0002` D4).
+
+**R1 — The fix card carries the closure.** A verdict may include an optional field
+`unblocks`, holding `"<original-card-id>.<condition-id>"` or a list of such strings.
+When a later card discharges an earlier card's condition, the reference lives on the
+**later** card's verdict. Example: a fix card whose verdict carries
+`"unblocks": ["XJ-20261004-004.C1", "XJ-20261004-004.C2"]`.
+
+**R2 — Historical verdicts are immutable.** A verdict file is an audit record: fields
+are never added to it, edited, or deleted. The original `CONDITIONAL` survives its own
+discharge byte-for-byte. This is why R1 puts the reference on the *fix* card: the
+alternative — writing `closed_by` back onto the original — buys forward-readability by
+editing the audit trail, which §6.1 and §8 both refuse.
+
+**R3 — Self-signing is stated and disqualifies.** A verdict whose `verifier` is the
+author of the reviewed artifact carries `self_signed: true`. **Every consumer that
+computes "is this an independent authority" reads it as `independent: false`** — in
+particular the §6.1 valid-authority bar. It may not retire another finding as a
+supersession successor, and it may not be cited as independent authority. It does
+**not** by itself block a merge: what it removes is the *authority*, not the
+*admissibility*. A field nothing reads changes nothing, and this repository has already
+shipped two of those (the dead shadow `VALID_VERDICTS` tuple, the `--no-verdict-schema`
+flag), which is why R3 names the mechanism and not merely the marker.
+
+**R4 — Closure and freshness never substitute.** `unblocks` never produces `SUPERSEDED`;
+a later verdict on the same file never produces a closure. Both directions are to be
+machine-checked, one test per direction:
+
+- *positive* — `unblocks` on a verdict whose artifact has no later verdict leaves the
+  `STALE` finding unchanged;
+- *negative* — `unblocks` never produces `SUPERSEDED` under any arrangement.
+
+**Known hazard: duplicate closure.** Two verdicts may carry the same `unblocks` value.
+Nothing in R1 says which of them closed the condition, and the two-card case is not
+exotic — a fix card plus a re-check card is a normal shape. Arbitration is deferred to
+the machine check; until it lands, `lint_cards.py` **warns** on a repeated `unblocks`
+value rather than passing it silently. See `ADR-0002` Review question 2 and its
+Revisit-trigger item 3.
+
+**Read direction.** Under R1, asking *"have this card's conditions been met?"* requires
+searching `verdicts/` for references to that id, rather than reading the original
+verdict. That backwards read is a **known, accepted cost**, not an oversight
+(`ADR-0002`, Consequences).
 
 ---
 
