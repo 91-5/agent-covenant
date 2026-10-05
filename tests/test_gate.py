@@ -559,5 +559,129 @@ class TestCwdContext(GateTestCase):
         self.assertNotIn("CWD context", out)
 
 
+class SelfSignedTestCase(GateTestCase):
+    """ADR-0002 R3: self_signed is read, not merely permitted."""
+
+    def test_self_signed_with_independent_true_is_a_contradiction(self):
+        """A verdict may not claim independence while carrying the marker."""
+        self.write_verdict("AC-20260929-001",
+                           _verdict(self_signed=True, independent=True))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("SELF_SIGNED_CONTRADICTION", out)
+
+    def test_self_signed_alone_is_not_independent(self):
+        """self_signed with independent false is a self-sign: not an authority."""
+        self.write_verdict("AC-20260929-001",
+                           _verdict(self_signed=True, independent=False))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("NOT_INDEPENDENT", out)
+
+    def test_self_signed_is_admitted_with_allow_nonindependent(self):
+        """The flag admits a *declared* self-sign; that is the whole point of it."""
+        self.write_verdict("AC-20260929-001",
+                           _verdict(self_signed=True, independent=False))
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"),
+                                     "--allow-nonindependent")
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+    def test_absent_self_signed_is_never_an_error(self):
+        """A normal review omits the field; that must not be read as a defect."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.base_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+    def test_self_signed_cannot_supersede_another_finding(self):
+        """R4 boundary: a self-signed later verdict is not a valid authority.
+
+        Even with --allow-nonindependent, a self-signed verdict must not retire
+        an earlier finding - otherwise the flag becomes a laundering route.
+        """
+        base = self.tmp
+        artifact = base / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = base / "artifacts.json"
+        map_path.write_text(
+            json.dumps({"AC-20260929-001": [str(artifact)],
+                        "AC-20260929-002": [str(artifact)]}),
+            encoding="utf-8")
+        # Earlier verdict is fresh on the file; the later one is self-signed.
+        self.write_verdict("AC-20260929-001", _verdict())
+        later = _verdict(id="AC-20260929-002", self_signed=True, independent=False,
+                         verifier="author@acme")
+        self.write_verdict("AC-20260929-002", later)
+        code, out, _ = self.run_gate("--verdict-dir", str(self.vdir),
+                                     "--require", "AC-20260929-001",
+                                     "--artifact-map", str(map_path), "--json",
+                                     "--allow-nonindependent")
+        payload = json.loads(out)
+        codes = [v.get("code") or v.get("reason") for v in payload.get("violations", [])]
+        # Whatever the earlier verdict reports, it must NOT be retired as
+        # SUPERSEDED by a self-signed successor.
+        advisories = payload.get("advisories", [])
+        self.assertNotIn("SUPERSEDED", json.dumps(payload.get("violations", [])), out)
+        self.assertEqual(gate.EXIT_OK, code, out)
+
+
+class UnblocksBoundaryTestCase(GateTestCase):
+    """ADR-0002 R4: closure never substitutes for freshness, in either direction."""
+
+    def test_unblocks_does_not_launder_a_stale_finding(self):
+        """Positive direction: closure leaves a STALE finding reported.
+
+        The verdict carries unblocks, but the artifact changed after it was
+        signed and no later verdict covers it. The STALE must still be raised -
+        discharging a condition is not a claim about file freshness.
+        """
+        base = self.tmp
+        artifact = base / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = base / "artifacts.json"
+        map_path.write_text(
+            json.dumps({"AC-20260929-001": [str(artifact)]}), encoding="utf-8")
+        old = _verdict(unblocks=["AC-20260929-000.C1"])
+        old_ts = (datetime.now(timezone.utc) - timedelta(days=2)).replace(microsecond=0)
+        old["ts"] = old_ts.isoformat().replace("+00:00", "Z")
+        self.write_verdict("AC-20260929-001", old)
+        # Make the artifact newer than the verdict that judged it.
+        later = datetime.now(timezone.utc) + timedelta(seconds=5)
+        os.utime(artifact, (later.timestamp(), later.timestamp()))
+        code, out, _ = self.run_gate("--verdict-dir", str(self.vdir),
+                                     "--require", "AC-20260929-001",
+                                     "--artifact-map", str(map_path))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("STALE", out)
+        self.assertNotIn("SUPERSEDED", out)
+
+    def test_unblocks_never_produces_superseded(self):
+        """Negative direction: no arrangement turns unblocks into SUPERSEDED.
+
+        Two verdicts, both carrying the same resolution reference, neither of
+        which lists the other's artifact as fresh. Whatever else is reported,
+        SUPERSEDED must not appear from the unblocks field alone.
+        """
+        base = self.tmp
+        artifact = base / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = base / "artifacts.json"
+        # Only 001 lists the artifact; 002 lists nothing, so it cannot be a
+        # successor on that file however its unblocks reads.
+        map_path.write_text(
+            json.dumps({"AC-20260929-001": [str(artifact)],
+                        "AC-20260929-002": []}),
+            encoding="utf-8")
+        self.write_verdict("AC-20260929-001", _verdict(unblocks=["AC-20260929-000.C1"]))
+        self.write_verdict("AC-20260929-002",
+                           _verdict(id="AC-20260929-002", unblocks=["AC-20260929-000.C1"]))
+        code, out, _ = self.run_gate("--verdict-dir", str(self.vdir),
+                                     "--require", "AC-20260929-001",
+                                     "--artifact-map", str(map_path))
+        self.assertNotIn("SUPERSEDED", out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -275,6 +275,53 @@ def check_verdict_pairs(card_ids, verdict_dir):
     for vid in sorted(card_ids - verdict_ids):
         out.append(_finding("VERDICT_WITHOUT_REVIEW", "WARN", Path(f"{vid}.md"),
                             "card has no machine-readable verdict file"))
+    out.extend(_check_duplicate_unblocks(verdict_dir))
+    return out
+
+
+def _check_duplicate_unblocks(verdict_dir):
+    """WARN when two or more verdicts claim the same resolution reference.
+
+    ADR-0002 section 6.3 records duplicate closure as a *known, unarbitrated
+    hazard*: nothing says which of two claimants actually closed the condition,
+    and two is not an exotic count - a fix card plus a re-check card is a normal
+    shape. Arbitration is deferred to the machine check, so this warns and does
+    not block. Raising it to an error before that arbitration exists would block
+    legitimate pairs.
+
+    The verdict files are read directly rather than through gate.load_verdict:
+    this check needs only one optional field, and a malformed verdict is already
+    reported by check_verdict_schema.
+    """
+    out = []
+    claims = {}
+    for path in sorted(verdict_dir.glob(f"*{VERDICT_SUFFIX}")):
+        vid = path.name[: -len(VERDICT_SUFFIX)]
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception:  # noqa: BLE001 - reported by the schema check
+            continue
+        if not isinstance(data, dict):
+            continue
+        value = data.get("unblocks")
+        if isinstance(value, str):
+            items = [value]
+        elif isinstance(value, list):
+            items = [i for i in value if isinstance(i, str)]
+        else:
+            continue
+        for item in items:
+            claims.setdefault(item, []).append(vid)
+    for ref in sorted(claims):
+        claimants = sorted(claims[ref])
+        if len(claimants) > 1:
+            out.append(_finding(
+                "DUPLICATE_UNBLOCKS", "WARN",
+                Path(f"{claimants[0]}{VERDICT_SUFFIX}"),
+                f"{ref} is claimed by {len(claimants)} verdicts "
+                f"({', '.join(claimants)}); which of them closed the condition is "
+                "unarbitrated (ADR-0002 6.3)",
+            ))
     return out
 
 
@@ -637,6 +684,46 @@ def lint_card_dir(card_dir):
     return findings, card_ids
 
 
+UNBLOCKS_RE = re.compile(r"^[A-Z]+-\d{8}-\d{3}\.[A-Za-z]\d+$")
+
+
+def _unblocks_problems(vid, value):
+    """Shape checks for a verdict's `unblocks` field (ADR-0002 R1/R2).
+
+    Returns a list of human-readable problem strings, [] when well-formed.
+    Deliberately does NOT verify that the referenced condition exists: condition
+    ids are free-text prefixes in practice (XJ-20261003-001's is "C1: PROTOCOL.md
+    ...", XJ-20261004-004's is "C1 (B1, from Q2): ..."), so existence cannot be
+    established without parsing prose. Shape and self-reference are checkable;
+    existence is ADR-0002's Revisit-trigger item 2.
+    """
+    problems = []
+    if isinstance(value, str):
+        items = [value]
+    elif isinstance(value, list):
+        items = value
+    else:
+        return [f"unblocks: must be a string or list of strings (got {type(value).__name__})"]
+    if not items:
+        return ["unblocks: must not be empty"]
+    for item in items:
+        if not isinstance(item, str) or not item.strip():
+            problems.append(f"unblocks: every entry must be a non-empty string (got {item!r})")
+            continue
+        if not UNBLOCKS_RE.match(item):
+            problems.append(
+                f"unblocks: {item!r} is not of the form <NS>-YYYYMMDD-NNN.<condition> "
+                "(e.g. XJ-20261004-004.C1)"
+            )
+            continue
+        if item.split(".", 1)[0] == vid:
+            problems.append(
+                f"unblocks: {item!r} references its own id; a verdict cannot discharge "
+                "a condition of the card it judges (ADR-0002 R1)"
+            )
+    return problems
+
+
 def check_verdict_schema(verdict_dir, skipped=False):
     """Validate every verdict file against gate.py's schema contract.
 
@@ -728,6 +815,25 @@ def check_verdict_schema(verdict_dir, skipped=False):
         # independent should be true (no --allow-nonindependent in lint)
         if data.get("independent") is not True:
             problems.append(f"independent: must be true (got {data.get('independent')!r})")
+        # ADR-0002 R3: a self-signed verdict is not an independent authority.
+        # Lint has no --allow-nonindependent flag, so it is strict by design.
+        if data.get("self_signed") is True:
+            if data.get("independent") is True:
+                problems.append(
+                    "self_signed: true together with independent: true is a "
+                    "contradiction (ADR-0002 R3)"
+                )
+            else:
+                problems.append(
+                    "self_signed: true; a self-signed verdict is not an "
+                    "independent authority (ADR-0002 R3)"
+                )
+        # ADR-0002 R1/R2: `unblocks` carries a resolution reference and must be
+        # well-formed. Lint cannot verify that the referenced condition exists -
+        # condition ids are free-text prefixes in practice ("C1", but also
+        # "C1 (B1, from Q2)") - so this checks shape and self-reference only.
+        if "unblocks" in data:
+            problems.extend(_unblocks_problems(vid, data.get("unblocks")))
         if problems:
             out.append(_finding("VERDICT_SCHEMA_NONCOMPLIANT", "ERROR",
                                 path,

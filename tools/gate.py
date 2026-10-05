@@ -139,6 +139,33 @@ def _check_conditional(data, verdict, allow_conditional):
 
 
 def _check_independence(data, allow_nonindependent):
+    """Independence, with ADR-0002 R3's self-signed field taken into account.
+
+    `self_signed: true` means the verifier is the author of the reviewed artifact.
+    Every consumer that computes "is this an independent authority" must read it as
+    `independent: false` - a field nothing reads changes nothing, and this repository
+    has already shipped two of those (the dead shadow VALID_VERDICTS tuple, the
+    --no-verdict-schema flag). `--allow-nonindependent` still admits such a verdict;
+    what it no longer admits is one that *claims* independence while carrying the
+    marker.
+
+    An absent `self_signed` is never itself an error: it means a normal review.
+    """
+    if data.get("self_signed") is True and data.get("independent") is True:
+        return [(
+            "SELF_SIGNED_CONTRADICTION",
+            "self_signed=true together with independent=true; a self-signed verdict "
+            "is not an independent authority (ADR-0002 R3). Set independent=false, or "
+            "drop self_signed if the review really was independent.",
+        )]
+    if data.get("self_signed") is True:
+        if allow_nonindependent:
+            return []
+        return [(
+            "NOT_INDEPENDENT",
+            "self_signed=true; the verifier is the author of the reviewed artifact, "
+            "so this verdict is not an independent authority",
+        )]
     if data.get("independent") is True:
         return []
     if allow_nonindependent:
@@ -222,7 +249,10 @@ def _successor_candidates(verdict_dir, artifact_map, args):
         blocking = list(value_errors)
         blocking += _check_fields(vid, data)
         blocking += _check_blockers(data, verdict)
-        blocking += _check_independence(data, args.allow_nonindependent)
+        # A successor must be genuinely independent: allow_nonindependent is a
+        # run-level concession for the id under check, not a licence for a
+        # self-signed verdict to retire someone else's finding (ADR-0002 R3, D2).
+        blocking += _check_independence(data, allow_nonindependent=False)
         blocking += _check_evidence(data)
         blocking += _check_timestamp_plausibility(data, args.max_clock_skew)
         if blocking:

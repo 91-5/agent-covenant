@@ -4,6 +4,45 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.19] - 2026-10-05
+
+Makes `ADR-0002`'s resolution-reference rules mechanical. `§6.3` described them; until
+this round no tool read either field, which is the exact condition `§6.3 R3` was written
+to forbid — *a field nothing reads changes nothing*. Two of those already shipped here
+(the dead shadow `VALID_VERDICTS` tuple, the `--no-verdict-schema` flag), so the fix is
+the mechanism, not the mention.
+
+**`self_signed` is now read, not merely permitted.** `gate._check_independence` treats
+`self_signed: true` as `independent: false`, so a self-signed verdict cannot be an
+independent authority — and `self_signed: true` together with `independent: true` is a
+**contradiction**, reported as `SELF_SIGNED_CONTRADICTION` rather than silently resolved
+in favour of one field. `--allow-nonindependent` still admits a *declared* self-sign; what
+it no longer admits is a verdict that claims independence while carrying the marker. An
+absent `self_signed` is never itself an error.
+
+**`_successor_candidates` passes `allow_nonindependent=False`.** The flag is a run-level
+concession for the id under check, not a licence for a self-signed verdict to retire
+someone else's finding — otherwise it becomes a laundering route.
+
+**`unblocks` gets a shape check** (`UNBLOCKS_MALFORMED`, ERROR): non-empty string or list
+of non-empty strings, each matching `<NS>-YYYYMMDD-NNN.<condition>` and never referencing
+its own id. It deliberately does **not** verify that the referenced condition exists:
+condition ids are free-text prefixes in practice (`"C1: …"`, but also `"C1 (B1, from Q2): …"`),
+so existence cannot be established without parsing prose. That gap is `ADR-0002`'s
+revisit-trigger item 2, and this round says so rather than implying coverage.
+
+**Duplicate closure warns** (`DUPLICATE_UNBLOCKS`, WARN): two or more verdicts claiming the
+same reference. WARN, not ERROR, because `§6.3` records this as a known unarbitrated hazard
+and a fix card plus a re-check card is a normal shape — raising it before arbitration exists
+would block legitimate pairs.
+
+**`R4`'s two directional assertions are armed**: a positive test that `unblocks` does not
+suppress a `STALE` finding, and a negative one that `unblocks` never produces `SUPERSEDED`.
+
+`templates/verdict.json` documents both optional fields, since a field absent from the
+template is a field nobody writes. **No change to `PROTOCOL.md`** — this round implements the
+protocol, it does not amend it.
+
 ## [0.1.18] - 2026-10-05
 
 Documentation-only. Adds **PROTOCOL.md §6.3 "Resolution references"** and the

@@ -803,5 +803,92 @@ class TestUnmappedClaimSurface(LintTestCase):
         self.assertIn("no verdict file", out)
 
 
+class TestUnblocksLint(LintTestCase):
+    """ADR-0002 R1/R3: unblocks shape checks and duplicate-closure warning."""
+
+    def _write_verdict_raw(self, vid, payload):
+        vdir = self.tmp / "verdicts"
+        vdir.mkdir(exist_ok=True)
+        (vdir / f"{vid}.verdict.json").write_text(
+            json.dumps(payload), encoding="utf-8")
+        return str(vdir)
+
+    def _good(self, vid, **over):
+        stamp = datetime.now(timezone.utc).isoformat()
+        payload = {"id": vid, "verdict": "PASS", "blockers": 0, "independent": True,
+                   "verifier": "reviewer@acme", "ts": stamp,
+                   "evidence": ["pytest -q -> 27 passed"]}
+        payload.update(over)
+        return payload
+
+    def test_malformed_unblocks_is_rejected(self):
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001", self._good("AC-20260929-001", unblocks="not-a-card-id"))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("VERDICT_SCHEMA_NONCOMPLIANT", self.codes(out))
+        self.assertIn("not of the form", out)
+
+    def test_wellformed_unblocks_is_accepted(self):
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001",
+            self._good("AC-20260929-001", unblocks=["AC-20260929-000.C1"]))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertNotIn("not of the form", out)
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+    def test_self_referencing_unblocks_is_rejected(self):
+        """A verdict cannot discharge a condition of the card it judges."""
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001",
+            self._good("AC-20260929-001", unblocks=["AC-20260929-001.C1"]))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("references its own id", out)
+
+    def test_duplicate_unblocks_warns_and_does_not_block(self):
+        """Two claimants is the two-card hazard; ADR-0002 6.3 says warn, not error."""
+        self.write("AC-20260929-001.md")
+        self.write("AC-20260929-002.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001", self._good("AC-20260929-001", unblocks=["AC-20260929-000.C1"]))
+        (Path(vdir) / "AC-20260929-002.verdict.json").write_text(
+            json.dumps(self._good("AC-20260929-002", unblocks=["AC-20260929-000.C1"])),
+            encoding="utf-8")
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertIn("DUPLICATE_UNBLOCKS", self.codes(out))
+        # warn, not error: the run must still succeed
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+    def test_single_claim_does_not_warn(self):
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001", self._good("AC-20260929-001", unblocks=["AC-20260929-000.C1"]))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertNotIn("DUPLICATE_UNBLOCKS", self.codes(out))
+
+    def test_self_signed_is_rejected_by_lint(self):
+        """Lint has no --allow-nonindependent, so a self-sign is an error here."""
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001",
+            self._good("AC-20260929-001", self_signed=True, independent=False))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("self-signed", out)
+
+    def test_self_signed_with_independent_true_is_a_contradiction(self):
+        self.write("AC-20260929-001.md")
+        vdir = self._write_verdict_raw(
+            "AC-20260929-001",
+            self._good("AC-20260929-001", self_signed=True, independent=True))
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("contradiction", out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
