@@ -1,0 +1,32 @@
+{
+  "id": "XJ-20261004-006",
+  "commit": "bef2afb",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-05T13:45:00+00:00",
+  "evidence": [
+    "Independent: my verifier identity (agnes-code@agent-covenant) is not the commit author of bef2afb (15812@users.noreply.github.com); I did not implement any of the gate/lint wiring. This is a code card, so I judged it on code: ran the tests, did the reverse proofs, checked the boundary, looked for what it failed to block.",
+    "R3 wired (the card's core question): tools/gate.py _check_independence (L141) now reads self_signed - self_signed:true + independent:true -> SELF_SIGNED_CONTRADICTION (blocking); self_signed:true alone -> NOT_INDEPENDENT (admitted by --allow-nonindependent); self_signed absent -> the early 'independent is True' branch, never an error. And _successor_candidates (L255) forces _check_independence(data, allow_nonindependent=False), so a self-signed verdict falls into blocking and can never become a supersession successor - the laundering route is closed even under --allow-nonindependent.",
+    "A1 (redo): python -m pytest tests -q -> 135 passed (independently run, not copied).",
+    "A2 (redo, temp dir, no verdicts/ pollution): self_signed:true + independent:true -> gate exit 1, output contains SELF_SIGNED_CONTRADICTION.",
+    "A3 (redo): self_signed:true, independent:false, no flag -> exit 1 + NOT_INDEPENDENT; + --allow-nonindependent -> exit 0; self_signed absent -> exit 0.",
+    "A4/A4b (redo): unblocks='not-a-card-id' -> exit 1, detail 'not of the form <NS>-YYYYMMDD-NNN.<condition>' (folded into VERDICT_SCHEMA_NONCOMPLIANT, a reasonable naming choice); self-referential unblocks -> detail 'references its own id', exit 1. Nothing under-blocked.",
+    "A5 (redo): two verdicts, same unblocks value -> DUPLICATE_UNBLOCKS WARN, exit still 0 (matches 6.3 'warn, not error').",
+    "A6 (redo): real XJ-20261004-005 verdict carries unblocks=[XJ-20261004-004.C1, XJ-20261004-004.C2] (well-formed) and is NOT flagged by any new rule (grep UNBLOCKS_MALFORMED|DUPLICATE_UNBLOCKS|SELF_SIGNED against 005 -> 0 hits).",
+    "A8 (redo): python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (87 warnings), exit 0.",
+    "A9 (independently re-verified - the round most worth challenging): full-dir gate 35 -> 87. Categorized the 87: STALE_VERDICT=77 (10 STALE-only verdicts on files genuinely changed this round: PROTOCOL.md/CHANGELOG.md/lint_cards.py/ADR-0002.md acceptance edits); VERDICT_FAIL=6 + CONDITIONAL_NOT_ALLOWED=4 all on pre-existing old verdicts; and zero new-rule violations (SELF_SIGNED_CONTRADICTION / UNBLOCKS_MALFORMED / DUPLICATE_UNBLOCKS / VERDICT_SCHEMA_NONCOMPLIANT all = 0). The entire 35->87 delta is section 6.1 STALE (design behaviour) plus pre-existing items - the author's 'no new defects' conclusion holds.",
+    "Forbiddens zero-diff: git diff 1a5cb34..229b6cd -- PROTOCOL.md ADR-0002.md -> empty (this card implements the protocol, does not edit it; ADR-0002.md was last touched by the acceptance commit in a prior round).",
+    "Self-admitted impl error 1 (safe_utf8 misuse): confirmed fixed - def _safe_utf8() (L109, no args, stdio reconfig) is called only at main() L868; _check_duplicate_unblocks reads via path.read_text(encoding='utf-8-sig') (L301); no second misuse. Author recorded that a test, not an eyeball, caught it.",
+    "Self-admitted impl error 2 (Owned-files prose, pitfall 14): confirmed fixed by 1c257d2 - the Owned files sections of XJ-20261004-005.md and XJ-20261004-006.md are now bare paths only (005: 3 paths, 006: 9 paths, no prose).",
+    "Q1: SELF_SIGNED_CONTRADICTION is not overly aggressive. It detects an internal contradiction (self_signed AND independent both true = two authorities under one field), not self-signing per se. An honest self-sign is written self_signed:true + independent:false and goes through NOT_INDEPENDENT, admitted by --allow-nonindependent - no punishment. The contradiction error is the field-level mirror of 'one id, one authority'. It removes authority, not admissibility - exactly R3. Keep as is.",
+    "Q2: the 'check format, not referenced-condition existence' boundary is correct and honestly scoped - condition ids are free-text prefixes ('C1: ...', 'C1 (B1, from Q2): ...') so existence needs prose parsing. Not a blocker: ADR already books it as Revisit-trigger item 2. Recommended follow-up (not this card): cross-load verdicts/<orig>.verdict.json conditions, normalize each to its ^[A-Za-z]+\\d+ prefix ('C1 (B1, from Q2)' -> C1), assert the unblocks suffix is in that set. Recorded as non-blocking Suggestion S1.",
+    "Q3: the R4 positive test (test_unblocks_does_not_launder_a_stale_finding) is reliably constructed in a temp dir - artifact written, os.utime pushed ahead of the verdict ts, no later verdict on the file, asserts STALE still reported and SUPERSEDED absent. Not polluting verdicts/. The negative test (test_unblocks_never_produces_superseded) is stronger. Minor recorded gap (S2, not a blocker): test_self_signed_cannot_supersede asserts behaviour but does not construct the control showing the allow_nonindependent=False change is necessary.",
+    "Q4: retrospective:true should NOT be done in this card - it is a separate schema field + gate rule + its own ADR (6.2's 'waits for its own ADR' is still unaccepted, and a schema change migrating every card needs ADR backing this card does not have). Folding it in would blur the card boundary. Author's instinct is right; record it as an independent card.",
+    "unblocks field deliberately omitted from this verdict: XJ-20261004-006 is a fresh code card whose PASS discharges no pre-existing CONDITIONAL (the 004 CONDITIONAL was already closed by 005). Per 6.3 'a verdict with no conditions to discharge omits the field entirely', carrying unblocks here would be a misuse. Recorded as the positive example of omission for the follow-up check card.",
+    "ts discipline: judged-artifact commit bef2afb is 2026-10-05; ts 2026-10-05T13:45:00+00:00 (=21:45 +08) is inside the live clock, not rounded, not in the future.",
+    "Read-only review: no commit, no push, no edits to tools/, tests/, PROTOCOL.md, or ADR-0002.md; all temp verification ran in disposable temp dirs, never into verdicts/."
+  ]
+}
