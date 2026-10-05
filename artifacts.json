@@ -122,5 +122,9 @@
     "tools/lint_cards.py",
     "tests/test_lint_cards.py",
     ".tasks/XJ-20261004-003.md"
+  ],
+  "XJ-20261004-004": [
+    "ADR-0002.md",
+    ".tasks/XJ-20261004-004.md"
   ]
 }
