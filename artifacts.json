@@ -129,5 +129,14 @@
   ],
   "XJ-20261004-005": [
     "ADR-0002.md"
+  ],
+  "XJ-20261004-006": [
+    "tools/gate.py",
+    "tools/lint_cards.py",
+    "tests/test_gate.py",
+    "tests/test_lint_cards.py",
+    "templates/verdict.json",
+    "docs/lint-rules.md",
+    "CHANGELOG.md"
   ]
 }
