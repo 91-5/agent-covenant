@@ -1,0 +1,33 @@
+{
+  "id": "XJ-20261004-005",
+  "commit": "181ea3f",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code@agent-covenant",
+  "ts": "2026-10-05T17:07:00+08:00",
+  "unblocks": [
+    "XJ-20261004-004.C1",
+    "XJ-20261004-004.C2"
+  ],
+  "evidence": [
+    "Independent: my verifier identity (agnes-code@agent-covenant) is not the commit author of 181ea3f (15812@users.noreply.github.com); I did not revise the ADR. This card is the re-review named in XJ-20261004-004's conditions.",
+    "B1 closed (was C1): ADR-0002 Consequences 'Accepted costs' now leads with 'Duplicate closure is a known, unarbitrated hazard' - two cards named as the sufficient case (with XJ-20261004-002/-003 as a fix-card-plus-recheck-card live example), arbitration explicitly deferred to the follow-up machine-check card, and lint_cards.py required to warn at minimum on a repeated unblocks value. Revisit-trigger item 3 rewritten from 'three or more cards' to 'two or more verdicts carry the same unblocks value'. All three C1 elements (acknowledge / assign owner / minimum warning) landed.",
+    "B2 closed (was C2): D3 now carries an enforcement clause - 'self_signed: true is read as independent: false by every consumer that computes is-this-an-independent-authority, in particular 6.1's valid-authority bar; it is a computed input, not a documentation marker; it may not retire another finding as a supersession successor'. Revisit-trigger item 5 rewritten: an occurrence means 'the clause is not wired everywhere it needs to be' (scope must widen), not 'annotation insufficient' - the old semantics my XJ-20261004-004 B2 flagged as the failure. The author's Gains bullet now states the claim is 'purchased by D3's enforcement clause', with the self-booking line 'the first draft claimed the same outcome from a field nothing read. That was false; the reviewer caught it as B2.'",
+    "Author's independent re-verification of B2 re-checked by me: python in-memory scan of tools/*.py and PROTOCOL.md -> 0 occurrences of 'self_signed' (confirmed the pre-revision state described in the commit message); section 6.1's valid-authority bar reads 'well-formed, independent, carry evidence' - computed from independent alone, as I flagged.",
+    "A1 (redo): re.findall(r'^## .+$') on ADR-0002.md -> exactly ['Context','Decision','Consequences','Alternatives considered','Revisit-trigger'], order unchanged.",
+    "A2 (redo): Revisit-trigger now has 5 quoted items (re.findall(r'^\\s*>\\s*\\d+\\.\\s') -> 5).",
+    "A3 (redo, in-memory per dispatch discipline - Select-String false-zero on UTF-8, pitfall 12): self_signed=7, unblocks=12, supersession=2, SUPERSEDED=3 - matches the author's counts.",
+    "A4 (redo): status line -> ['- **Status:** proposed'] (unchanged).",
+    "A5 (redo): git diff a57fb7f..181ea3f -- tools tests PROTOCOL.md CHANGELOG.md -> empty; git show 181ea3f --stat -> ADR-0002.md only (+63/-18). Document-layer card confirmed.",
+    "A6 (redo): python -m pytest tests -q -> 121 passed, exit 0.",
+    "A7 (redo): python tools/lint_cards.py --dir .tasks --verdict-dir verdicts -> LINT: PASS (25 warnings), exit 0; all pre-existing OWNED_FILES_CONFLICT / VERDICT_WITHOUT_REVIEW / UNMAPPED_CLAIM_SURFACE, none new.",
+    "Q1: D3's 'every consumer that computes is-this-an-independent-authority' is behaviour-defined, not tool-enumerated - sufficient at the decision layer. In this repo the consumers are gate.py (6.1 bar) and lint_cards.py (which reuses gate's per-field validators after the XJ-20261003-002 fix), so wiring it once in the gate computation covers both. Any consumer added later without the clause trips Revisit-trigger item 5. No further disambiguation needed in the ADR text.",
+    "Q2: deferring C3 is correct on two grounds: ADR-0001.md is not in this card family's owned files (R2), and the footnote's semantics are 'if accepted' while ADR-0002 is still proposed. C3 is not a threshold for this round, as stated in the dispatch.",
+    "Q3: the new-card-number closure flow terminates without a loop. The XJ-20261004-004 CONDITIONAL verdict stays immutable (D2) as historical record; this card's verdict carries the closure on the fix side per D1; this PASS claims no condition of any other card, so the chain stops at ring 2. The residual edge (a second card later claiming the same unblocks value) is exactly the known hazard ADR-0002 concedes and Revisit-trigger item 3 covers - lint warns, arbitration deferred, no new invention needed. Honest note recorded: the unblocks field is not read by any tool yet (ADR unaccepted), so this writing of it is a specimen for the follow-up check card, not an enforcement.",
+    "Q4: the self-booking line ('the first draft claimed ... that was false; the reviewer caught it as B2') should stay in the ADR body: it corrects this document's own earlier claim, and 'old claim + falsification + correction in one place' is the repo's section 8 evidence-does-not-expire spirit; two short instances are not confession-book bloat; the reusable rule already generalized in D3 (a field nothing read claims a behaviour change - the dead shadow VALID_VERDICTS and --no-verdict-schema pattern), so postmortems.md does not need a duplicate entry until it re-occurs.",
+    "ts discipline: newest judged artifact ADR-0002.md mtime = 2026-10-05T16:59:51+08:00 (commit 181ea3f timestamp); ts 2026-10-05T17:07:00+08:00 satisfies mtime <= ts <= now (stamped at 17:07, inside the live clock, not rounded; an earlier draft of this verdict stamped 17:15 and was caught as FUTURE_VERDICT by the lint before delivery - corrected, not re-stamped earlier).",
+    "Read-only re-review: no commit, no push, no edits to ADR-0002.md, tools/, tests/, PROTOCOL.md, or CHANGELOG.md; zero blockers, so nothing to fix anyway."
+  ]
+}
