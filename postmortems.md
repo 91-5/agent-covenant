@@ -256,6 +256,65 @@ form a tool can evaluate, which is a larger design question than this entry sett
 
 ---
 
+## PM-13 · The rule arrived after the evidence did
+
+**[ours — `XJ-20261003-001` and `XJ-20261003-002`, both still `CONDITIONAL`]**
+
+`ADR-0002` introduced resolution references: a fix card's verdict carries
+`unblocks: "<card>.<condition>"` to record that it discharged an earlier card's
+condition. `PROTOCOL.md` §6.3 R2 makes verdict files immutable — fields are never
+added, edited, or deleted — so the reference must ride on the fix card, written at
+the moment that card is reviewed.
+
+Two cards were already stuck on this before the rule existed. `XJ-20261004-002`
+(reviewed `a73c77c`) fixed `XJ-20261003-001`'s blocker B1. `XJ-20261004-003`
+(reviewed `e175f58`) fixed `XJ-20261003-002`'s condition C1. Both verdicts are signed
+`PASS` and neither carries `unblocks`, because the field did not exist when they were
+signed.
+
+**The obvious repair is the violation.** Adding `unblocks` to those two verdict files
+would discharge both cards in one commit. It would also be an edit to an audit record —
+R2, precisely — and both records were signed by an independent reviewer, not by the
+author who would be editing them. The fix for a stuck card is not to reach back into
+someone else's signed verdict.
+
+**The two cards are not in the same state, and the entry should not pretend they are.**
+
+- `XJ-20261003-002` is already archived to `.tasks/legacy/` with status `CLOSED`; its
+  C1 was discharged in substance (the fixes were committed and pushed, verified at
+  `e175f58`). It lost nothing to this gap — it was closed by the process that existed
+  at the time. `legacy/**` is exempt from linting, so it raises no finding either way.
+- `XJ-20261003-001` is still **active** in `.tasks/` at `IN_REVIEW`, and its
+  `CONDITIONAL` verdict carries an unresolved condition with no conformant way to
+  record the discharge. **This is the card the gap actually holds open.**
+
+**What makes this one instructive.** The card family was planned before the rule it now
+depends on. The author wrote "backfill `unblocks` on -002/-003" into a task list, and
+that line stayed there across the rule being drafted, reviewed, revised, and accepted
+without ever being re-read against it. The plan was correct when written and illegal
+when executed, and nothing in the workflow asked the question again. A to-do list
+carries no expiry.
+
+**Resolution (sir, 2026-10-05):** record the gap rather than manufacture a closure.
+`XJ-20261003-001` stays open with its `CONDITIONAL` verdict intact; no historical verdict
+file is edited. A retroactive reference would assert that a discharge happened through a
+mechanism that did not exist at the time, which is the class of claim this catalogue
+exists to catch. One honest open condition is worth more than one invented closed one.
+
+**Rule:** when a rule is accepted, re-read the open work items against it before
+executing them. A plan item written under the old rules is not grandfathered — it is
+untaught. Specifically for `ADR-0002`: `unblocks` can only be written by a verdict
+whose review happens *after* this round, so any closure predating it is out of reach
+and must be recorded as such.
+
+**Not enforced:** nothing detects "this card should have carried `unblocks` and did
+not." A check would have to correlate a card's `conditions` against later verdicts'
+`unblocks` values, which is the same existence question `UNBLOCKS_MALFORMED`
+deliberately declines to answer (condition ids are free-text prefixes). Named here so
+the next round extends the check rather than rediscovering the gap.
+
+---
+
 ## PM-5 · Lost update: the file looks fine
 
 **[literature]** Documented across worktree-based multi-agent setups: agent A
