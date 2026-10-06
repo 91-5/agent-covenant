@@ -146,5 +146,12 @@
     "tests/test_lint_cards.py",
     "docs/lint-rules.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20261006-002": [
+    "PROTOCOL.md",
+    "ADR-0002.md",
+    "ADR-0001.md",
+    "postmortems.md",
+    "CHANGELOG.md"
   ]
 }
