@@ -217,7 +217,7 @@ def _check_evidence_quality(data, pattern):
     return []
 
 
-def _successor_candidates(verdict_dir, artifact_map, args):
+def _successor_candidates(verdict_dir, artifact_map, args, strict_independence=True):
     """Ids that could act as a superseding authority, keyed by id -> ts.
 
     A candidate must clear the same bar any checked id does, minus its verdict value:
@@ -231,6 +231,12 @@ def _successor_candidates(verdict_dir, artifact_map, args):
     checks it will block on its own verdict. Demanding PASS here would be the wrong
     axis: it would mean a later round saying "this is worse than you thought" could
     not retire an earlier round's claim about the file.
+
+    ``strict_independence`` exists so a test can demonstrate that the default is
+    load-bearing rather than decorative: under the pre-ADR-0002 semantics
+    (``False``), a self-signed later verdict entered the candidate set and could
+    retire an earlier finding through the run-level --allow-nonindependent flag.
+    The default stays True; production callers do not pass it.
     """
     out = {}
     if not artifact_map:
@@ -252,7 +258,13 @@ def _successor_candidates(verdict_dir, artifact_map, args):
         # A successor must be genuinely independent: allow_nonindependent is a
         # run-level concession for the id under check, not a licence for a
         # self-signed verdict to retire someone else's finding (ADR-0002 R3, D2).
-        blocking += _check_independence(data, allow_nonindependent=False)
+        # strict_independence=False reproduces the pre-ADR-0002 behaviour so the
+        # necessity test can show the difference; production never passes it.
+        blocking += _check_independence(
+            data,
+            allow_nonindependent=False if strict_independence
+            else getattr(args, "allow_nonindependent", False),
+        )
         blocking += _check_evidence(data)
         blocking += _check_timestamp_plausibility(data, args.max_clock_skew)
         if blocking:

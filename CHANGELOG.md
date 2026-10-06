@@ -4,6 +4,38 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.20] - 2026-10-06
+
+Closes the two follow-ups the `XJ-20261004-006` review left as non-blocking (S1/S2).
+
+**S1 — `UNBLOCKS_DANGLING` (WARN): an `unblocks` reference can no longer point at a
+condition that does not exist.** Until now only the *shape* was checked
+(`UNBLOCKS_MALFORMED`); a reference to `XJ-…-004.C9` passed while that card's conditions
+open with C1/C2/C3 — which is `ADR-0002` revisit-trigger item 2 ("an unblocks claim is
+found to be false") in its concrete form. The check loads each referenced card's
+`conditions` and matches the reference against the leading `^[A-Za-z]+\d+` token, so
+`C1 (B1, from Q2): …` matches a reference to `C1`. Verified against this repository's
+full verdict set: `XJ-20261004-005`'s two live references both resolve; zero findings on
+real data.
+
+WARN, not ERROR, on three grounds stated in the rule's row: a referenced card with no
+verdict yet makes existence *undecidable* (not false) — that state is already
+`VERDICT_WITHOUT_REVIEW`'s finding; condition ids are a convention, and a card whose
+conditions carry no prefix reports "no id prefixes" rather than pretending to have
+checked; and §6.3 keeps everything awaiting arbitration at WARN.
+
+**S2 — the successor independence check is now provably load-bearing.** The `XJ-20261004-006`
+test asserted that a self-signed verdict does not enter the successor set, but not that
+it *would have* under the old semantics — it proved the behaviour, not the necessity.
+`_successor_candidates` gains a `strict_independence=True` default parameter (production
+callers do not pass it), and the new test runs the identical fixture both ways: under
+`False` (pre-ADR-0002, where the run-level `--allow-nonindependent` flag flowed into the
+successor bar) the self-signed verdict **enters** the candidate set; under the default it
+does not. If the default ever stops mattering, the test fails on the `False` branch.
+
+Suite: 141 tests (135 + 6). README counts updated, which `STALE_TEST_COUNT` correctly
+enforced before this entry was written.
+
 ## [0.1.19] - 2026-10-05
 
 Makes `ADR-0002`'s resolution-reference rules mechanical. `§6.3` described them; until

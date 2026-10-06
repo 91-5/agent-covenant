@@ -890,5 +890,93 @@ class TestUnblocksLint(LintTestCase):
         self.assertIn("contradiction", out)
 
 
+class TestUnblocksDangling(LintTestCase):
+    """S1: an unblocks reference to a condition that does not exist, WARNed."""
+
+    def _write_verdict_raw(self, vid, payload):
+        vdir = self.tmp / "verdicts"
+        vdir.mkdir(exist_ok=True)
+        (vdir / f"{vid}.verdict.json").write_text(
+            json.dumps(payload), encoding="utf-8")
+        return str(vdir)
+
+    def _good(self, vid, **over):
+        stamp = datetime.now(timezone.utc).isoformat()
+        payload = {"id": vid, "verdict": "PASS", "blockers": 0, "independent": True,
+                   "verifier": "reviewer@acme", "ts": stamp,
+                   "evidence": ["pytest -q -> 27 passed"]}
+        payload.update(over)
+        return payload
+
+    def _write_pair(self, claimant_extra, target_conditions):
+        """Two verdicts: a claimant with unblocks, a target with conditions."""
+        self.write("AC-20260929-001.md")
+        self.write("AC-20260929-002.md")
+        vdir = self.tmp / "verdicts"
+        vdir.mkdir(exist_ok=True)
+        self._write_verdict_raw(
+            "AC-20260929-001", self._good("AC-20260929-001", **claimant_extra))
+        (vdir / "AC-20260929-002.verdict.json").write_text(
+            json.dumps(self._good("AC-20260929-002",
+                                  conditions=target_conditions)),
+            encoding="utf-8")
+        return str(vdir)
+
+    def test_reference_to_missing_card_warns(self):
+        vdir = self._write_pair(
+            {"unblocks": ["XJ-99999999-001.C9"]},
+            ["C1: something"],
+        )
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertIn("UNBLOCKS_DANGLING", self.codes(out))
+        self.assertIn("cannot be verified", out)
+        # WARN only: the run still succeeds.
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+    def test_reference_to_missing_condition_warns(self):
+        vdir = self._write_pair(
+            {"unblocks": ["AC-20260929-002.C9"]},
+            ["C1: the real condition"],
+        )
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertIn("UNBLOCKS_DANGLING", self.codes(out))
+        self.assertIn("do not open with C9", out)
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+    def test_reference_to_real_condition_is_silent(self):
+        vdir = self._write_pair(
+            {"unblocks": ["AC-20260929-002.C1"]},
+            ["C1: the real condition"],
+        )
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertNotIn("UNBLOCKS_DANGLING", self.codes(out))
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+    def test_annotated_prefix_matches_base_id(self):
+        """"C1 (B1, from Q2): ..." must match a reference to C1."""
+        vdir = self._write_pair(
+            {"unblocks": ["AC-20260929-002.C1"]},
+            ["C1 (B1, from Q2): the annotated form seen on XJ-20261004-004"],
+        )
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertNotIn("UNBLOCKS_DANGLING", self.codes(out))
+
+    def test_prefixless_conditions_report_undecidable_not_missing(self):
+        """A target whose conditions carry no id prefix warns as undecidable.
+
+        The empty prefix set must not be read as 'no conditions matched, so
+        every reference dangles' -- it is 'cannot verify', the honest
+        degradation the rule promises for free-text conditions.
+        """
+        vdir = self._write_pair(
+            {"unblocks": ["AC-20260929-002.C1"]},
+            ["fix the thing before the next release"],  # no prefix
+        )
+        code, out, _ = self.run_lint("--verdict-dir", vdir)
+        self.assertIn("UNBLOCKS_DANGLING", self.codes(out))
+        self.assertIn("no id prefixes", out)
+        self.assertEqual(lint.EXIT_OK, code, out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

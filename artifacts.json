@@ -138,5 +138,13 @@
     "templates/verdict.json",
     "docs/lint-rules.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20261006-001": [
+    "tools/lint_cards.py",
+    "tools/gate.py",
+    "tests/test_gate.py",
+    "tests/test_lint_cards.py",
+    "docs/lint-rules.md",
+    "CHANGELOG.md"
   ]
 }

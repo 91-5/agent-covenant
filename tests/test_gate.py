@@ -628,6 +628,53 @@ class SelfSignedTestCase(GateTestCase):
 class UnblocksBoundaryTestCase(GateTestCase):
     """ADR-0002 R4: closure never substitutes for freshness, in either direction."""
 
+    def test_self_signed_successor_check_is_load_bearing(self):
+        """S2: show the strictness is necessary, not just present.
+
+        Same fixture under both semantics. With strict_independence=False
+        (the pre-ADR-0002 behaviour, where the run-level
+        --allow-nonindependent flag flowed into the successor bar), a
+        self-signed later verdict enters the candidate set and can retire an
+        earlier finding. With the default True, it does not. Asserting both
+        directions is what makes this a necessity proof rather than a
+        behaviour snapshot: if the default ever stopped mattering, this test
+        fails on the False branch, not the True one.
+        """
+        base = self.tmp
+        artifact = base / "src" / "pipeline.py"
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text("print('hi')", encoding="utf-8")
+        map_path = base / "artifacts.json"
+        map_path.write_text(
+            json.dumps({"AC-20260929-001": [str(artifact)],
+                        "AC-20260929-002": [str(artifact)]}),
+            encoding="utf-8")
+        self.write_verdict("AC-20260929-001", _verdict())
+        later = _verdict(id="AC-20260929-002", self_signed=True, independent=False,
+                         verifier="author@acme")
+        self.write_verdict("AC-20260929-002", later)
+
+        class _Args:
+            allow_nonindependent = True   # the run-level flag is ON
+            max_clock_skew = 300
+
+        args = _Args()
+        amap = gate._read_artifact_map(map_path)
+
+        # Old semantics: the flag flowed into the successor bar, so the
+        # self-signed verdict qualified as a superseding authority.
+        old = gate._successor_candidates(self.vdir, amap, args,
+                                         strict_independence=False)
+        self.assertIn("AC-20260929-002", old,
+                      "pre-ADR-0002 semantics must admit the self-signed "
+                      "successor; if it does not, the fixture stopped "
+                      "demonstrating the hole")
+
+        # Current semantics: the default refuses the same verdict even with
+        # the run-level flag on.
+        new = gate._successor_candidates(self.vdir, amap, args)
+        self.assertNotIn("AC-20260929-002", new)
+
     def test_unblocks_does_not_launder_a_stale_finding(self):
         """Positive direction: closure leaves a STALE finding reported.
 

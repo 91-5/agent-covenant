@@ -264,6 +264,96 @@ def check_task_card(path, text):
     return out
 
 
+CONDITION_PREFIX_RE = re.compile(r"^\s*([A-Za-z]+\d+)")
+
+
+def _condition_prefixes(conditions):
+    """Best-effort condition ids from a verdict's free-text conditions.
+
+    Condition ids are a convention, not a schema field: in practice every
+    condition in this repository opens with 'C1', 'C2', ... -- sometimes
+    annotated as 'C1 (B1, from Q2): ...'. Extracting the leading token is
+    therefore reliable on this data set, but it is a *prefix*, not a field:
+    conditions without such a token contribute nothing, and callers must
+    treat an empty set as 'cannot verify', never as 'no conditions'.
+    """
+    out = set()
+    if not isinstance(conditions, list):
+        return out
+    for cond in conditions:
+        if not isinstance(cond, str):
+            continue
+        m = CONDITION_PREFIX_RE.match(cond)
+        if m:
+            out.add(m.group(1))
+    return out
+
+
+def _check_unblocks_dangling(verdict_dir):
+    """WARN when an unblocks reference names a condition that may not exist.
+
+    This is ADR-0002's revisit-trigger item 2 made checkable: an unblocks
+    value claiming to discharge XJ-....C9 when that card's conditions open
+    with C1/C2 can now be seen, where before only the shape was checked.
+
+    Deliberately WARN, on three grounds. A referenced card with no verdict
+    file yet (still queued for review) makes existence *undecidable*, and
+    erroring would fail closed on a state another rule already reports
+    (VERDICT_WITHOUT_REVIEW). The prefix is a convention, not a field: a
+    card whose conditions carry no leading token has an empty prefix set,
+    and an error would turn every reference to it into a false positive.
+    And per 6.3, anything awaiting arbitration warns rather than blocks.
+
+    Reads verdicts directly rather than through gate.load_verdict for the
+    same reason _check_duplicate_unblocks does: malformed files are already
+    the schema check's finding.
+    """
+    out = []
+    verdicts = {}
+    for path in sorted(verdict_dir.glob(f"*{VERDICT_SUFFIX}")):
+        vid = path.name[: -len(VERDICT_SUFFIX)]
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception:  # noqa: BLE001 - reported by the schema check
+            continue
+        if isinstance(data, dict):
+            verdicts[vid] = data
+
+    # Claimant pass: every unblocks reference, resolved against the
+    # referenced card's own conditions.
+    for vid, data in verdicts.items():
+        value = data.get("unblocks")
+        if isinstance(value, str):
+            refs = [value]
+        elif isinstance(value, list):
+            refs = [i for i in value if isinstance(i, str)]
+        else:
+            continue
+        for ref in refs:
+            if not UNBLOCKS_RE.match(ref):
+                continue  # UNBLOCKS_MALFORMED already covers the shape
+            target_card, _, cond_id = ref.partition(".")
+            target = verdicts.get(target_card)
+            if target is None:
+                out.append(_finding(
+                    "UNBLOCKS_DANGLING", "WARN",
+                    Path(f"{vid}{VERDICT_SUFFIX}"),
+                    f"{ref}: referenced card has no verdict on disk, so the "
+                    "condition cannot be verified",
+                ))
+                continue
+            prefixes = _condition_prefixes(target.get("conditions"))
+            if cond_id not in prefixes:
+                detail = (f"{ref}: referenced card's conditions do not open "
+                          f"with {cond_id} (found: "
+                          f"{sorted(prefixes) if prefixes else 'no id prefixes'})")
+                out.append(_finding(
+                    "UNBLOCKS_DANGLING", "WARN",
+                    Path(f"{vid}{VERDICT_SUFFIX}"), detail,
+                ))
+    return out
+
+
 def check_verdict_pairs(card_ids, verdict_dir):
     out = []
     if not verdict_dir or not verdict_dir.is_dir():
@@ -276,6 +366,7 @@ def check_verdict_pairs(card_ids, verdict_dir):
         out.append(_finding("VERDICT_WITHOUT_REVIEW", "WARN", Path(f"{vid}.md"),
                             "card has no machine-readable verdict file"))
     out.extend(_check_duplicate_unblocks(verdict_dir))
+    out.extend(_check_unblocks_dangling(verdict_dir))
     return out
 
 
