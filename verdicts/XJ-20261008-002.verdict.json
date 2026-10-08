@@ -1,0 +1,25 @@
+{
+  "id": "XJ-20261008-002",
+  "artifact": "tools/check_owned_files.py",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-08T23:45:00+08:00",
+  "evidence": [
+    "python -m unittest discover -s tests -> 168 tests OK, exit 0 (independently re-run)",
+    "python tools/check_owned_files.py --card-dir .tasks --base HEAD~2 --warn -> trailer=0/2 plus adoption warning line, exit 0",
+    "git show --stat 3264333 -> 2 files, no tools/gate.py (forbidden zone confirmed)",
+    "git show --stat 4469deb -> 4 files, no tools/gate.py (forbidden zone confirmed)",
+    "TRAILER_RE definition cross-checked against collect_trailer_card_ids anchor semantics (P3 alignment note recorded)"
+  ],
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\EVO-20261008-001.review.md (10117 bytes, SHA256 519F6CFB846B8CD4E6AB74F24E041118E2CE669894BA59B93D96DFC5F66D83E7)",
+  "supersedes_note": "This round carries XJ-20261008-001 (its verdict turned STALE when round 1a touched two files it had judged); that verdict becomes SUPERSEDED, not rejected -- round 001's rulings, forbidden zone and deviation decision all stand",
+  "open_followups": [
+    "P3: align trailer_adoption's \\x01 record splitting with collect_trailer_card_ids' line anchoring",
+    "P2: add a not-measured marker so a git failure cannot masquerade as 0/0 adoption",
+    "P2-2 (priority raised): README test count via CI dynamic injection -- STALE_TEST_COUNT tripped a second time (141->166->168)",
+    "GATED card must hard-code the adoption denominator as commits_with_trailer/commits_total"
+  ]
+}
