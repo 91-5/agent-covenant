@@ -166,5 +166,10 @@
     "README.md",
     "README.zh-CN.md",
     ".tasks/XJ-20261008-001.md"
+  ],
+  "XJ-20261008-002": [
+    "tools/check_owned_files.py",
+    "tests/test_check_owned_files.py",
+    ".tasks/XJ-20261008-002.md"
   ]
 }
