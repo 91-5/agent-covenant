@@ -978,5 +978,69 @@ class TestUnblocksDangling(LintTestCase):
         self.assertEqual(lint.EXIT_OK, code, out)
 
 
+class TestOwnedFilesQuality(LintTestCase):
+    """A claim surface that cannot constrain anything is not a claim.
+
+    `OWNED_FILES_CONFLICT` only fires on overlap, so a card claiming nothing —
+    or claiming `**` — passed every other rule while making the ownership model
+    decorative. Both rules are WARN: CI runs this linter with `--strict`, and
+    promoting them to ERROR is a gate, which EVO-20261007-001 forbids until the
+    current corpus has been measured.
+    """
+
+    def test_active_card_without_owned_files_warns(self):
+        self.write("AC-20260929-001.md", TASK_CARD)
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code)  # WARN does not fail by default
+        self.assertIn("OWNED_FILES_EMPTY", self.codes(out))
+
+    def test_closed_card_without_owned_files_is_silent(self):
+        """A finished card has nothing left to constrain."""
+        self.write("AC-20260929-001.md", TASK_CARD.replace("OPEN", "CLOSED"))
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_EMPTY", self.codes(out))
+
+    def test_review_card_is_not_held_to_task_rules(self):
+        """Review cards carry no owned files by design."""
+        self.write("REVIEW-AC-20260929-001.md", REVIEW_CARD)
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_EMPTY", self.codes(out))
+
+    def test_double_star_claim_is_too_broad(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- src/**\n")
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_TOO_BROAD", self.codes(out))
+
+    def test_root_claim_is_too_broad(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- .\n")
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_TOO_BROAD", self.codes(out))
+
+    def test_directory_claim_stays_legal(self):
+        """templates/TASK.md: a directory claim owns everything beneath it.
+
+        The whitelist is where directory claims are refused; a card may still
+        take a whole subtree, so this rule must not drift into forbidding it.
+        """
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- tools/\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_TOO_BROAD", self.codes(out))
+
+    def test_concrete_claims_are_clean(self):
+        self.write("AC-20260929-001.md",
+                   TASK_CARD + "\n## Owned files\n- tools/gate.py\n- docs/lint-rules.md\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_EMPTY", self.codes(out))
+        self.assertNotIn("OWNED_FILES_TOO_BROAD", self.codes(out))
+
+    def test_empty_section_reports_only_one_finding(self):
+        """An empty section is one defect, not one per rule."""
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n\n")
+        code, out, _ = self.run_lint()
+        empty_lines = [line for line in out.splitlines() if "OWNED_FILES_EMPTY" in line]
+        self.assertEqual(len(empty_lines), 1, out)
+        self.assertNotIn("OWNED_FILES_TOO_BROAD", self.codes(out))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -87,3 +87,61 @@ CI with nobody reading the output, these are the ones to treat as mandatory:
 
 The rest (`TASK_MISSING_*`, `CLOSED_NOT_ARCHIVED`, `NON_ASCII_FILENAME`) are
 hygiene and can stay advisory at L2 without misleading a machine.
+
+## Owned-files quality (`OWNED_FILES_EMPTY`, `OWNED_FILES_TOO_BROAD`)
+
+`OWNED_FILES_CONFLICT` only fires when two active cards overlap. A card that
+declares nothing, or declares `**`, therefore passed every other rule while
+making the ownership model decorative: the claim surface existed on paper and
+constrained nothing.
+
+| Rule | Level | Why | Fix |
+|---|---|---|---|
+| `OWNED_FILES_EMPTY` | WARN | An active card with no claims cannot be violated, so "single write ownership" (R2) is asserted and never checked. | Declare the paths this card owns exclusively. |
+| `OWNED_FILES_TOO_BROAD` | WARN | `**` and root-ish claims match everything, so a violation check against them is vacuous. | Declare concrete paths. |
+
+Both are WARN on purpose, and the reason is deployment: CI runs this linter with
+`--strict`, where a WARN is an ERROR. Promoting them is a gate, and
+EVO-20261007-001 forbids opening a gate before the current corpus is measured.
+At the time of writing the corpus is **not** clean (11 findings on this
+repository), so `--strict` cannot be used as evidence for these two rules yet.
+
+**Directory claims stay legal here.** `templates/TASK.md` states that a directory
+claim owns everything beneath it, so `tools/` is a valid entry. Only the
+whitelist (`policy/owned-files-whitelist.yml`) refuses directory claims and
+globs — see below.
+
+## owned-files enforcement (dry-run shadow period)
+
+`tools/check_owned_files.py` answers a question no rule asked before: *after the
+fact, did this branch touch files that no card claimed?* Three design decisions
+are load-bearing, and each one is a place where the obvious implementation is
+wrong:
+
+- **Authorization is per-diff, not per-agent.** "Whatever cards this assignee
+  has open" was rejected because one forgotten `CLOSED` widens an agent's write
+  surface forever. The author declares the cards a commit belongs to with a
+  `Card-Id:` trailer, and the authorized surface is the union of *those* cards.
+  A commit with no trailer is **unknown**, not violating — otherwise the check
+  punishes the honest agent that forgot a convention instead of the one that
+  broke a boundary.
+- **The exit code is always 0.** Findings are data. A checker that can fail the
+  build before its false-positive rate is known is not a measurement, it is an
+  outage. `--strict` is deliberately absent from this tool.
+- **The whitelist is an exception list, not a permission.** Exact paths only; a
+  glob in a shared exception file is a universal escape hatch wearing a config
+  file's clothes. High-impact files — this repository's CI, linter, gate, artifact
+  map and the whitelist itself — are protected by `.github/CODEOWNERS` instead,
+  because a human approval boundary is the only kind that survives a determined
+  agent. CODEOWNERS binds on GitHub PRs only; it is an approval boundary, not an
+  absolute one.
+
+**Shadow period exit criteria** (EVO-20261007-001): run ≥1 week or ≥3 tasks,
+then promote to a real gate only if the false-positive rate stays ≤10% and no
+more than 3 human rescues were needed per week. Above that, fix the rules before
+the gate. Until then the CI job runs with `continue-on-error: true` and uploads
+its report as an artifact.
+
+**Escape hatch, deliberately narrow**: fix the rules or ask a human — do not add
+a whitelist entry to silence your own violation. Whitelist changes are
+high-impact changes and need sir's sign-off.

@@ -1,0 +1,27 @@
+# owned_files 越界检查的例外清单（白名单）
+#
+# 语义（务必读懂再改）：本文件**不是「允许写清单」**，而是
+# 「owned_files 越界检查的例外条目」。列在这里的路径，只是让
+# tools/check_owned_files.py 不把它们的改动报成 violation；它不豁免
+# CODEOWNERS 评审、verdict 独立性、lint 规则或任何测试。
+#
+# 影子期纪律（EVO-20261007-001）：本清单初始为空，且
+#   - agent **不得**为了让自己的越界消失而往这里加条目；
+#   - 任何条目变更本身属高风险，需 sir 锚定 + 独立评审；
+#   - 清单只接受**精确路径**，禁 glob、禁目录级、禁根级——
+#     glob 例外等于一个穿着配置文件外衣的万能后门。
+#
+# 格式（stdlib 手写解析，保持极简）：
+#
+# paths:
+#   - path: docs/some-shared-doc.md
+#     owner: sir
+#     reason: "跨项目共享参考文档，无单一 owner"
+#     expires: 2026-12-31
+#
+# 高影响文件**不得**进本清单（它们走 .github/CODEOWNERS 的人类审批边界）：
+#   .github/workflows/gate.yml   tools/gate.py   tools/lint_cards.py
+#   tools/check_owned_files.py   artifacts.json  PROTOCOL.md
+#   以及本文件自身。
+
+paths: []

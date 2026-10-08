@@ -58,6 +58,56 @@ jobs:
           --artifact-map artifacts.json
           --require "${{ steps.current.outputs.id }}"
 
+  # ---------------------------------------------------------------------------
+  # owned_files dry-run — SHADOW PERIOD, measures nothing that blocks.
+  #
+  # This job is a data collector, not a gate: `continue-on-error` is set so a
+  # violation report cannot redden the build, and the script itself always exits
+  # 0 (see its module docstring, decision 2). It exists to answer one question
+  # with data instead of opinion: what does an agent actually touch outside its
+  # card? EVO-20261007-001 keeps this non-blocking until its false-positive rate
+  # is known; promoting it to `required` is a separate, later decision.
+  #
+  # The authorization unit is the `Card-Id:` trailer set on the commits in range,
+  # not "whatever cards the assignee has open" — see the card's decision 1.
+  owned-files-dryrun:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The reporter needs history to diff against, and the card trailers
+          # live in commit messages, so this is a full clone on purpose.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: owned-files dry-run report (never blocks)
+        run: >-
+          python tools/check_owned_files.py
+          --card-dir .tasks
+          --base origin/master
+          --whitelist policy/owned-files-whitelist.yml
+          --json
+
+      - name: keep the report as an artifact
+        if: always()
+        run: >-
+          python tools/check_owned_files.py
+          --card-dir .tasks
+          --base origin/master
+          --whitelist policy/owned-files-whitelist.yml
+          --json > owned-files-report.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owned-files-dryrun-report
+          path: owned-files-report.json
+          if-no-files-found: warn
+
 # ---------------------------------------------------------------------------
 # What a green run does and does not mean.
 #

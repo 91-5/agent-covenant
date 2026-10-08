@@ -712,6 +712,39 @@ def _paths_overlap(left, right):
     return a.startswith(b + "/") or b.startswith(a + "/")
 
 
+def check_owned_files_quality(path, text):
+    """A claim surface that cannot constrain anything is not a claim.
+
+    `OWNED_FILES_CONFLICT` only fires when two active cards overlap; a card that
+    claims nothing, or claims `**`, passes every other rule while making the
+    whole ownership model decorative. These two rules close that hole at
+    planning time, which is the only place cheap enough to fix it.
+
+    Both are WARN on purpose: CI runs this linter with `--strict`, so promoting
+    them to ERROR is a gate, and a gate should not be opened before the current
+    corpus is measured (EVO-20261007-001 shadow period). Note the asymmetry with
+    the whitelist: a *directory* claim is legitimate here — templates/TASK.md
+    states a directory claim owns everything beneath it — so only `**` and
+    root-ish declarations are too broad for a card.
+    """
+    out = []
+    owned = _owned_files(text)
+    if not owned:
+        out.append(_finding(
+            "OWNED_FILES_EMPTY", "WARN", path,
+            "active card declares no owned files, so ownership enforcement has "
+            "nothing to check (PROTOCOL.md R2)"))
+        return out
+    for entry in owned:
+        candidate = entry.strip().strip("/\\").replace("\\", "/")
+        if "**" in entry or candidate in ("", ".", "/", "*"):
+            out.append(_finding(
+                "OWNED_FILES_TOO_BROAD", "WARN", path,
+                f"owned-files entry {entry!r} is too broad to constrain anything; "
+                "declare concrete paths (a directory claim is allowed, `**` is not)"))
+    return out
+
+
 def check_owned_files_conflicts(claims):
     """claims: list of (filename, [owned paths]) for active cards only."""
     out = []
@@ -768,6 +801,8 @@ def lint_card_dir(card_dir):
             owned = _owned_files(text)
             if owned:
                 claims.append((path.name, owned))
+            if kind == "task":
+                findings += check_owned_files_quality(path, text)
         if not path.name.isascii():
             findings.append(_finding("NON_ASCII_FILENAME", "WARN", path,
                                     "non-ASCII filename — breaks tooling on some platforms"))

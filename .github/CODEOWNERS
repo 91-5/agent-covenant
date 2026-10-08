@@ -1,0 +1,27 @@
+# CODEOWNERS — 执法基础设施的人类审批边界
+#
+# 背景（EVO-20261007-001）：owned_files 机检的白名单若可被 agent 自行扩充，
+# 执法就会被"配置即后门"架空——改 CI 能关 gate、改 lint 能绕规则、改
+# artifacts.json 能伪造证据。故这些文件不进白名单，改由 CODEOWNERS 要求
+# 人类批准。
+#
+# 生效范围（重要）：CODEOWNERS **仅对 GitHub PR 生效**。本地 commit 与
+# 直接推送不受它约束，因此它是"人类审批边界"而非"绝对强制"；真正的硬边界
+# 仍需分支保护 + required checks（尚未启用，见 EVO-20261007-001 后续）。
+#
+# owner 暂记为 sir；多评审员体系下的细则待 agent-covenant 协议另行约定。
+
+# ── 执法与规则内核：改动等于改变执法语义 ─────────────────────────
+/tools/gate.py                    @sir
+/tools/lint_cards.py              @sir
+/tools/check_owned_files.py       @sir
+
+# ── 例外清单：改动等于自行扩权 ──────────────────────────────────
+/policy/owned-files-whitelist.yml @sir
+
+# ── CI 定义：改动等于关闭门禁 ──────────────────────────────────
+/.github/workflows/gate.yml       @sir
+
+# ── 证据与纪律正本 ────────────────────────────────────────────
+/artifacts.json                   @sir
+/PROTOCOL.md                      @sir
