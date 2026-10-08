@@ -153,5 +153,18 @@
     "ADR-0001.md",
     "postmortems.md",
     "CHANGELOG.md"
+  ],
+  "XJ-20261008-001": [
+    "tools/check_owned_files.py",
+    "tools/lint_cards.py",
+    "tests/test_check_owned_files.py",
+    "tests/test_lint_cards.py",
+    "docs/lint-rules.md",
+    ".github/CODEOWNERS",
+    ".github/workflows/gate.yml",
+    "policy/owned-files-whitelist.yml",
+    "README.md",
+    "README.zh-CN.md",
+    ".tasks/XJ-20261008-001.md"
   ]
 }

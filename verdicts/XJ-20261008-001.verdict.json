@@ -1,0 +1,30 @@
+{
+  "id": "XJ-20261008-001",
+  "artifact": "tools/check_owned_files.py",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-08T20:30:00+08:00",
+  "evidence": [
+    "git show --stat 084bae3 -> 10 files, no tools/gate.py (forbidden zone independently confirmed)",
+    "python -m unittest discover -s tests -> 166 tests OK, exit 0 (re-run independently)",
+    "python tools/lint_cards.py --dir .tasks --json -> errors=0, warnings=152 (OWNED_FILES_CONFLICT 137 + EMPTY 6 + TOO_BROAD 5 + VERDICT_WITHOUT_REVIEW 2 + UNMAPPED_CLAIM_SURFACE 2)",
+    "python tools/check_owned_files.py --card-dir .tasks --base HEAD~2 --warn -> changed=11 violations=0, 26 active cards listed",
+    "python tools/lint_cards.py --dir .tasks --strict -> exit 1 (verify.md claim 'strict was already red' independently reproduced)",
+    "git log -3 --format=%b -> 084bae3/3187b92 bodies contain no Card-Id: trailer line (coverage-gap evidence, review point 1)"
+  ],
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\EVO-20261007-001.review.md (15665 bytes, SHA256 8527DA073C9CAC7D3B21A964A74882E9A164F1D8537D8211FA37188D2529A5AA)",
+  "gated_preconditions": [
+    "ZCode independent clean-environment re-verification signed (verify.md data must match)",
+    "shadow-period data: false-positive rate <=10% across >=3 tasks",
+    "trailer adoption rate >=50% (if below, land a COMMIT_TRAILER_MISSING card first)",
+    "assignee cross-check: every Card-Ids: card must include the commit author (required at GATED)"
+  ],
+  "followup_cards": [
+    "P2-1 zombie-card cleanup + OWNED_FILES_CONFLICT baseline < 20",
+    "P2-2 README test-count CI dynamic injection (STALE_TEST_COUNT root cause)",
+    "P2-3 GATED promotion card bundling the three preconditions above"
+  ]
+}
