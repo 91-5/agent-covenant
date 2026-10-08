@@ -153,6 +153,31 @@ def collect_trailer_card_ids(cwd, base, head="HEAD"):
     return seen
 
 
+def trailer_adoption(cwd, base, head="HEAD"):
+    """Count commits in range and how many declare a Card-Id trailer.
+
+    Reviewer instruction (EVO-20261007-001 review, point 1a): the coverage gap
+    — "zero violations" does not mean "nothing drifted" — is acceptable only
+    while it is *measured*. A range where nobody uses the trailer convention
+    produces a report that can say nothing about drift, so the adoption rate
+    belongs in every report, and promoting the checker to a real gate is
+    blocked until that rate reaches 50%.
+    """
+    raw = _git(["log", "--format=%H%x00%B%x01", f"{base}..{head}"], cwd)
+    if not raw:
+        return (0, 0)
+    total = 0
+    with_trailer = 0
+    for record in raw.split("\x01"):
+        if not record.strip():
+            continue
+        total += 1
+        message = record.split("\x00", 1)[1] if "\x00" in record else record
+        if TRAILER_RE.search(message):
+            with_trailer += 1
+    return (total, with_trailer)
+
+
 def changed_paths(cwd, base, head="HEAD"):
     """Changed paths as (status, path) pairs, renames contributing both sides.
 
@@ -309,7 +334,8 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             "whitelist_invalid": whitelist_invalid,
             "whitelist_missing": whitelist_missing,
             "info": [],
-            "metrics": {"changed_paths": 0, "violations": 0, "whitelist_hits": 0},
+            "metrics": {"changed_paths": 0, "violations": 0, "whitelist_hits": 0,
+                        "commits_total": 0, "commits_with_trailer": 0},
         }
 
     seen = set()
@@ -339,6 +365,13 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             violations.append({"path": path, "status": status, "covered_by": None})
 
     info = []
+    commits_total, commits_with_trailer = trailer_adoption(repo, resolved_base, head)
+    if commits_total and commits_with_trailer < commits_total:
+        info.append(
+            f"trailer adoption: {commits_with_trailer}/{commits_total} commits declare a "
+            "Card-Id trailer; until that reaches 50%, a zero-violation report is not "
+            "evidence that nothing drifted (GATED precondition, review point 1a)"
+        )
     if not declared:
         active = []
         for card_file in sorted(card_dir.glob("*.md")):
@@ -370,6 +403,8 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             "changed_paths": len(seen),
             "violations": len(violations),
             "whitelist_hits": whitelist_hits,
+            "commits_total": commits_total,
+            "commits_with_trailer": commits_with_trailer,
         },
     }
 
@@ -381,12 +416,15 @@ def render_warn(payload):
         lines.append(f"owned-files: report error: {payload['error']}")
     lines.append(
         "owned-files (dry-run, never blocks): base={base} cards={cards} "
-        "changed={changed} violations={violations} whitelist_hits={hits}".format(
+        "changed={changed} violations={violations} whitelist_hits={hits} "
+        "trailer={with_trailer}/{commits}".format(
             base=payload.get("merge_base"),
             cards=",".join(payload.get("authorized_card_ids") or []) or "-",
             changed=payload["metrics"]["changed_paths"],
             violations=payload["metrics"]["violations"],
             hits=payload["metrics"]["whitelist_hits"],
+            with_trailer=payload["metrics"].get("commits_with_trailer", 0),
+            commits=payload["metrics"].get("commits_total", 0),
         )
     )
     for item in payload.get("info", []):

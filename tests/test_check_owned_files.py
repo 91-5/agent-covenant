@@ -115,12 +115,14 @@ class EvaluateTests(unittest.TestCase):
         _write(self.cards / "XJ-20260901-001.md", CARD_CLOSED)
         self.wl = self.root / "wl.yml"
         _write(self.wl, "paths: []\n")
-        self._orig = (check.collect_trailer_card_ids, check.changed_paths, check.resolve_base)
+        self._orig = (check.collect_trailer_card_ids, check.changed_paths, check.resolve_base,
+                     check.trailer_adoption)
         check.resolve_base = lambda repo, spec: ("base123", None)
+        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 3)
 
     def tearDown(self):
         (check.collect_trailer_card_ids, check.changed_paths,
-         check.resolve_base) = self._orig
+         check.resolve_base, check.trailer_adoption) = self._orig
         self._tmp.cleanup()
 
     def _run(self, card_ids, pairs):
@@ -177,6 +179,20 @@ class EvaluateTests(unittest.TestCase):
         payload = self._run(["XJ-20261007-001", "XJ-20261007-002"],
                             [("M", "src/allowed.py"), ("M", "tools/extra.py")])
         self.assertEqual(payload["violations"], [])
+
+    def test_trailer_adoption_below_half_is_measured_and_flagged(self):
+        """Review point 1a: a coverage gap must be measured, not assumed away."""
+        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 1)
+        payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
+        self.assertEqual(payload["metrics"]["commits_total"], 3)
+        self.assertEqual(payload["metrics"]["commits_with_trailer"], 1)
+        self.assertTrue(any("trailer adoption: 1/3" in i for i in payload["info"]))
+
+    def test_full_trailer_adoption_stays_silent(self):
+        """No warning line when every commit declares its cards."""
+        check.trailer_adoption = lambda repo, base, head="HEAD": (2, 2)
+        payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
+        self.assertFalse(any("trailer adoption" in i for i in payload["info"]))
 
 
 class ExitCodeTests(unittest.TestCase):
