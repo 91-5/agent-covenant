@@ -173,23 +173,31 @@ def trailer_adoption(cwd, base, head="HEAD"):
     `trailer_measured: false`; callers must not read 0/0 as "all clear".
 
     This parses commits the same way `collect_trailer_card_ids` does -- one line
-    at a time against `TRAILER_RE` -- after splitting on `\\x1e` (the record
-    separator git itself uses). Round 002 used `\\x00`/`\\x01` instead, which
-    was a second, divergent notion of "what is a trailer"; review point 1 asked
-    for the two to be aligned so one commit body cannot be judged two ways.
-    `\\x1e` splits *between* commits only and never takes part in the per-line
-    analysis, so the anchor semantics stay identical to the id collector.
+    at a time against `TRAILER_RE` -- after splitting the stream into commits.
+    The anchor semantics are what had to be aligned with the id collector; the
+    record framing is a separate concern and uses two DIFFERENT control bytes
+    (`\\x00` inside a commit, `\\x1e` between them).
+
+    That separation is not decoration. The first attempt at this alignment used
+    `%H%x1e%B%x1e`, putting the SAME byte on both sides of the body, and
+    `split("\\x1e")` then cut every commit into two non-empty chunks (the sha
+    fragment and the body), so `total` counted each commit twice -- a 2x
+    inflation of the very denominator the GATED adoption threshold divides by.
+    An independent reviewer caught it by calling this function against a known
+    range; `185` green tests had not, because every test mocked this function
+    out. The lesson is in the test that now guards it: a regression test must
+    exercise the real `git log --format` split, not a lambda.
     """
-    raw = _git(["log", "--format=%H%x1e%B%x1e", f"{base}..{head}"], cwd)
+    raw = _git(["log", "--format=%H%x00%B%x1e", f"{base}..{head}"], cwd)
     if raw is None:
         return (0, 0, False)
     records = [chunk for chunk in raw.split("\x1e") if chunk.strip()]
     total = 0
     with_trailer = 0
     for record in records:
-        # Each record is "<sha>\n<body>"; drop the sha line, then treat the body
+        # Each record is "<sha>\x00<body>"; drop the sha, then treat the body
         # exactly as the id collector does.
-        body = record.split("\n", 1)[1] if "\n" in record else ""
+        body = record.split("\x00", 1)[1] if "\x00" in record else record
         total += 1
         if any(TRAILER_RE.match(line) for line in body.splitlines()):
             with_trailer += 1

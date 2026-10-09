@@ -1,0 +1,40 @@
+{
+  "id": "XJ-20261008-003",
+  "artifact": "tools/check_owned_files.py",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-09T22:06:00+08:00",
+  "evidence": [
+    "python -m unittest discover -s tests -> 185 tests OK, exit 0 (independently re-run; +17 vs round 002)",
+    "python tools/lint_cards.py --dir .tasks --json -> errors=0, warnings=150",
+    "python tools/sync_test_count.py --check -> both READMEs in sync at 185, exit 0",
+    "python tools/check_owned_files.py --card-dir .tasks --json -> exit 0, trailer_measured=true, trailer=0/20",
+    "anchor-not-exempt proof reproduced: README.md anchor 185->999 then lint -> STALE_TEST_COUNT README.md:13 hit; git checkout -- README.md restored, re-lint errors=0 (author files left untouched)",
+    "git show --stat 74026c7 -> 11 files, no tools/gate.py; git show --stat 8ff8be3 -> 1 file, no tools/gate.py (forbidden zone independently confirmed); git diff --name-only 74026c7~1..8ff8be3 contains no tools/gate.py",
+    "P1 (BLOCKER): independently invoked tools/check_owned_files.trailer_adoption(REPO, 'e4f32fe') -> total=20, with_trailer=0, measured=True; but 'git log --oneline e4f32fe..HEAD' = 10 commits. Root cause: '--format=%H%x1e%B%x1e' places \\x1e in two slots, so split('\\x1e') yields 2 non-empty chunks per commit (SHA segment + MSG segment) and the loop double-counts; ratio 20/10 = 2.0x. Author self-check numbers 0/16 (card, 8 commits) and 0/20 (my rerun, 10 commits) are BOTH inflated 2x; with_trailer==0 masked it. No test covers the real git-format path: tests/test_check_owned_files.py mocks trailer_adoption out via lambda, so the regression is unguarded.",
+    "gate.py successor semantics read (line 220 _successor_candidates, line 276 _superseded_by): a successor with verdict=FAIL still retires an earlier stale finding, so this FAIL verdict supersedes 001's 7 file-derived STALE entries and 002's 4 (all files touched by 003); only 001's self-referential entry (.tasks/XJ-20261008-001.md card itself in the artifact map) remains a true dead-lock, awaiting the proposed fix (a)."
+  ],
+  "blockers_detail": [
+    "P1 (BLOCKER): trailer_adoption() double-counts commits via --format=%H%x1e%B%x1e (\\x1e used as both intra-record SHA/body separator and inter-commit record separator -> split yields 2 chunks per commit). Fix with two distinct delimiters (e.g. --format=%H%x00%B%x1e with records=raw.split('\\x1e'), body=record.split('\\x00',1)[1]) and add one non-mocked regression test asserting trailer_adoption(...)[0] equals 'git log --oneline <base>..HEAD' for a range with >=2 commits. Shadow-period impact ceiling: commits_total inflated 2x, and the GATED 'trailer adoption >=50%' precondition runs on the inflated denominator, systematically understating the rate."
+  ],
+  "rulings": {
+    "P3_parse_alignment": "APPROVE intent / BLOCK implementation (P1)",
+    "P2_not_measured_tristate": "APPROVE (dual channel: metrics.trailer_measured machine-truth + info 'NOT MEASURED' human-truth); optional GATE card: encode 'trailer_measured==true' as a GATED precondition",
+    "P2-2_local_script_anchor_deviation": "APPROVE the deviation from 'CI dynamic injection' (3 rationales independently verified; grep=185 is a current-corpus coincidence; anchor is not an exemption -- reproduced)",
+    "self_referential_test_is_feature": "FEATURE, keep; add optional read-only CI 'sync_test_count.py --check' job (non-blocking)",
+    "self_reference_trap_card_in_artifact_map": "adopt (a) contract clarification: the card itself is not a judged artifact and must not sit in the artifact map; open a separate EVO card to correct both XJ-20260930-015 and XJ-20261008-001 mappings; do NOT touch gate.py; author's decision to hold current state rather than fake a verdict is correct",
+    "three_concerns_one_card": "APPROVE the merge (shared theme 'a measurement must not lie about itself'); mandate that independent re-runs are not fully mocked (this card proved the point)",
+    "Q1_x1e_in_body": "low-probability residual P3, downgrade to observation; fix P1 with two distinct delimiters to narrow the tear surface"
+  },
+  "open_followups": [
+    "P1 fix + non-mocked regression test (author files; OpenCode re-dispatches or new card), then quick re-review to PASS",
+    "New EVO card: artifact-map contract = card self excluded; correct XJ-20260930-015 and XJ-20261008-001 mappings in artifacts.json; gate.py unchanged",
+    "GATE card: add 'trailer_measured==true' + 'independent re-run not fully mocked' as GATED preconditions; optional read-only CI 'sync_test_count.py --check' job",
+    "P3 cosmetic: sync_test_count.py utf-8 rewrite silently dropped the leading BOM from README.md"
+  ],
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\REVIEW-XJ-20261008-003.md (17438 bytes, SHA256 68EA674C05B39E572DA65F719F64FEBEDD4ACCD006DBD5D0295CDCAA54CB6748); canonical text staged in the reviewer workspace at D:\\15812\\Documents\\2026-10-09\\20261009_2\\work\\REVIEW-XJ-20261008-003.md (byte-identical, SHA unchanged when OpenCode relocates it in-repo)",
+  "note": "verdict=FAIL. This FAIL is still a legal successor under gate.py (a FAIL or unacknowledged-CONDITIONAL verdict can supersede an earlier finding), so landing it retires 001/002 file-derived STALE entries to SUPERSEDED; only 001's card-self-referential STALE remains, pending the (a) card. In-shadow data point for GATED: real commit count this round = 10 (NOT 16/20), trailer adoption 0/10 = 0%."
+}

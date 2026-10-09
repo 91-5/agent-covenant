@@ -13,6 +13,7 @@ outage, not a measurement (EVO-20261007-001, decision 2).
 import importlib.util
 import io
 import json
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -214,6 +215,101 @@ class EvaluateTests(unittest.TestCase):
         self.assertTrue(payload["metrics"]["trailer_measured"])
         self.assertFalse(any("NOT MEASURED" in i for i in payload["info"]))
         self.assertTrue(any("trailer adoption: 0/2" in i for i in payload["info"]))
+
+
+class RealGitParsingTests(unittest.TestCase):
+    """Exercise the real `git log --format` split, with no mock in the path.
+
+    This class exists because of a defect that shipped past 185 green tests
+    (round 003, found by an independent reviewer calling the function directly):
+    the record format put the same `\\x1e` on both sides of the body, so the
+    split cut every commit into two non-empty chunks and `total` was exactly 2x
+    the truth. Every other test in this file replaces `trailer_adoption` with a
+    lambda, so nothing ever parsed a real `git log` stream -- the one code path
+    that was broken had zero coverage while the suite reported success.
+
+    The guard is therefore not "test the parser with a fixture" but "compare the
+    parser against git's own count in a real repository". A fixture would have
+    been written by the same person who wrote the bug.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+        self._seq = 0
+        self._git("init", "-q")
+        self._git("config", "user.email", "test@example.com")
+        self._git("config", "user.name", "test")
+
+    def _git(self, *args):
+        result = subprocess.run(["git", *args], cwd=str(self.root),
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, f"git {' '.join(args)}: {result.stderr}")
+        return result.stdout
+
+    def _commit(self, message):
+        # Content must differ every time or git refuses the commit ("nothing to
+        # commit") and the fixture silently stops creating history.
+        self._seq += 1
+        (self.root / "f.txt").write_text(f"version {self._seq}\n", encoding="utf-8")
+        self._git("add", "-A")
+        self._git("commit", "-q", "-m", message)
+
+    def _baseline(self):
+        """Return a revision that predates every commit the test cares about.
+
+        `rev-list --max-parents=0` gives the root commit, and `root..HEAD`
+        excludes that commit itself -- so using it as the base silently drops one
+        from both sides of the comparison and the test would agree with any
+        off-by-one in the parser. An empty initial commit gives a base that is
+        genuinely outside the range.
+        """
+        self._git("commit", "-q", "--allow-empty", "-m", "baseline")
+        return self._git("rev-parse", "HEAD").strip()
+
+    def _truth(self, base):
+        return len([line for line in
+                    self._git("log", "--oneline", f"{base}..HEAD").splitlines() if line.strip()])
+
+    def test_count_matches_git_for_plain_messages(self):
+        base = self._baseline()
+        for i in range(3):
+            self._commit(f"chore: commit {i}")
+        total, with_trailer, measured = check.trailer_adoption(self.root, base)
+        self.assertTrue(measured)
+        self.assertEqual(total, self._truth(base))
+        self.assertEqual(total, 3)
+        self.assertEqual(with_trailer, 0)
+
+    def test_count_matches_git_when_trailers_present(self):
+        """The regression that mattered: trailers must not change the count."""
+        base = self._baseline()
+        self._commit("feat: one\n\nCard-Id: XJ-20261007-001")
+        self._commit("chore: two")
+        self._commit("fix: three\n\nCard-Id: XJ-20261007-002")
+        total, with_trailer, measured = check.trailer_adoption(self.root, base)
+        self.assertEqual(total, self._truth(base))
+        self.assertEqual(total, 3, "a 2x inflation here is the exact bug this guards")
+        self.assertEqual(with_trailer, 2)
+
+    def test_multiline_body_without_trailer_is_still_one_commit(self):
+        """A body containing text that looks like structure must not split it."""
+        base = self._baseline()
+        self._commit("feat: subject\n\nbody line one\nbody line two\n\nnot a trailer")
+        total, _, _ = check.trailer_adoption(self.root, base)
+        self.assertEqual(total, self._truth(base))
+        self.assertEqual(total, 1)
+
+    def test_card_ids_and_adoption_agree_on_the_same_range(self):
+        """The two parsers must not judge one commit body two different ways."""
+        base = self._baseline()
+        self._commit("feat: a\n\nCard-Id: XJ-20261007-001")
+        self._commit("chore: b")
+        ids = check.collect_trailer_card_ids(self.root, base)
+        _, with_trailer, _ = check.trailer_adoption(self.root, base)
+        self.assertEqual(ids, ["XJ-20261007-001"])
+        self.assertEqual(with_trailer, 1, "same body, same verdict from both parsers")
 
 
 class ExitCodeTests(unittest.TestCase):
