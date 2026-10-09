@@ -145,3 +145,39 @@ its report as an artifact.
 **Escape hatch, deliberately narrow**: fix the rules or ask a human — do not add
 a whitelist entry to silence your own violation. Whitelist changes are
 high-impact changes and need sir's sign-off.
+
+## The test-count anchor (`<!-- test-count -->N<!-- /test-count -->`)
+
+`STALE_TEST_COUNT` is right and was still painful: the count lived as hand-written
+prose in two READMEs, so one added test made both files wrong at once. It tripped
+three times in a week (141 → 166 → 168). The rule stays; the *hand-typing* goes.
+
+`tools/sync_test_count.py` writes the real count into both READMEs:
+
+```
+python tools/sync_test_count.py            # write the count
+python tools/sync_test_count.py --check    # exit 1 when out of sync
+```
+
+**The anchor is not an exemption.** `TEST_COUNT_RES` lists the anchored form
+first, so the checker reads the number back and a stale anchor fails exactly like
+stale prose. If the anchor were skipped, the syntax would become a place to hide
+a wrong claim — the exact inversion of why the rule exists.
+
+Four decisions worth knowing, because each rejects an easier wrong answer:
+
+- **The count comes from `unittest`, not `grep`.** The review suggested
+  `grep -c "^def test_" tests/*.py`, which happens to agree with the suite today
+  (168 == 168). It agrees by coincidence: this repository has no parameterised
+  tests and no shared test-case base class. `lint_cards.py` already discovers the
+  count properly, and a sync tool that disagreed with the checker would just be
+  a new way to be wrong.
+- **The sync runs locally, not in CI.** CI writing a README would leave an
+  uncommitted diff in the PR flow, and `gate.yml` deliberately holds
+  `contents: read`; a writer needs a permission widening the project avoids.
+- **A missing anchor is an error, never a silent no-op.** A tool that reports
+  success while changing nothing is the failure mode this whole exercise targets.
+- **The self-referential test is intentional.** `test_check_mode_on_the_real_repo_is_clean`
+  fails the moment a test is added without syncing, because that test *is* a
+  test. That pressure is the point: the fix is one command, and the alternative
+  is a number that rots quietly.

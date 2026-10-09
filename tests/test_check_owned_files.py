@@ -118,7 +118,7 @@ class EvaluateTests(unittest.TestCase):
         self._orig = (check.collect_trailer_card_ids, check.changed_paths, check.resolve_base,
                      check.trailer_adoption)
         check.resolve_base = lambda repo, spec: ("base123", None)
-        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 3)
+        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 3, True)
 
     def tearDown(self):
         (check.collect_trailer_card_ids, check.changed_paths,
@@ -182,7 +182,7 @@ class EvaluateTests(unittest.TestCase):
 
     def test_trailer_adoption_below_half_is_measured_and_flagged(self):
         """Review point 1a: a coverage gap must be measured, not assumed away."""
-        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 1)
+        check.trailer_adoption = lambda repo, base, head="HEAD": (3, 1, True)
         payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
         self.assertEqual(payload["metrics"]["commits_total"], 3)
         self.assertEqual(payload["metrics"]["commits_with_trailer"], 1)
@@ -190,9 +190,30 @@ class EvaluateTests(unittest.TestCase):
 
     def test_full_trailer_adoption_stays_silent(self):
         """No warning line when every commit declares its cards."""
-        check.trailer_adoption = lambda repo, base, head="HEAD": (2, 2)
+        check.trailer_adoption = lambda repo, base, head="HEAD": (2, 2, True)
         payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
         self.assertFalse(any("trailer adoption" in i for i in payload["info"]))
+
+    def test_failed_measurement_is_labelled_not_shown_as_zero(self):
+        """Round 002 review point 3: a failed measurement must not look clean.
+
+        Before this, a git failure returned (0, 0), which reads exactly like
+        'measured, and no commit declared a trailer'. The two are worlds apart:
+        one means the report proves nothing about drift, the other means the
+        convention is unused. Only an explicit flag keeps them distinguishable.
+        """
+        check.trailer_adoption = lambda repo, base, head="HEAD": (0, 0, False)
+        payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
+        self.assertFalse(payload["metrics"]["trailer_measured"])
+        self.assertTrue(any("NOT MEASURED" in i for i in payload["info"]))
+
+    def test_measured_zero_is_not_labelled_as_unmeasured(self):
+        """The mirror case: a real, empty measurement says so honestly."""
+        check.trailer_adoption = lambda repo, base, head="HEAD": (2, 0, True)
+        payload = self._run(["XJ-20261007-001"], [("M", "src/allowed.py")])
+        self.assertTrue(payload["metrics"]["trailer_measured"])
+        self.assertFalse(any("NOT MEASURED" in i for i in payload["info"]))
+        self.assertTrue(any("trailer adoption: 0/2" in i for i in payload["info"]))
 
 
 class ExitCodeTests(unittest.TestCase):

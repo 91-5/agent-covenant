@@ -157,25 +157,43 @@ def trailer_adoption(cwd, base, head="HEAD"):
     """Count commits in range and how many declare a Card-Id trailer.
 
     Reviewer instruction (EVO-20261007-001 review, point 1a): the coverage gap
-    — "zero violations" does not mean "nothing drifted" — is acceptable only
+    -- "zero violations" does not mean "nothing drifted" -- is acceptable only
     while it is *measured*. A range where nobody uses the trailer convention
     produces a report that can say nothing about drift, so the adoption rate
     belongs in every report, and promoting the checker to a real gate is
     blocked until that rate reaches 50%.
+
+    Returns `(total, with_trailer, measured)`. The third element exists because
+    of a review finding on this function itself (round 002, point 3): returning
+    `(0, 0)` when git failed made "could not measure" indistinguishable from
+    "measured, and nothing declared a trailer". A measurement tool that reports
+    a confident zero it never took is the same defect class as
+    `TEST_COUNT_UNVERIFIED` -- a disabled check wearing a passing result. So a
+    failed git call now says so explicitly and the report carries
+    `trailer_measured: false`; callers must not read 0/0 as "all clear".
+
+    This parses commits the same way `collect_trailer_card_ids` does -- one line
+    at a time against `TRAILER_RE` -- after splitting on `\\x1e` (the record
+    separator git itself uses). Round 002 used `\\x00`/`\\x01` instead, which
+    was a second, divergent notion of "what is a trailer"; review point 1 asked
+    for the two to be aligned so one commit body cannot be judged two ways.
+    `\\x1e` splits *between* commits only and never takes part in the per-line
+    analysis, so the anchor semantics stay identical to the id collector.
     """
-    raw = _git(["log", "--format=%H%x00%B%x01", f"{base}..{head}"], cwd)
-    if not raw:
-        return (0, 0)
+    raw = _git(["log", "--format=%H%x1e%B%x1e", f"{base}..{head}"], cwd)
+    if raw is None:
+        return (0, 0, False)
+    records = [chunk for chunk in raw.split("\x1e") if chunk.strip()]
     total = 0
     with_trailer = 0
-    for record in raw.split("\x01"):
-        if not record.strip():
-            continue
+    for record in records:
+        # Each record is "<sha>\n<body>"; drop the sha line, then treat the body
+        # exactly as the id collector does.
+        body = record.split("\n", 1)[1] if "\n" in record else ""
         total += 1
-        message = record.split("\x00", 1)[1] if "\x00" in record else record
-        if TRAILER_RE.search(message):
+        if any(TRAILER_RE.match(line) for line in body.splitlines()):
             with_trailer += 1
-    return (total, with_trailer)
+    return (total, with_trailer, True)
 
 
 def changed_paths(cwd, base, head="HEAD"):
@@ -335,7 +353,8 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             "whitelist_missing": whitelist_missing,
             "info": [],
             "metrics": {"changed_paths": 0, "violations": 0, "whitelist_hits": 0,
-                        "commits_total": 0, "commits_with_trailer": 0},
+                        "commits_total": 0, "commits_with_trailer": 0,
+                        "trailer_measured": False},
         }
 
     seen = set()
@@ -365,8 +384,14 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             violations.append({"path": path, "status": status, "covered_by": None})
 
     info = []
-    commits_total, commits_with_trailer = trailer_adoption(repo, resolved_base, head)
-    if commits_total and commits_with_trailer < commits_total:
+    commits_total, commits_with_trailer, trailer_measured = trailer_adoption(repo, resolved_base, head)
+    if not trailer_measured:
+        # Never let a failed measurement look like a clean bill of health.
+        info.append(
+            "trailer adoption: NOT MEASURED (git log failed) -- 0/0 here means "
+            "'could not measure', not 'nothing declared a trailer'"
+        )
+    elif commits_total and commits_with_trailer < commits_total:
         info.append(
             f"trailer adoption: {commits_with_trailer}/{commits_total} commits declare a "
             "Card-Id trailer; until that reaches 50%, a zero-violation report is not "
@@ -405,6 +430,7 @@ def evaluate(repo, card_dir, base_spec, head, whitelist_path):
             "whitelist_hits": whitelist_hits,
             "commits_total": commits_total,
             "commits_with_trailer": commits_with_trailer,
+            "trailer_measured": trailer_measured,
         },
     }
 
@@ -414,17 +440,22 @@ def render_warn(payload):
     lines = []
     if payload.get("error"):
         lines.append(f"owned-files: report error: {payload['error']}")
+    measured = payload["metrics"].get("trailer_measured", False)
+    trailer_repr = (
+        "{}/{}".format(payload["metrics"].get("commits_with_trailer", 0),
+                       payload["metrics"].get("commits_total", 0))
+        if measured else "NOT MEASURED"
+    )
     lines.append(
         "owned-files (dry-run, never blocks): base={base} cards={cards} "
         "changed={changed} violations={violations} whitelist_hits={hits} "
-        "trailer={with_trailer}/{commits}".format(
+        "trailer={trailer}".format(
             base=payload.get("merge_base"),
             cards=",".join(payload.get("authorized_card_ids") or []) or "-",
             changed=payload["metrics"]["changed_paths"],
             violations=payload["metrics"]["violations"],
             hits=payload["metrics"]["whitelist_hits"],
-            with_trailer=payload["metrics"].get("commits_with_trailer", 0),
-            commits=payload["metrics"].get("commits_total", 0),
+            trailer=trailer_repr,
         )
     )
     for item in payload.get("info", []):

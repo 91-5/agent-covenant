@@ -100,7 +100,14 @@ CLAIM_SURFACE_FILES = ("README.md", "README.zh-CN.md", "CHANGELOG.md")
 # CHANGELOG is deliberately absent. A changelog entry records what was true at
 # that release, so a historical "45 tests" is correct history, not a stale claim.
 COUNTED_CLAIM_FILES = ("README.md", "README.zh-CN.md")
+# The anchored form is listed FIRST on purpose. `tools/sync_test_count.py`
+# writes `<!-- test-count -->N<!-- /test-count -->`, and that marker is a
+# convenience for the writer, not an exemption from this check: a stale anchor
+# must fail exactly like stale prose. Ordering it first means the anchor (when
+# present on a line) is the number reported, so the reader is told about the
+# claim the sync script is responsible for.
 TEST_COUNT_RES = (
+    re.compile(r"<!--\s*test-count\s*-->(\d+)<!--\s*/test-count\s*-->"),
     re.compile(r"#\s*(\d+)\s+tests?\b"),
     re.compile(r"(\d+)\s*个(?:单测|单元测试|测试)"),
 )

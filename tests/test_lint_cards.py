@@ -1042,5 +1042,41 @@ class TestOwnedFilesQuality(LintTestCase):
         self.assertNotIn("OWNED_FILES_TOO_BROAD", self.codes(out))
 
 
+class TestAnchoredTestCount(unittest.TestCase):
+    """The `<!-- test-count -->N<!-- /test-count -->` anchor is a writer's
+    convenience, not an exemption: a stale anchor must fail like stale prose.
+
+    `tools/sync_test_count.py` owns the number, but the checker still reads it
+    back. These test the *parsing* unit -- `_declared_counts` over a fenced
+    block -- because that is where an unrecognised anchor would silently stop
+    being checked at all. Whether a wrong number then fails is
+    `check_stale_test_count`'s job, already covered by the ruleset tests.
+    """
+
+    def _declared(self, line):
+        text = "# Setup\n\n```\n" + line + "\n```\n"
+        return list(lint._declared_counts(text))
+
+    def test_anchored_form_is_read(self):
+        found = self._declared("python -m unittest discover -s tests  # "
+                               "<!-- test-count -->170<!-- /test-count --> tests")
+        self.assertEqual([v for _, v in found], [170])
+
+    def test_anchored_form_survives_spacing_variants(self):
+        found = self._declared("x <!--test-count-->42<!--/test-count--> y")
+        self.assertEqual([v for _, v in found], [42])
+
+    def test_prose_forms_still_read(self):
+        self.assertEqual([v for _, v in self._declared("cmd  # 170 tests")], [170])
+        self.assertEqual([v for _, v in self._declared("cmd  # 170 个单测")], [170])
+
+    def test_anchor_is_reported_once_not_twice(self):
+        """One line, one claim: the anchor must not double-count with the
+        prose regex that also matches the trailing 'tests'."""
+        found = self._declared("python -m unittest discover -s tests  # "
+                               "<!-- test-count -->170<!-- /test-count --> tests")
+        self.assertEqual(len(found), 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

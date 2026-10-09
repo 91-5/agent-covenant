@@ -1,4 +1,4 @@
-﻿# Agent Covenant 鈥?a collaboration verification protocol
+# Agent Covenant 鈥?a collaboration verification protocol
 
 **No deliverable is "done" until an independent reviewer has produced a
 machine-checkable verdict that passes a gate.**
@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # 168 tests
+python -m unittest discover -s tests            # <!-- test-count -->185<!-- /test-count --> tests
 ```
 
 ## Install
