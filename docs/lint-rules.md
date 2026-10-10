@@ -146,6 +146,35 @@ its report as an artifact.
 a whitelist entry to silence your own violation. Whitelist changes are
 high-impact changes and need sir's sign-off.
 
+## Card self-listing in the artifact map (`CARD_SELF_IN_MAP`)
+
+`artifacts.json` says it plainly: *"Keep this list equal to what the reviewer
+actually read."* A round's own card is not something the reviewer read — it is
+the record *of* the review. Listing it makes the round stale by construction:
+
+1. The freshness rule compares every listed artifact's mtime against the round's
+   verdict timestamp.
+2. Closing a card edits the card file (`IN_REVIEW` → `CLOSED`, recording the
+   verdict and the reviewed commit), and that edit necessarily happens *after*
+   the verdict is written.
+3. No later round revisits a closed card, so nothing ever supersedes the finding.
+
+The result is a permanent, unactionable finding — worse than noise, because it
+sits among real staleness and trains readers to ignore the list. `XJ-20261008-001`
+demonstrated it end to end: closing the card produced
+`[STALE_VERDICT] ... .tasks/XJ-20261008-001.md was modified after the verdict`,
+with no verdict able to retire it afterwards.
+
+**The rule is WARN, not ERROR.** Seven rounds carried the pattern and the
+repository tolerates some of them living red for unrelated reasons; the point is
+to stop the habit spreading, not to demand a sweep nobody scheduled. Only
+`XJ-20261008-001` was corrected (EVO-20261010-001) — the rest were left alone
+deliberately, because their staleness comes from later rounds touching shared
+files, which is the mechanism working, not this defect.
+
+Note what this rule is *not*: it is not a fix to `gate.py`. The freshness logic is
+correct; the defect was in the data. `gate.py` stays untouched.
+
 ## The test-count anchor (`<!-- test-count -->N<!-- /test-count -->`)
 
 `STALE_TEST_COUNT` is right and was still painful: the count lived as hand-written

@@ -613,6 +613,44 @@ def _claim_state(name, path, artifact_map, ids, verdicts):
     return None, listed_by, blockers
 
 
+def check_card_self_in_map(artifact_map):
+    """A round must not list its own card as a judged artifact (EVO-20261010-001).
+
+    The freshness rule compares each listed artifact's mtime against the round's
+    verdict timestamp. A card's own file is edited as part of *closing it*
+    (IN_REVIEW -> CLOSED, recording the verdict and the reviewed commit), and
+    that edit necessarily happens after the verdict. So listing the card makes
+    the round stale by definition the moment the round finishes -- and since no
+    later round revisits a closed card, nothing ever supersedes it. The finding
+    is permanent and useless, which is worse than noise: it hides real staleness
+    among findings nobody can act on.
+
+    The list should equal what the reviewer read. A reviewer reads the code, the
+    docs and the evidence; the card is the record *of* the review, not an input
+    to it.
+
+    WARN, not ERROR: seven existing rounds carry this pattern and the repository
+    gate already tolerates some of them living red. This rule is here to stop the
+    habit spreading, not to demand a sweep nobody scheduled.
+    """
+    out = []
+    for vid in sorted(artifact_map):
+        if vid.startswith("_"):
+            continue
+        # `_listed_files` already normalises (strip + backslashes + leading "./"),
+        # and `lstrip("./")` eats the leading dot of ".tasks/..." too -- so the
+        # comparison string is normalised the same way rather than re-stripped.
+        self_path = _listed_files([f".tasks/{vid}.md"]).pop()
+        if self_path in _listed_files(artifact_map.get(vid)):
+            out.append(_finding(
+                "CARD_SELF_IN_MAP", "WARN", Path("artifacts.json"),
+                f"{vid} lists its own card '.tasks/{vid}.md' as a judged artifact - "
+                "closing the card then makes its own verdict stale, permanently "
+                "(no later round revisits a closed card). List what the reviewer "
+                "read, not the card that records the review (EVO-20261010-001)."))
+    return out
+
+
 def check_unmapped_claim_surface(project_root, artifact_map, verdict_dir=None):
     """The claim surface needs a *current PASS signature*, or freshness skips it.
 
@@ -1031,6 +1069,8 @@ def main(argv=None):
             return EXIT_USAGE
     findings += check_stale_test_count(project_root)
     findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)
+    if artifact_map is not None:
+        findings += check_card_self_in_map(artifact_map)
 
     errors = sum(1 for f in findings if f["level"] == "ERROR")
     warnings = sum(1 for f in findings if f["level"] == "WARN")

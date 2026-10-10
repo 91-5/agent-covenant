@@ -1,5 +1,5 @@
 {
-  "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read.",
+  "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read. A card's OWN file (.tasks/<id>.md) is NOT a judged artifact and must not be listed for that id: its Status/progress fields change as part of normal lifecycle closing (IN_REVIEW -> CLOSED), which would make the round's own verdict stale the moment the card is closed, and no later round revisits a closed card to supersede it. List the code, docs and evidence the reviewer read, not the card that records the review. See EVO-20261010-001.",
   "XJ-20260929-001": [
     "PROTOCOL.md",
     "README.md",
@@ -164,8 +164,7 @@
     ".github/workflows/gate.yml",
     "policy/owned-files-whitelist.yml",
     "README.md",
-    "README.zh-CN.md",
-    ".tasks/XJ-20261008-001.md"
+    "README.zh-CN.md"
   ],
   "XJ-20261008-002": [
     "tools/check_owned_files.py",

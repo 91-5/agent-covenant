@@ -1078,5 +1078,61 @@ class TestAnchoredTestCount(unittest.TestCase):
         self.assertEqual(len(found), 1)
 
 
+class TestCardSelfInMap(unittest.TestCase):
+    """A round must not list its own card as a judged artifact.
+
+    Listing it makes the round stale by definition: closing the card edits the
+    card file, which necessarily happens after the verdict, and no later round
+    revisits a closed card to supersede the finding. The result is a permanent
+    finding that no one can act on.
+    """
+
+    def _codes(self, artifact_map):
+        return {f["rule"] for f in lint.check_card_self_in_map(artifact_map)}
+
+    def test_self_listed_card_warns(self):
+        found = self._codes({
+            "XJ-20261008-001": ["tools/lint_cards.py", ".tasks/XJ-20261008-001.md"],
+        })
+        self.assertIn("CARD_SELF_IN_MAP", found)
+
+    def test_backslash_and_dot_slash_spellings_are_caught(self):
+        """Windows paths and './' prefixes must not smuggle a self-listing past."""
+        found = self._codes({
+            "XJ-20261008-001": [".\\.tasks\\XJ-20261008-001.md"],
+        })
+        self.assertIn("CARD_SELF_IN_MAP", found)
+
+    def test_clean_map_is_silent(self):
+        found = self._codes({
+            "XJ-20261008-001": ["tools/lint_cards.py", "docs/lint-rules.md"],
+        })
+        self.assertNotIn("CARD_SELF_IN_MAP", found)
+
+    def test_another_rounds_card_is_not_flagged(self):
+        """Only a round's OWN card is the defect; citing someone else's is normal."""
+        found = self._codes({
+            "XJ-20261008-001": [".tasks/XJ-20261008-002.md"],
+        })
+        self.assertNotIn("CARD_SELF_IN_MAP", found)
+
+    def test_private_keys_are_skipped(self):
+        found = self._codes({"_comment": [".tasks/_comment.md"]})
+        self.assertNotIn("CARD_SELF_IN_MAP", found)
+
+    def test_shipped_map_reports_only_known_legacy_rounds(self):
+        """The repository's own map is not clean, and this rule says so.
+
+        Seven rounds carried the pattern; XJ-20261008-001 was corrected by
+        EVO-20261010-001 while the rest were left alone deliberately (their red
+        has other causes). If this count changes, someone either fixed more
+        rounds or reintroduced the habit -- both worth noticing.
+        """
+        artifact_map = lint.load_artifact_map(REPO_ROOT / "artifacts.json")
+        details = " ".join(f["detail"] for f in lint.check_card_self_in_map(artifact_map))
+        self.assertNotIn("XJ-20261008-001", details, "the corrected round must stay corrected")
+        self.assertIn("XJ-20260930-015", details)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
