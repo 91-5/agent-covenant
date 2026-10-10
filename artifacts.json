@@ -170,8 +170,7 @@
     "tools/check_owned_files.py",
     "tests/test_check_owned_files.py",
     "README.md",
-    "README.zh-CN.md",
-    ".tasks/XJ-20261008-002.md"
+    "README.zh-CN.md"
   ],
   "XJ-20261008-003": [
     "tools/check_owned_files.py",
@@ -182,7 +181,6 @@
     "tests/test_sync_test_count.py",
     "README.md",
     "README.zh-CN.md",
-    "docs/lint-rules.md",
-    ".tasks/XJ-20261008-003.md"
+    "docs/lint-rules.md"
   ]
 }
