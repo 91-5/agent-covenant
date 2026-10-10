@@ -730,6 +730,74 @@ def _owned_files(text):
     return owned
 
 
+def _looks_like_path(entry):
+    """Is this Owned-files line actually a path, or prose that drifted in?
+
+    `_owned_files` returns whatever sits on a line in the section, and on the
+    real corpus that includes constraint sentences: a card whose section reads
+    "不要** `tools/lint_cards.py`、`tests/test_lint_cards.py`、`PROTOCOL.md`、"
+    yields a "claim" that is a prohibition, not an ownership declaration. Those
+    pseudo-claims then collide with each other through `_paths_overlap`, because
+    the sentence happens to name files another card also names.
+
+    The measurable consequence (EVO-20261010-002): `OWNED_FILES_CONFLICT`
+    reported 132 findings where same-rule recomputation over path-shaped entries
+    finds 5 real ones -- about 96% noise, and it is the only ERROR-level blocker
+    under `--strict`, so the noise was hiding real conflicts.
+
+    Accepted shapes:
+      * a file: one token containing a dot and a short alphanumeric extension
+        (``tools/gate.py``, ``README.md``, ``verdicts/X.verdict.json``)
+      * a directory claim: a token ending in ``/`` (templates/TASK.md states a
+        directory claim owns everything beneath it, so this MUST stay legal)
+      * any token containing a path separator, once backticks/quotes/backslashes
+        are stripped (``agent-os/**``, ``docs/lint-rules.md``)
+
+    Rejected: sentences, prose with spaces, prohibitions, bullet text. The test
+    is deliberately permissive about *shape* and silent about *meaning* -- it
+    cannot know whether a well-formed path belongs to the card, and pretending
+    otherwise would just move the false positives.
+    """
+    token = entry.strip().strip("`'\"").strip()
+    if not token or " " in token or "\t" in token:
+        return False  # a sentence, not a token
+    if token.endswith("/"):
+        return True  # directory claim -- explicitly legal here
+    if "/" in token or "\\" in token:
+        return True
+    # A bare filename needs an extension; "CHANGELOG.md" yes, "本卡" no.
+    return bool(re.match(r"^[^/\\]+\.[A-Za-z0-9]{1,8}$", token))
+
+
+def _owned_paths(text):
+    """The subset of `_owned_files(text)` that is shaped like a path."""
+    return [entry for entry in _owned_files(text) if _looks_like_path(entry)]
+
+
+def check_owned_files_nonpath(claims):
+    """Report Owned-files lines that are not paths, instead of silently dropping.
+
+    Silently filtering them would repeat the defect class this repository keeps
+    post-morteming: a check that stops looking while still reporting success. If
+    a card's Owned files section contains prose, the author (or a later reader)
+    should be told, because the section is machine-read and the prose is doing
+    nothing but generating collision noise.
+
+    `claims` is a list of ``(filename, [raw entries])`` for active cards.
+    """
+    out = []
+    for name, entries in claims:
+        for entry in entries:
+            if not _looks_like_path(entry):
+                out.append(_finding(
+                    "OWNED_FILES_NONPATH", "WARN", Path(name),
+                    f"line {entry!r} sits in the Owned files section but is not a "
+                    "path -- it will not be treated as a claim (it was generating "
+                    "false OWNED_FILES_CONFLICT noise). Move constraints prose to "
+                    "the Constraints section, or write the path on its own line."))
+    return out
+
+
 def _is_active(card_text):
     status = _section_body(card_text, ("status", "状态")).strip().upper()
     if not status:
@@ -827,6 +895,9 @@ def lint_card_dir(card_dir):
     findings = []
     card_ids = set()
     claims = []
+    # Path-shaped claims only: the overlap rule compares paths, and feeding it
+    # constraint prose produced ~96% false positives (EVO-20261010-002).
+    path_claims = []
     for path in sorted(card_dir.glob("*.md")):
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
@@ -846,12 +917,22 @@ def lint_card_dir(card_dir):
             owned = _owned_files(text)
             if owned:
                 claims.append((path.name, owned))
+                # Only path-shaped entries take part in the overlap check; every
+                # non-path entry is reported regardless of whether the card also
+                # has valid paths, so prose cannot hide behind a well-formed line
+                # (EVO-20261010-002: such prose was ~96% of the conflict noise).
+                paths = _owned_paths(text)
+                if paths:
+                    path_claims.append((path.name, paths))
+                rejected = [entry for entry in owned if not _looks_like_path(entry)]
+                if rejected:
+                    findings += check_owned_files_nonpath([(path.name, rejected)])
             if kind == "task":
                 findings += check_owned_files_quality(path, text)
         if not path.name.isascii():
             findings.append(_finding("NON_ASCII_FILENAME", "WARN", path,
                                     "non-ASCII filename — breaks tooling on some platforms"))
-    findings += check_owned_files_conflicts(claims)
+    findings += check_owned_files_conflicts(path_claims)
     return findings, card_ids
 
 

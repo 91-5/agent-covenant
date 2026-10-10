@@ -88,7 +88,7 @@ CI with nobody reading the output, these are the ones to treat as mandatory:
 The rest (`TASK_MISSING_*`, `CLOSED_NOT_ARCHIVED`, `NON_ASCII_FILENAME`) are
 hygiene and can stay advisory at L2 without misleading a machine.
 
-## Owned-files quality (`OWNED_FILES_EMPTY`, `OWNED_FILES_TOO_BROAD`)
+## Owned-files quality (`OWNED_FILES_EMPTY`, `OWNED_FILES_TOO_BROAD`, `OWNED_FILES_NONPATH`)
 
 `OWNED_FILES_CONFLICT` only fires when two active cards overlap. A card that
 declares nothing, or declares `**`, therefore passed every other rule while
@@ -99,6 +99,42 @@ constrained nothing.
 |---|---|---|---|
 | `OWNED_FILES_EMPTY` | WARN | An active card with no claims cannot be violated, so "single write ownership" (R2) is asserted and never checked. | Declare the paths this card owns exclusively. |
 | `OWNED_FILES_TOO_BROAD` | WARN | `**` and root-ish claims match everything, so a violation check against them is vacuous. | Declare concrete paths. |
+| `OWNED_FILES_NONPATH` | WARN | The line sits in the Owned files section but is not shaped like a path, so it is not treated as a claim — and until this rule existed, it silently generated conflict noise instead. | Move constraints prose to the Constraints section, or put the path on its own line. |
+
+### Why `OWNED_FILES_NONPATH` exists (the 96% noise finding)
+
+`_owned_files()` returns whatever is on a line in the section. On the real corpus
+that included prohibitions and commentary — a card reading
+
+```
+## Owned files
+不要** `tools/lint_cards.py`、`tests/test_lint_cards.py`、`PROTOCOL.md`、
+```
+
+yielded a "claim" that is a sentence. Those pseudo-claims then collided with each
+other through `_paths_overlap`, because the sentence happens to name files another
+card also names. The measured result (EVO-20261010-002):
+
+| | count |
+|---|---|
+| `OWNED_FILES_CONFLICT` before | **132** |
+| Same rule, recomputed over path-shaped entries only | **5** |
+| Noise | **~96%** |
+
+That mattered beyond tidiness: `OWNED_FILES_CONFLICT` is the only ERROR-level
+blocker under `--strict`, so 127 false findings were burying the 5 real ones — and
+a reviewer had already read the inflated number as "the corpus is deteriorating,
+clean the boards first".
+
+The filter is deliberately permissive about *shape* and silent about *meaning*: a
+well-formed path is accepted without asking whether it belongs to this card, because
+guessing at intent would only relocate the false positives. Directory claims stay
+legal here (`templates/TASK.md` states a directory claim owns its subtree); the
+whitelist is where directory claims are refused.
+
+Prose is **reported, never dropped**. Silently skipping it would recreate this
+repository's most-repeated defect: a check that stopped looking while still
+reporting success.
 
 Both are WARN on purpose, and the reason is deployment: CI runs this linter with
 `--strict`, where a WARN is an ERROR. Promoting them is a gate, and

@@ -1134,5 +1134,71 @@ class TestCardSelfInMap(unittest.TestCase):
         self.assertIn("XJ-20260930-015", details)
 
 
+class TestOwnedFilesNonPath(LintTestCase):
+    """Constraint prose in the Owned files section must not become a claim.
+
+    On the real corpus this produced 132 OWNED_FILES_CONFLICT findings where only
+    5 were real (EVO-20261010-002) -- about 96% noise, and that rule is the only
+    ERROR-level blocker under --strict, so the noise was burying real conflicts.
+    The prose is reported rather than dropped: silently skipping it would be the
+    same "check quietly stopped looking" defect this repository keeps postmorteming.
+    """
+
+    def test_prose_line_is_reported_not_claimed(self):
+        card = TASK_CARD + "\n## Owned files\n- 不要** `tools/gate.py`、`PROTOCOL.md`\n"
+        self.write("AC-20260929-001.md", card)
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_NONPATH", self.codes(out))
+        self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
+
+    def test_prose_does_not_collide_with_a_real_claim(self):
+        """The regression that mattered: noise colliding with a genuine claim."""
+        self.write("AC-20260929-001.md",
+                   TASK_CARD + "\n## Owned files\n- `tools/gate.py`\n")
+        self.write("AC-20260929-002.md",
+                   TASK_CARD + "\n## Owned files\n- 不要** `tools/gate.py`、`PROTOCOL.md`\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_CONFLICT", self.codes(out))
+        self.assertIn("OWNED_FILES_NONPATH", self.codes(out))
+
+    def test_prose_alongside_valid_paths_is_still_reported(self):
+        """A well-formed line must not shelter the prose next to it."""
+        card = (TASK_CARD
+                + "\n## Owned files\n- `tools/gate.py`\n- 本卡与评审产物（只读）\n")
+        self.write("AC-20260929-001.md", card)
+        code, out, _ = self.run_lint()
+        self.assertIn("OWNED_FILES_NONPATH", self.codes(out))
+
+    def test_directory_claim_is_still_a_path(self):
+        """templates/TASK.md: a directory claim owns everything beneath it."""
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- tools/\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_NONPATH", self.codes(out))
+
+    def test_bare_filename_with_extension_is_a_path(self):
+        self.write("AC-20260929-001.md", TASK_CARD + "\n## Owned files\n- CHANGELOG.md\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_NONPATH", self.codes(out))
+
+    def test_windows_path_is_a_path(self):
+        self.write("AC-20260929-001.md",
+                   TASK_CARD + "\n## Owned files\n- `docs\\lint-rules.md`\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("OWNED_FILES_NONPATH", self.codes(out))
+
+    def test_shipped_conflict_count_is_the_known_real_set(self):
+        """Pins the measurement so a regression back to ~132 is visible.
+
+        Five real conflicts is what path-shaped recomputation finds; the count
+        changing is fine, but it should change because the cards did, not because
+        the filter stopped filtering.
+        """
+        findings, _ = lint.lint_card_dir(REPO_ROOT / ".tasks")
+        conflicts = [f for f in findings if f["rule"] == "OWNED_FILES_CONFLICT"]
+        self.assertLessEqual(
+            len(conflicts), 20,
+            "OWNED_FILES_CONFLICT ballooned -- prose is being claimed again")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
