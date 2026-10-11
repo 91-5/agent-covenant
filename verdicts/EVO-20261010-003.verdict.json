@@ -1,0 +1,27 @@
+{
+  "id": "EVO-20261010-003",
+  "artifact": "tools/lint_cards.py + tests/test_lint_cards.py + docs/lint-rules.md + READMEs (EVO protected-asset boundary, commit a69996a)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-11T23:15:00+08:00",
+  "evidence": [
+    "reverse-verification in a system temp dir (EVO-*.json, cleaned after, repo untouched): targeted-no-escalation=ERROR; targeted+changes+sir_approval=WARN; prose-mention-only=0 hits silent; changes-only-no-approval=ERROR (double field required); typo'd asset=EVO_PROTECTED_ASSET_UNKNOWN WARN; unreadable JSON=EVO_UNREADABLE ERROR -> gate is fail-closed",
+    "real 7 EVO cards in _handoffs/evo: 0 findings (false positives eliminated, independent re-run)",
+    "PROTECTED constant verified correct UTF-8 in source (terminal mojibake is console rendering only)",
+    "design correction verified: keyword-scraping draft -> declaration-only; check_evo_protected_assets ignores proposed_change prose, judges only protected_assets_targeted + the two escalation fields",
+    "syntax regression (mis-deleted opening triple-quote) independently confirmed repaired: module loads, constant correct, all cases run; no residue",
+    "209 tests OK (exit 0); lint_cards --json errors=0; forbidden zone independently confirmed: 0 commits to tools/gate.py across 7ae5c82 and a69996a"
+  ],
+  "rulings": {
+    "keyword_to_declaration_correction": "CORRECT AND REQUIRED - the 'fires hardest on the strongest protector' inversion is disqualifying; declaration-only eliminates it",
+    "no_declaration_means_silent_escape_surface": "ACCEPTED - the real line is that the 5 assets cannot actually be changed (gate.py forbidden zone + single-write ownership + sir final ruling); declaration-based lint is the explicit-audit layer on the legitimate escalation channel, not the sole defense; pair with GATED followup to encode the schema text in AGENTS.md 5.3",
+    "double_escalation_field_required": "CONFIRMED (independently tested changes-only -> stays ERROR)"
+  },
+  "open_followups": [
+    "GATED write-access: write protected_assets / targeted / changes / sir_approval field definitions into AGENTS.md 5.3 EVO schema text (machine check already lives in lint_cards.py)",
+    "P3: before GATED, re-confirm none of the three backstops (gate.py forbidden zone / single-write ownership / sir final ruling) has an EVO bypass channel"
+  ],
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\EVO-20261010-003.review.md (canonical, staged in reviewer workspace; OpenCode lands the in-repo copy per 4.4)"
+}
