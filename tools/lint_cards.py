@@ -613,6 +613,97 @@ def _claim_state(name, path, artifact_map, ids, verdicts):
     return None, listed_by, blockers
 
 
+def check_evo_protected_assets(evo_dir):
+    """A rule-evolution card must not quietly rewrite the system that judges it.
+
+    Adopted from two independent sources (EVO-20261010-003): AgentDescent states
+    the principle outright -- "a self-modifying system must not be able to replace
+    its own evaluator" -- and DarwinAgent encodes it as an "asset boundary" that
+    fails closed. reef does it with a field: its commit record only admits
+    `training / rollback / promote`, and rollback/promote must carry a target id
+    while training must not. The common form is **structural, not aspirational**:
+    the rule about what may not change lives in a schema, not in a paragraph.
+
+    Detection is by DECLARATION, not by keyword-scraping prose. The first draft
+    matched protected names as substrings across `owned_files` and the json-dumped
+    `proposed_change`, and it produced three false positives on the existing
+    corpus, every one of them a card that was *protecting* the asset:
+
+        "高风险文件（gate.yml、lint_cards.py、gate.py...）不进白名单"
+        "不改 gate.py（评审明确禁区）"
+        "状态机补旁路"
+
+    A keyword scan cannot tell "I will change X" from "I will not change X", so it
+    punished the stronger a card's protection language, the harder it fired. That
+    inversion is disqualifying: the check must read what a card DECLARES it will
+    touch. So a card lists `protected_assets_targeted` explicitly, and only that
+    list is judged.
+
+    A card that targets any protected asset is an ERROR unless it also carries
+    both `protected_assets_changes` (naming the asset and the reason) and
+    `sir_approval`. That pair is the legitimate escalation path -- discipline-level
+    changes are sir's call, not something a card can grant itself.
+
+    Deliberately not checked: prose in `proposed_change`. A card is free to
+    discuss, cite or forbid gate.py without declaring that it intends to modify
+    it; only the declaration is load-bearing.
+    """
+    out = []
+    if not evo_dir or not Path(evo_dir).is_dir():
+        return out
+
+    # The five assets sir approved (EVO-20261010-003). A card names them in
+    # `protected_assets_targeted`; anything else is not this rule's business.
+    PROTECTED = (
+        "verdict 模板与字段语义",
+        "EVO 状态机定义",
+        "AgnesCode 评审员资格",
+        "sir 终裁权",
+        "gate.py 判定逻辑",
+    )
+
+    for path in sorted(Path(evo_dir).glob("EVO-*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError) as exc:
+            out.append(_finding("EVO_UNREADABLE", "ERROR", path, f"cannot read EVO card: {exc}"))
+            continue
+        if not isinstance(data, dict):
+            continue
+
+        targeted = data.get("protected_assets_targeted") or []
+        if isinstance(targeted, str):
+            targeted = [targeted]
+        # Only names that are actually on the list count; an unknown string is a
+        # typo, not a boundary crossing, and is reported as such.
+        unknown = [t for t in targeted if t not in PROTECTED]
+        hit = [t for t in targeted if t in PROTECTED]
+        if unknown:
+            out.append(_finding(
+                "EVO_PROTECTED_ASSET_UNKNOWN", "WARN", path,
+                f"protected_assets_targeted names {unknown}, which is not one of the "
+                f"protected assets {list(PROTECTED)} -- check for a typo"))
+        if not hit:
+            continue
+
+        changes = data.get("protected_assets_changes")
+        approval = data.get("sir_approval")
+        if changes and approval:
+            out.append(_finding(
+                "EVO_PROTECTED_ASSET_TOUCHED", "WARN", path,
+                f"targets protected asset(s) {hit} but declares "
+                "protected_assets_changes + sir_approval -- allowed as an explicit "
+                "discipline-level change, recorded for audit"))
+        else:
+            out.append(_finding(
+                "EVO_PROTECTED_ASSET_TOUCHED", "ERROR", path,
+                f"targets protected asset(s) {hit} without both "
+                "protected_assets_changes and sir_approval. A rule-evolution card "
+                "may not rewrite the system that judges it: escalate explicitly "
+                "(discipline-level change is sir's call), do not self-grant."))
+    return out
+
+
 def check_card_self_in_map(artifact_map):
     """A round must not list its own card as a judged artifact (EVO-20261010-001).
 
@@ -1111,6 +1202,10 @@ def build_parser():
                         help="artifacts.json to check the public claim surface against; "
                              "defaults to ./artifacts.json when that file exists "
                              "(neither flag nor file = check not enabled)")
+    parser.add_argument("--evo-dir", default=None,
+                        help="directory of EVO rule-evolution cards (EVO-*.json) to "
+                             "check the protected-asset boundary against; neither "
+                             "flag nor directory = check not enabled")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit JSON findings")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -1149,6 +1244,7 @@ def main(argv=None):
             print(f"[USAGE] {exc}", file=sys.stderr)
             return EXIT_USAGE
     findings += check_stale_test_count(project_root)
+    findings += check_evo_protected_assets(args.evo_dir)
     findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)
     if artifact_map is not None:
         findings += check_card_self_in_map(artifact_map)

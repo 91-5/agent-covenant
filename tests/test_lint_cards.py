@@ -1200,5 +1200,72 @@ class TestOwnedFilesNonPath(LintTestCase):
             "OWNED_FILES_CONFLICT ballooned -- prose is being claimed again")
 
 
+class TestEvoProtectedAssets(unittest.TestCase):
+    """A rule-evolution card may not rewrite the system that judges it.
+
+    EVO-20261010-003, from two independent sources: AgentDescent's "a
+    self-modifying system must not be able to replace its own evaluator", and
+    DarwinAgent's asset boundary. Detection is by DECLARATION
+    (`protected_assets_targeted`), not by scraping prose -- the first draft
+    keyword-matched and produced three false positives on cards that were
+    *protecting* gate.py ("不改 gate.py（评审明确禁区）"). A scan that fires
+    harder the more a card defends an asset is disqualifying.
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.evo = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+
+    def _card(self, name, **fields):
+        payload = {"id": name, "proposed_change": "x"}
+        payload.update(fields)
+        (self.evo / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8")
+        return name
+
+    def _codes(self):
+        return {f["rule"] for f in lint.check_evo_protected_assets(self.evo)}
+
+    def test_targeting_without_declaration_is_an_error(self):
+        self._card("EVO-20990101-001", protected_assets_targeted=["gate.py 判定逻辑"])
+        self.assertIn("EVO_PROTECTED_ASSET_TOUCHED", self._codes())
+
+    def test_targeting_with_changes_and_approval_downgrades_to_warn(self):
+        self._card("EVO-20990101-002",
+                   protected_assets_targeted=["sir 终裁权"],
+                   protected_assets_changes=["why"],
+                   sir_approval="sir 2026-10-11")
+        findings = lint.check_evo_protected_assets(self.evo)
+        levels = {f["rule"]: f["level"] for f in findings}
+        self.assertEqual(levels.get("EVO_PROTECTED_ASSET_TOUCHED"), "WARN")
+
+    def test_prose_that_merely_mentions_gate_py_is_silent(self):
+        """The regression that mattered: protecting an asset is not touching it."""
+        self._card("EVO-20990101-003",
+                   proposed_change="不改 gate.py（评审明确禁区）；gate.yml、lint_cards.py 均不进白名单")
+        self.assertNotIn("EVO_PROTECTED_ASSET_TOUCHED", self._codes())
+
+    def test_card_without_targeting_is_silent(self):
+        self._card("EVO-20990101-004", proposed_change="加一条 lint 规则")
+        self.assertEqual(self._codes(), set())
+
+    def test_unknown_asset_name_warns_as_a_typo(self):
+        self._card("EVO-20990101-005", protected_assets_targeted=["gate.py 判定邏輯"])
+        self.assertIn("EVO_PROTECTED_ASSET_UNKNOWN", self._codes())
+
+    def test_unreadable_card_is_an_error_not_silence(self):
+        (self.evo / "EVO-20990101-006.json").write_text("{not json", encoding="utf-8")
+        self.assertIn("EVO_UNREADABLE", self._codes())
+
+    def test_shipped_evo_cards_are_clean(self):
+        """The seven real cards must not trip this rule."""
+        evo_dir = Path("D:/15812/projects/_handoffs/evo")
+        if not evo_dir.is_dir():
+            self.skipTest("EVO handoff directory not present")
+        findings = lint.check_evo_protected_assets(evo_dir)
+        errors = [f for f in findings if f["level"] == "ERROR"]
+        self.assertEqual(errors, [], f"protected-asset boundary tripped on real cards: {errors}")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

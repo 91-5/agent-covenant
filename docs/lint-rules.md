@@ -182,6 +182,53 @@ its report as an artifact.
 a whitelist entry to silence your own violation. Whitelist changes are
 high-impact changes and need sir's sign-off.
 
+## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
+
+A rule-evolution card must not quietly rewrite the system that judges it. Two
+independent projects state the same principle — AgentDescent puts it plainly
+(*"a self-modifying system must not be able to replace its own evaluator"*, with
+its governance layer deliberately non-pluggable) and DarwinAgent encodes it as an
+asset boundary that fails closed — and reef makes it structural: its commit record
+admits only `training / rollback / promote`, where `rollback`/`promote` **must**
+carry a target id and `training` **must not**. A rule about what may not change
+belongs in a schema, not in a paragraph.
+
+`EVO-20261010-003` gives this repository the same shape. Five assets are protected
+(sir's list):
+
+1. verdict 模板与字段语义
+2. EVO 状态机定义
+3. AgnesCode 评审员资格
+4. sir 终裁权
+5. `gate.py` 判定逻辑
+
+A card that **targets** one of them is an ERROR unless it also carries both
+`protected_assets_changes` (naming the asset and why) and `sir_approval` — that
+pair is the legitimate escalation path, because a discipline-level change is sir's
+call and never something a card can grant itself.
+
+**Detection is by declaration, not by keyword.** The first draft scraped prose and
+produced three false positives on the existing corpus, every one a card that was
+*protecting* the asset:
+
+```
+"不改 gate.py（评审明确禁区）"
+"高风险文件（gate.yml、lint_cards.py、gate.py…）不进白名单"
+"状态机补旁路"
+```
+
+A keyword scan cannot distinguish *"I will change X"* from *"I will not change
+X"*, so it fired hardest on the cards defending the boundary most explicitly. That
+inversion is disqualifying: cards now declare `protected_assets_targeted`, and only
+that list is judged. A card remains free to discuss, cite or forbid `gate.py` in
+prose without being treated as touching it.
+
+`EVO_PROTECTED_ASSET_UNKNOWN` (WARN) catches a typo'd asset name, so a
+misspelling cannot silently opt a card out of the boundary.
+
+Enable with `--evo-dir <path>`; without the flag the check is off, like every
+other rule that needs an external file.
+
 ## Card self-listing in the artifact map (`CARD_SELF_IN_MAP`)
 
 `artifacts.json` says it plainly: *"Keep this list equal to what the reviewer
