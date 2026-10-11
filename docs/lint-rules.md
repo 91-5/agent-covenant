@@ -182,6 +182,45 @@ its report as an artifact.
 a whitelist entry to silence your own violation. Whitelist changes are
 high-impact changes and need sir's sign-off.
 
+## Review-card sections must be sections (`REVIEW_MISSING_BLOCKERS`)
+
+A heading that *names* a section is not that section. The original test was
+`any("blocker" in name for name in _sections(text))`, and `_sections` collects
+every heading at every level — so a verdict heading reading
+`### **PASS** (blockers=0)` satisfied the rule while the card carried no Blockers
+section at all. Three review copies shipped that way and passed
+(EVO-20261010-004).
+
+Scanning the corpus showed the substring test admits three kinds of noise:
+
+| heading actually seen | what it really is |
+|---|---|
+| `### **PASS** (blockers=0)` | verdict heading |
+| `### P1 · 解析对齐 —— 阻断（2× 分母回归）` | finding heading |
+| `### B1 reproduction (the blocker)` | evidence heading |
+
+Enumerating those as exceptions would be whack-a-mole; matching the *structure*
+is the fix. The rule now requires an H1/H2 heading whose text **is** the name:
+`## Blockers`, `## Blocker` (singular — the corpus uses it once), `## 阻断`,
+optionally bolded, optionally trailing a colon.
+
+### The pattern behind three same-day defects
+
+This was the third of three defects fixed in one day with a single root cause —
+**approximating structure with a substring**:
+
+| defect | the substring stood in for |
+|---|---|
+| `_owned_files()` read constraint prose as file claims | a path (EVO-20261010-002) |
+| `check_evo_protected_assets()` read "不改 gate.py" as "will change gate.py" | an intent (EVO-20261010-003) |
+| `_sections()` accepted a verdict heading as a Blockers section | a section (EVO-20261010-004) |
+
+Each one *admitted noise while missing the real thing*: prose generated 127
+phantom conflicts, a prohibition was read as a plan, and a verdict line passed a
+structural requirement. The lesson worth keeping is narrower than "be careful":
+when a check asks whether some structure exists, match the structure, and treat
+"the word appears somewhere" as evidence of nothing.
+
 ## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
 
 A rule-evolution card must not quietly rewrite the system that judges it. Two

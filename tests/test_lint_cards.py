@@ -215,6 +215,42 @@ class TestReviewCardRules(LintTestCase):
         self.assertEqual(lint.EXIT_ERROR, code)
         self.assertIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
 
+    def test_verdict_heading_mentioning_blockers_is_not_a_section(self):
+        """EVO-20261010-004: a heading that NAMES blockers is not one.
+
+        Three review copies shipped with `### **PASS** (blockers=0)` and no
+        Blockers section, and passed -- the rule matched the substring. This is
+        the guard: the word appearing in a verdict heading must not satisfy it.
+        """
+        self.write("REVIEW-001.md",
+                   "# REVIEW\n\n## Verdict\nPASS\n\n### **PASS** (blockers=0)\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
+    def test_finding_heading_mentioning_blocked_is_not_a_section(self):
+        """`### P1 - blocked (2x regression)` is a finding, not a section."""
+        self.write("REVIEW-001.md",
+                   "# REVIEW\n\n## Verdict\nFAIL\n\n### P1 - blocked (2x regression)\n")
+        code, out, _ = self.run_lint()
+        self.assertIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
+    def test_singular_blocker_section_is_accepted(self):
+        """The corpus genuinely uses `## Blocker` once; keep it legal."""
+        self.write("REVIEW-001.md", "# REVIEW\n\n## Verdict\nPASS\n\n## Blocker\n0\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
+    def test_chinese_blockers_section_is_accepted(self):
+        self.write("REVIEW-001.md", "# REVIEW\n\n## Verdict\nPASS\n\n## 阻断\n0\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
+    def test_bold_blockers_section_is_accepted(self):
+        self.write("REVIEW-001.md", "# REVIEW\n\n## Verdict\nPASS\n\n## **Blockers**\n0\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
     def test_conformant_review_passes(self):
         self.write("REVIEW-001.md", REVIEW_CARD)
         code, out, _ = self.run_lint()

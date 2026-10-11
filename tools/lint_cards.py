@@ -211,6 +211,36 @@ def check_bare_task_refs(path, text):
     return out
 
 
+#: A Blockers declaration is a *section heading*, not any line that mentions the
+#: word. H1/H2 only, and the heading text must BE the name (optionally bolded,
+#: optionally trailing a colon) rather than merely contain it.
+BLOCKERS_SECTION_RE = re.compile(
+    r"^\s{0,3}#{1,2}\s+(?:\*\*)?\s*(?:blockers?|阻断)\s*(?:\*\*)?\s*[:：]?\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _has_blockers_section(text):
+    """True when the card declares a Blockers section, not merely names one.
+
+    The previous test was `any("blocker" in name for name in _sections(text))`,
+    and `_sections` collects every heading at every level. So a verdict heading
+    reading `### **PASS** (blockers=0)` satisfied the rule while the card had no
+    Blockers section at all -- three review copies shipped that way and passed
+    (EVO-20261010-004).
+
+    Scanning the corpus showed the substring test admits three kinds of noise:
+    verdict headings (`### **PASS** (blockers=0)`), finding headings
+    (`### P1 - blocked (2x regression)`), and evidence headings
+    (`### B1 reproduction (the blocker)`). Trying to enumerate those as
+    exceptions would be whack-a-mole; matching the structure is the fix.
+
+    Still accepted, because the corpus genuinely uses them: `## Blocker`
+    (singular) and a Chinese `## 阻断`.
+    """
+    return bool(BLOCKERS_SECTION_RE.search(text))
+
+
 def check_review_card(path, text):
     out = []
     sections = _sections(text)
@@ -221,7 +251,7 @@ def check_review_card(path, text):
     elif not re.search(r"\b(PASS|CONDITIONAL|FAIL)\b", text, re.IGNORECASE):
         out.append(_finding("REVIEW_MISSING_VERDICT_LINE", "ERROR", path,
                             "'## Verdict' section contains no PASS / CONDITIONAL / FAIL"))
-    if not any("blocker" in name or "阻塞" in name for name in sections):
+    if not _has_blockers_section(text):
         out.append(_finding("REVIEW_MISSING_BLOCKERS", "ERROR", path,
                             "no '## Blockers' section (state the count, even if zero)"))
     return out
