@@ -246,6 +246,19 @@ class TestReviewCardRules(LintTestCase):
         code, out, _ = self.run_lint()
         self.assertNotIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
 
+    def test_second_chinese_spelling_is_accepted(self):
+        """`阻塞` was matched by the pre-fix rule; do not narrow the vocabulary.
+
+        Reviewer T-1 (EVO-20261010-004) caught that the fix dropped it: the old
+        test read `"阻塞" in name`, the new regex had only `阻断`. No card writes
+        either as a heading today, so nothing observable changed -- but quietly
+        accepting less than before is a regression waiting to fail the first
+        author who uses the word.
+        """
+        self.write("REVIEW-001.md", "# REVIEW\n\n## Verdict\nPASS\n\n## 阻塞\n0\n")
+        code, out, _ = self.run_lint()
+        self.assertNotIn("REVIEW_MISSING_BLOCKERS", self.codes(out))
+
     def test_bold_blockers_section_is_accepted(self):
         self.write("REVIEW-001.md", "# REVIEW\n\n## Verdict\nPASS\n\n## **Blockers**\n0\n")
         code, out, _ = self.run_lint()

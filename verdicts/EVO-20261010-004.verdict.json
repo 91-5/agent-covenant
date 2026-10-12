@@ -1,0 +1,30 @@
+{
+  "id": "EVO-20261010-004",
+  "artifact": "tools/lint_cards.py + tests/test_lint_cards.py + docs/lint-rules.md + READMEs (REVIEW_MISSING_BLOCKERS structural match, commit 5a77e83)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-12T22:19:00+08:00",
+  "evidence": [
+    "reverse-verification in system temp dir (repo untouched), 8 cases: verdict-heading-only=ERROR, singular '## Blocker'=PASS, '## 阻断'=PASS, finding-heading '### P1 ... 阻断'=ERROR, evidence-heading '### B1 reproduction (the blocker)'=ERROR, bolded '## **Blockers**'=PASS, trailing-colon '## Blockers:'=PASS, '### 遗留（非阻断）'=ERROR",
+    "corpus strict recompute: BLOCKERS_SECTION_RE over all 20 .tasks/REVIEW-*.md -> strict_ok=20/20 (zero false negatives); old substring logic independently re-played on the verdict-heading card -> WOULD pass (defect genuinely existed)",
+    "214 tests OK (exit 0, +5 new test methods); lint_cards --json errors=0 (REVIEW_MISSING_BLOCKERS=0); sync_test_count --check in sync at 214; forbidden zone independently confirmed: 0 commits to tools/gate.py in a69996a..5a77e83",
+    "self-correction-1 (count 4->3) verified: REVIEW-XJ-20260930-013 '## Blocker' singular is legal (new regex PASSES it); the 3 true false-passes are REVIEW-EVO-20261010-001/002/003",
+    "self-correction-2 (regex typo) verified: current source is '(?:\\*\\*)?' (not '\\**'); strict_ok=20 not the bogus 0"
+  ],
+  "independent_findings": [
+    "T-1 (P3): dispatch/母卡 quoted the old Chinese branch as '阻断', but 5a77e83~1 source is '阻塞'; neither '## 阻断' nor '## 阻塞' exists in the corpus (0 each), so no existing card's outcome changes. The new docstring's 'corpus genuinely uses ## 阻断' is overstated (0 corpus examples) -> reword, keep the Chinese synonym support",
+    "T-2 (P2): same substring-approximates-structure anti-pattern still lives in _has_section (:137, TASK_MISSING_SECTION WARN), verdict_section (:247, REVIEW_MISSING_VERDICT_LINE ERROR, partly anchored by \\b(PASS|CONDITIONAL|FAIL)\\b), REVIEW_Q_SECTIONS (:290, TASK_MISSING_REVIEW_QUESTIONS WARN). 004 correctly did not widen _sections() (boundary held). Open a separate P2 audit card, do NOT fold into 004."
+  ],
+  "rulings": {
+    "structural_match_over_substring": "ACCEPTED - matches H1/H2 whose text IS the name; kills verdict/finding/evidence-heading noise while keeping singular/Chinese/bold/colon variants",
+    "currently-dormant_defect_framing": "ACCEPTED AND ACCURATE - the three shipped copies got their sections at landing, so old_false_pass=0 today; the source predicate was still wide (independently re-proven) and the next card could retrigger it; this card is prevention, not a claimed stock defect",
+    "do_not_rescope_to_other_substring_predicates": "CORRECT - the other 3 are lower-risk (mostly WARN / secondarily anchored); defer to a separate audit card"
+  },
+  "open_followups": [
+    "P3: reword _has_blockers_section docstring (corpus does not actually contain '## 阻断'; the old word was '阻塞', not '阻断' as the dispatch/母卡 quoted)",
+    "P2 (separate card): audit _has_section / verdict_section / REVIEW_Q_SECTIONS (and re-check _owned_files, check_evo_protected_assets) for the substring-approximates-structure pattern; convert structure-existence checks to structural matches, keep legitimate substring word-searches"
+  ],
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\EVO-20261010-004.review.md (canonical, staged in reviewer workspace; OpenCode lands the in-repo copy per 4.4)"
+}

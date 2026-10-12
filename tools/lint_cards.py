@@ -214,8 +214,17 @@ def check_bare_task_refs(path, text):
 #: A Blockers declaration is a *section heading*, not any line that mentions the
 #: word. H1/H2 only, and the heading text must BE the name (optionally bolded,
 #: optionally trailing a colon) rather than merely contain it.
+#:
+#: `阻塞` is kept alongside `阻断` for a specific reason: the pre-fix rule tested
+#: `"阻塞" in name`, so dropping it here would narrow the accepted vocabulary
+#: while fixing the over-acceptance. No card currently writes either as a heading
+#: (reviewed: 19x `## Blockers`, 1x `## Blocker`, zero Chinese headings), so the
+#: two spellings are behaviourally invisible today -- keeping both costs nothing
+#: and avoids failing a future author who writes one of them. Reviewer T-1 caught
+#: the dropped word; the docstring above it previously over-claimed that the
+#: corpus uses `## 阻断`, which it does not.
 BLOCKERS_SECTION_RE = re.compile(
-    r"^\s{0,3}#{1,2}\s+(?:\*\*)?\s*(?:blockers?|阻断)\s*(?:\*\*)?\s*[:：]?\s*$",
+    r"^\s{0,3}#{1,2}\s+(?:\*\*)?\s*(?:blockers?|阻断|阻塞)\s*(?:\*\*)?\s*[:：]?\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -235,8 +244,10 @@ def _has_blockers_section(text):
     (`### B1 reproduction (the blocker)`). Trying to enumerate those as
     exceptions would be whack-a-mole; matching the structure is the fix.
 
-    Still accepted, because the corpus genuinely uses them: `## Blocker`
-    (singular) and a Chinese `## 阻断`.
+    Accepted forms, checked against the corpus rather than assumed: 19 cards use
+    `## Blockers`, one uses `## Blocker` (singular). No card uses a Chinese
+    heading, but `阻断` and `阻塞` stay accepted because the pre-fix rule matched
+    `阻塞` and narrowing the vocabulary is not part of this fix.
     """
     return bool(BLOCKERS_SECTION_RE.search(text))
 
