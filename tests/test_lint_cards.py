@@ -1316,5 +1316,46 @@ class TestEvoProtectedAssets(unittest.TestCase):
         self.assertEqual(errors, [], f"protected-asset boundary tripped on real cards: {errors}")
 
 
+class TestSectionNameMatching(unittest.TestCase):
+    """A section must be declared, not merely mentioned (EVO-20261010-005).
+
+    Three matching rules were tried against the corpus before one survived:
+
+      * substring -- the original. The Chinese alias `边界` is two common
+        characters, so `## ③ 真冲突未处理 —— 边界划得对，应另开卡` counted as a
+        Constraints section. Four sentences and a document H1 were accepted.
+      * equality -- too strict. `## Acceptance audit` is a real acceptance
+        section with a qualifier, and it would be dropped.
+      * start-anchored -- keeps the qualifier, drops the sentence.
+    """
+
+    def _match(self, heading, key):
+        return lint._section_name_matches({heading.lower()}, lint.TASK_SECTION_ALIASES[key])
+
+    def test_exact_name_matches(self):
+        self.assertTrue(self._match("Constraints", "constraints"))
+
+    def test_qualified_name_matches(self):
+        """`## Acceptance audit` declares acceptance; dropping it would be a regression."""
+        self.assertTrue(self._match("Acceptance audit", "acceptance"))
+
+    def test_chinese_alias_matches(self):
+        self.assertTrue(self._match("状态", "status"))
+
+    def test_sentence_containing_the_word_does_not_match(self):
+        """The defect: `边界` inside a sentence is not a Constraints section."""
+        self.assertFalse(
+            self._match("③ 5 条真冲突未处理 —— 边界划得对，应另开卡", "constraints"))
+
+    def test_document_title_containing_the_word_does_not_match(self):
+        self.assertFalse(self._match("EVO-20261010-003 评审报告（硬边界 · 声明式检测）", "constraints"))
+
+    def test_question_containing_the_word_does_not_match(self):
+        self.assertFalse(self._match("Q4 —— D4 的边界要不要写成可机检的断言？", "constraints"))
+
+    def test_absent_section_does_not_match(self):
+        self.assertFalse(self._match("Context", "constraints"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

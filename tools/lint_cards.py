@@ -132,9 +132,43 @@ def _sections(text):
     return found
 
 
+def _norm_heading(name):
+    """A heading reduced to comparable form: no markers, no bold, no trailing colon."""
+    return name.strip().strip("*").strip(" :：").strip().lower()
+
+
+def _section_name_matches(sections, aliases):
+    """True when some heading *is* one of `aliases`, allowing a qualifier after it.
+
+    The intent is "does this card declare a Constraints section?", and the answer
+    has to survive both a shorter and a longer spelling: `## Acceptance audit` is
+    an acceptance section, `## 中文验收` is one, but
+    `## ③ 5 条真冲突未处理 —— 边界划得对，应另开卡` is a sentence that happens to
+    contain `边界`.
+
+    Two rules were rejected on corpus evidence before this one (EVO-20261010-005):
+
+      * substring (`alias in name`) -- the original. Measured over the corpus it
+        accepted four sentences and one document H1 as sections, because the
+        Chinese alias `边界` is two very common characters.
+      * equality (`name == alias`) -- too strict. It drops `## Acceptance audit`,
+        which is a real acceptance section with a qualifier.
+
+    Anchoring at the START keeps the qualifier and drops the sentence. Verified
+    against all `.tasks/*.md`: of 12 cards where the loose rule disagreed with a
+    stricter one, this keeps the 8 genuine sections and rejects the 4 sentences,
+    with no card losing a section it actually declares.
+    """
+    wanted = [_norm_heading(a) for a in aliases if a and a.strip()]
+    for name in sections:
+        core = _norm_heading(name)
+        if any(core.startswith(a) for a in wanted):
+            return True
+    return False
+
+
 def _has_section(sections, key):
-    aliases = TASK_SECTION_ALIASES.get(key, (key,))
-    return any(any(alias in name for alias in aliases) for name in sections)
+    return _section_name_matches(sections, TASK_SECTION_ALIASES.get(key, (key,)))
 
 
 def classify(path):

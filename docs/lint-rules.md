@@ -221,6 +221,49 @@ structural requirement. The lesson worth keeping is narrower than "be careful":
 when a check asks whether some structure exists, match the structure, and treat
 "the word appears somewhere" as evidence of nothing.
 
+## Declared vs mentioned: task-card sections (`TASK_MISSING_SECTION`)
+
+`_has_section` asked "does this card declare a Constraints section?" by checking
+whether the alias appeared **anywhere** in a heading. The Chinese alias `边界` is
+two very common characters, so this satisfied it:
+
+```
+### ③ 5 条真冲突未处理 —— 边界划得对，应另开卡
+```
+
+Four sentences and a document H1 were being read as sections (EVO-20261010-005).
+
+Two fixes were tried before one survived, and the rejected one is the interesting
+part — **equality is too strict**:
+
+| rule | `## Acceptance audit` | `### 边界划得对，应另开卡` |
+|---|---|---|
+| substring (original) | ✅ accepted | ❌ accepted (the bug) |
+| equality | ❌ **rejected (a regression)** | ✅ rejected |
+| **start-anchored** | ✅ accepted | ✅ rejected |
+
+`## Acceptance audit` is a genuine acceptance section with a qualifier; a rule
+that drops it trades one defect for another. Anchoring at the start keeps the
+qualifier and drops the sentence. Measured across `.tasks/*.md`: of 12 cards where
+the loose rule disagreed with a stricter one, this keeps the 8 real sections and
+rejects the 4 sentences, with no card losing a section it actually declares.
+
+**Why the other two same-shaped checks were left alone.** EVO-20261010-004's
+review flagged all three (`_has_section`, `verdict_section`,
+`REVIEW_Q_SECTIONS`) as the same anti-pattern, and they are — but they are not
+equally exposed:
+
+| check | second line of defence | output | action |
+|---|---|---|---|
+| `_has_section` | none | ERROR | **tightened** |
+| `verdict_section` | `\b(PASS\|CONDITIONAL\|FAIL)\b` anchor | ERROR | left, comment added |
+| `REVIEW_Q_SECTIONS` | none | WARN | left, note added |
+
+Tightening a check that already has a backstop buys little and costs regression
+surface. The grading is recorded here so a future audit does not have to re-derive
+it — and so that removing the `verdict_section` anchor's `elif` branch is visibly
+a mistake rather than a simplification.
+
 ## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
 
 A rule-evolution card must not quietly rewrite the system that judges it. Two
