@@ -264,6 +264,42 @@ surface. The grading is recorded here so a future audit does not have to re-deri
 it — and so that removing the `verdict_section` anchor's `elif` branch is visibly
 a mistake rather than a simplification.
 
+## `STATUS_DRIFT`: a Status that never grew out of an open state
+
+WARN when a card's `## Status` carries no closed marker while its verdict file
+records `PASS`. The State looks untidy; the damage is not in the look.
+
+`_is_active()` decides whether a card's owned-files claims take part in conflict
+detection. A drifted card therefore stays active and holds its files forever, and
+every later card touching the same file collides with it — with the noise aimed at
+the *new* card. That is exactly how three `OWNED_FILES_CONFLICT` findings landed on
+`XJ-20261013-002`, an innocent card, while `XJ-20261004-006` — PASS since 2026-10-05
+and the one actually holding the files — was an invisible occupant nobody blamed.
+
+**The design decision worth remembering**: this rule does not enumerate status
+values. The first attempt at finding drift matched `IN_REVIEW|OPEN|...` and found
+five of the seven cards that had drifted, because two of them wrote prose:
+
+```markdown
+## Status
+
+Awaiting independent review.
+```
+
+A status does not only come as an enum, so enumerating one with a regex
+systematically misses prose. Instead this rule reuses `_is_active()` directly: an
+open state is whatever that function considers open, which already covers prose.
+Three of the seven tests exist solely to keep that property from being
+"simplified" back into a regex.
+
+**WARN, not ERROR.** A wrong status does not itself damage the evidence chain, and
+`ERROR` would trap a repository mid-correction — the seven cards being fixed when
+this rule was written would each have blocked the gate. AgnesCode ruled the level on
+`XJ-20261013-003`, and the rule has to earn `ERROR` after a clean WARN record.
+
+`CONDITIONAL` is not drift: the card is still genuinely awaiting something, and
+`CLOSED`/`GATED` plus `PASS` is the aligned state the rule is nudging toward.
+
 ## `ORPHAN_VERDICT`: a verdict with no card *anywhere*
 
 The rule asks a narrower question than it looks: not "is this verdict

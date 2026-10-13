@@ -1412,5 +1412,95 @@ class TestEvoVerdictPairing(unittest.TestCase):
         self.assertEqual(set(), lint._evo_card_ids(None))
 
 
+class TestStatusDrift(unittest.TestCase):
+    """WARN when a card's Status never grew out of an open state (XJ-20261013-006).
+
+    The rule exists because drift has a consequence, not just a look: _is_active
+    decides whether owned-files claims compete, so a drifted card keeps its files
+    and later cards collide with it. Seven cards drifted, two of them writing
+    prose ("Awaiting independent review.") with no state token at all -- which is
+    why the tests below assert that prose is caught and not only the enum.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.cards = self.root / ".tasks"
+        self.verdicts = self.root / "verdicts"
+        self.cards.mkdir()
+        self.verdicts.mkdir()
+
+    def _write(self, cid, status_body, verdict=None):
+        (self.cards / f"{cid}.md").write_text(
+            f"# TASK {cid}: stub\n\n## Context\n\nstub\n\n## Status\n\n{status_body}\n",
+            encoding="utf-8")
+        if verdict is not None:
+            (self.verdicts / f"{cid}.verdict.json").write_text(
+                json.dumps({"id": cid, "verdict": verdict, "ts": "2026-10-05T00:00:00Z"}),
+                encoding="utf-8")
+
+    def _drift(self):
+        return [f["file"] for f in lint.check_status_drift(self.cards, self.verdicts)
+                if f["rule"] == "STATUS_DRIFT"]
+
+    def test_open_status_with_pass_verdict_is_drift(self):
+        self._write("XJ-20261013-001", "`IN_REVIEW`", "PASS")
+        self.assertEqual(["XJ-20261013-001.md"], self._drift())
+
+    def test_prose_status_with_pass_verdict_is_drift(self):
+        """The case an enum-only rule would have missed: two real cards did this."""
+        self._write("XJ-20260930-014", "Awaiting independent review.", "PASS")
+        self.assertIn("XJ-20260930-014.md", self._drift())
+
+    def test_missing_status_with_pass_verdict_is_drift(self):
+        self._write("XJ-20260930-015", "", "PASS")
+        self.assertIn("XJ-20260930-015.md", self._drift())
+
+    def test_closed_status_with_pass_verdict_is_clean(self):
+        self._write("XJ-20261013-002", "`CLOSED` — PASS", "PASS")
+        self.assertEqual([], self._drift())
+
+    def test_conditional_verdict_is_not_drift(self):
+        self._write("XJ-20261013-003", "`IN_REVIEW`", "CONDITIONAL")
+        self.assertEqual([], self._drift())
+
+    def test_open_status_without_verdict_is_clean(self):
+        self._write("XJ-20261013-004", "`IN_REVIEW`")
+        self.assertEqual([], self._drift())
+
+    def test_clean_card_dir_reports_nothing(self):
+        self.assertEqual([], self._drift())
+
+
+class TestSuiteExcludesKnownFailures(unittest.TestCase):
+    """The four pre-existing failures in tests/test_pre_push_hook.py.
+
+    They belong to XJ-20261013-004, which AgnesCode judged FAIL because its
+    deliverables never reached git -- the files exist only in the working tree.
+    Verified independent of this change: stashing the README sync does not clear
+    them, so they are not caused by anything here. Recorded so a red suite is
+    never mistaken for a regression introduced by the card under review, and so
+    that whoever fixes 004 has an explicit list.
+    """
+
+    KNOWN = (
+        "InstallHooksTestCase.test_install_creates_hook",
+        "InstallHooksTestCase.test_install_backs_up_existing_hook",
+        "PrePushHookTestCase.test_branch_push_blocked_on_lint_error",
+        "PrePushHookTestCase.test_branch_push_blocked_when_verdict_missing",
+    )
+
+    def test_known_failures_are_still_exactly_these(self):
+        """Guard: if 004 gets fixed, this test should start failing."""
+        result = unittest.TextTestRunner(stream=io.StringIO()).run(
+            unittest.defaultTestLoader.loadTestsFromName("tests.test_pre_push_hook"))
+        actual = {f"{type(case).__name__}.{case._testMethodName}"
+                  for case, _tb in (result.failures + result.errors)}
+        self.assertEqual(set(self.KNOWN), actual,
+                         "the pre-push hook test failures changed shape -- "
+                         "XJ-20261013-004 may have been fixed or regressed")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

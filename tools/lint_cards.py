@@ -794,7 +794,7 @@ def check_evo_protected_assets(evo_dir):
     return out
 
 
-def check_card_self_in_map(artifact_map):
+def check_card_self_in_map(artifact_map, card_dir=None):
     """A round must not list its own card as a judged artifact (EVO-20261010-001).
 
     The freshness rule compares each listed artifact's mtime against the round's
@@ -817,6 +817,10 @@ def check_card_self_in_map(artifact_map):
     out = []
     for vid in sorted(artifact_map):
         if vid.startswith("_"):
+            continue
+        # Archived cards are historical records; their self-listing is a
+        # consequence of being captured at creation time, not a live defect.
+        if card_dir is not None and (card_dir / "legacy" / f"{vid}.md").exists():
             continue
         # `_listed_files` already normalises (strip + backslashes + leading "./"),
         # and `lstrip("./")` eats the leading dot of ".tasks/..." too -- so the
@@ -987,6 +991,56 @@ def _is_active(card_text):
         if closed in status:
             return False
     return True
+
+
+def check_status_drift(card_dir, verdict_dir):
+    """WARN when a card advertises an open state it has already grown out of.
+
+    Drift means: `## Status` carries no closed marker (CLOSED / GATED / etc.)
+    while `verdicts/<id>.verdict.json` records PASS. This is not cosmetic.
+    `_is_active` decides whether a card's owned-files claims take part in
+    conflict detection, so a drifted card holds its files forever -- and every
+    later card touching the same file collides with it. That is how the three
+    OWNED_FILES_CONFLICT findings of XJ-20261013-002 pointed at the innocent new
+    card while XJ-20261004-006, PASS since 2026-10-05, quietly kept the claim.
+
+    Seven cards drifted this way and none of them were written that way on
+    purpose: two wrote prose ("Awaiting independent review.") with no state
+    token at all. A fix that only matched the enum values would have found five
+    of the seven, so this rule deliberately reuses `_is_active` -- an open state
+    is whatever `_is_active` considers open, which already covers prose.
+
+    WARN, not ERROR: a wrong status does not itself damage the evidence chain,
+    and ERROR would trap a repo mid-correction. AgnesCode ruled the level on
+    XJ-20261013-003: earn ERROR after a clean WARN record.
+    """
+    out = []
+    if not card_dir or not card_dir.is_dir():
+        return out
+    verdicts = {}
+    if verdict_dir and verdict_dir.is_dir():
+        for path in verdict_dir.glob(f"*{VERDICT_SUFFIX}"):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8-sig"))
+            except Exception:  # noqa: BLE001 - schema check reports unreadable verdicts
+                continue
+            verdicts[path.name[:-len(VERDICT_SUFFIX)]] = data
+    for path in sorted(card_dir.glob("*.md")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if not _is_active(text):
+            continue
+        verdict = verdicts.get(path.stem)
+        if not verdict:
+            continue
+        if str(verdict.get("verdict", "")).upper() != "PASS":
+            continue
+        ts = verdict.get("ts") or "unknown date"
+        out.append(_finding("STATUS_DRIFT", "WARN", path,
+                            f"Status still reads as open but verdicts/{path.stem}"
+                            f"{VERDICT_SUFFIX} is PASS (signed {ts}). A drifted card "
+                            "stays active and keeps holding its owned files; "
+                            "realign it or archive it."))
+    return out
 
 
 def _paths_overlap(left, right):
@@ -1330,6 +1384,7 @@ def main(argv=None):
     # their verdicts are neither orphaned nor missing.
     findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir,
                                     extra_known_ids=_evo_card_ids(args.evo_dir))
+    findings += check_status_drift(card_dir, verdict_dir)
     if not getattr(args, "no_verdict_schema", False):
         findings += check_verdict_schema(verdict_dir, skipped=args.no_verdict_schema)
 
@@ -1353,7 +1408,7 @@ def main(argv=None):
     findings += check_evo_protected_assets(args.evo_dir)
     findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)
     if artifact_map is not None:
-        findings += check_card_self_in_map(artifact_map)
+        findings += check_card_self_in_map(artifact_map, card_dir)
 
     errors = sum(1 for f in findings if f["level"] == "ERROR")
     warnings = sum(1 for f in findings if f["level"] == "WARN")
