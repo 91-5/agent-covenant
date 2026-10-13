@@ -264,6 +264,39 @@ surface. The grading is recorded here so a future audit does not have to re-deri
 it — and so that removing the `verdict_section` anchor's `elif` branch is visibly
 a mistake rather than a simplification.
 
+## `ORPHAN_VERDICT`: a verdict with no card *anywhere*
+
+The rule asks a narrower question than it looks: not "is this verdict
+meaningful?" but "is its card missing from the places we look?". Cards were
+collected from `.tasks/*.md` and `.tasks/legacy/*.md`, which meant the EVO rule
+cards were invisible — they are `_handoffs/evo/EVO-*.json`, outside the card
+directory entirely. Four of them (`EVO-20261010-001..004`), each holding a PASS
+verdict and a review document, were reported as orphans.
+
+So the fix is **one-sided on purpose**. EVO card ids are admitted for the orphan
+direction only:
+
+| direction | sees EVO ids? | why |
+|---|---|---|
+| orphan (verdict without card) | **yes** | the cards exist; we were simply not looking |
+| card without verdict | **no** | whether EVO cards must carry a verdict is a question about the EVO state machine, not this rule |
+
+Folding them into both would have been tidier and much worse: seven of the eleven
+EVO cards have no in-repo verdict, so the reverse direction would have fired
+seven times over — **four false positives traded for forty new ones**. Two tests
+in `TestEvoVerdictPairing` exist purely to keep that asymmetry from being
+"cleaned up" by a later reader.
+
+Note the two directories already disagree on what counts as an id: the active
+directory requires a strict `NAMESPACE_RE` full-name match (`XJ-...md`), while
+`legacy/` uses the looser `ID_IN_NAME_RE`, which also extracts an id from
+`REVIEW-XJ-....md`. That inconsistency is why an archived card's review file
+keeps its verdict paired while the same file in the active directory would not.
+Tracked as a review question on `XJ-20261013-002`, not fixed here.
+
+Without `--evo-dir` the four findings return unchanged: the directory was not
+named, so lint does not guess at it.
+
 ## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
 
 A rule-evolution card must not quietly rewrite the system that judges it. Two

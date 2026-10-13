@@ -436,12 +436,27 @@ def _check_unblocks_dangling(verdict_dir):
     return out
 
 
-def check_verdict_pairs(card_ids, verdict_dir):
+def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None):
+    """Pair verdicts against cards, in both directions.
+
+    `extra_known_ids` are ids that count as "a card exists" for the orphan
+    direction only. EVO rule cards live outside the card directory as
+    `_handoffs/evo/EVO-*.json`, so their in-repo verdicts used to be reported
+    as ORPHAN_VERDICT -- four false positives (EVO-20261010-001..004), each of
+    which had both a PASS verdict and a review document.
+
+    Deliberately one-sided. Folding these ids into `card_ids` proper would make
+    the reverse direction fire for the seven EVO cards with no in-repo verdict,
+    turning four false positives into forty real-looking ones -- a second defect
+    traded for the first. Whether EVO cards must carry a verdict is a separate
+    question about the EVO state machine, not something to decide here.
+    """
     out = []
     if not verdict_dir or not verdict_dir.is_dir():
         return out
     verdict_ids = {p.name[: -len(VERDICT_SUFFIX)] for p in verdict_dir.glob(f"*{VERDICT_SUFFIX}")}
-    for vid in sorted(verdict_ids - card_ids):
+    known_ids = card_ids | set(extra_known_ids or ())
+    for vid in sorted(verdict_ids - known_ids):
         out.append(_finding("ORPHAN_VERDICT", "WARN", Path(f"{vid}{VERDICT_SUFFIX}"),
                             "verdict has no matching card in the card directory"))
     for vid in sorted(card_ids - verdict_ids):
@@ -1057,6 +1072,21 @@ def _legacy_card_ids(card_dir):
     return ids
 
 
+def _evo_card_ids(evo_dir):
+    """Ids of EVO rule cards, which live outside the card directory.
+
+    These are `_handoffs/evo/EVO-*.json` rather than Markdown cards under
+    `.tasks/`, so pairing never saw them. Only used to stop their verdicts being
+    reported as orphans -- see check_verdict_pairs for why it stops there.
+    """
+    if not evo_dir:
+        return set()
+    directory = Path(evo_dir)
+    if not directory.is_dir():
+        return set()
+    return {path.stem for path in directory.glob("EVO-*.json")}
+
+
 def lint_card_dir(card_dir):
     findings = []
     card_ids = set()
@@ -1298,7 +1328,8 @@ def main(argv=None):
     findings, card_ids = lint_card_dir(card_dir)
     # Cards parked in legacy/ are evidence, not linted - but they still exist, so
     # their verdicts are neither orphaned nor missing.
-    findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir)
+    findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir,
+                                    extra_known_ids=_evo_card_ids(args.evo_dir))
     if not getattr(args, "no_verdict_schema", False):
         findings += check_verdict_schema(verdict_dir, skipped=args.no_verdict_schema)
 

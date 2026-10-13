@@ -1357,5 +1357,60 @@ class TestSectionNameMatching(unittest.TestCase):
         self.assertFalse(self._match("Context", "constraints"))
 
 
+class TestEvoVerdictPairing(unittest.TestCase):
+    """EVO verdicts must not read as orphans (XJ-20261013-002).
+
+    EVO rule cards are `_handoffs/evo/EVO-*.json`, outside the card directory,
+    so pairing never saw them and four PASS verdicts were reported as orphans.
+    The fix is one-sided on purpose: making them count as cards for the orphan
+    direction only. Letting them into the reverse direction too would fire
+    VERDICT_WITHOUT_REVIEW for the seven EVO cards with no in-repo verdict --
+    four false positives traded for forty new ones. These tests exist to keep
+    that asymmetry from being "tidied up" later.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.verdicts = Path(self.tmp.name) / "verdicts"
+        self.verdicts.mkdir()
+        (self.verdicts / "EVO-1.verdict.json").write_text(
+            '{"id": "EVO-1", "verdict": "PASS"}', encoding="utf-8")
+
+    def _orphans(self, card_ids, extra=None):
+        findings = lint.check_verdict_pairs(card_ids, self.verdicts, extra_known_ids=extra)
+        return {f["rule"] for f in findings if f["rule"] == "ORPHAN_VERDICT"}
+
+    def _without_review(self, card_ids, extra=None):
+        findings = lint.check_verdict_pairs(card_ids, self.verdicts, extra_known_ids=extra)
+        return {f["rule"] for f in findings if f["rule"] == "VERDICT_WITHOUT_REVIEW"}
+
+    def test_orphan_without_extra_known_ids(self):
+        """Baseline: an EVO verdict reads as an orphan when its card is unknown."""
+        self.assertIn("ORPHAN_VERDICT", self._orphans(set()))
+
+    def test_extra_known_ids_clears_the_orphan(self):
+        self.assertNotIn("ORPHAN_VERDICT", self._orphans(set(), extra={"EVO-1"}))
+
+    def test_extra_known_ids_do_not_create_missing_verdicts(self):
+        """The whole point of one-sided pairing: no reverse-direction fallout."""
+        self.assertEqual(set(), self._without_review(set(), extra={"EVO-1"}))
+
+    def test_unrelated_extra_ids_still_orphan(self):
+        self.assertIn("ORPHAN_VERDICT", self._orphans(set(), extra={"EVO-2"}))
+
+    def test_evo_card_ids_reads_json_cards(self):
+        evo = Path(self.tmp.name) / "evo"
+        evo.mkdir()
+        (evo / "EVO-1.json").write_text("{}", encoding="utf-8")
+        (evo / "EVO-2.json").write_text("{}", encoding="utf-8")
+        (evo / "notes.md").write_text("ignored", encoding="utf-8")
+        self.assertEqual({"EVO-1", "EVO-2"}, lint._evo_card_ids(evo))
+
+    def test_evo_card_ids_tolerates_missing_dir(self):
+        self.assertEqual(set(), lint._evo_card_ids(Path(self.tmp.name) / "nope"))
+        self.assertEqual(set(), lint._evo_card_ids(None))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
