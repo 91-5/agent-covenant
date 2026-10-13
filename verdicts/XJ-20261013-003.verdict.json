@@ -1,0 +1,31 @@
+{
+  "id": "XJ-20261013-003",
+  "artifact": ".tasks/XJ-20260930-007,014,015 + .tasks/XJ-20261004-002,003,005,006 (7 Status sections realigned to their existing PASS verdicts, commit 4d3a0b5; +4 -1 per card, prefix/suffix byte-preserved)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-13T21:55:00+08:00",
+  "evidence": [
+    "git diff --stat 4d3a0b5: 7 card files +28 -7 (7 x +4 -1), plus the card's own .tasks/XJ-20261013-003.md +109; reviewer byte-compared prefix/suffix on the 7 rewritten cards -> only the ## Status block changed, owned-file lines intact",
+    "OWNED_FILES_CONFLICT re-run at 4d3a0b5^: 3 findings, all 'tools/lint_cards.py / tests/test_lint_cards.py / docs/lint-rules.py also claimed by XJ-20261013-002 while XJ-20261004-006 (PASS since 2026-10-05) still holds the claim' -> at HEAD OWNED_FILES_CONFLICT = 0; the drift card (003) is what let the 7 closed cards exit the active set via _is_active()",
+    "7 verdicts independently confirmed PASS with the ts/verifier the card cites: 0930-007 (ximo@agnes-ai 09-30T14:21), 0930-014 (ximo@agnes-ai 10-01T08:36), 0930-015 (independent-reviewer, not the author, 10-01T11:03), 1004-002/003 (agnes-code 10-04), 1004-005/006 (agnes-code 10-05)",
+    "the '5 real conflicts from EVO-20261010-002' had already converged on their own: XJ-20261008-003 was archived by XJ-20261013-001 (605f637), so its owned claims left the active set -- matching the 002-review L49 prediction; the card correctly did NOT rewrite the older card's text",
+    "unittest discover -> 228 tests OK (no code touched, count unchanged, as the card states)"
+  ],
+  "independent_findings": [
+    "P2 (does not block): marking the 7 cards CLOSED newly created 7 CLOSED_NOT_ARCHIVED findings (verified at HEAD: CLOSED_NOT_ARCHIVED=7). These are §8 obligations, not defects of this commit, but they will linger until a cleanup card archives/deletes them. Flagged so the next card does not start from 7 unexplained warnings."
+  ],
+  "rulings": {
+    "q1_closed_card_owned_declaration_trace": "ACCEPTED §4.2 exit-only, no new weak-traceability mechanism. Owned-file lines on the 7 cards are historical fact already preserved in git (the +4 -1 diff); a separate 'closed-owned-files' dir is a new data structure with no user. Route to §10; revisit only if 'which files did a closed card claim' becomes a real question (answer is git log --follow).",
+    "q2_status_drift_warn_vs_error": "WARN as chosen. The 7 drifts are being corrected by THIS commit, so ERROR would have blocked the gate during the correction window. New rule with no lint-rules.md precedent; EVO-20261010-005 explicitly warned a new rule must earn its level. Ship WARN; plan a separate card to promote to ERROR after 2-3 weeks of clean WARN history, with a revisit-trigger of 'any WARN uncorrected within 5 days auto-promotes'. Correctly NOT shipped in this commit: its 3 target files are owned by IN_REVIEW card 002, so claiming them here would manufacture the OWNED_FILES_CONFLICT this card removes. Route STATUS_DRIFT to a new card owned by 002's author after 002 closes.",
+    "q3_0930_007_ximo_verifier_canonical_copy": "YES as a SEPARATE card, not a blocker here. ximo@agnes-ai is a different verifier than agnes-code; the card correctly keeps the verifier field on the Status section. A §4.4 canonical in-repo copy is NEW evidence and, per §6.3 R2, must be a new verdict artifact, not an edit to verdicts/XJ-20260930-007.verdict.json (which this commit did not touch). Only the ximo@agnes-ai verdict raises the §4.4 question; the 6 agnes-code verdicts are fine as-is."
+  },
+  "open_followups": [
+    "§8: open a small cleanup card to archive-or-delete the 7 now-CLOSED cards (XJ-20260930-007/014/015, XJ-20261004-002/003/005/006) within one working day; they currently fire CLOSED_NOT_ARCHIVED x7.",
+    "P2 (separate card, owner of 002 after it closes): add the STATUS_DRIFT rule (open-status + existing PASS verdict = drift) at WARN level, written on top of the active/legacy id-extraction decision from card 002's follow-up; design it to catch prose statuses (the 5->7 miss), not just enum values.",
+    "P3 (separate card): if the EVO/ximo §4.4 question is accepted, re-record XJ-20260930-007 as a new verdict artifact without editing the ximo@agnes-ai one."
+  ],
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-001-003.md (batched round; OpenCode lands this verdict into verdicts/ per §5.7)"
+}

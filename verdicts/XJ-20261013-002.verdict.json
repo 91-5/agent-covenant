@@ -1,0 +1,32 @@
+{
+  "id": "XJ-20261013-002",
+  "artifact": "tools/lint_cards.py + tests/test_lint_cards.py + docs/lint-rules.md + READMEs (one-sided EVO verdict pairing, commit 12ae245)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-13T21:55:00+08:00",
+  "evidence": [
+    "git show 12ae245: check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None) admitted EVO ids to the orphan direction only; two TestEvoVerdictPairing tests lock the asymmetry so a later 'tidy-up' cannot fold ids both ways and re-fire the 7 no-verdict EVO cards",
+    "one-sided (shipped) @12ae245 evo: ORPHAN_VERDICT 4 -> 0, VERDICT_WITHOUT_REVIEW 3 (unchanged), errors=0; two-sided counterfactual re-run by reviewer: ORPHAN still 0, VERDICT_WITHOUT_REVIEW rises to 10 at 4d3a0b5^ -> one-sided is the lesser-noise choice",
+    "backward-compat preserved: lint --dir .tasks (no --evo-dir) still reports ORPHAN_VERDICT 4; the reviewer re-ran it and confirmed",
+    "7 EVO cards without an in-repo verdict independently confirmed: EVO-20261004-001/002, 20261005-001, 20261006-001, 20261007-001, 20261010-005, 20261010-006 (4 GATED cards DO have verdicts)",
+    "unittest discover -> 228 tests OK (222 baseline + 6 new TestEvoVerdictPairing)"
+  ],
+  "independent_findings": [
+    "P2 (evidence-precision, does not block this PASS): the card's decision-table counterfactual 'VERDICT_WITHOUT_REVIEW 3 -> 44, net +40' does NOT reproduce. Measured two-sided it is 10 at 12ae245/4d3a0b5^ (+7 vs one-sided's 3), and 'ORPHAN 4 -> 1' should read 'ORPHAN 4 -> 0' (folding all 11 EVO ids satisfies the card-exists check for every EVO verdict). The +40 figure traces to the same p.stem simulation the card already corrected for the baseline (3-vs-37). The DECISION (one-sided) is right and stands; only the supporting numbers need a recompute. Filed as open_followup, not a blocker, because the choice one-sided-vs-two-sided is correct under either measurement."
+  ],
+  "rulings": {
+    "q1_one_sided_vs_two_sided": "ACCEPTED one-sided. ORPHAN direction was the actual defect (cards exist, lint was not looking); the reverse direction is a separate EVO state-machine question. Folding ids both ways converts 4 false positives into 7 real-looking VERDICT_WITHOUT_REVIEW findings; keeping the asymmetry with two lock-tests is the smaller, more honest surface. Confirmed by independent re-run.",
+    "q2_five_active_shadow_evo_no_inrepo_verdict": "NOT a gap this card must close. Review documents exist (mo brain/review/evo + in-repo .tasks copies); whether ACTIVE/SHADOW EVO cards should carry in-repo verdicts is an EVO state-machine policy question. Retro-issuing 7 verdict files would be inventing evidence about cards that never claimed to have them -> route to the EVO owner as a NEW card, leave the 7 as-is. Agrees with the card's 'do not retro-rewrite history caliber'.",
+    "q3_unify_active_vs_legacy_id_extraction": "CORRECT to flag; do NOT fix in this commit. The active(strict NAMESPACE_RE)/legacy(loose ID_IN_NAME_RE) split is load-bearing today (it is why an archived card's REVIEW-XJ-*.md keeps its verdict paired). Unifying is a semantic change to two rules and belongs in a dedicated card backed by a corpus audit of which ids actually exist per directory. Opened as open_followup."
+  },
+  "open_followups": [
+    "P2: recompute the card 002 decision-table counterfactual (ORPHAN + VERDICT_WITHOUT_REVIEW columns) using the shipped measurement path; correct '44/+40' to the measured values and '4 -> 1' to '4 -> 0'. Evidence-precision only; decision unchanged.",
+    "P3: note in card/commit that warnings=35 (and 31) are mtime-dependent per PROTOCOL §10.7, not checkout-invariant invariants.",
+    "P2 (separate card): audit & decide active/legacy id-extraction unification (NAMESPACE_RE vs ID_IN_NAME_RE), including the load-bearing REVIEW-XJ-*.md legacy case; any future STATUS_DRIFT rule must be written on top of that decision.",
+    "P3 (separate card, to EVO owner): decide whether ACTIVE/SHADOW EVO cards should have in-repo verdicts; if yes, backfill via a new card, not a retro-rewrite."
+  ],
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-001-003.md (batched round; OpenCode lands this verdict into verdicts/ per §5.7)"
+}

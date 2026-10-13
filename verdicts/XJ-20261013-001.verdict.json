@@ -1,0 +1,27 @@
+{
+  "id": "XJ-20261013-001",
+  "artifact": ".tasks/legacy/XJ-20261008-00{1,2,3}.md (3 renames via git mv, 0 deletions; verdicts XJ-20261008-00{1,2,3}.verdict.json untouched; commits 605f637 + 2512d33)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-13T21:55:00+08:00",
+  "evidence": [
+    "git show 605f637 --name-status: 3x R100 .tasks/XJ-20261008-00{1,2,3}.md -> .tasks/legacy/, 0 insertions/0 deletions, no D/??",
+    "verdict SHA256 byte-identical before/after: 001 dfe0ba569ee1914f, 002 ea85b89744a94909, 003 222734916f28677b",
+    "artifacts.json untouched in 605f637/2512d33 (product->file mappings stay card-position-agnostic)",
+    "lint --dir .tasks (no evo) @ 605f637 -> errors=0 warnings=30 CLOSED_NOT_ARCHIVED=0; unittest discover @ 4d3a0b5 -> 228 tests OK",
+    "card self-correction of '归档不消警' accepted: original measurement was --dir .tasks/legacy (subdir, non-recursive gate path), a different observation point; PROTOCOL §8 closure stands"
+  ],
+  "rulings": {
+    "q1_closed_not_archived_legacy_aware": "KEEP legacy-blind; normal gate --dir .tasks does not recurse into legacy/ so archiving clears the finding; single-run-on-legacy residual is a §10 known-limitation, not a defect; a CLI flag like --allow-legacy-stale is the right lever if anyone needs it, not a rule semantic change",
+    "q2_artifacts_follow_lifecycle": "NO; artifacts.json entries are product->file mappings independent of card position; moving to an archived section would wrongly imply the product is gone; verdict pairing already pairs by filename not position",
+    "q3_archived_marker_line": "optional P3, follow precedent 5fa7120 (no marker; git log --follow recovers the archive event); if added, do it in a separate card that reopens the 'archived card is immutable' assumption"
+  },
+  "open_followups": [
+    "P3: record --dir .tasks/legacy still firing CLOSED_NOT_ARCHIVED x7 as a §10 known-limitation (rule is active-only by design)",
+    "P3 operational note: after git mv stages a rename, git add for the same commit must target the NEW path; the old path no longer exists (root cause of the 2512d33 follow-up commit)"
+  ],
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-001-003.md (batched round; OpenCode lands this verdict into verdicts/ per §5.7)"
+}
