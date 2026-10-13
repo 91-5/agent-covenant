@@ -182,5 +182,13 @@
     "README.md",
     "README.zh-CN.md",
     "docs/lint-rules.md"
+  ],
+  "XJ-20261013-004": [
+    "tools/pre-push-hook.sh",
+    "tools/install-hooks.sh",
+    "tests/test_pre_push_hook.py",
+    "README.md",
+    "README.zh-CN.md",
+    "PROTOCOL.md"
   ]
 }
