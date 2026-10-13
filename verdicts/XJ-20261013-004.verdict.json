@@ -1,0 +1,32 @@
+{
+  "id": "XJ-20261013-004",
+  "artifact": "pre-push hook deliverable per .tasks/XJ-20261013-004.md (tools/pre-push-hook.sh + tools/install-hooks.sh + tests/test_pre_push_hook.py + README/PROTOCOL D3)",
+  "verdict": "FAIL",
+  "blockers": 1,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-13T22:55:00+08:00",
+  "commit": "41c4e3e (origin/feature/OC-20261007-001; card opened at ab77d13; baseline 4d3a0b5)",
+  "evidence": [
+    "Absence, re-run independently 2026-10-13 at tree 41c4e3e (clean, no stash): Test-Path tools\\pre-push-hook.sh / tools\\install-hooks.sh / tests\\test_pre_push_hook.py -> all False",
+    "git log --all --oneline -- tools/pre-push-hook.sh tools/install-hooks.sh tests/test_pre_push_hook.py -> empty (no commit on any ref ever created the deliverables)",
+    "git ls-files | Select-String 'pre-push|install-hooks|test_pre_push' -> empty (not tracked); git status --porcelain -> clean; git stash list -> empty",
+    "git diff 4d3a0b5..HEAD --name-only -> only .tasks/XJ-20261013-00{1,2,3,4}.md + artifacts.json + verdicts/XJ-20261013-00{1,2,3}.verdict.json; none of the card's code deliverables (D1/D2/D4) landed",
+    "card .tasks/XJ-20261013-004.md ## Status = OPEN; acceptance A1-A10 all unchecked; .git/hooks holds only default *.sample, no active pre-push; git config core.hooksPath empty",
+    "card's A3/A4/A5 (main/block/passthrough) and A6 (pytest of the new suite) could NOT be executed because the target files are missing; existing suite (unittest discover, 228) is unrelated to this card (it adds no code)"
+  ],
+  "blockers_detail": [
+    "Decisive: the reviewed artifact does not exist. Per PROTOCOL section 3 R3 (no silent success), an unshipped deliverable cannot be PASS/CONDITIONAL. Fix: author lands D1/D2/D4 + D3 in a commit, flips the card to IN_REVIEW, re-dispatches; reviewer then re-runs bash -n + A1-A5 + 'tests never touch real .git/hooks/' against the shipped files."
+  ],
+  "rulings": {
+    "q1_ci_same_sequence_vs_full_dir": "ACCEPT the card's CI-same-sequence (latest round) over a stricter full-directory gate: gate.yml already adjudicated 'permanently red build' and the hook's stated purpose is zero drift from CI. Do NOT self-invent a --baseline historical-debt exclusion in this card; a genuinely stricter gate, if wanted, is a separate ADR/card. [inferred - no shipped hook to verify against]",
+    "q2_no_verify_bypass": "ACCEPT the 'deter + document' boundary: a pre-push hook cannot technically block git push --no-verify, so deter (stderr + 'recorded in shell history') is the max achievable. CI-side bypass-detection (scan commit messages) is rightly dismissed as infeasible. Record on file that the durable backstop is CI (audit), with the hook as prevention only - recommend making that line explicit. [inferred]",
+    "q3_installer_default": "Keep install opt-in per Constraint 2; add a one-line 'opt into local gating' note in the README dev section, not a first-class blocking step. [inferred]",
+    "q4_multi_ref_granularity": "Keep per-line 'any branch push -> gate' as the safer prevention default; gating only master-bound refs adds a remote-topology correctness surface without proportional benefit. Revisit with evidence only if feature-branch push latency becomes a real complaint. [inferred]"
+  },
+  "open_followups": [
+    "Author must ship the three code deliverables + D3 doc edits, set card to IN_REVIEW, and re-dispatch; this FAIL is re-reviewed against the shipped artifact."
+  ],
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-004.md (staged in reviewer workspace; OpenCode lands .tasks/REVIEW-XJ-20261013-004.md + verdicts/XJ-20261013-004.verdict.json per 4.4; no commit/push performed by reviewer)"
+}
