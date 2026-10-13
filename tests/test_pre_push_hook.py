@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 HOOK_SRC = REPO_ROOT / "tools" / "pre-push-hook.sh"
 INSTALL_SRC = REPO_ROOT / "tools" / "install-hooks.sh"
 
-HOOK_STDIN_BRANCH = f"refs/heads/main {'0' * 40} refs/heads/main {'0' * 40}\n"
+HOOK_STDIN_BRANCH = f"refs/heads/main {'a' * 40} refs/heads/main {'a' * 40}\n"
 HOOK_STDIN_TAG = "refs/tags/v1.0 0000000000000000000000000000000000000000 refs/tags/v1.0\n"
 HOOK_STDIN_DELETE = f"refs/heads/main {'0' * 40} refs/heads/topic {'0' * 40}\n"
 

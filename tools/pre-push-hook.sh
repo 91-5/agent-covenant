@@ -16,8 +16,14 @@
 set -eu
 
 # --- locate repo root ---
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+# Use git to find the repo root, not the script location.  When the hook is
+# installed via core.hooksPath the script may live outside the working tree,
+# and when tests invoke it from a tempdir the script location is irrelevant.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+    echo "[pre-push] ERROR: not inside a git work tree" >&2
+    exit 2
+fi
 cd "$REPO_ROOT"
 
 # --- find python ---
@@ -31,19 +37,13 @@ else
 fi
 
 # --- parse stdin: only branch pushes (skip tags, deletes) ---
-HOOK_INPUT=$(cat)
-if [ -z "$HOOK_INPUT" ]; then
-    # Empty stdin — nothing to push
-    exit 0
-fi
-
-# Check if we're only pushing tags or deletes
+# Read stdin directly in the loop; no intermediate variable needed.
+# Use process substitution to avoid subshell variable scoping issues.
 PUSH_BRANCH=0
 while IFS= read -r line; do
+    [ -z "$line" ] && continue
     LOCAL_REF=$(echo "$line" | awk '{print $1}')
     LOCAL_SHA=$(echo "$line" | awk '{print $2}')
-    REMOTE_REF=$(echo "$line" | awk '{print $3}')
-    REMOTE_SHA=$(echo "$line" | awk '{print $4}')
 
     # Skip tag pushes
     case "$LOCAL_REF" in refs/tags/*) continue ;; esac
@@ -52,12 +52,10 @@ while IFS= read -r line; do
     case "$LOCAL_SHA" in 0000000000000000000000000000000000000000) continue ;; esac
 
     PUSH_BRANCH=1
-done <<EOF
-$HOOK_INPUT
-EOF
+done
 
 if [ "$PUSH_BRANCH" -eq 0 ]; then
-    # Only tags or deletes — no gate needed
+    # Only tags or deletes, or empty stdin — no gate needed
     exit 0
 fi
 
