@@ -1,0 +1,34 @@
+{
+  "id": "XJ-20261013-006",
+  "artifact": "tools/lint_cards.py check_status_drift + tests/test_lint_cards.py TestStatusDrift (7) + TestSuiteExcludesKnownFailures (1) + docs/lint-rules.md (commit c09cbef, 6 files +277 -4)",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-14T21:05:00+08:00",
+  "commit": "c09cbef (feature/OC-20261007-001; baseline 2148ba9; remote 33cdce9)",
+  "evidence": [
+    "python -m unittest tests.test_lint_cards.TestStatusDrift -v -> 7/7 OK (independently re-run 2026-10-14)",
+    "independent proof the rule fires (not just 'tests pass'): a prose-status fixture ('Awaiting independent review.' + PASS verdict) -> STATUS_DRIFT fires; flipping the same card to CLOSED + PASS -> does NOT fire (proof_drift.py, temp dir, not left in repo)",
+    "STATUS_DRIFT full-repo count @ HEAD -> 0 (drift was already cleared by 4d3a0b5 + 2148ba9); rule is 'prevention/future-enforcing', card's 'future value' positioning is honest, not a dead rule",
+    "independent lint comparison: CARD_SELF_IN_MAP 4 (at c09cbef^) -> 1 (at c09cbef) -- the delta is an UNCLAIMED second code change (see independent_findings[0])",
+    "unittest discover -> 245 tests, 4 failures all in tests/test_pre_push_hook.py (belong to XJ-20261013-004, FAILED by gate bd99981, deliverables only in working tree never in git); author independently confirmed via stash that these 4 existed before c09cbef",
+    "TestStatusDrift prose test + missing-Status test specifically lock the 'reuse _is_active, do NOT enumerate status values' design decision against future 'tidy-up' into a regex -- 3 of 7 tests exist only to prevent that regression"
+  ],
+  "independent_findings": [
+    "P2 (scope-disclosure gap, does not block this PASS): c09cbef ALSO modified check_card_self_in_map (new card_dir param + skip already-archived .tasks/legacy/ cards, changing CARD_SELF_IN_MAP 4 -> 1 independently verified). This second code change is NOT in the card's ## Deliverables and NOT in ## Constraints. The semantic itself is CORRECT (an archived card's self-listing is a historical record, not a live defect), but the card's author only recorded the README sync as an 'undeclared write' -- they did not record this second lint-rule change as undeclared. Fix: document the 'archived-card self-listing exemption' in docs/lint-rules.md at the next card that touches tools/lint_cards.py, or add a line to card 006's Context. This is a disclosure/completeness gap, not a functional defect.",
+    "P3 (guard expiry): TestSuiteExcludesKnownFailures currently RED BY DESIGN (004's 4 pre-push failures changed shape: sir fixed 2, 1 new one appeared). This is the guard working as intended, NOT a defect. But the guard has a built-in expiry condition: it stays meaningful only while 004's specific 4-failure shape exists. Add a one-liner to the card: 'TestSuiteExcludesKnownFailures valid until XJ-20261013-004 is fixed or closed; remove or re-anchor when that happens.'",
+    "P3 (README undeclared sync, accept as disclosed): card's Constraint #5 already honestly records that the README test-count sync is a mechanical action of sync_test_count.py and is deliberately NOT claimed in Owned files because 004 also declares README. No action needed; the conflict resolves naturally when 004's fate is decided."
+  ],
+  "rulings": {
+    "q1_reuse_is_active_vs_enum_regex": "CORRECT. An enum regex systematically misses prose statuses (the exact failure mode that cost XJ-20261013-003 2 of 7 cards); reusing _is_active() delegates the 'what is open' definition to a function that already covers prose. Independently proven: a prose fixture fires STATUS_DRIFT, and flipping it to CLOSED stops firing. Reverse risk (false positive: a card actually still open flagged as drifted) cannot occur because the rule's second gate requires the verdict file to exist AND be PASS -- a card with no verdict or a non-PASS verdict is never flagged. No false-positive case found for a 'should-be-CLOSED' card being misread as open.",
+    "q2_test_suite_excludes_known_failures": "KEEP, with an explicit expiry condition tied to XJ-20261013-004's resolution. It serves the §10.3 purpose (a red suite is never silently mistaken for a new regression) and its current failing state is the guard doing its job, not a defect. Do NOT delete it now; re-anchor or delete it when 004 is actually fixed/closed.",
+    "q3_error_promotion_threshold": "'A clean WARN record' must mean 'the rule fired at least once and every firing was corrected within the §8 1-working-day SLA, then 2-3 more weeks with no new uncorrected firings.' '0 hits for N weeks' is trivially satisfiable (do nothing -> 0 hits) and does not actually test whether WARN is the right level. Recommend opening the promotion card with this exact, testable criterion, not the looser 'clean history' phrasing.",
+    "q4_undeclared_readme_sync": "Accept the card's own disclosure (Constraint #5); no follow-up required. The README count is a mechanical sync_test_count.py action, correctly left out of Owned files because 004 owns that decision."
+  },
+  "open_followups": [
+    "P2: add a one-paragraph note to docs/lint-rules.md documenting the 'archived-card self-listing is exempt from CARD_SELF_IN_MAP' behavior introduced as a side-effect of c09cbef (not a separate card; fold into the next card that already touches tools/lint_cards.py)."
+  ],
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-006.md (staged in reviewer workspace; OpenCode lands .tasks/REVIEW-XJ-20261013-006.md + this verdict under verdicts/ per 4.4/5.7)"
+}
