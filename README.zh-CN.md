@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->245<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->249<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -80,6 +80,8 @@ jobs:
 闈為浂閫€鍑哄氨鏄け璐ワ紝涓嶆槸鎻愰啋銆傚悓鏃惰娓呴棬绂佽兘璇佹槑浠€涔堛€佷笉鑳借瘉鏄庝粈涔堬細瀹冭兘璇佹槑
 妫€鏌?*璺戣繃浜?*銆佷笖璇?verdict 婊¤冻绛栫暐锛涘畠璇佹槑涓嶄簡璇勫鑰呮槸鍚﹁鐪燂紝杩欓噷浠讳綍閫€鍑虹爜
 閮戒笉璇ヨ褰撲綔"璇勫璁ょ湡"鐨勮瘉鎹€?
+
+本地想用同一套门禁：在工作树里跑 `bash tools/install-hooks.sh` 即可，它会把 `tools/pre-push-hook.sh` 装进你的 hooks 目录，重复执行安全。hook 跑的是上面第 2、3 步，作用在同一个“最新轮”上，所以本地通过和 CI 通过是一回事。它是**预防**不是**强制**——`git push --no-verify` 能绕过，真正的兜底仍然是 CI。另需注意：`--strict` 会把**每一条** warning 都当成失败，所以只要仓库里还压着 warning 存量，hook 就会拦推送，直到存量清干净为止——这跟 CI 会报红是同一件事。
 
 ## 鎬庝箞鍙戣捣涓€娆¤瘎瀹?
 

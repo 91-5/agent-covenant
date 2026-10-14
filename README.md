@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->245<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->249<!-- /test-count --> tests
 ```
 
 ## Install
@@ -91,6 +91,15 @@ A non-zero exit is a failure, not a warning. Note what the gate can and cannot
 tell you: it proves a check *ran* and that a verdict satisfies the policy. It
 cannot tell you the reviewer was thorough, and no exit code here should be cited
 as evidence that it was.
+
+Opt into the same gate locally by running `bash tools/install-hooks.sh` from
+inside the work tree; it installs `tools/pre-push-hook.sh` into your hooks
+directory and is safe to re-run. The hook runs steps 2 and 3 above on the newest
+round, so a local pass and a CI pass mean the same thing. It is prevention, not
+enforcement: `git push --no-verify` skips it, and CI is still the backstop. Note
+that `--strict` makes *every* warning fatal, so a repository carrying a warning
+backlog will have the hook block pushes until that backlog is cleared — the same
+build CI would report red.
 
 ## Ask for a review
 

@@ -19,20 +19,28 @@ set -eu
 # Use git to find the repo root, not the script location.  When the hook is
 # installed via core.hooksPath the script may live outside the working tree,
 # and when tests invoke it from a tempdir the script location is irrelevant.
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 if [ -z "$REPO_ROOT" ]; then
     echo "[pre-push] ERROR: not inside a git work tree" >&2
     exit 2
 fi
 cd "$REPO_ROOT"
 
-# --- find python ---
-if command -v python3 >/dev/null 2>&1; then
-    PYTHON=python3
-elif command -v python >/dev/null 2>&1; then
-    PYTHON=python
-else
-    echo "[pre-push] ERROR: python3 or python not found in PATH" >&2
+# --- find a usable python ---
+# `command -v` only proves a name resolves, not that the name runs. On Windows
+# Git Bash, `python3` resolves to the Microsoft Store stub in
+# %LOCALAPPDATA%\Microsoft\WindowsApps\python3, which exists, exits non-zero, and
+# prints nothing. Preferring it on name alone made this hook die with that
+# stub's exit code and no diagnostics. Probe each candidate instead.
+PYTHON=""
+for candidate in python3 python; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c '' >/dev/null 2>&1; then
+        PYTHON=$candidate
+        break
+    fi
+done
+if [ -z "$PYTHON" ]; then
+    echo "[pre-push] ERROR: no usable python interpreter (tried: python3, python)" >&2
     exit 2
 fi
 

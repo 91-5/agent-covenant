@@ -286,7 +286,12 @@ assertion count ("41 assertions") that no party had actually counted.
 - **P1 — Verdict before push.** A required id may not be pushed to the trunk or to any
   published repository until its verdict file exists and the gate returns `0`. **Local
   commits are not merging**: they exist precisely so the reviewer inspects the real
-  artifact instead of a description of it. Require the id in the pre-push check.
+  artifact instead of a description of it. Require the id in the pre-push check —
+  `tools/pre-push-hook.sh` does this locally, opt in with `bash tools/install-hooks.sh`
+  from inside the work tree. It runs the same two commands CI runs, on the same newest
+  round, so a local green and a CI green mean the same thing; `git push --no-verify`
+  still skips it, which is why CI remains the backstop and this hook is prevention,
+  not enforcement.
 - **P2 — If it already landed, say so on the first screen.** A change already on the
   trunk gets a retrospective card whose opening block states that it landed unreviewed,
   how long ago, and what the blast radius is. A retrospective card may never be marked

@@ -1473,33 +1473,28 @@ class TestStatusDrift(unittest.TestCase):
         self.assertEqual([], self._drift())
 
 
-class TestSuiteExcludesKnownFailures(unittest.TestCase):
-    """The four pre-existing failures in tests/test_pre_push_hook.py.
+class TestPrePushHookSuiteIsClean(unittest.TestCase):
+    """The pre-push hook suite must stay green now that XJ-20261013-004 is fixed.
 
-    They belong to XJ-20261013-004, which AgnesCode judged FAIL because its
-    deliverables never reached git -- the files exist only in the working tree.
-    Verified independent of this change: stashing the README sync does not clear
-    them, so they are not caused by anything here. Recorded so a red suite is
-    never mistaken for a regression introduced by the card under review, and so
-    that whoever fixes 004 has an explicit list.
+    This used to be ``TestSuiteExcludesKnownFailures``: a list of four failures
+    that were known to belong to XJ-20261013-004 while that card was unimplemented,
+    kept so a red suite would not be mistaken for a regression. AgnesCode ruled on
+    XJ-20261013-006 that the list's validity period ends when 004 closes, and that
+    it must then be removed or re-anchored. 004 is fixed, so the list is gone.
+
+    What is left is the same intent pointed the other way: this now fails if
+    ``tests/test_pre_push_hook.py`` regresses, instead of failing if someone fixed
+    it. Pinning a failure list is only ever right while the failure is expected.
     """
 
-    KNOWN = (
-        "InstallHooksTestCase.test_install_creates_hook",
-        "InstallHooksTestCase.test_install_backs_up_existing_hook",
-        "PrePushHookTestCase.test_branch_push_blocked_on_lint_error",
-        "PrePushHookTestCase.test_branch_push_blocked_when_verdict_missing",
-    )
-
-    def test_known_failures_are_still_exactly_these(self):
-        """Guard: if 004 gets fixed, this test should start failing."""
+    def test_pre_push_hook_suite_has_no_failures(self):
         result = unittest.TextTestRunner(stream=io.StringIO()).run(
             unittest.defaultTestLoader.loadTestsFromName("tests.test_pre_push_hook"))
-        actual = {f"{type(case).__name__}.{case._testMethodName}"
-                  for case, _tb in (result.failures + result.errors)}
-        self.assertEqual(set(self.KNOWN), actual,
-                         "the pre-push hook test failures changed shape -- "
-                         "XJ-20261013-004 may have been fixed or regressed")
+        broken = sorted(f"{type(case).__name__}.{case._testMethodName}"
+                        for case, _tb in (result.failures + result.errors))
+        self.assertEqual([], broken,
+                         "tests/test_pre_push_hook.py is red again; XJ-20261013-004 "
+                         "was signed off on it, so this is a regression")
 
 
 if __name__ == "__main__":
