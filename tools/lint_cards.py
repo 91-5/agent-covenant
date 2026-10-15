@@ -302,14 +302,51 @@ def check_review_card(path, text):
     return out
 
 
+# A fence opens with three or more backticks or tildes, optionally indented, and
+# closes with the same character. Markdown lets a document carry a section header
+# inside a fence as *documentation of that section*, so a heading scan that ignores
+# fences reads the illustration as the real thing. Track the marker instead of
+# matching a fixed string: ``` and ~~~ both count, and a longer run still closes a
+# shorter opening.
+_FENCE_RE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+
+
+def _fenced_line_indices(lines):
+    """Indices of every line that belongs to a fenced code block, fences included.
+
+    Returns a set so callers can skip with one membership test per line.
+    """
+    inside = set()
+    marker = None
+    for index, line in enumerate(lines):
+        match = _FENCE_RE.match(line)
+        if marker is None:
+            if match:
+                marker = match.group(1)[0]
+                inside.add(index)
+            continue
+        inside.add(index)
+        if match and match.group(1)[0] == marker:
+            marker = None
+    return inside
+
+
 def _section_body(text, header_names):
     """Return the text under the first H2 whose header matches one of header_names.
 
     A status word lives in the body, not in the header line, so a single-line scan
     silently misses it.
+
+    Headings inside fenced code blocks are skipped. A card that documents the
+    status section it is expected to carry would otherwise have that illustration
+    read as the card's own status (XJ-20261013-006 did exactly this, and the rule
+    it documents came back to fire on it).
     """
     lines = text.splitlines()
+    fenced = _fenced_line_indices(lines)
     for index, line in enumerate(lines):
+        if index in fenced:
+            continue
         stripped = line.strip()
         if not stripped.startswith("#"):
             continue

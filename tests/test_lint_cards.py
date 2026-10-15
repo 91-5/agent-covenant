@@ -1440,6 +1440,21 @@ class TestStatusDrift(unittest.TestCase):
                 json.dumps({"id": cid, "verdict": verdict, "ts": "2026-10-05T00:00:00Z"}),
                 encoding="utf-8")
 
+    def _write_with_fenced_example(self, cid, status_body, verdict, fenced_body=None):
+        """A card that illustrates the status section in a fence, then states its own.
+
+        fenced_body is what the illustration shows; it defaults to the open prose
+        that XJ-20261013-006 used, which is the shape that broke the reader.
+        """
+        shown = fenced_body if fenced_body is not None else "Awaiting independent review."
+        (self.cards / f"{cid}.md").write_text(
+            f"# TASK {cid}: stub\n\n## Context\n\n```\n## Status\n\n{shown}\n```\n\n"
+            f"## Acceptance\n\n- [x] done\n\n## Status\n\n{status_body}\n",
+            encoding="utf-8")
+        (self.verdicts / f"{cid}.verdict.json").write_text(
+            json.dumps({"id": cid, "verdict": verdict, "ts": "2026-10-05T00:00:00Z"}),
+            encoding="utf-8")
+
     def _drift(self):
         return [f["file"] for f in lint.check_status_drift(self.cards, self.verdicts)
                 if f["rule"] == "STATUS_DRIFT"]
@@ -1459,6 +1474,39 @@ class TestStatusDrift(unittest.TestCase):
 
     def test_closed_status_with_pass_verdict_is_clean(self):
         self._write("XJ-20261013-002", "`CLOSED` — PASS", "PASS")
+        self.assertEqual([], self._drift())
+
+    def test_fenced_status_example_is_not_the_real_status(self):
+        """A card documenting the status section must not be read by its own example.
+
+        This is XJ-20261013-006's shape, and it is not cosmetic: the fenced
+        illustration was read as the card's status, so an already-closed card
+        stayed active, kept its owned-files claims, and locked
+        tools/lint_cards.py against the card opened to fix the bug.
+        """
+        self._write_with_fenced_example("XJ-20261013-006", "`CLOSED` PASS", "PASS")
+        self.assertEqual([], self._drift())
+
+    def test_fenced_closed_example_does_not_rescue_a_genuinely_open_status(self):
+        """Skipping fences must not invert into "ignore the real status".
+
+        The fence here shows CLOSED; the card's own status is open prose with a
+        PASS verdict. That is drift and must still be reported.
+        """
+        self._write_with_fenced_example(
+            "XJ-20261013-007", "Awaiting independent review.", "PASS",
+            fenced_body="`CLOSED` PASS")
+        self.assertIn("XJ-20261013-007.md", self._drift())
+
+    def test_tilde_fence_is_also_skipped(self):
+        """Markdown allows ~~~ as well as ```; both are code."""
+        (self.cards / "XJ-20261013-008.md").write_text(
+            "# TASK XJ-20261013-008: stub\n\n## Context\n\n~~~\n## Status\n\n"
+            "Awaiting independent review.\n~~~\n\n## Status\n\n`CLOSED` PASS\n",
+            encoding="utf-8")
+        (self.verdicts / "XJ-20261013-008.verdict.json").write_text(
+            json.dumps({"id": "XJ-20261013-008", "verdict": "PASS",
+                        "ts": "2026-10-05T00:00:00Z"}), encoding="utf-8")
         self.assertEqual([], self._drift())
 
     def test_conditional_verdict_is_not_drift(self):
