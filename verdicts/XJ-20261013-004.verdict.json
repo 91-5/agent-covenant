@@ -1,32 +1,37 @@
 {
   "id": "XJ-20261013-004",
-  "artifact": "pre-push hook deliverable per .tasks/XJ-20261013-004.md (tools/pre-push-hook.sh + tools/install-hooks.sh + tests/test_pre_push_hook.py + README/PROTOCOL D3)",
-  "verdict": "FAIL",
-  "blockers": 1,
+  "artifact": "tools/pre-push-hook.sh + tools/install-hooks.sh + tests/test_pre_push_hook.py + README.md + README.zh-CN.md + PROTOCOL.md §6.2 P1 (commit d17cd1d, 8 files +390 -166; plus c04eee4 card-only A9 basis correction)",
+  "verdict": "PASS",
+  "blockers": 0,
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-13T22:55:00+08:00",
-  "commit": "41c4e3e (origin/feature/OC-20261007-001; card opened at ab77d13; baseline 4d3a0b5)",
+  "ts": "2026-10-14T22:35:00+08:00",
+  "commit": "d17cd1d (feature/OC-20261007-001; round-2 re-adjudication; round-1 FAIL at dbfc3fd/41c4e3e superseded)",
+  "supersedes": "verdicts/XJ-20261013-004.verdict.json (round 1, FAIL -- deliverable absent)",
   "evidence": [
-    "Absence, re-run independently 2026-10-13 at tree 41c4e3e (clean, no stash): Test-Path tools\\pre-push-hook.sh / tools\\install-hooks.sh / tests\\test_pre_push_hook.py -> all False",
-    "git log --all --oneline -- tools/pre-push-hook.sh tools/install-hooks.sh tests/test_pre_push_hook.py -> empty (no commit on any ref ever created the deliverables)",
-    "git ls-files | Select-String 'pre-push|install-hooks|test_pre_push' -> empty (not tracked); git status --porcelain -> clean; git stash list -> empty",
-    "git diff 4d3a0b5..HEAD --name-only -> only .tasks/XJ-20261013-00{1,2,3,4}.md + artifacts.json + verdicts/XJ-20261013-00{1,2,3}.verdict.json; none of the card's code deliverables (D1/D2/D4) landed",
-    "card .tasks/XJ-20261013-004.md ## Status = OPEN; acceptance A1-A10 all unchecked; .git/hooks holds only default *.sample, no active pre-push; git config core.hooksPath empty",
-    "card's A3/A4/A5 (main/block/passthrough) and A6 (pytest of the new suite) could NOT be executed because the target files are missing; existing suite (unittest discover, 228) is unrelated to this card (it adds no code)"
+    "Round-1 blocker cleared (independently re-run): Test-Path tools/pre-push-hook.sh + tools/install-hooks.sh + tests/test_pre_push_hook.py -> all True; git log --all -- <3 files> shows d17cd1d; bash -n on both scripts exit 0",
+    "python -m unittest discover -s tests -> 249 tests OK (0 failures); the old guard TestSuiteExcludesKnownFailures was replaced by TestPrePushHookSuiteIsClean (disclosed cross-card write to test_lint_cards.py, valid because card 006 is CLOSED at 9af03e4)",
+    "python tools/sync_test_count.py --check -> both READMEs in sync at 249, exit 0",
+    "Q0 confirmed independently: lint_cards.py --strict @ HEAD -> 0 errors, 21 warnings (NONPATH 4, TOO_BROAD 3, EMPTY 3, ORPHAN_VERDICT 5, VERDICT_WITHOUT_REVIEW 2, UNMAPPED_CLAIM_SURFACE 2, CARD_SELF_IN_MAP 1, STATUS_DRIFT 1); --strict sets 'failed = errors>0 or (strict and warnings>0)', so the hook's step-1 gate blocks every branch push today. A3 (feed real branch-ref stdin to sh tools/pre-push-hook.sh) -> exit 1 [pre-push] BLOCKED. Dispatch's A10c (remove hook, same push -> exit 0) proves the hook is the sole blocker, not the environment.",
+    "Q1 zero-drift confirmed in shipped hook: the 2-step command sequence (lint --strict then gate --require newest_id, newest id = last non-underscore key of artifacts.json) is byte-for-byte the gate.yml sequence.",
+    "Q2/Q3/Q4 re-confirmed against shipped files: --no-verify deter wording present in block message; installer is opt-in (Constraint 2) and resolves target repo from cwd via git rev-parse (fixes the pollution root cause); multi-ref stdin loop gates on any non-tag/non-delete branch line, locked by test_multi_ref_with_one_branch_still_gates.",
+    "Pollution handling verified: real .git/hooks/ holds only git's default *.sample (no active pre-push, no .bak.*); the 3 polluted files are quarantined in %TEMP%\\opencode\\hook-pollution-quarantine (pre-push + 2 .bak), content-matched to this card's hook versions, no user hook clobbered; RealHooksUntouchedTestCase now present as a permanent guard."
   ],
-  "blockers_detail": [
-    "Decisive: the reviewed artifact does not exist. Per PROTOCOL section 3 R3 (no silent success), an unshipped deliverable cannot be PASS/CONDITIONAL. Fix: author lands D1/D2/D4 + D3 in a commit, flips the card to IN_REVIEW, re-dispatches; reviewer then re-runs bash -n + A1-A5 + 'tests never touch real .git/hooks/' against the shipped files."
+  "independent_findings": [
+    "P2 (Q0 routing, does not block this PASS): the hook is correct but blocks every push today because of 21 pre-existing WARNs under --strict. This is a timing issue (repo not yet cleaned), not a code defect. Adjudication: REJECT path (b) (dropping --strict breaks the card's zero-drift-from-CI claim); PRIMARY path (c) = open a cleanup card that clears the 21 WARNs, ship the hook unchanged; mitigation (a) = add a 'current state' section to both READMEs so the 21-WARN reality is documented at install time. Open follow-ups: (1) cleanup card for the 21 WARNs (includes the 5 EVO ORPHAN_VERDICT from card 002's follow-up, the 8 OWNED_FILES_* old-card debt, 2 VERDICT_WITHOUT_REVIEW, 2 UNMAPPED_CLAIM_SURFACE README freshness, 1 CARD_SELF_IN_MAP, 1 STATUS_DRIFT); (2) README 'current state' section in that same cleanup card."
   ],
   "rulings": {
-    "q1_ci_same_sequence_vs_full_dir": "ACCEPT the card's CI-same-sequence (latest round) over a stricter full-directory gate: gate.yml already adjudicated 'permanently red build' and the hook's stated purpose is zero drift from CI. Do NOT self-invent a --baseline historical-debt exclusion in this card; a genuinely stricter gate, if wanted, is a separate ADR/card. [inferred - no shipped hook to verify against]",
-    "q2_no_verify_bypass": "ACCEPT the 'deter + document' boundary: a pre-push hook cannot technically block git push --no-verify, so deter (stderr + 'recorded in shell history') is the max achievable. CI-side bypass-detection (scan commit messages) is rightly dismissed as infeasible. Record on file that the durable backstop is CI (audit), with the hook as prevention only - recommend making that line explicit. [inferred]",
-    "q3_installer_default": "Keep install opt-in per Constraint 2; add a one-line 'opt into local gating' note in the README dev section, not a first-class blocking step. [inferred]",
-    "q4_multi_ref_granularity": "Keep per-line 'any branch push -> gate' as the safer prevention default; gating only master-bound refs adds a remote-topology correctness surface without proportional benefit. Revisit with evidence only if feature-branch push latency becomes a real complaint. [inferred]"
+    "q0_strict_block_every_push": "REJECT (b) drop --strict: it would make local and CI disagree, violating the card's core zero-drift claim and its own Constraint 6. CHOOSE (c) open a cleanup card to clear the 21 pre-existing WARNs while shipping the hook unchanged; add (a) as a mitigation README 'current state' section now. The hook is correct as written; the repo just isn't ready to take the lock yet.",
+    "q1_ci_same_sequence_vs_full_dir": "KEEP CI-same-sequence, confirmed byte-for-byte in the shipped hook; zero drift is the point. Q0's issue is timing, not the judge scope.",
+    "q2_no_verify_boundary": "ACCEPT 'deter + document' (the block message names --no-verify); the durable backstop is CI (audit) with the hook as prevention; confirm the shell-history deterrent line also lands in the README when the P2 cleanup card adds its section.",
+    "q3_installer_opt_in": "KEEP opt-in per Constraint 2; installer correctly resolves the target repo from cwd (git rev-parse), not script location, fixing the pollution root cause; hard-error path locked by test_install_outside_a_git_work_tree_is_a_hard_error.",
+    "q4_multi_ref_granularity": "KEEP 'any branch line -> gate'; conservative prevention default; test_multi_ref_with_one_branch_still_gates locks it against a later 'feature branches pass' regression.",
+    "q5_cwd_repo_resolution": "ACCEPTED as D2's implicit premise (which repo to write into), not a new feature; the pollution it prevented is correctly disclosed + quarantined + guarded by RealHooksUntouchedTestCase.",
+    "q6_python_probe_tightening": "ACCEPTED as a legitimate fix, not scope-creep: the original 'command -v python3' was broken on Windows Git Bash (Store stub resolves but exits 49 with no output); probing each candidate with 'candidate -c \"\"' preserves fail-closed while fixing the real failure mode."
   },
   "open_followups": [
-    "Author must ship the three code deliverables + D3 doc edits, set card to IN_REVIEW, and re-dispatch; this FAIL is re-reviewed against the shipped artifact."
+    "P2: open a cleanup card to clear the 21 pre-existing lint_cards.py WARNs (so the --strict hook becomes usable) and add a README 'current state' section in that same card. Note: the 1 STATUS_DRIFT WARN on XJ-20261013-006 is a FALSE POSITIVE, not a stale-open card -- 006 is properly CLOSED at 9af03e4; the rule's _section_body is not fenced-code-block-aware, so it picks up the fenced '## Status / Awaiting independent review.' pedagogical example in 006's own card body instead of the real '## Status CLOSED' block. Clear it by either making _section_body fence-aware (recommended) or moving 006's illustration out of a '## Status'-prefixed fence; cross-annotate verdicts/XJ-20261013-006.verdict.json with a P2 follow-up to that fence-blindness defect."
   ],
-  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-004.md (staged in reviewer workspace; OpenCode lands .tasks/REVIEW-XJ-20261013-004.md + verdicts/XJ-20261013-004.verdict.json per 4.4; no commit/push performed by reviewer)"
+  "review_ref": "D:\\15812\\Documents\\2026-10-13\\20261013_1\\work\\REVIEW-XJ-20261013-004-R2.md (staged in reviewer workspace; OpenCode lands .tasks/REVIEW-XJ-20261013-004-R2.md + this verdict under agent-covenant verdicts/ per 4.4/5.7; no commit/push performed by reviewer)"
 }
