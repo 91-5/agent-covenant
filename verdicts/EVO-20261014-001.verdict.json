@@ -1,0 +1,39 @@
+{
+  "id": "EVO-20261014-001",
+  "artifact": "C:\\Users\\15812\\.config\\opencode\\AGENTS.md §2.2 evidence-line convention (升级 [已验证] 须紧跟 '证据：' 行，二选一 命令证据/复核ref，缺证据行降级 [主张]); 0 in-repo changes; backup chain gap (newest AGENTS.md.bak.20261013-003233 is pre-006, not pre-14-001); no EVO status value-domain lint",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-15T22:03:00+08:00",
+  "commit": "agent-covenant @ bb3bc3b (git status --porcelain = 0 lines; HEAD pre-existing tasks commit, unchanged by this card)",
+  "evidence": [
+    "independent V1 re-run on the true AGENTS.md: Select-String '证据：' => exactly 1 hit, L50, inside §2.2 (matches card's required =1)",
+    "independent V2 re-run: Select-String '缺证据行' => exactly 1 hit, L50 (matches card's required =1); L50 text matches proposal.change verbatim (二选一: 命令+退出码/输出 OR 独立复核ref; 缺证据行 => 按 [主张])",
+    "independent V3: §2.2 three-marker table L40-L44 = header + separator + 3 marker rows, intact",
+    "independent V6 net-change re-measured TODAY: backup 003233 = 17854B / 210 lines; current = 19597B / 223 lines; delta = +13 lines, same as card's self-report (+13). 003233 contains 0 hits for 证据：/缺证据行/EVO-20261010-006/EVO-20261014-001 => it is a pre-006 baseline, NOT a pre-14-001 baseline (key finding). Card's absolute V6 numbers (19529B/224) drift vs today (19597B/223); net +13 identical, absolute drift P3",
+    "independent V7: agent-covenant git status --porcelain = 0 lines => repo untouched (A4 zero in-repo change re-verified); AGENTS.md mtime 2026-10-14 22:39 corroborates status_note '实施 2026-10-14'",
+    "protected_assets 5 independently checked on the true AGENTS.md: §5.4 state machine / gate.py / verdict template & field semantics / AgnesCode reviewer eligibility / sir final-veto §5.6 all untouched by the L50 paragraph => protected_assets_targeted: [] is correct; the change is confined to §2.2 upgrade path",
+    "not_doing 4 items all observed: (1) no machine lint/supermemory change (0 consumers of 证据等级 field); (2) §2.2 three-marker definitions + 缺省从严 main clause (L48) unchanged; (3) no retroactive rewrite of existing supermemory entries; (4) evidence line is a paragraph form, not a table",
+    "linter gap independently confirmed: tools/lint_cards.py --evo-dir path only runs check_evo_protected_assets (L743); all status reads (L93/376/377/1024) serve TASK-card '## Status' sections; NO EVO-JSON status value-domain (DRAFT..ACTIVE enum) check => card's 'IMPLEMENTED not flagged' self-report is accurate"
+  ],
+  "independent_findings": [
+    "P2-1 (routed to open_followups, not a blocker since author self-recorded rollback_defect at BLOCKER-LEVEL and requested a ruling): the card's rollback requires a pre-implementation backup AGENTS.md.bak.<yyyyMMdd-HHmmss> that does NOT exist. Newest backup 003233 (17854B/210 lines) lacks even 006's marker => it is pre-006. Literal rollback per card text would revert 006 (a PASS-verified GATED rule) together with 14-001. Ruled (b): rewrite rollback as paragraph-removal of L50 (exact text recoverable from proposal.change => reconstruction, not restoration), and state explicitly that the true pre-14-001 state is NOT restorable from any existing backup. Reject (a): a post-hoc 'pre-implementation' backup is a logical loop. Reject (c): 'reversible + text known' is a justification, not a disposition; the card's rollback paragraph still points the next executor at a nonexistent backup. Side requirement: the next EVO card that edits AGENTS.md MUST build a fresh backup before implementing, to re-link the broken backup chain.",
+    "P2-2 (routed to open_followups): lint_cards.py has no EVO status value-domain validation. Stronger than 006's veto of evidence-grade linting: here there IS a producer (status is a §5.3 required field, someone is filling it, and it was fillable-wrongly as IMPLEMENTED) but no consumer reads its value domain. Held 'record + route, do not fix in this card' — consistent with this card's not_doing[0] (no machine checks) and 006 veto_2 anti-dead-code. Future status-consuming/lint card adds EVO_STATUS_INVALID (unknown value WARN / missing value ERROR, domain = §5.4 enum).",
+    "P3 (non-blocking, for the record): card's V6 self-reported absolute byte/line (19529B/224) differ from today's re-measure (19597B/223); the +13-line net delta is identical, so the difference is a snapshot timestamp drift between the 10-14 self-check and the 10-15 review, not a content change.",
+    "P3: mtime of AGENTS.md (10-14 22:39) corroborates status_note '实施 2026-10-14'; no inconsistency."
+  ],
+  "rulings": {
+    "rollback_three_options": "Ruled (b) paragraph-removal, not (a) post-hoc backup, not (c) declare-non-blocker. Reconstruction of L50 from proposal.change is equivalent to restoration because the full paragraph text is known; the card must say 'reconstruction, not restoration' and that pre-14-001 state is unrecoverable from existing backups. Next AGENTS.md-editing EVO card must build a fresh pre-implementation backup.",
+    "linter_evo_status_value_domain": "Record + route (P2), do NOT fix in this card. There is a producer (required status field being filled) but no consumer of the value domain; adding the check now would be premature and conflicts with this card's not_doing[0]. Route to the first status-consuming/lint card.",
+    "evidence_line_two_of_three": "APPROVE 二选一 (command+exit/output OR independent-recheck ref, not both). The two are non-mergeable verification channels per 006; forcing both would manufacture fake filler evidence. 缺证据行 => 按 [主张] gives the convention teeth; long-evidence-line formalism risk is acceptable because the cost asymmetry favors writing the line over the label failing. No extra constraint added (avoids a new concept, per 006 spirit).",
+    "three_markers_vs_binary": "Inherited from 006 (three markers kept); this card does not touch marker definitions, so no re-adjudication needed.",
+    "in_place_upgrade_vs_new_entry": "Inherited from 006 (in-place rewrite kept); the evidence-line '同一条内紧跟一行' is a direct extension of that in-place-upgrade ruling."
+  },
+  "open_followups": [
+    "P2-1 (owner = 14-001 author): rewrite the card's rollback to paragraph-removal of L50 (reconstruction, not restoration); state that pre-14-001 state is unrecoverable from existing backups; require the next AGENTS.md-editing EVO card to build a fresh pre-implementation backup AGENTS.md.bak.<yyyyMMdd-HHmmss> to re-link the backup chain.",
+    "P2-2 (owner = first status-consuming/lint card): add EVO status value-domain validation to lint_cards.py (EVO_STATUS_INVALID: unknown value WARN / missing value ERROR, domain = §5.4 DRAFT->CANDIDATE->IN_REVIEW->SHADOW->GATED->ACTIVE + REJECTED/DEPRECATED). Do NOT add in this card (not_doing[0] + anti-dead-code)."
+  ],
+  "loop_closure": "After this card reaches GATED, the PASS justification of EVO-20261010-006 is thereby REALIZED (not waived). 006's verdict stated PASS stood on 'the hole being explicitly documented + routed to a follow-up card', not on closing the hole; this card IS that follow-up, and its text convention (with the 缺证据行=>降级[主张] consequence) is now landed at AGENTS.md L50, so the previously-documentary hole is closed. 006 itself keeps PASS / GATED unchanged; this card implements its basis rather than modifying it.",
+  "review_ref": "D:\\15812\\Documents\\2026-10-15\\20261015_1\\work\\EVO-20261014-001.review.md (canonical, staged in reviewer workspace; OpenCode lands the in-repo copy under agent-covenant verdicts/ + the review/evo/ per 4.4/5.7)"
+}
