@@ -96,10 +96,18 @@ Opt into the same gate locally by running `bash tools/install-hooks.sh` from
 inside the work tree; it installs `tools/pre-push-hook.sh` into your hooks
 directory and is safe to re-run. The hook runs steps 2 and 3 above on the newest
 round, so a local pass and a CI pass mean the same thing. It is prevention, not
-enforcement: `git push --no-verify` skips it, and CI is still the backstop. Note
-that `--strict` makes *every* warning fatal, so a repository carrying a warning
-backlog will have the hook block pushes until that backlog is cleared — the same
-build CI would report red.
+enforcement: `git push --no-verify` skips it, and CI is still the backstop.
+
+**In this repository the hook will block every push today, and that is by
+design, not a defect.** `lint_cards.py --strict` fails on *any* warning, and the
+tree currently carries 16 of them — all pre-existing debt, none of it introduced
+by the hook. A signed, clean round is still refused, and removing the hook makes
+the identical push succeed; that was measured, not assumed. `XJ-20261013-004`'s
+review chose this over dropping `--strict` from the hook, because a hook that
+judges more strictly than CI would be judging something CI never judges. The
+backlog is being cleared under `XJ-20261014-002`; until it reaches zero, expect
+`[pre-push] BLOCKED` and read the warnings rather than reaching for
+`--no-verify`.
 
 ## Ask for a review
 
