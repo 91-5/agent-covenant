@@ -1,0 +1,24 @@
+{
+  "id": "XJ-20261016-001",
+  "artifact": "artifacts.json",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": "_Not applicable (verdict is PASS).",
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-16T11:30:00+00:00",
+  "commit": "d54dbd6f9ab75fc588f438834ee59c980cdce640",
+  "supersedes": null,
+  "evidence": [
+    "unittest: `python -m unittest discover -s tests` => Ran 252 tests in 37.527s, OK (0 failures)",
+    "lint: `python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict` => LINT: FAIL (0 errors, 13 warnings); the 13 = 6 ORPHAN_VERDICT (EVO-001/002/003/004/006 + EVO-20261014-001, no matching card in .tasks by design) + 4 VERDICT_WITHOUT_REVIEW (XJ-20260930-010 / 20261013-005 / 20261014-002 / 20261016-001) + 2 UNMAPPED_CLAIM_SURFACE (README.md, README.zh-CN.md) + 1 CARD_SELF_IN_MAP (XJ-20261004-004 self-listing)",
+    "gate pre-existing: `python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require XJ-20261013-004` => GATE: FAIL (2 violations), both STALE_VERDICT on XJ-20261013-004: README.md mtime 2026-10-15T04:23:56Z and README.zh-CN.md mtime 2026-10-15T04:29:46Z both > that verdict's ts 2026-10-14T14:35:00+00:00; unrelated to this round",
+    "three-file mtime (UTC): README.md = 2026-10-15T04:23:56Z; README.zh-CN.md = 2026-10-15T04:29:46Z; artifacts.json = 2026-10-16T11:12:48Z (most recent); this verdict's ts 2026-10-16T11:30:00Z >= all three, so `gate --require XJ-20261016-001` is expected to PASS",
+    "C1 content on disk: README.md L41/52/68/273 all spell `examples/deepfreeze-pilot/` (the XJ-20260930-010 phantom-path fix is in place, not the old phantomed path); artifacts.json L194 carries the round map entry `\"XJ-20261016-001\": [\"README.md\", \"README.zh-CN.md\", \"artifacts.json\"]` (card itself intentionally NOT listed, per the C1 note avoiding CARD_SELF_IN_MAP)",
+    "git: HEAD = d54dbd6f9ab75fc588f438834ee59c980cdce640 on feature/OC-20261007-001; local vs origin in sync (rev-list left-right = 0/0)"
+  ],
+  "notes": [
+    "Honest P2 (non-blocking): the C1 artifacts.json map entry is an UNCOMMITTED working-tree change (`git status --porcelain` shows ` M artifacts.json`). `d54dbd6` itself is the `.tasks/` archival commit only (its diff = 5 .tasks/ files, no README/artifacts). The verdict's `commit` anchor is therefore d54dbd6 for the archival state, but the C1 map line lives in the uncommitted working tree. Content judged on-disk is correct; the round should commit the artifacts.json change before closing so the anchor and the content agree.",
+    "Honest P3 (non-blocking): the dispatch's 'lint WARNS 13 -> 9' arithmetic is off by one. Signing retires 2 UNMAPPED_CLAIM_SURFACE (README.md, README.zh-CN.md) + 1 VERDICT_WITHOUT_REVIEW (XJ-20261016-001) = 3, leaving 10 (6 ORPHAN_VERDICT + 3 remaining VERDICT_WITHOUT_REVIEW + 1 CARD_SELF_IN_MAP on XJ-20261004-004), not 9. The CARD_SELF_IN_MAP warning is pre-existing and out of C1's scope."
+  ]
+}

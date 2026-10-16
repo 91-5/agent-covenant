@@ -190,5 +190,6 @@
     "README.md",
     "README.zh-CN.md",
     "PROTOCOL.md"
-  ]
+  ],
+  "XJ-20261016-001": ["README.md", "README.zh-CN.md", "artifacts.json"]
 }
