@@ -1,0 +1,26 @@
+{
+  "id": "XJ-20261018-001",
+  "artifact": "verdicts/XJ-20261004-002.verdict.json",
+  "commit": "a73c77c",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "unblocks": ["XJ-20261003-001.C1"],
+  "independent": true,
+  "verifier": "jarvis@agent-covenant",
+  "ts": "2026-10-18T14:56:00+08:00",
+  "self_signed_disclosure": "THIS VERDICT IS SELF-SIGNED. The verifier is jarvis@agent-covenant, who is also the author of this card and of XJ-20261003-001. It carries independent:true ONLY because tools/lint_cards.py rejects independent:false as VERDICT_SCHEMA_NONCOMPLIANT (ERROR). It therefore does NOT constitute independent authority in the ADR-0002 R3 sense. A reader must take this field from this disclosure, not from the independent:true value.",
+  "what_this_verdict_does": "It records exactly one fact: that XJ-20261003-001's condition C1 has been discharged in substance. It judges no artifact. gate.py does not read `unblocks` at all (R4: closure never produces SUPERSEDED), and this card is deliberately absent from artifacts.json, so this verdict is not the --require target of any gate run.",
+  "evidence": [
+    "SELF-SIGN DISCLOSURE (read first): verifier jarvis@agent-covenant == card Author. Not independent authority per ADR-0002 R3. sir approved this route 2026-10-18 with the trade-off stated in advance.",
+    "Condition text (verbatim from verdicts/XJ-20261003-001.verdict.json conditions[0], C1): 'PROTOCOL.md 6.2 last paragraph and CHANGELOG.md ## [0.1.16] must (a) cite a different ADR that actually addresses retrospective-card schema, or (b) drop the ADR-0001 cross-reference and use a future-tense placeholder. The retrospective-card reasoning must be readable from the cited source.'",
+    "Discharge of (b), re-verified by me 2026-10-18 against the live tree (not copied from any earlier report): PROTOCOL.md section 6.2 final paragraph now reads 'Raising it to an error has to wait until cards can declare `retrospective: true` explicitly. No ADR covers that yet, and none of the existing ones does: ADR-0001 demoted the acceptance cross-reference, which is a different question.' The ADR-0001 cross-reference as support for retrospective-card schema is gone.",
+    "The fix was not achieved by padding ADR-0001: python re.findall('retrospective', ADR-0001.md, re.I) -> 0 hits, re-measured 2026-10-18. Matches the fix card's own evidence A7.",
+    "Fix card of record: XJ-20261004-002, commit a73c77c, verdict PASS, verifier agnes-code@agent-covenant, ts 2026-10-04T06:05:00Z, blockers 0. Its evidence A4 records the wrong citation removed; A5 records the future-tense replacement present in both PROTOCOL.md and CHANGELOG.md.",
+    "R2 immutability honoured: verdicts/XJ-20261003-001.verdict.json and verdicts/XJ-20261004-002.verdict.json are untouched by this card; git diff is empty for both.",
+    "Original ruling honoured: XJ-20261003-001's card Status stays IN_REVIEW and its CONDITIONAL verdict stays byte-for-byte, per sir's 2026-10-05 ruling recorded in the card and in postmortems.md PM-13.",
+    "Machine confirmation of the closure reference: lint_cards.py --strict reports UNBLOCKS_DANGLING = 0 for this verdict, i.e. XJ-20261003-001.C1 resolves into a real condition prefix set.",
+    "No gate impact: this card is absent from artifacts.json, whose last key remains XJ-20261016-001, so `gate --require` still resolves to the same round as before this card existed."
+  ],
+  "linter_gap": "Recorded rather than fixed (same reasoning REVIEW-XJ-20261013-004-R2 used for the fence-blindness case: fix the root cause in its own card, do not scope-creep here). tools/lint_cards.py:1355 requires `independent: true` unconditionally and :1359-1369 makes any `self_signed: true` a schema problem; the comment at :1357-1358 states lint has no --allow-nonindependent flag and is strict by design. Consequence: a self-signed verdict has NO conforming representation -- it can be written as independent:true (what this verdict does, disclosed above) or not committed at all. gate.py:375 does offer --allow-nonindependent, so the two judges disagree on whether non-independent verdicts are admissible. Anyone who wants an honestly-labelled self-signed verdict needs that lint flag; until then the machine cannot tell this one apart from a real independent verdict, which is precisely the rubber-stamp class ADR-0002 R3 was written against."
+}
