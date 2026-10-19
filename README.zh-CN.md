@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->262<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->265<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -186,6 +186,14 @@ python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-
 ```
 
 **诚实声明：本工具只写不校验。** 当前没有任何东西会读回 link。真正做「这条 verdict 确实覆盖了那次快照」的追溯校验，是后续期（见 roadmap）；在它落地之前，link 只是一份记录，不是一道检查——不要把它当作「本轮已绑定快照」的证据来引用。
+
+**`verdict_sha256` 是什么、不是什么。** 三条钉死，防止把这个字段误当成它当前还不提供的保证：
+
+1. 它锁的是 verdict 文件的**原始字节**（对磁盘上原样的文件做流式 SHA-256），不锁语义。
+2. verdict 被重新序列化——缩进变化、键序变化——字节就变，哈希随之变，哪怕语义完全没动。
+3. **期 2 门禁尚未校验此字段；当前没有任何机器消费它。** 在它落地之前，哈希只是一条记录的事实，不是一道检查——是追溯门禁的占位符，不是门禁本身。
+
+**并发：两个写者，一个文件。** `deepfreeze protect --card` 与 `link_card.py` 写**同一个** link，各占各的字段组。本工具的合并是 dict 级：既有全部字段都保留，包括它不认识的任何字段。为避免 last-write-wins 静默丢掉另一方的字段组，工具在写回前会重新 stat link，若自读取以来发生变化，则以退出码 `1` 拒绝并提示「重跑」，而不是覆盖。
 
 ## 闂ㄧ鍒板簳鏌ヤ粈涔?
 

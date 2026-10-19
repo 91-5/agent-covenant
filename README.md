@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->262<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->265<!-- /test-count --> tests
 ```
 
 ## Install
@@ -234,6 +234,24 @@ python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-
 back today. A gate that confirms "this verdict actually covers that snapshot" is
 a later phase (see the roadmap); until it ships, the link is a record, not a
 check — do not cite it as evidence that a round was tied to a snapshot.
+
+**`verdict_sha256` — what it is, and what it is not.** Three things, so the field
+cannot be mistaken for a guarantee it does not yet give:
+
+1. It locks the verdict file's **raw bytes** (a streamed SHA-256 of the file
+   exactly as it sits on disk), not the verdict's meaning.
+2. Re-serialising the verdict — a change of indentation or key order — changes
+   those bytes and therefore the hash, even when the meaning is identical.
+3. **The phase-2 gate does not verify this field yet; no machine consumes it
+   today.** Until that ships, the hash is a recorded fact, not a check — a
+   placeholder for the traceability gate, not the gate itself.
+
+**Concurrency: two writers, one file.** `deepfreeze protect --card` and
+`link_card.py` write the *same* link, each owning its own field group. The merge
+here is dict-level: every existing field survives, including any field this tool
+does not know about. To stop last-write-wins from silently dropping the other
+writer's group, the tool re-stats the link just before writing and, if it changed
+since it was read, exits `1` with a "re-run" message rather than overwriting.
 
 ## What the gate enforces
 

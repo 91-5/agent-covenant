@@ -17,6 +17,15 @@ It **only writes; it does not validate**. Nothing machine-checks a link today -
 a gate that reads the link back to confirm "this verdict covers that snapshot"
 is a later phase. Until then, treat the link as a record, not as a check.
 
+`verdict_sha256` - what it is, and what it is not
+-------------------------------------------------
+    1. It locks the verdict file's **raw bytes** (a streamed SHA-256 of the file
+       exactly as it sits on disk), not the verdict's meaning.
+    2. Re-serialising the verdict - a change of indentation or key order - changes
+       those bytes and therefore the hash, even when the meaning is identical.
+    3. The phase-2 gate does **not** verify this field yet; no machine consumes
+       it today. Until that ships, the field is a recorded fact, not a check.
+
 Usage
 -----
     python tools/link_card.py --card DFB-20261019-001 --verdict verdicts/DFB-20261019-001.verdict.json
@@ -26,7 +35,8 @@ Exit codes
 ----------
     0  the link file was updated
     1  a business error (no link to update, unreadable/corrupt link, verdict
-       does not belong to this card, unsafe card id); the message says what to do
+       does not belong to this card, unsafe card id, the link changed on disk
+       mid-run); the message says what to do
     2  usage error (missing/unreadable arguments)
 
 Behaviour
@@ -40,13 +50,23 @@ Behaviour
     3. Parse the verdict: it must be JSON, `id` must equal `--card` (a verdict
        for another card must never be bound here), and `ts` must be present.
     4. Read the existing link. If it does not parse, exit 1 and leave it
-       untouched - overwriting it would destroy the snapshot binding.
-    5. Hash the verdict file's *raw bytes* (streamed SHA-256).
-    6. Merge: keep every existing field (the snap group in particular) and set
-       only the verdict group. The snap group is never written here.
-    7. Write back atomically (temp file in the same directory + os.replace) so a
+       untouched - overwriting it would destroy the snapshot binding. The link is
+       read as `utf-8-sig`: deepfreeze (PowerShell `Set-Content -Encoding UTF8`)
+       writes a BOM, so a leading BOM is stripped rather than treated as a decode
+       error. Writes stay plain `utf-8` (no BOM).
+    5. Hash the verdict file's *raw bytes* (streamed SHA-256). See the
+       `verdict_sha256` note above for what this does and does not guarantee.
+    6. Merge: keep every existing field (the snap group in particular, plus any
+       field this tool does not know) and set only the verdict group. The merge is
+       dict-level: unknown keys survive untouched. The snap group is never written
+       here.
+    7. Guard against a lost update: re-stat the link right before writing. If its
+       mtime/size changed since step 4 - deepfreeze wrote a new snap group while
+       this run was hashing and merging - exit 1 and refuse, rather than let
+       last-write-wins silently drop the other writer's field group.
+    8. Write back atomically (temp file in the same directory + os.replace) so a
        concurrent reader never sees a half-written link.
-    8. On success, print one summary line:
+    9. On success, print one summary line:
        `linked <card>: snap_ts=<...> verdict_ts=<...>`
 
 Re-running for the same card (a rework with a new verdict) overwrites the
@@ -120,7 +140,11 @@ def load_json_file(path):
     except OSError as exc:
         return None, f"cannot read {path}: {exc}"
     try:
-        text = raw.decode("utf-8")
+        # utf-8-sig strips a leading BOM if present and decodes plain UTF-8
+        # otherwise. deepfreeze writes its link with PowerShell
+        # `Set-Content -Encoding UTF8`, which prepends a BOM; a strict utf-8
+        # decode would reject every real link it produces.
+        text = raw.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
         return None, f"{path} is not valid UTF-8: {exc}"
     try:
@@ -168,6 +192,13 @@ def build_parser():
         prog="link_card.py",
         description="Write a verdict's fields back into .freeze/link-<card>.json "
                     "(the verdict group), preserving deepfreeze's snap group.",
+        epilog=(
+            "On 'verdict_sha256': (1) it locks the verdict file's raw bytes, not "
+            "its meaning; (2) re-serialising the verdict (indentation or key-order "
+            "change) changes the hash even when the meaning is unchanged; (3) the "
+            "phase-2 gate does NOT verify this field yet - no machine consumes it "
+            "today. The tool writes; it does not validate."
+        ),
     )
     parser.add_argument("--card", required=True,
                         help="card id whose link file to update (e.g. DFB-20261019-001)")
@@ -230,6 +261,15 @@ def main(argv=None):
 
     # 4. Read the existing link. A corrupt link is never overwritten: it still
     #    holds the snapshot binding, and clobbering it would destroy evidence.
+    #    Stat before reading so the pre-write guard in step 7 detects any writer
+    #    that touches the link while this run is hashing and merging. Statting
+    #    before the read makes the guard fail-safe: a change racing the read is
+    #    seen as a mismatch and refused, never silently clobbered.
+    try:
+        link_stat = os.stat(link_path)
+    except OSError as exc:
+        print(f"[ERROR] cannot stat existing link {link_path}: {exc}", file=sys.stderr)
+        return EXIT_ERROR
     link, error = load_json_file(link_path)
     if error:
         print(f"[ERROR] existing link is unreadable: {error} - refusing to overwrite it "
@@ -256,14 +296,32 @@ def main(argv=None):
         merged.pop("verifier", None)
     merged["updated_at"] = _utc_now_z()
 
-    # 7. Atomic write-back.
+    # 7. Lost-update guard. deepfreeze may have overwritten the link (a new snap
+    #    group) after step 4 read it. Re-stat now; if it changed, refuse rather
+    #    than write a merge built on a stale read and drop deepfreeze's group.
+    try:
+        current_stat = os.stat(link_path)
+    except OSError as exc:
+        print(f"[ERROR] link {link_path} disappeared before write: {exc} - re-run "
+              f"`deepfreeze protect --card {card}` then re-run link_card.py",
+              file=sys.stderr)
+        return EXIT_ERROR
+    if (current_stat.st_mtime_ns != link_stat.st_mtime_ns
+            or current_stat.st_size != link_stat.st_size):
+        print(f"[ERROR] link {link_path} was modified concurrently (mtime/size "
+              "changed since this run read it) - refusing to overwrite it and risk "
+              "dropping the other writer's fields; re-run link_card.py so the merge "
+              "is based on the current link", file=sys.stderr)
+        return EXIT_ERROR
+
+    # 8. Atomic write-back.
     try:
         atomic_write_json(link_path, merged)
     except OSError as exc:
         print(f"[ERROR] cannot write link {link_path}: {exc}", file=sys.stderr)
         return EXIT_ERROR
 
-    # 8. One summary line.
+    # 9. One summary line.
     snap_ts = link.get("snap_ts", "-")
     if snap_ts in (None, ""):
         snap_ts = "-"

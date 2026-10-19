@@ -10,8 +10,10 @@ pipe: on Windows a piped exit code is what the *pipe* returned, not the child's
 `main()` returns would hide a real CLI regression, so the CLI is exercised as a
 subprocess end to end.
 """
+import contextlib
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -139,6 +141,45 @@ class LinkCardTest(unittest.TestCase):
         for key, value in snap.items():
             self.assertEqual(linked[key], value, f"snap field {key} changed on re-run")
 
+    def test_forward_link_with_bom_is_read_and_rewritten_without_bom(self):
+        # deepfreeze writes the link with PowerShell `Set-Content -Encoding UTF8`,
+        # which prepends a UTF-8 BOM (EF BB BF). A strict utf-8 read fails closed
+        # on the only links the real producer ever writes; utf-8-sig must accept
+        # the BOM, and the rewrite must stay BOM-free for every json.loads reader.
+        snap = self._snap_link()
+        payload = b"\xef\xbb\xbf" + json.dumps(snap, ensure_ascii=False).encode("utf-8")
+        self.link_path.write_bytes(payload)
+        verdict = self._write_verdict()
+
+        code, out, err = _run("--card", self.card, "--verdict", str(verdict),
+                              "--freeze-dir", str(self.freeze))
+
+        self.assertEqual(code, 0, err)
+        linked = self._read_link()
+        # The snap group the BOM'd file carried survives value-for-value.
+        for key, value in snap.items():
+            self.assertEqual(linked[key], value, f"snap field {key} changed")
+        self.assertEqual(linked["verdict_ts"], "2026-10-19T07:30:00Z")
+        # The product is plain UTF-8: no BOM written back.
+        self.assertFalse(self.link_path.read_bytes().startswith(b"\xef\xbb\xbf"),
+                         "the rewritten link must not carry a BOM")
+
+    def test_forward_unknown_link_field_is_preserved(self):
+        # The merge is dict-level, not a fixed-schema serialization: a field this
+        # tool has never heard of (a later phase's addition, or deepfreeze's own)
+        # must survive a write-back untouched.
+        snap = self._snap_link()
+        snap["future_field"] = {"opaque": [1, 2, 3], "nested": {"k": "v"}}
+        self._write_link(snap)
+        verdict = self._write_verdict()
+
+        code, out, err = _run("--card", self.card, "--verdict", str(verdict),
+                              "--freeze-dir", str(self.freeze))
+
+        self.assertEqual(code, 0, err)
+        linked = self._read_link()
+        self.assertEqual(linked["future_field"], {"opaque": [1, 2, 3], "nested": {"k": "v"}})
+
     # -- reverse -----------------------------------------------------------
     def test_reverse_missing_link_errors_with_hint_and_creates_nothing(self):
         verdict = self._write_verdict()
@@ -165,6 +206,57 @@ class LinkCardTest(unittest.TestCase):
         self.assertIn("refusing to overwrite", err)
         self.assertEqual(self.link_path.read_bytes(), original,
                          "a corrupt link must not be rewritten")
+
+    def test_reverse_concurrent_link_write_between_read_and_write_is_refused(self):
+        # deepfreeze and link_card.py both write the same link, each owning a field
+        # group. If deepfreeze rewrites the snap group after this run read the link
+        # but before it writes, last-write-wins would silently drop deepfreeze's
+        # fresh group. The mtime/size guard must refuse instead.
+        #
+        # The race is injected deterministically rather than by sleeping: the CLI
+        # is exercised in-process (the module is already loaded) and `sha256_file`
+        # is patched to perform the concurrent rewrite, which runs at step 5 -
+        # after the link was read (step 4) and before the re-stat (step 7). A
+        # subprocess cannot be interrupted at that exact point without a
+        # test-only hook in the tool, which is worse than an in-process return.
+        self._write_link(self._snap_link())
+        verdict = self._write_verdict()
+
+        concurrent = {
+            "card": self.card,
+            "snap_ts": "2026-10-19T08:00:00Z",
+            "snap_path": "snap-20261019-080000",
+            "snapshot_root": ".freeze-snap",
+            "source": "deepfreeze",
+            "created_at": "2026-10-19T08:00:01Z",
+            # An extra key so the file size differs too: the guard keys on
+            # mtime_ns, but a size change makes the refusal robust even if two
+            # writes land in the same coarse filesystem mtime tick.
+            "rotation_note": "deepfreeze wrote a fresh snap group mid-run",
+        }
+        real_sha256 = link_card.sha256_file
+
+        def racing_sha256(path):
+            # Simulate deepfreeze's protect rewriting the link mid-run.
+            self._write_link(concurrent)
+            return real_sha256(path)
+
+        link_card.sha256_file = racing_sha256
+        try:
+            buf_out, buf_err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(buf_out), contextlib.redirect_stderr(buf_err):
+                code = link_card.main(["--card", self.card, "--verdict", str(verdict),
+                                       "--freeze-dir", str(self.freeze)])
+        finally:
+            link_card.sha256_file = real_sha256
+
+        self.assertEqual(code, 1, buf_err.getvalue())
+        self.assertIn("modified concurrently", buf_err.getvalue())
+        # The concurrent writer's content is intact: nothing was overwritten.
+        after = self._read_link()
+        for key, value in concurrent.items():
+            self.assertEqual(after[key], value, f"concurrent field {key} was clobbered")
+        self.assertNotIn("verdict_ts", after, "a refused run must not write the verdict group")
 
     def test_reverse_verdict_id_mismatch_leaves_link_unchanged(self):
         snap = self._snap_link()
