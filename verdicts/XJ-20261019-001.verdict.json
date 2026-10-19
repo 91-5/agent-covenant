@@ -1,0 +1,43 @@
+{
+  "id": "XJ-20261019-001",
+  "artifact": "tools/link_card.py (新建, stdlib, 333 行, verdict 字段组回写 .freeze/link) + tests/test_link_card.py (新建 13 用例: 4 forward / 7 reverse / 2 edge) + README.md + README.zh-CN.md (265 计数 + Link-cards-to-snapshots 小节) + artifacts.json (XJ-20261019-001 登记)；分支 feature/XJ-20261019-001, 基线 a1b8724, commits af1e58c+b69dfde",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-19T21:52:00+08:00",
+  "ts_resign_note": "2026-10-19T21:52+08:00 重签（仓内先例 b2994b1/2541e0c）：签回阶段按 condition C1 修正 BOM 归因措辞（tools/link_card.py docstring ×2、tests/test_link_card.py 注释、.tasks/XJ-20261019-001.md D1.4），改动 mtime 21:39 晚于原 ts 18:55，重签以保持「最新被审产物 mtime ≤ ts ≤ now」。逻辑零改动（仅注释/文档措辞），unittest 265 PASS 复测；结论维持 PASS / 0 blocker / 3 conditions 不变。",
+  "commit": "feature/XJ-20261019-001 @ b69dfde (git status --porcelain: 2 行均为预期 —— ?? .tasks/XJ-20261019-001.md (本卡自身) + ?? verdicts/EVO-20261019-001.verdict.json (并行 EVO 治理工作流旁路, 作者未 add/commit/碰, 与卡面「已知环境事项 1」一致)",
+  "conditions": [
+    "C1 (P2, 签回后顺手, 非阻断)：决策 #1 的 BOM 归因措辞需修——代码 docstring(L54-56, L143-146) 与卡 design_rationale 写「BOM 让 utf-8 读直接 fail-closed / a strict utf-8 decode would reject」。本评审员实测证伪该措辞：Python 严格 utf-8 解码 BOM 字节实际成功（BOM 变 \\ufeff 字符，无 UnicodeDecodeError），真正 fail 发生在下游 json.loads（报 'Unexpected UTF-8 BOM (decode using utf-8-sig)'）。utf-8-sig 修复本身完全正确且 e2e 验证有效（见 evidence），但注释/卡面归因应改为「BOM 使 json.loads 失败，utf-8-sig 解码剥离 BOM 后 json 可解析」，避免误导期 2 读者。改 docstring/README 一行措辞即可，不涉及逻辑。",
+    "C2 (P3, 合并前可选)：link 缺失的错误提示「run deepfreeze protect --card <id> first」在「link 已被轮转/清理掉」这一边界情形下略误导（用户可能已跑过 protect 只是 link 没了）。当前阶段 link 轮转非实现路径、该情形罕见，不阻断；建议期 2 或本卡签回时补一句「若 link 缺失但源目录已有快照，可能是 link 被清理，重跑 protect --card 即可重建」。",
+    "C3 (P2, 路由, 非阻断)：verdict_sha256 的「记录不校验」装饰品风险经评估可接受，但须路由：(a) 真实消费该字段的机器校验只能在 gate.py 落地，而 gate.py 是受保护资产 #5，期 2 另开卡时须标 protected_assets_targeted + sir 批准；(b) 在 README 三处「honest scope」声明基础上，期 2 卡的前置说明须显式「本字段今日无任何机器消费者，不得作为证据引用」，防止腐化。本期不提前把校验写进 lint（lint 校验 verdict_sha256 与「只写不读」的期 1 边界矛盾，且无消费者的字段校验 = 死代码，同 006/14-001 反死代码裁定）。"
+  ],
+  "evidence": [
+    "独立实跑 unittest：python -m unittest discover -s tests → 'Ran 265 tests in 41.175s OK'，exit 0。基线 252 + 本卡 13（test_link_card.py 4 forward + 7 reverse + 2 edge）= 265，与卡面一致。",
+    "独立实跑 lint：python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json → 'LINT: PASS (4 warnings)'，exit 0。4 条 WARN 实际构成 = 2×UNMAPPED_CLAIM_SURFACE（README / README.zh-CN，本轮 verdict 签名后即消解，属预期）+ 1×ORPHAN_VERDICT（EVO-20261019-001，我并行 EVO 双核制评审旁路所落，与卡无关，无害）+ 1×VERDICT_WITHOUT_REVIEW（XJ-20261019-001，本卡 verdict 尚未写，预期）。卡面自述「4 条均为 UNMAPPED_CLAIM_SURFACE」不完全准确（实为 2），但 4 条全 WARN 无 ERROR、exit 0，不阻断；此差异 P3 记录。",
+    "独立实跑 gate 基线对照：python tools/gate.py --verdict-dir verdicts → 'GATE: FAIL (10 violations across 34 checked)'，exit 1。与卡面自述「与 master 基线完全一致、历史 FAIL/CONDITIONAL verdict 所致、非本次引入」吻合（34 checked 含我新增的 EVO verdict，非本卡代码导致）。",
+    "受保护文件零改动独立核验：git diff --exit-code a1b8724..HEAD -- tools/gate.py tools/lint_cards.py → exit 0（两文件零 diff）。零代码耦合核实：link_card.py 不 import deepfreeze 任何代码、不 import gate.py/lint_cards.py，仅 stdlib（argparse/hashlib/json/os/sys/tempfile/datetime/pathlib），符合「独立可拷贝」承诺。",
+    "BOM 修复 e2e 独立实测（本评审员构造，非复信作者 dogfood）：复刻 deepfreeze PS5.1 Set-Content -Encoding UTF8 写出带 BOM 的 link（前 3 字节 239,187,191 = EF BB BF 确认），跑 python tools/link_card.py --card EVO-20261019-001 --verdict verdicts/EVO-20261019-001.verdict.json → exit 0，产物 9 字段（snap 组 5 + verdict 组 4）完整、snap_ts 保留、verdict_ts=2026-10-19T16:30:00+08:00、verifier=agnes-code、产物前 3 字节 123,10,32（无 BOM）、verdict_sha256 与独立 Get-FileHash SHA256 一致（ee30986c…）。BOM 读链路修复坐实。",
+    "对抗 Q1（mtime 同粒度漏判）：实测两次快速写 NTFS 文件 mtime_ticks 会变化（本环境粒度下 639280014956440257→639280014956485697），且守卫是 st_mtime_ns OR st_size 双判——即便两 stat 落在同一 mtime 粒度内，size 不同即拒。漏判后果 = last-write-wins 静默丢一个字段组；但该窗口极窄（两次 stat 之间须完成一次完整写且 size 恰好不变），concurrent 测试用例故意用 size 变化兜底。判定：检测在当前 Windows/NTFS 下有效，残余风险已注释记录，接受。",
+    "对抗 Q2（写出是否应保留 BOM）：本期选「读 utf-8-sig 容忍 BOM / 写无 BOM」是正确 canonical 选择——本仓 verdicts/ 目录所有 JSON 均无 BOM，link_card 写无 BOM 与其自身产物风格 + 期 2 门禁对齐。deepfreeze 侧 PS5.1 带 BOM 是 PowerShell 历史行为，由 XJ 侧 utf-8-sig 读容忍，两仓不必统一写入编码。判定：选择合理，对期 2 无隐含影响。",
+    "对抗 Q3（verdict_sha256 装饰品风险）：作者「三句钉死」（锁原始字节不锁语义 / 重序列化哈希即变 / 期 2 前无机器消费）已在本评审员实读的 link_card.py docstring + README + README.zh-CN 三处一致落地，措辞诚实。风险评估：若期 2 永不到来，字段确实会腐化——但这是期 2 排期问题而非本卡缺陷。是否让 lint 现在就校验 = 引入无消费者的字段校验（死代码）+ 校验须消费 gate 语义（受保护资产），本卡不该做。判定：接受本期「记录不校验」，路由见 C3。",
+    "对抗 Q4（concurrent 测试是否真覆盖纯调度竞争）：test_reverse_concurrent_link_write_between_read_and_write_is_refused 模拟「读后写前文件被改」——用 size 变化构造，断言 'modified concurrently' 拒绝 + 并发写方字段不被覆盖。它覆盖 check-then-act 守卫核心路径，但不能精确复现「两进程同时读、几乎同时写、后写的把先写的字段组冲掉」的纯时间竞争。判定：现有断言覆盖守卫逻辑本身（size/mtime 变化 → 拒绝 + 保留对方字段），纯调度竞争窗口极窄且已被守卫兜底，测试充分度对本期「只写不读 + last-write-wins 对称」目标足够；残余调度竞争属 P3 记录，不强求本卡补真实双进程测试（会引入 flaky）。",
+    "对抗 Q5（link 缺失报错是否误导）：见 C2。当前信息对「未跑 protect」主因正确且可操作；对「link 被轮转/清理」边界略误导，但该边界期 1 非实现路径。",
+    "artifacts.json 合规独立核：XJ-20261019-001 登记 4 文件（tools/link_card.py, tests/test_link_card.py, README.md, README.zh-CN.md），未列入本卡 .tasks 自身（符合 artifacts.json:2 _comment 的「卡自身不入 map」纪律）。",
+    "README 双语言计数一致性独立核：python tools/sync_test_count.py --check → 双 OK at 265，exit 0；README.md / README.zh-CN.md 的 test-count 均 = 265，与实测 Ran 265 一致，无谎报。"
+  ],
+  "independent_findings": [
+    "P2-1：BOM 归因措证伪（strict utf-8 解码 BOM 实际成功，fail 在 json.loads）——见 C1，修 docstring/README 一行。",
+    "P2-2：lint 4 WARN 实为 2 UNMAPPED_CLAIM_SURFACE + 1 ORPHAN_VERDICT + 1 VERDICT_WITHOUT_REVIEW，卡面自述「均为 UNMAPPED_CLAIM_SURFACE」不完全准确——无 ERROR，不阻断，P3 记录。",
+    "P3：concurrent 测试覆盖守卫逻辑，未精确复现纯调度竞争窗口（极窄 + 已兜底），不强求补双进程测试。",
+    "P3：link 缺失报错在「link 被清理」边界的措辞优化，见 C2。"
+  ],
+  "open_followups": [
+    "C1 BOM 措辞修正（owner = XJ 作者，签回时顺手，改 docstring/README 一行，不动逻辑）。",
+    "C3 verdict_sha256 期 2 消费：真实校验只能在 gate.py（受保护资产 #5）落地，期 2 卡须标 protected_assets_targeted + sir 批准；本期 lint 不提前加校验（反死代码）。",
+    "P2-2 lint WARN 构成勘误（owner = XJ 作者，下次 lint 自述时更正为 2+1+1）。"
+  ],
+  "loop_closure": "本卡（covenant 侧）与 DFB-20261019-001（deepfreeze 侧）共同闭环融合期 1「卡↔快照↔verdict 绑定链」：deepfreeze protect -Card 写 snap 字段组，本卡 link_card.py 回写 verdict 字段组，两仓零代码耦合、各写各的字段组、同一 link 文件。期 2（门禁读 link 校验）/ 期 3（派卡自动 protect）/ 期 4（FAIL 自动回滚）均未实现，本卡未越界提前。",
+  "review_ref": "D:\\15812\\Documents\\2026-10-19\\20261019_1\\work\\REVIEW-XJ-20261019-001.md (canonical, staged in reviewer workspace; 正本落 D:\\15812\\projects\\agent-covenant\\.tasks\\REVIEW-XJ-20261019-001.md + verdicts/XJ-20261019-001.verdict.json，按本派发单指定落点)"
+}

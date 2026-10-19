@@ -143,9 +143,10 @@ class LinkCardTest(unittest.TestCase):
 
     def test_forward_link_with_bom_is_read_and_rewritten_without_bom(self):
         # deepfreeze writes the link with PowerShell `Set-Content -Encoding UTF8`,
-        # which prepends a UTF-8 BOM (EF BB BF). A strict utf-8 read fails closed
-        # on the only links the real producer ever writes; utf-8-sig must accept
-        # the BOM, and the rewrite must stay BOM-free for every json.loads reader.
+        # which prepends a UTF-8 BOM (EF BB BF). A strict utf-8 decode accepts the
+        # bytes but keeps U+FEFF, and json.loads then rejects the text; utf-8-sig
+        # strips the BOM before parsing, and the rewrite stays BOM-free for every
+        # json.loads reader.
         snap = self._snap_link()
         payload = b"\xef\xbb\xbf" + json.dumps(snap, ensure_ascii=False).encode("utf-8")
         self.link_path.write_bytes(payload)

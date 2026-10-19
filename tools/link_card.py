@@ -49,11 +49,13 @@ Behaviour
        "run deepfreeze protect --card <id> first" hint.
     3. Parse the verdict: it must be JSON, `id` must equal `--card` (a verdict
        for another card must never be bound here), and `ts` must be present.
-    4. Read the existing link. If it does not parse, exit 1 and leave it
-       untouched - overwriting it would destroy the snapshot binding. The link is
-       read as `utf-8-sig`: deepfreeze (PowerShell `Set-Content -Encoding UTF8`)
-       writes a BOM, so a leading BOM is stripped rather than treated as a decode
-       error. Writes stay plain `utf-8` (no BOM).
+     4. Read the existing link. If it does not parse, exit 1 and leave it
+        untouched - overwriting it would destroy the snapshot binding. The link is
+        read as `utf-8-sig`: deepfreeze (PowerShell `Set-Content -Encoding UTF8`)
+        writes a leading BOM; a strict utf-8 decode accepts the BOM bytes (as a
+        U+FEFF character) but then `json.loads` rejects the text, so the BOM is
+        stripped at decode time and plain UTF-8 still reads unchanged. Writes stay
+        plain `utf-8` (no BOM).
     5. Hash the verdict file's *raw bytes* (streamed SHA-256). See the
        `verdict_sha256` note above for what this does and does not guarantee.
     6. Merge: keep every existing field (the snap group in particular, plus any
@@ -143,7 +145,8 @@ def load_json_file(path):
         # utf-8-sig strips a leading BOM if present and decodes plain UTF-8
         # otherwise. deepfreeze writes its link with PowerShell
         # `Set-Content -Encoding UTF8`, which prepends a BOM; a strict utf-8
-        # decode would reject every real link it produces.
+        # decode keeps the BOM as a leading U+FEFF and json.loads then rejects
+        # it ("Unexpected UTF-8 BOM"), so the strip must happen before parsing.
         text = raw.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
         return None, f"{path} is not valid UTF-8: {exc}"
