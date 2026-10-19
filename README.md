@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->252<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->262<!-- /test-count --> tests
 ```
 
 ## Install
@@ -205,6 +205,35 @@ python tools/gate.py --verdict-dir verdicts \
 | `0` | every required id satisfied the policy |
 | `1` | **gate violation** 鈥?reasons printed, or `--json` for machines |
 | `2` | usage/input error (bad dir, unreadable verdict). **Not a pass.** |
+
+## Link cards to snapshots
+
+*Optional.* This is the integration point for the
+[deepfreeze](https://github.com/91-5/deepfreeze) project — this repository runs
+fine without it. If you already snapshot a work tree before touching it, you can
+bind the two records together: a snapshot *and* the verdict that judged it, in
+one file.
+
+The pair splits the writing by field group, so neither side imports the other:
+
+| Field group | Fields | Written by |
+|---|---|---|
+| **snap** | `card`, `snap_ts`, `snap_path`, `snapshot_root`, `source`, `created_at` | `deepfreeze protect --card <id>` |
+| **verdict** | `verdict_ts`, `verdict_sha256`, `verifier`, `updated_at` | `python tools/link_card.py` |
+
+The link lives at `.freeze/link-<card>.json`. Run `deepfreeze protect --card
+<id>` first — it creates the file and the snap group — then write the verdict
+group once a verdict exists:
+
+```bash
+python tools/link_card.py --card DFB-20261019-001 --verdict verdicts/DFB-20261019-001.verdict.json
+python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-001.verdict.json --freeze-dir /path/to/.freeze
+```
+
+**Honest scope: this tool writes, it does not validate.** Nothing reads the link
+back today. A gate that confirms "this verdict actually covers that snapshot" is
+a later phase (see the roadmap); until it ships, the link is a record, not a
+check — do not cite it as evidence that a round was tied to a snapshot.
 
 ## What the gate enforces
 

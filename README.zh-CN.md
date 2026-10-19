@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->252<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->262<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -166,6 +166,26 @@ python tools/gate.py --verdict-dir verdicts \
 | `0` | 鎵€鏈夊繀闇€ id 鍧囨弧瓒崇瓥鐣?|
 | `1` | **闂ㄧ杩濊**鈥斺€旀墦鍗板師鍥狅紝鎴?`--json` 缁欐満鍣ㄨ |
 | `2` | 鐢ㄦ硶/杈撳叆閿欒锛堢洰褰曚笉瀛樺湪銆乿erdict 璇讳笉浜嗭級銆?*涓嶇畻閫氳繃** |
+
+## 把卡片绑定到快照（融合期 1）
+
+*可选。* 这是与 [deepfreeze](https://github.com/91-5/deepfreeze) 项目的对接入口——本仓库不依赖 deepfreeze 也能独立运行。如果你在动工作树之前已经做了快照，就可以把两条记录绑到一起：**快照**和**评判它的 verdict**，写进同一个文件。
+
+两边各写各的字段组，零代码耦合：
+
+| 字段组 | 字段 | 写入方 |
+|---|---|---|
+| **snap** | `card`、`snap_ts`、`snap_path`、`snapshot_root`、`source`、`created_at` | `deepfreeze protect --card <卡号>` |
+| **verdict** | `verdict_ts`、`verdict_sha256`、`verifier`、`updated_at` | `python tools/link_card.py` |
+
+link 文件位于 `.freeze/link-<卡号>.json`。先跑 `deepfreeze protect --card <卡号>`（它创建文件与 snap 字段组），verdict 产出后再回写 verdict 字段组：
+
+```bash
+python tools/link_card.py --card DFB-20261019-001 --verdict verdicts/DFB-20261019-001.verdict.json
+python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-001.verdict.json --freeze-dir /path/to/.freeze
+```
+
+**诚实声明：本工具只写不校验。** 当前没有任何东西会读回 link。真正做「这条 verdict 确实覆盖了那次快照」的追溯校验，是后续期（见 roadmap）；在它落地之前，link 只是一份记录，不是一道检查——不要把它当作「本轮已绑定快照」的证据来引用。
 
 ## 闂ㄧ鍒板簳鏌ヤ粈涔?
 

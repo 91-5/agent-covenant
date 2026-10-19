@@ -190,5 +190,6 @@
     "README.zh-CN.md",
     "PROTOCOL.md"
   ],
-  "XJ-20261016-001": ["README.md", "README.zh-CN.md", "artifacts.json"]
+  "XJ-20261016-001": ["README.md", "README.zh-CN.md", "artifacts.json"],
+  "XJ-20261019-001": ["tools/link_card.py", "tests/test_link_card.py", "README.md", "README.zh-CN.md"]
 }
