@@ -1,0 +1,38 @@
+{
+  "id": "EVO-20261020-001",
+  "artifact": "tools/gate.py（check_links + _sha256_file + _parse_snap_ts + --link-dir/--require-link/--no-link-check 三参数 + docstring traceability 段）+ tests/test_gate.py（TestLinkTraceability 13 例，71 OK）+ README.md / README.zh-CN.md（「工具写、门禁读」改写 + resig 纪律段 + Traceability 条目 + 计数 278）；分支 feature/evo-20261020-001-gate-link-check @ eece14f，基线 87ffd19，4 文件 diff；.freeze demo link 已删",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-20T20:05:00+08:00",
+  "commit": "feature/evo-20261020-001-gate-link-check @ eece14f（git diff --stat 87ffd19..HEAD = 4 files, +353/-12，与卡面 owned files 一致）",
+  "conditions": [],
+  "evidence": [
+    "独立实跑 unittest tests.test_gate → 'Ran 71 tests in 1.794s OK'，exit 0，与卡面一致（旧 58 + LINK 13）。",
+    "独立实跑 unittest discover -s tests → 'Ran 278 tests in 33.219s / FAILED (failures=13)'：13 failures 构成 = test_pre_push_hook ×12 + test_lint_cards hook-suite 守卫 ×1（bash 路径漂移）。独立建 master worktree @ 87ffd19 复测 → 'Ran 265 tests / FAILED (failures=13)'，same 13 —— 重启环境漂移、master 同症坐实，期 2 零新增失败。worktree 用后即删。",
+    "独立实跑 gate 基线对照：不带 map → 'GATE: FAIL (10 violations across 35 checked)'；带 map --json → violations 124 / advisories 21 / LINK codes 0。与卡面自述完全一致。",
+    "独立实跑 sync_test_count.py --check → README.md / README.zh-CN.md 双 278 in sync，exit 0。",
+    "独立实跑 lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json → LINT: PASS (4 warnings)：CLOSED_NOT_ARCHIVED XJ-20261019-001 + ORPHAN_VERDICT EVO-20261019-001 + 2×UNMAPPED_CLAIM_SURFACE（README 双语言，本卡 verdict 落地即消解）；--dir D:\\15812\\projects --evo-dir ..._handoffs\\evo → LINT: PASS (1 warning)：EVO_PROTECTED_ASSET_TOUCHED = WARN（三件齐合法升级通道），无 ERROR。与卡面一致。",
+    "独立 fixture 注入（自包含 gatefixture 目录，deepfreeze 式 BOM link）：坏 JSON → LINK_UNREADABLE blocking；card 字段 ≠ id → LINK_CARD_MISMATCH blocking；verdict 重序列化 → LINK_VERDICT_SHA_MISMATCH blocking（detail 含 link_card.py 重跑提示）；verdict_ts<snap_ts → LINK_TS_INVERTED blocking；manifest 缺失 → LINK_MANIFEST_MISSING blocking；--require-link 无 link → LINK_REQUIRED_MISSING blocking；--no-link-check + 坏 link → 全跳过 PASS；完整 link（BOM + manifest + sha + ts）→ GATE: PASS。全族 5 码 blocking 语义独立坐实。",
+    "RQ1 时区独立实测：snap '20261020-175900'（+08 本地 = 09:59Z）vs verdict '10:00Z' → PASS（比较正确）；vs '09:00Z' → LINK_TS_INVERTED（正确拦截）；等时边界 '09:59Z' = snap instant → PASS（≥ 语义）；naive verdict ts 按 UTC 解释（parse_ts 既有契约）。同机假设下无错误入口；跨机/DST 偏移为可预测已知假设（P3），FUTURE_VERDICT 兜底。",
+    "RQ2 盲区独立确认：snap-only link + resig'd verdict → SILENT PASS（exit 0，无 LINK_* 码）。裁定本期不处理，lint WARN 承接（P2 follow-up）。",
+    "RQ4 独立核验 .freeze 实况：link-EVO-20261020-001.json（snap 组 6 字段，verdict 组未回写 = 中间态，符合决策 #6 保护）+ manifests/ 5 个 manifest（含 20261020-192122）+ demo link 已删。单参数 --link-dir 推导 = 单一 source of truth，不回退 link[source] 的设计正确。",
+    "exemption_boundary 独立核：diff 4 文件全在 owned files；evaluate() 签名零改动；无 2c artifacts 哈希；无 35 卡 NOTICE 泛化；verdict 模板/状态机/评审员资格/sir 终裁权四项零触碰。"
+  ],
+  "independent_findings": [
+    "P2-1（RQ3）：--require-link 点名 id 若不在 checked set（--require 子集模式）被静默忽略；建议 main() 循环后 stderr NOTICE（不扩 0/1/2 语义、不误伤 glob 模式合法调用）。",
+    "P2-2（RQ2）：snap-only link + resig'd verdict 盲区；建议 lint_cards.py 加 WARN 规则（verdict 文件存在 + link 存在但无 verdict_sha256），不走 gate NOTICE 通道。",
+    "P3-1（RQ1）：_parse_snap_ts 本地时区 naive 假设（跨机/DST 偏移可预测，FUTURE_VERDICT 兜底），deepfreeze 侧 snap_ts 带偏移属期 2.5+。",
+    "P3-2（RQ5）：LINK_UNREADABLE 码名对 verdict 文件 I/O 失败略误导，detail 已消歧，未来扩码族再议专码。",
+    "P3-3（RQ6）：resig × link sha 两仓协作顺序 = 先 deepfreeze 重签 → 同提交内 covenant 回写 link_card.py → gate 验证，提醒靠人；期 3 延伸 deepfreeze post-step 提示。",
+    "ENV-1：13 unittest failures = 2026-10-20 16:38 重启后 bash/路径环境漂移，master @ 87ffd19 worktree 独立同症（Ran 265 same 13），不在 owned files，另开卡（与 deepfreeze verify T2/T4 flaky 同族）。"
+  ],
+  "open_followups": [
+    "P2-1 / P2-2：期 2.5 或后续卡承接（--require-link NOTICE + lint 侧 snap-only 规则）。",
+    "ENV-1：13 bash 路径漂移 failures 另开卡系统性排查。",
+    "本卡 verdict 落地后：.freeze/link-EVO-20261020-001.json 经 link_card.py 回写 verdict 组，gate --require EVO-20261020-001 --require-link EVO-20261020-001 校验 PASS；gate 带 map delta（+10 STALE / -8 SUPERSEDED）随 README mtime 被本 verdict 覆盖而消解，与期 1 同流程。"
+  ],
+  "loop_closure": "期 1（XJ-20261019-001 + DFB-20261019-001，已合并 PASS）交付『两工具写 link』；期 2（本卡）交付『门禁读 link』——verdict_sha256 从『记录无人消费』落地为 gate.py 机器消费者（C3 路由闭环），check_links 五码全 blocking + 缺失静默 + --require-link 点名 + --no-link-check 关族的失败分级如卡面设计。exemption_boundary 零越界。期 3（派卡自动 protect）/ 期 4（FAIL 自动回滚）未触碰。",
+  "review_ref": "D:\\15812\\mo brain\\review\\evo\\EVO-20261020-001.review.md（EVO 例外区正本；评审人独立 fixture 与 master worktree 基线证据存 D:\\15812\\Documents\\2026-10-20\\20261020_2\\work\\.agnes\\work\\）"
+}
