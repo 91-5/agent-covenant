@@ -40,7 +40,10 @@ Policy (normative in PROTOCOL.md §6)
     exists. Every failure is blocking (`LINK_*`). A card with no link is skipped
     silently unless `--require-link <id>` names it, in which case the missing
     link blocks (`LINK_REQUIRED_MISSING`); `--no-link-check` turns the whole
-    family off.
+    family off. A `--require-link` id that is not in the checked set at all
+    (absent from `--require` and without a verdict file) can never be examined,
+    so the gate prints a non-blocking NOTICE on stderr instead of dropping the
+    promise silently.
 """
 from __future__ import annotations
 
@@ -606,6 +609,23 @@ def main(argv=None):
         for vid in unchecked:
             print(f"[NOTICE] {vid}: freshness NOT checked - no entry in the artifact map "
                   "(pass --artifact-map to enable the staleness rule)")
+
+    # --require-link is a hard promise, but check_links() only runs for ids in
+    # the checked set: --require's ids, or the verdicts-dir glob when --require
+    # is absent. An id named here that is not in that set is never examined, so
+    # the promise is silently dropped - the caller asked for an enforcement that
+    # can never fire. Report it (unless the whole link family is off via
+    # --no-link-check, where the caller already knows no link check runs).
+    # A NOTICE, not a violation: the missing link is a setup gap, exit stays 0/1
+    # as before. Sent to stderr so it never contaminates --json's stdout, and
+    # silent under --quiet like the freshness NOTICE above.
+    if args.require_link and not args.no_link_check and not args.quiet:
+        checked = set(ids)
+        for rlid in dict.fromkeys(args.require_link):
+            if rlid not in checked:
+                print(f"[NOTICE] {rlid}: --require-link names {rlid} but it was not "
+                      "checked (not in --require and no verdict file); the "
+                      "required-link check did not run for it", file=sys.stderr)
 
     ok = not blocking
     if args.as_json:

@@ -853,6 +853,49 @@ class TestLinkTraceability(GateTestCase):
         self.assertIn("MISSING_VERDICT", out)
         self.assertNotIn("LINK_REQUIRED_MISSING", out)
 
+    # -- --require-link names an id that is never checked -----------------
+    def test_require_link_outside_require_notices(self):
+        """Pointing --require-link at an id the run never checks must not be silent."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, err = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                       "--require-link", "AC-20260929-999"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertIn("--require-link names AC-20260929-999", err)
+        self.assertNotIn("AC-20260929-999", out)
+
+    def test_require_link_inside_require_has_no_notice(self):
+        """When the id is in --require the check actually runs, so no NOTICE fires."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, err = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                       "--require-link", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("LINK_REQUIRED_MISSING", out)
+        self.assertNotIn("--require-link names", err)
+
+    def test_require_link_absent_from_glob_notices(self):
+        """Under the glob set, a --require-link id with no verdict file is unchecked."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, err = self.run_gate(*self.link_args("--require-link", "AC-20260929-404"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertIn("--require-link names AC-20260929-404", err)
+
+    def test_require_link_notice_is_silent_under_quiet(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, err = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                       "--require-link", "AC-20260929-999",
+                                                       "--quiet"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertEqual("", err)
+
+    def test_require_link_notice_suppressed_when_link_check_disabled(self):
+        """--no-link-check already disables the family; do not nag about it."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, err = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                       "--require-link", "AC-20260929-999",
+                                                       "--no-link-check"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertEqual("", err)
+
     # -- blocking defects -------------------------------------------------
     def assert_link_violation(self, code_name, payload=None, raw=None, vid="AC-20260929-001",
                               bom=True):
