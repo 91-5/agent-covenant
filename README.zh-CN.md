@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->265<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->278<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -185,15 +185,17 @@ python tools/link_card.py --card DFB-20261019-001 --verdict verdicts/DFB-2026101
 python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-001.verdict.json --freeze-dir /path/to/.freeze
 ```
 
-**诚实声明：本工具只写不校验。** 当前没有任何东西会读回 link。真正做「这条 verdict 确实覆盖了那次快照」的追溯校验，是后续期（见 roadmap）；在它落地之前，link 只是一份记录，不是一道检查——不要把它当作「本轮已绑定快照」的证据来引用。
+**边界：本工具写，门禁读。** `link_card.py` 负责写入 verdict 字段组；自期 2 起 `tools/gate.py` 会把整个 link 读回来，不一致就拦（见「门禁到底查什么」）。这项检查仍回答不了「这次评审判得对不对」——它锁的是字节，不是判断。
 
 **`verdict_sha256` 是什么、不是什么。** 三条钉死，防止把这个字段误当成它当前还不提供的保证：
 
 1. 它锁的是 verdict 文件的**原始字节**（对磁盘上原样的文件做流式 SHA-256），不锁语义。
 2. verdict 被重新序列化——缩进变化、键序变化——字节就变，哈希随之变，哪怕语义完全没动。
-3. **期 2 门禁尚未校验此字段；当前没有任何机器消费它。** 在它落地之前，哈希只是一条记录的事实，不是一道检查——是追溯门禁的占位符，不是门禁本身。
+3. **门禁会校验此字段（期 2 已落地）。** 当 `.freeze/link-<卡号>.json` 存在时，`tools/gate.py` 会重新计算 verdict 的哈希，字节变了就报 `LINK_VERDICT_SHA_MISMATCH` 并拦截。没有 link 的卡默认不校验，除非用 `--require-link <卡号>` 点名。它证明的是「link 指的那份 verdict 就是盘上这份」，不是「这份 verdict 判得对」。
 
 **并发：两个写者，一个文件。** `deepfreeze protect --card` 与 `link_card.py` 写**同一个** link，各占各的字段组。本工具的合并是 dict 级：既有全部字段都保留，包括它不认识的任何字段。为避免 last-write-wins 静默丢掉另一方的字段组，工具在写回前会重新 stat link，若自读取以来发生变化，则以退出码 `1` 拒绝并提示「重跑」，而不是覆盖。
+
+**重签 verdict 必须在同一提交内刷新 link。** 改 verdict 的 `ts` 会改写文件字节，已写入的 `verdict_sha256` 随即失配，门禁会拦。重签后先跑 `python tools/link_card.py --card <卡号> --verdict <路径>` 再提交——link 过期的签回不可追溯，门禁会如实说出来。
 
 ## 闂ㄧ鍒板簳鏌ヤ粈涔?
 
@@ -204,6 +206,8 @@ python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-
 - **鏂伴矞搴?*锛歷erdict 鐨?`ts` 涓嶅緱鏃╀簬瀹冩墍璇勫垽鐨勪骇鐗┿€傛棭浜庝唬鐮佺殑 verdict 鏄?*杩囨湡**锛岃繃鏈熷嵆鎷︺€傦紙杩欐潯鏄洟闃熸渶鍏堢渷鐨勶紝涔熸渶瑕佺揣锛?
   - **涓€涓緥澶栥€?* 濡傛灉鏄犲皠閲?*鏇存櫄**鐨?id 涔熷垪浜嗗悓涓€涓枃浠躲€?*骞朵笖鑷繁灏辨槸璇ユ枃浠剁殑鍚堟硶鏉冨▉**鈥斺€斿畠鑷繁鏈塿erdict銆佹牸寮忓悎娉曘€佺嫭绔嬨€佸甫璇佹嵁銆佹湭杩囨湡鏈潵鏃堕棿銆佷笖瀵硅鏂囦欢鏄柊椴滅殑鈥斺€旈偅涔堣緝鏃╃殑閭ｄ唤璁颁负 `SUPERSEDED`锟斤拷杈冩櫄鐨勮疆娆℃墠鏄綋鍓嶆潈濞併€傛病鏈夎繖鏉¤鍒欙紝鍏ㄩ摼闂ㄧ姘歌繙鍥炰笉鍒扮豢鑹诧細浠讳綍瀵?README 鐨勪慨澶嶉兘浼氭椿寰楁瘮璇昏繃瀹冪殑閭ｄ唤 verdict 鏇翠箙銆?
     鍚庣户鑰呰嚜韬繃鏈熴€佹垨娌℃湁verdict锛岄兘浠€涔堜篃retire 涓嶄簡锛屾墍浠ュ湪瀹＄殑杞鏃犳硶娲楃櫧瀹冨墠涓€杞€傚悗缁ц€呭垽`FAIL` 浠嶆槸鍚堟硶鏉冨▉鈥斺€斿畠浼歳etire杈冩棭閭ｄ唤锛屽悓鏃跺洜鑷繁鐨剉erdict 鑰屾嫤銆俙SUPERSEDED` 涓€瀹氫細琚墦鍗板嚭鏉ワ紝缁濅笉闈欓粯涓㈠純銆?
+- **可追溯性（期 2，`.freeze`）**：当 `.freeze/link-<卡号>.json` 存在时，门禁会读回并校验——能否解析（`LINK_UNREADABLE`）、`card` 是否等于本卡（`LINK_CARD_MISMATCH`）、`snap_ts` 对应的 manifest 是否存在（`LINK_MANIFEST_MISSING`，`manifests/<snap_ts>.json`）、`verdict_sha256` 是否等于 verdict 文件原始字节的哈希（`LINK_VERDICT_SHA_MISMATCH`）、`verdict_ts` 是否不早于 `snap_ts`（`LINK_TS_INVERTED`）。**五个 `LINK_*` 码全部 blocking**：link 一旦存在，这张卡就等于承诺了可追溯。
+  - 没有 link 的卡静默跳过（历史卡大多早于该约定）；`--require-link <卡号>`（可重复）把点名的卡从静默改为 `LINK_REQUIRED_MISSING`，`--link-dir DIR` 改查找目录（默认 `.freeze`），`--no-link-check` 关闭整族校验。
 
 ## 閲囩撼绛夌骇鈥斺€旇璇氬疄澹版槑
 

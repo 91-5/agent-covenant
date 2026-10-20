@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->265<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->278<!-- /test-count --> tests
 ```
 
 ## Install
@@ -230,21 +230,30 @@ python tools/link_card.py --card DFB-20261019-001 --verdict verdicts/DFB-2026101
 python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-001.verdict.json --freeze-dir /path/to/.freeze
 ```
 
-**Honest scope: this tool writes, it does not validate.** Nothing reads the link
-back today. A gate that confirms "this verdict actually covers that snapshot" is
-a later phase (see the roadmap); until it ships, the link is a record, not a
-check — do not cite it as evidence that a round was tied to a snapshot.
+**Scope: this tool writes, the gate reads.** `link_card.py` owns the verdict
+group; since phase 2 `tools/gate.py` reads the whole link back and blocks when it
+is inconsistent (see *What the gate enforces*). What the check still cannot tell
+you is whether the review was *right* — it binds bytes, not judgement.
 
 **`verdict_sha256` — what it is, and what it is not.** Three things, so the field
-cannot be mistaken for a guarantee it does not yet give:
+cannot be mistaken for a guarantee it does not give:
 
 1. It locks the verdict file's **raw bytes** (a streamed SHA-256 of the file
    exactly as it sits on disk), not the verdict's meaning.
 2. Re-serialising the verdict — a change of indentation or key order — changes
    those bytes and therefore the hash, even when the meaning is identical.
-3. **The phase-2 gate does not verify this field yet; no machine consumes it
-   today.** Until that ships, the hash is a recorded fact, not a check — a
-   placeholder for the traceability gate, not the gate itself.
+3. **The gate verifies this field (phase 2).** When `.freeze/link-<card>.json`
+   exists, `tools/gate.py` re-hashes the verdict and blocks with
+   `LINK_VERDICT_SHA_MISMATCH` if the bytes have moved. Cards without a link are
+   not checked unless `--require-link <id>` names them. The proof is about bytes,
+   not judgement: it shows the verdict the link names is the verdict on disk,
+   not that the verdict was correct.
+
+**Re-signing a verdict must refresh its link, in the same commit.** Changing a
+verdict's `ts` rewrites its bytes, so an already-written `verdict_sha256` stops
+matching and the gate blocks. After re-signing, run
+`python tools/link_card.py --card <id> --verdict <path>` before committing; a
+signed verdict whose link is stale is not traceable, and the gate says so.
 
 **Concurrency: two writers, one file.** `deepfreeze protect --card` and
 `link_card.py` write the *same* link, each owning its own field group. The merge
@@ -271,6 +280,18 @@ since it was read, exits `1` with a "re-run" message rather than overwriting.
     an in-flight round cannot whitewash the one before it. A successor that returned `FAIL`
     is still an authority 鈥?it retires the older claim *and* blocks on its own verdict.
     `SUPERSEDED` is always printed, never dropped.
+- **Traceability (phase 2, `.freeze`):** when `.freeze/link-<id>.json` exists the gate
+  reads it back and requires that it parses (`LINK_UNREADABLE`), names this card
+  (`LINK_CARD_MISMATCH`), points at a snapshot manifest that is present
+  (`LINK_MANIFEST_MISSING`, `manifests/<snap_ts>.json`), carries a `verdict_sha256`
+  matching the verdict file's raw bytes (`LINK_VERDICT_SHA_MISMATCH`), and has a
+  `verdict_ts` no earlier than `snap_ts` (`LINK_TS_INVERTED`). Every `LINK_*` code
+  blocks: once a link exists, the card has promised traceability.
+  - A card with **no link** is skipped silently, because most historical cards predate
+    the convention. `--require-link <id>` (repeatable) turns that silence into
+    `LINK_REQUIRED_MISSING` for the ids you name; `--link-dir DIR` relocates the
+    lookup (default `.freeze`); `--no-link-check` disables the family for runs that
+    judge verdicts only.
 
 ## Conformance 鈥?claim honestly
 

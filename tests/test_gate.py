@@ -730,5 +730,192 @@ class UnblocksBoundaryTestCase(GateTestCase):
         self.assertNotIn("SUPERSEDED", out)
 
 
+class TestLinkTraceability(GateTestCase):
+    """Phase 2: the gate consumes `.freeze/link-<id>.json`.
+
+    A link is written by two tools (`deepfreeze protect --card` for the snap
+    group, `tools/link_card.py` for the verdict group) and, unlike every other
+    input here, it names the *snapshot* a review was performed against. The gate
+    only honours it when it exists: most historical cards predate the convention,
+    so a missing link is silent unless `--require-link` names the id. Once a link
+    exists the card has promised traceability, so every defect in it blocks.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.ldir = self.tmp / ".freeze"
+        (self.ldir / "manifests").mkdir(parents=True)
+
+    # -- fixtures ---------------------------------------------------------
+    def stamp(self, offset=timedelta(0)):
+        """deepfreeze's compact local-time stamp, offset from 'now'."""
+        return (datetime.now() + offset).strftime("%Y%m%d-%H%M%S")
+
+    def link_payload(self, vid="AC-20260929-001", snap_ts=None, **extra):
+        payload = {
+            "card": vid,
+            "snap_ts": snap_ts or self.stamp(timedelta(hours=-2)),
+            "snap_path": str(self.tmp / "snapshot"),
+            "snapshot_root": str(self.tmp),
+            "source": str(self.tmp),
+            "created_at": "2026-10-20 19:21:35",
+        }
+        payload.update(extra)
+        return payload
+
+    def write_link(self, payload, vid="AC-20260929-001", bom=True, raw=None):
+        text = raw if raw is not None else json.dumps(payload, ensure_ascii=False)
+        data = text.encode("utf-8")
+        if bom:
+            data = b"\xef\xbb\xbf" + data
+        path = self.ldir / f"link-{vid}.json"
+        path.write_bytes(data)
+        return path
+
+    def write_manifest(self, snap_ts):
+        path = self.ldir / "manifests" / f"{snap_ts}.json"
+        path.write_text("{}", encoding="utf-8")
+        return path
+
+    def verdict_sha(self, vid="AC-20260929-001"):
+        import hashlib
+        return hashlib.sha256((self.vdir / f"{vid}.verdict.json").read_bytes()).hexdigest()
+
+    def link_args(self, *extra):
+        return self.base_args("--link-dir", str(self.ldir), *extra)
+
+    # -- happy paths ------------------------------------------------------
+    def test_full_link_passes(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        snap = self.stamp(timedelta(hours=-2))
+        self.write_manifest(snap)
+        self.write_link(self.link_payload(
+            snap_ts=snap,
+            verdict_ts=_verdict()["ts"],
+            verdict_sha256=self.verdict_sha(),
+            verifier="reviewer@acme",
+            updated_at="2026-10-20 19:25:00",
+        ))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("LINK_", out)
+
+    def test_snap_only_link_skips_the_verdict_group(self):
+        """A pre-verdict link carries only the snap group; nothing to compare yet."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        snap = self.stamp(timedelta(hours=-2))
+        self.write_manifest(snap)
+        self.write_link(self.link_payload(snap_ts=snap))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("LINK_", out)
+
+    def test_bom_prefixed_link_is_read_cleanly(self):
+        """deepfreeze writes a UTF-8 BOM; utf-8-sig must strip it, not fail the parse."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        snap = self.stamp(timedelta(hours=-2))
+        self.write_manifest(snap)
+        path = self.write_link(self.link_payload(snap_ts=snap), bom=True)
+        self.assertTrue(path.read_bytes().startswith(b"\xef\xbb\xbf"))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("LINK_UNREADABLE", out)
+
+    # -- absence policy ---------------------------------------------------
+    def test_missing_link_is_silent_without_require_link(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.link_args())
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("LINK_", out)
+
+    def test_missing_link_blocks_when_required(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                     "--require-link", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("LINK_REQUIRED_MISSING", out)
+        self.assertIn("deepfreeze protect --card", out)
+
+    def test_no_link_check_disables_the_whole_family(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        self.write_link(self.link_payload(card="AC-999"), raw='{"card": "AC-999", "snap_ts": "bogus"}')
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001",
+                                                     "--require-link", "AC-20260929-001",
+                                                     "--no-link-check"))
+        self.assertEqual(gate.EXIT_OK, code, out)
+        self.assertNotIn("LINK_", out)
+
+    def test_missing_verdict_skips_link_checks(self):
+        """No verdict means nothing to trace; the existing MISSING_VERDICT is the finding."""
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-404",
+                                                     "--require-link", "AC-20260929-404"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("MISSING_VERDICT", out)
+        self.assertNotIn("LINK_REQUIRED_MISSING", out)
+
+    # -- blocking defects -------------------------------------------------
+    def assert_link_violation(self, code_name, payload=None, raw=None, vid="AC-20260929-001",
+                              bom=True):
+        self.write_verdict(vid, _verdict(id=vid))
+        self.write_link(payload, vid=vid, bom=bom, raw=raw)
+        code, out, _ = self.run_gate(*self.link_args("--require", vid))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn(code_name, out)
+        return out
+
+    def test_corrupt_link_json_blocks(self):
+        self.assert_link_violation("LINK_UNREADABLE", raw="{not json")
+
+    def test_card_mismatch_blocks(self):
+        self.assert_link_violation("LINK_CARD_MISMATCH",
+                                   payload=self.link_payload(card="AC-20260929-999"))
+
+    def test_manifest_missing_blocks(self):
+        snap = self.stamp(timedelta(hours=-2))
+        out = self.assert_link_violation("LINK_MANIFEST_MISSING",
+                                         payload=self.link_payload(snap_ts=snap))
+        self.assertIn(snap, out)
+
+    def test_verdict_sha_mismatch_blocks(self):
+        """Re-signing a verdict changes its bytes and invalidates the link."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        snap = self.stamp(timedelta(hours=-2))
+        self.write_manifest(snap)
+        self.write_link(self.link_payload(snap_ts=snap,
+                                          verdict_ts=_verdict()["ts"],
+                                          verdict_sha256=self.verdict_sha()))
+        # Re-serialise the verdict (same meaning, different bytes).
+        self.write_verdict("AC-20260929-001", _verdict(conditions=["re-serialised"]))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("LINK_VERDICT_SHA_MISMATCH", out)
+        self.assertIn("link_card.py", out)
+
+    def test_verdict_ts_before_snap_ts_blocks(self):
+        """A verdict cannot have judged a snapshot taken after it was signed."""
+        self.write_verdict("AC-20260929-001", _verdict())
+        snap = self.stamp(timedelta(hours=2))
+        self.write_manifest(snap)
+        past = (datetime.now(timezone.utc) - timedelta(hours=3)).replace(microsecond=0)
+        self.write_link(self.link_payload(
+            snap_ts=snap,
+            verdict_ts=past.isoformat().replace("+00:00", "Z"),
+            verdict_sha256=self.verdict_sha(),
+        ))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001"))
+        self.assertEqual(gate.EXIT_VIOLATION, code, out)
+        self.assertIn("LINK_TS_INVERTED", out)
+
+    def test_link_findings_appear_as_blocking_json(self):
+        self.write_verdict("AC-20260929-001", _verdict())
+        self.write_link(self.link_payload(card="AC-20260929-999"))
+        code, out, _ = self.run_gate(*self.link_args("--require", "AC-20260929-001", "--json"))
+        payload = json.loads(out)
+        self.assertEqual(gate.EXIT_VIOLATION, code)
+        self.assertFalse(payload["ok"])
+        self.assertTrue(any(v["code"] == "LINK_CARD_MISMATCH" for v in payload["violations"]))
+        self.assertEqual([], payload["advisories"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

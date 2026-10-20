@@ -33,10 +33,19 @@ Policy (normative in PROTOCOL.md §6)
   * evidence quality (opt-in): with --evidence-must-match, at least one
     evidence entry must match the regex. Off by default, because a pattern
     cannot be part of the contract without rejecting honest short evidence.
+  * traceability (opt-in, phase 2): when `.freeze/link-<id>.json` exists, the
+    gate reads it back and checks that (a) it parses and names this card, (b) its
+    `verdict_sha256` matches the verdict file's raw bytes, (c) `verdict_ts` is
+    not earlier than `snap_ts`, and (d) the snapshot manifest it points at
+    exists. Every failure is blocking (`LINK_*`). A card with no link is skipped
+    silently unless `--require-link <id>` names it, in which case the missing
+    link blocks (`LINK_REQUIRED_MISSING`); `--no-link-check` turns the whole
+    family off.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -360,6 +369,109 @@ def evaluate(vid, data, verdict_dir, args, artifact_map, successor_ts=None):
     return violations
 
 
+def _sha256_file(path):
+    """Streamed SHA-256 of a file's raw bytes (never its parsed meaning)."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _parse_snap_ts(raw):
+    """Parse deepfreeze's compact `snap_ts` (YYYYMMDD-HHMMSS, local time) to UTC.
+
+    deepfreeze writes the snapshot stamp in the machine's local time without an
+    offset, so it is read as local. `datetime.strptime` on 3.9 yields a naive
+    datetime; `astimezone` then applies the platform's local zone.
+    """
+    return datetime.strptime(str(raw), "%Y%m%d-%H%M%S").astimezone(timezone.utc)
+
+
+def check_links(vid, verdict_path, link_dir, require_link):
+    """Return (code, detail) violations for the link that binds a card to a snapshot.
+
+    Kept out of `evaluate()` on purpose: `evaluate` is a pure per-verdict function
+    and its signature is part of this tool's surface. Link checks read other files
+    (the link, its manifest, the verdict bytes again) and are a main-layer concern.
+
+    Failure policy: a missing link is silent (most historical cards predate the
+    convention; nagging about them would bury the real findings) unless the caller
+    demanded that id via `--require-link`. Once a link *exists*, the card has
+    promised traceability, so every inconsistency is blocking — a broken promise
+    must not be quieter than a missing one.
+    """
+    link_path = Path(link_dir) / f"link-{vid}.json"
+    if not link_path.is_file():
+        if vid in (require_link or []):
+            return [(
+                "LINK_REQUIRED_MISSING",
+                f"--require-link names {vid} but {link_path} does not exist; "
+                f"run `deepfreeze protect --card {vid}` before the review to bind "
+                "this card to a snapshot, then `python tools/link_card.py` once a "
+                "verdict exists",
+            )]
+        return []
+
+    try:
+        link = json.loads(link_path.read_bytes().decode("utf-8-sig"))
+    except Exception as exc:  # noqa: BLE001 - any parse failure is a violation
+        return [("LINK_UNREADABLE", f"cannot read {link_path.name}: {exc}")]
+    if not isinstance(link, dict):
+        return [("LINK_UNREADABLE", f"{link_path.name} must contain a JSON object")]
+
+    out = []
+    if link.get("card") != vid:
+        out.append((
+            "LINK_CARD_MISMATCH",
+            f"{link_path.name} binds card {link.get('card')!r}, not {vid!r}",
+        ))
+
+    snap_ts = link.get("snap_ts")
+    if not snap_ts:
+        out.append(("LINK_UNREADABLE", f"{link_path.name} has no snap_ts"))
+    else:
+        manifest = Path(link_dir) / "manifests" / f"{snap_ts}.json"
+        if not manifest.is_file():
+            out.append((
+                "LINK_MANIFEST_MISSING",
+                f"snapshot manifest for snap_ts {snap_ts} is absent at {manifest}; "
+                "the link points at a snapshot this checkout cannot show",
+            ))
+
+    verdict_sha = link.get("verdict_sha256")
+    verdict_ts = link.get("verdict_ts")
+    if verdict_sha:
+        try:
+            actual_sha = _sha256_file(verdict_path)
+        except OSError as exc:
+            out.append(("LINK_UNREADABLE", f"cannot read verdict bytes: {exc}"))
+            actual_sha = None
+        if actual_sha and actual_sha.lower() != str(verdict_sha).strip().lower():
+            out.append((
+                "LINK_VERDICT_SHA_MISMATCH",
+                f"verdict bytes no longer match {link_path.name}'s verdict_sha256 "
+                "(the verdict was re-signed or re-serialised after the link was "
+                f"written); re-run python tools/link_card.py --card {vid} "
+                f"--verdict {verdict_path} to refresh the link",
+            ))
+    if verdict_ts:
+        try:
+            judged_at = parse_ts(verdict_ts)
+            frozen_at = _parse_snap_ts(snap_ts) if snap_ts else None
+        except Exception as exc:  # noqa: BLE001 - unusable link timestamps
+            out.append(("LINK_UNREADABLE", f"{link_path.name} has an unparsable timestamp: {exc}"))
+        else:
+            if frozen_at is not None and judged_at < frozen_at:
+                out.append((
+                    "LINK_TS_INVERTED",
+                    f"verdict_ts {judged_at.isoformat()} predates snap_ts "
+                    f"{frozen_at.isoformat()}: the verdict cannot have judged a "
+                    "snapshot taken after it was signed",
+                ))
+    return out
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="gate.py",
@@ -379,6 +491,14 @@ def build_parser():
                              "this regex (e.g. 'exit [0-9]|passed|failed'). Off by default.")
     parser.add_argument("--max-clock-skew", type=int, default=300, metavar="SECONDS",
                         help="how far a verdict ts may sit in the future (default: 300)")
+    parser.add_argument("--link-dir", default=".freeze", metavar="DIR",
+                        help="directory holding link-<id>.json traces and their manifests "
+                             "(default: .freeze)")
+    parser.add_argument("--require-link", action="append", default=[], metavar="ID",
+                        help="id that must carry a link file; repeatable. Ids without a link "
+                             "are skipped silently unless named here")
+    parser.add_argument("--no-link-check", action="store_true",
+                        help="skip the link (traceability) checks entirely")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit machine-readable JSON")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -467,6 +587,15 @@ def main(argv=None):
                 findings.append({"id": vid, "code": vcode, "detail": vdetail, "advisory": True})
             else:
                 findings.append({"id": vid, "code": vcode, "detail": vdetail})
+        # Traceability is a main-layer check, not part of the per-verdict policy:
+        # it reads the link, its manifest, and the verdict bytes again. A missing
+        # verdict already blocked above (MISSING_VERDICT), and there is nothing to
+        # trace back to when there is no verdict, so that branch skips it.
+        if not args.no_link_check:
+            verdict_path = verdict_dir / f"{vid}{VERDICT_SUFFIX}"
+            for lcode, ldetail in check_links(vid, verdict_path, args.link_dir,
+                                              args.require_link):
+                findings.append({"id": vid, "code": lcode, "detail": ldetail})
 
     blocking = [f for f in findings if not f.get("advisory")]
     advisories = [f for f in findings if f.get("advisory")]
