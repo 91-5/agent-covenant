@@ -25,6 +25,43 @@ HOOK_SRC = REPO_ROOT / "tools" / "pre-push-hook.sh"
 INSTALL_SRC = REPO_ROOT / "tools" / "install-hooks.sh"
 REAL_HOOKS = REPO_ROOT / ".git" / "hooks"
 
+
+def _find_bash() -> str:
+    """Return a POSIX bash that accepts Windows paths -- never a bare "bash".
+
+    A bare ``bash`` resolves through PATH, and on 2026-10-20 a WSL install
+    registered ``%LOCALAPPDATA%\\Microsoft\\WindowsApps\\bash.exe`` (an
+    app-execution alias to the WSL launcher) *ahead* of Git for Windows.
+    WSL bash does no Windows-drive translation, so the hook path arrived as
+    ``D:15812projects...`` (backslashes eaten as escapes) and every call
+    exited 127. Git itself runs hooks with its bundled sh and never consults
+    PATH, so production hooks were never affected -- only these tests.
+
+    Locking the Git for Windows bash restores the environment this suite was
+    written against instead of skipping anything: the assertions stay exactly
+    as strict. Resolution order: git's sibling bin/bash.exe, then the two
+    standard install roots. No silent fallback to the bare name -- if none
+    is found the suite must fail loudly rather than drift back to WSL.
+    """
+    git = shutil.which("git")
+    if git:
+        candidate = Path(git).resolve().parent.parent / "bin" / "bash.exe"
+        if candidate.is_file():
+            return str(candidate)
+    for candidate in (
+        r"C:\Program Files\Git\bin\bash.exe",
+        r"C:\Program Files (x86)\Git\bin\bash.exe",
+    ):
+        if Path(candidate).is_file():
+            return candidate
+    raise RuntimeError(
+        "no Git for Windows bash found; refusing to fall back to a bare "
+        "'bash' (a WSL alias would swallow Windows paths, ENV-1)"
+    )
+
+
+BASH = _find_bash()
+
 CARD_ID = "XJ-20261008-001"
 SHA = "a" * 40
 HOOK_STDIN_BRANCH = f"refs/heads/main {SHA} refs/heads/main {SHA}\n"
@@ -94,7 +131,7 @@ def _popen(cmd, **kw):
 def run_hook(repo: Path, stdin_data: str) -> subprocess.CompletedProcess:
     """Run the pre-push hook with *repo* as the working directory."""
     return _popen(
-        ["bash", str(HOOK_SRC)],
+        [BASH, str(HOOK_SRC)],
         input=stdin_data,
         capture_output=True,
         text=True,
@@ -236,7 +273,7 @@ class InstallHooksTestCase(unittest.TestCase, SeededRepoMixin):
 
     def _install(self) -> subprocess.CompletedProcess:
         return _popen(
-            ["bash", str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(self.repo)
+            [BASH, str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(self.repo)
         )
 
     def test_install_creates_hook(self):
@@ -275,7 +312,7 @@ class InstallHooksTestCase(unittest.TestCase, SeededRepoMixin):
         plain = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, plain, True)
         result = _popen(
-            ["bash", str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(plain)
+            [BASH, str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(plain)
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn("not inside a git work tree", result.stderr)
@@ -295,7 +332,7 @@ class RealHooksUntouchedTestCase(unittest.TestCase):
             repo = Path(tmp)
             _popen(["git", "init", "-b", "main"], capture_output=True, cwd=repo)
             _popen(
-                ["bash", str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(repo)
+                [BASH, str(INSTALL_SRC)], capture_output=True, text=True, cwd=str(repo)
             )
         self.assertEqual(
             before,
