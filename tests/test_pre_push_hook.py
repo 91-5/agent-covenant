@@ -13,6 +13,7 @@ none, so every push was blocked no matter what the fixture claimed.
 """
 import json
 import os
+import hashlib
 import shutil
 import tempfile
 import unittest
@@ -63,6 +64,9 @@ def _find_bash() -> str:
 BASH = _find_bash()
 
 CARD_ID = "XJ-20261008-001"
+# A second round that is *not* the newest one. Step 2 only gates the newest id,
+# so only this card can show the step-3 sweep doing work step 2 would not do.
+OLD_ID = "XJ-20261007-002"
 SHA = "a" * 40
 HOOK_STDIN_BRANCH = f"refs/heads/main {SHA} refs/heads/main {SHA}\n"
 HOOK_STDIN_TAG = f"refs/tags/v1.0 {SHA} refs/tags/v1.0\n"
@@ -82,7 +86,7 @@ shaped like one.
 
 ## Deliverables
 
-- `README.md` — the fixture's claim surface
+- `README.md` �?the fixture's claim surface
 
 ## Owned files
 
@@ -104,6 +108,37 @@ shaped like one.
 
 IN_REVIEW
 """
+
+
+def _card_text(card_id: str) -> str:
+    """A minimal lint-clean card for *card_id* (same shape as CARD_TEXT)."""
+    return (
+        f"# TASK {card_id}: fixture card for the pre-push hook test\n\n"
+        "- **Author:** test@local\n"
+        "- **Created:** 2026-10-07\n"
+        f"- **Gated by:** `verdicts/{card_id}.verdict.json`\n\n"
+        "## Context\n\n"
+        "Seeded by `tests/test_pre_push_hook.py` as an already-landed round, so a\n"
+        "link can drift off the newest one and only the sweep can see it.\n\n"
+        "## Deliverables\n\n"
+        "- `README.md` — the fixture's claim surface\n\n"
+        "## Owned files\n\n"
+        "- `README.md`\n\n"
+        "## Constraints\n\n"
+        "- none; this is test scaffolding\n\n"
+        "## Acceptance\n\n"
+        "- [x] `python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict` exits 0\n\n"
+        "## Review questions\n\n"
+        "- Is the fixture shaped like a round the gate would actually sign?\n\n"
+        "## Status\n\n"
+        "IN_REVIEW\n"
+    )
+
+
+def _snap_ts() -> str:
+    """deepfreeze's compact local stamp (YYYYMMDD-HHMMSS)."""
+    return datetime.now().strftime("%Y%m%d-%H%M%S")
+
 
 
 def _now() -> str:
@@ -128,14 +163,19 @@ def _popen(cmd, **kw):
     return subprocess.run(cmd, **kw)
 
 
-def run_hook(repo: Path, stdin_data: str) -> subprocess.CompletedProcess:
-    """Run the pre-push hook with *repo* as the working directory."""
+def run_hook(repo: Path, stdin_data: str, env: dict | None = None) -> subprocess.CompletedProcess:
+    """Run the pre-push hook with *repo* as the working directory.
+
+    ``env`` is merged over the inherited environment; the link sweep's skip
+    switch (`DEEPFREEZE_SKIP_LINK_CHECK`) is read from it.
+    """
     return _popen(
         [BASH, str(HOOK_SRC)],
         input=stdin_data,
         capture_output=True,
         text=True,
         cwd=str(repo),
+        env={**os.environ, **env} if env else None,
     )
 
 
@@ -197,6 +237,71 @@ class SeededRepoMixin:
         _popen(["git", "add", "-A"], capture_output=True, cwd=repo)
         _popen(["git", "commit", "-m", "seed"], capture_output=True, cwd=repo)
 
+    def _seed_older_round(self, repo: Path) -> Path:
+        """Add an already-landed round that is *not* the newest id.
+
+        artifacts.json keeps insertion order and the hook gates the last
+        non-underscore key, so this entry goes first: CARD_ID must stay the
+        newest round or step 2 would gate the old one and the sweep test would
+        stop testing the sweep.
+        """
+        (repo / ".tasks" / "legacy" / f"{OLD_ID}.md").write_text(
+            _card_text(OLD_ID), encoding="utf-8"
+        )
+        verdict = {
+            "id": OLD_ID,
+            "artifact": "README.md",
+            "verdict": "PASS",
+            "blockers": 0,
+            "conditions": [],
+            "independent": True,
+            "verifier": "reviewer@local",
+            "ts": _now(),
+            "evidence": ["git init -> success"],
+        }
+        verdict_path = repo / "verdicts" / f"{OLD_ID}.verdict.json"
+        verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+        map_path = repo / "artifacts.json"
+        current = json.loads(map_path.read_text(encoding="utf-8"))
+        rebuilt = {OLD_ID: ["README.md"], **{k: v for k, v in current.items() if k != OLD_ID}}
+        map_path.write_text(json.dumps(rebuilt), encoding="utf-8")
+        return verdict_path
+
+    def _seed_link(self, repo: Path, card_id: str = CARD_ID,
+                   verdict_sha: str | None = None) -> Path:
+        """Write `.freeze/link-<id>.json` plus the manifest it points at.
+
+        ``verdict_sha`` overrides the digest, reproducing the drift this step
+        exists to catch: the verdict was re-signed (its bytes changed) and
+        `link_card.py` was not re-run, so the link still carries the old hash.
+
+        The snapshot manifest has to exist even though this test only exercises
+        the sha rule -- `check_links()` also blocks a link pointing at a snapshot
+        the checkout cannot show, and a fixture that tripped that rule would be
+        testing the wrong finding.
+        """
+        freeze = repo / ".freeze"
+        (freeze / "manifests").mkdir(parents=True, exist_ok=True)
+        snap_ts = _snap_ts()
+        (freeze / "manifests" / f"{snap_ts}.json").write_text("{}", encoding="utf-8")
+        verdict_path = repo / "verdicts" / f"{card_id}.verdict.json"
+        digest = hashlib.sha256(verdict_path.read_bytes()).hexdigest()
+        link = {
+            "card": card_id,
+            "snap_ts": snap_ts,
+            "snap_path": f".freeze-snap/snap-{snap_ts}",
+            "snapshot_root": ".freeze-snap",
+            "source": str(repo),
+            "created_at": _now(),
+            "verdict_ts": _now(),
+            "verdict_sha256": digest if verdict_sha is None else verdict_sha,
+            "verifier": "reviewer@local",
+            "updated_at": _now(),
+        }
+        link_path = freeze / f"link-{card_id}.json"
+        link_path.write_text(json.dumps(link), encoding="utf-8")
+        return link_path
+
 
 class PrePushHookTestCase(unittest.TestCase, SeededRepoMixin):
     def setUp(self) -> None:
@@ -211,6 +316,57 @@ class PrePushHookTestCase(unittest.TestCase, SeededRepoMixin):
         result = run_hook(self.repo, HOOK_STDIN_BRANCH)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("[pre-push] OK", result.stdout)
+
+    def test_link_whose_sha_matches_passes(self):
+        """A link that matches its verdict bytes is not a finding."""
+        self._seed_link(self.repo)
+
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("LINKS: PASS", result.stdout)
+        self.assertIn("[pre-push] OK", result.stdout)
+
+    def test_blocked_when_verdict_was_resigned_without_refreshing_link(self):
+        """A stale verdict_sha256 on an older round blocks the push (step 3).
+
+        The link belongs to a round that is not the newest, so step 2 never reads
+        it: if this test passes it is the sweep that caught the drift, not the
+        gate it already runs.
+        """
+        self._seed_older_round(self.repo)
+        self._seed_link(self.repo, card_id=OLD_ID, verdict_sha="0" * 64)
+
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+        output = result.stdout + result.stderr
+
+        self.assertNotEqual(result.returncode, 0, output)
+        self.assertIn("LINK_VERDICT_SHA_MISMATCH", output)
+        self.assertIn("tools/link_card.py --card <id>", output)
+        self.assertIn(f"LINK_VERDICT_SHA_MISMATCH] {OLD_ID}", output)
+
+    def test_no_freeze_directory_is_not_a_finding(self):
+        """A checkout with no .freeze has nothing to sweep and pushes normally."""
+        self.assertFalse((self.repo / ".freeze").exists())
+
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("link sweep skipped", result.stdout)
+        self.assertIn("[pre-push] OK", result.stdout)
+
+    def test_skip_switch_bypasses_only_the_link_sweep(self):
+        """DEEPFREEZE_SKIP_LINK_CHECK=1 lets a known-stale link through."""
+        self._seed_older_round(self.repo)
+        self._seed_link(self.repo, card_id=OLD_ID, verdict_sha="0" * 64)
+
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH,
+                          env={"DEEPFREEZE_SKIP_LINK_CHECK": "1"})
+        output = result.stdout + result.stderr
+
+        self.assertEqual(result.returncode, 0, output)
+        self.assertIn("SKIP link sweep", result.stdout)
+        self.assertNotIn("LINK_VERDICT_SHA_MISMATCH", output)
 
     def test_branch_push_blocked_when_verdict_missing(self):
         """No verdict for the newest round blocks the push."""

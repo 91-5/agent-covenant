@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->287<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->291<!-- /test-count --> tests
 ```
 
 ## Install
@@ -97,6 +97,17 @@ inside the work tree; it installs `tools/pre-push-hook.sh` into your hooks
 directory and is safe to re-run. The hook runs steps 2 and 3 above on the newest
 round, so a local pass and a CI pass mean the same thing. It is prevention, not
 enforcement: `git push --no-verify` skips it, and CI is still the backstop.
+
+The hook also sweeps `.freeze/link-*.json` (step 3). For every link that has
+bound a verdict it re-runs the gate's own `check_links()`: `verdict_sha256`
+against the verdict's raw bytes, `verdict_ts` against `snap_ts`, and the snapshot
+manifest's presence. That is the case plain gating cannot see — a verdict
+re-signed after its link was written, usually on a round that is no longer the
+newest, so the normal gate never re-reads it. The push is blocked with
+`LINK_VERDICT_SHA_MISMATCH` and the fix is `python tools/link_card.py --card <id>
+--verdict verdicts/<id>.verdict.json`. No `.freeze` directory means nothing to
+sweep. `DEEPFREEZE_SKIP_LINK_CHECK=1 git push` skips only this step; lint and the
+gate still run.
 
 **In this repository the hook will block every push today, and that is by
 design, not a defect.** `lint_cards.py --strict` fails on *any* warning, and the
@@ -220,6 +231,14 @@ The pair splits the writing by field group, so neither side imports the other:
 |---|---|---|
 | **snap** | `card`, `snap_ts`, `snap_path`, `snapshot_root`, `source`, `created_at` | `deepfreeze protect --card <id>` |
 | **verdict** | `verdict_ts`, `verdict_sha256`, `verifier`, `updated_at` | `python tools/link_card.py` |
+
+**Timestamps.** `snap_ts` is a compact local-time stamp (`YYYYMMDD-HHMMSS`,
+no offset); the gate reads it in the deployer's local timezone and compares
+it against the verdict's ISO `verdict_ts`. Same-machine deployment is the
+contract. A snapshot taken on another machine, or across a DST shift, is a
+known assumption rather than something the link format carries today — the
+gate's future-verdict check is the backstop, and `verdict_ts` earlier than
+`snap_ts` blocks as `LINK_TS_INVERTED`.
 
 The link lives at `.freeze/link-<card>.json`. Run `deepfreeze protect --card
 <id>` first — it creates the file and the snap group — then write the verdict

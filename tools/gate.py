@@ -44,6 +44,15 @@ Policy (normative in PROTOCOL.md §6)
     (absent from `--require` and without a verdict file) can never be examined,
     so the gate prints a non-blocking NOTICE on stderr instead of dropping the
     promise silently.
+  * traceability sweep (`--check-all-links`): the per-verdict loop only reaches
+    links for ids in the checked set, so a link whose round is no longer the
+    newest one is never re-read. `--check-all-links` walks every
+    `link-*.json` in `--link-dir` that has bound a verdict and runs the same
+    `check_links()` against it, exiting 1 on any `LINK_*`. The pre-push hook
+    calls this so re-signing a verdict without re-running `link_card.py` is
+    caught before the push instead of whenever someone next gates that round.
+    Snap-only links (no `verdict_sha256`, no `verdict_ts`) are skipped: they
+    promise a snapshot, not a review.
 """
 from __future__ import annotations
 
@@ -475,6 +484,74 @@ def check_links(vid, verdict_path, link_dir, require_link):
     return out
 
 
+def check_all_links(link_dir, verdict_dir):
+    """Run `check_links()` over every link in *link_dir* that bound a verdict.
+
+    Returns `(findings, checked)`: findings are `(card, code, detail)` tuples in
+    file order, and `checked` counts the links that actually had a verdict group
+    to re-read. The id comes from the file name, not from the `card` field, so a
+    link that names a different card still gets `LINK_CARD_MISMATCH` from
+    `check_links()` instead of quietly checking the wrong verdict.
+
+    Why this exists: `main()`'s per-verdict loop only reaches the links of ids it
+    was asked to judge (`--require`, else every verdict file). A link whose round
+    has since stopped being the newest one is therefore never re-read, and a
+    verdict re-signed without re-running `link_card.py` leaves a stale
+    `verdict_sha256` that nothing notices until that round is gated again -- or
+    never. This sweep is the same check, not a second implementation of it.
+    """
+    link_dir = Path(link_dir)
+    if not link_dir.is_dir():
+        return [], 0
+    findings = []
+    checked = 0
+    for link_path in sorted(link_dir.glob("link-*.json")):
+        vid = link_path.name[len("link-"):-len(".json")]
+        try:
+            link = json.loads(link_path.read_bytes().decode("utf-8-sig"))
+        except Exception as exc:  # noqa: BLE001 - any parse failure is a violation
+            findings.append((vid, "LINK_UNREADABLE",
+                             f"cannot read {link_path.name}: {exc}"))
+            continue
+        if not isinstance(link, dict):
+            findings.append((vid, "LINK_UNREADABLE",
+                             f"{link_path.name} must contain a JSON object"))
+            continue
+        # Snap-only link: it promises a snapshot, not a review. There is no
+        # verdict to re-hash, so this sweep cannot contradict it, and demanding
+        # one here would block pushes for the normal "protected, not yet
+        # reviewed" state.
+        if not link.get("verdict_sha256") and not link.get("verdict_ts"):
+            continue
+        checked += 1
+        verdict_path = Path(verdict_dir) / f"{vid}{VERDICT_SUFFIX}"
+        for code, detail in check_links(vid, verdict_path, link_dir, []):
+            findings.append((vid, code, detail))
+    return findings, checked
+
+
+def _run_check_all_links(args, verdict_dir):
+    """`--check-all-links` mode: report the sweep, exit 0/1 like the gate."""
+    findings, checked = check_all_links(args.link_dir, verdict_dir)
+    if args.as_json:
+        print(json.dumps({
+            "ok": not findings,
+            "checked": checked,
+            "violations": [{"id": vid, "code": code, "detail": detail}
+                           for vid, code, detail in findings],
+        }, ensure_ascii=False, indent=2))
+    elif not args.quiet:
+        for vid, code, detail in findings:
+            print(f"[{code}] {vid}: {detail}")
+        if findings:
+            print(f"LINKS: FAIL ({len(findings)} violations across {checked} checked)")
+        elif checked:
+            print(f"LINKS: PASS ({checked} checked)")
+        else:
+            print(f"LINKS: PASS (no bound link in {args.link_dir})")
+    return EXIT_OK if not findings else EXIT_VIOLATION
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="gate.py",
@@ -502,6 +579,9 @@ def build_parser():
                              "are skipped silently unless named here")
     parser.add_argument("--no-link-check", action="store_true",
                         help="skip the link (traceability) checks entirely")
+    parser.add_argument("--check-all-links", action="store_true",
+                        help="sweep every link in --link-dir that bound a verdict and "
+                             "exit 0/1 on the result; ignores --require/--artifact-map")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit machine-readable JSON")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -539,6 +619,12 @@ def main(argv=None):
         print(f"[USAGE] verdict directory not found: {verdict_dir}", file=sys.stderr)
         return EXIT_USAGE
     verdict_dir = verdict_dir.resolve()
+    # A sweep of every bound link is its own mode: it is the pre-push hook's
+    # job (catch a verdict re-signed after its link was written), it takes no
+    # --require, and it has nothing to say about freshness. Keep it out of the
+    # per-verdict loop below rather than widening that loop's contract.
+    if args.check_all_links:
+        return _run_check_all_links(args, verdict_dir)
     try:
         artifact_map = _read_artifact_map(args.artifact_map)
     except ValueError as exc:

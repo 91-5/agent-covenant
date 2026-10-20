@@ -6,12 +6,17 @@
 #
 # Blocks the push if:
 #   - lint_cards.py --strict returns non-zero, OR
-#   - gate.py --require <newest_round_id> returns non-zero
+#   - gate.py --require <newest_round_id> returns non-zero, OR
+#   - gate.py --check-all-links returns non-zero (a link's verdict_sha256,
+#     timing or manifest no longer matches the files on disk)
 #
 # The newest round id is the last non-underscore key in artifacts.json.
 # This matches the CI scope in .github/workflows/gate.yml.
 #
 # Escape hatch: git push --no-verify  (recorded in shell history).
+# Skip only the link sweep: DEEPFREEZE_SKIP_LINK_CHECK=1 git push  (lint and
+# gate still run -- use it when the link is a known work-in-progress, never to
+# ship a verdict whose link you have not refreshed).
 
 set -eu
 
@@ -103,5 +108,31 @@ if ! "$PYTHON" tools/gate.py --verdict-dir verdicts --artifact-map artifacts.jso
     exit 1
 fi
 
-echo "[pre-push] OK — lint and gate passed."
+# --- step 3: link sweep (verdict sha / timing / manifest) ---
+# Step 2 only re-reads links for the ids it gates, i.e. the newest round. A
+# verdict that was re-signed after its link was written leaves a stale
+# verdict_sha256 on an *older* round, and nothing would notice until that round
+# is gated again -- in practice, never. This sweep runs the same check_links()
+# over every link that bound a verdict, so the fix (re-run link_card.py) happens
+# before the push instead of after a reviewer finds the trace inconsistent.
+#
+# The logic stays in gate.py on purpose: one implementation, two entry points.
+# A shell copy would be a second rule that can drift from the one CI enforces.
+case "${DEEPFREEZE_SKIP_LINK_CHECK:-0}" in
+    1|true|yes|TRUE|YES)
+        echo "[pre-push] SKIP link sweep (DEEPFREEZE_SKIP_LINK_CHECK=$DEEPFREEZE_SKIP_LINK_CHECK)"
+        ;;
+    *)
+        if [ ! -d "${LINK_DIR:-.freeze}" ]; then
+            echo "[pre-push] no ${LINK_DIR:-.freeze} directory - link sweep skipped"
+        elif ! "$PYTHON" tools/gate.py --check-all-links --link-dir "${LINK_DIR:-.freeze}" --verdict-dir verdicts; then
+            echo "[pre-push] BLOCKED: link trace violations (see above)." >&2
+            echo "[pre-push] fix: python tools/link_card.py --card <id> --verdict verdicts/<id>.verdict.json" >&2
+            echo "[pre-push]      (or DEEPFREEZE_SKIP_LINK_CHECK=1 git push to skip only this step)" >&2
+            exit 1
+        fi
+        ;;
+esac
+
+echo "[pre-push] OK — lint, gate and link sweep passed."
 exit 0

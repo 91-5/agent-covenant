@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->287<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->291<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -82,6 +82,8 @@ jobs:
 閮戒笉璇ヨ褰撲綔"璇勫璁ょ湡"鐨勮瘉鎹€?
 
 本地想用同一套门禁：在工作树里跑 `bash tools/install-hooks.sh` 即可，它会把 `tools/pre-push-hook.sh` 装进你的 hooks 目录，重复执行安全。hook 跑的是上面第 2、3 步，作用在同一个“最新轮”上，所以本地通过和 CI 通过是一回事。它是**预防**不是**强制**——`git push --no-verify` 能绕过，真正的兜底仍然是 CI。另需注意：`--strict` 会把**每一条** warning 都当成失败，所以只要仓库里还压着 warning 存量，hook 就会拦推送，直到存量清干净为止——这跟 CI 会报红是同一件事。
+
+hook 的**第 3 步**会扫一遍 `.freeze/link-*.json`：凡是绑定了 verdict 的 link，都复用 gate 自己的 `check_links()` 重校 `verdict_sha256`（对 verdict 原始字节）、`verdict_ts` 与 `snap_ts` 的先后、以及快照 manifest 是否存在。它抓的是这样一个坑——**verdict 重签了，`link_card.py` 没重跑**：失配的往往是「已经不是最新轮」的那张卡，常规 gate 只审最新轮，于是永远看不到；现在 push 前就会被 `LINK_VERDICT_SHA_MISMATCH` 拦下，修复命令是 `python tools/link_card.py --card <卡号> --verdict verdicts/<卡号>.verdict.json`。没有 `.freeze` 目录就什么都不做；只想跳过这一步（lint 与 gate 照跑）用 `DEEPFREEZE_SKIP_LINK_CHECK=1 git push`。
 
 **本仓库现在装上 hook 会拦掉每一次推送，这是设计，不是缺陷。** `lint_cards.py --strict` 把**任何一条** warning 都当失败，而当前树上有 **16 条**——全是存量债，没有一条是 hook 引入的。轮次已签好名、lint 也干净的推送仍然会被拒；而把 hook 摘掉之后，同一次推送就成功了。这两条是**实测**的，不是推断。`XJ-20261013-004` 的评审选择保留 `--strict`，而不是让 hook 判得比 CI 更严——判官分叉就意味着 hook 在审 CI 从不审的东西。存量正在 `XJ-20261014-002` 下清理；在它归零之前，请把 `[pre-push] BLOCKED` 当成一份告警清单读完，别直接摸 `--no-verify`。
 
@@ -177,6 +179,8 @@ python tools/gate.py --verdict-dir verdicts \
 |---|---|---|
 | **snap** | `card`、`snap_ts`、`snap_path`、`snapshot_root`、`source`、`created_at` | `deepfreeze protect --card <卡号>` |
 | **verdict** | `verdict_ts`、`verdict_sha256`、`verifier`、`updated_at` | `python tools/link_card.py` |
+
+**时间戳。** `snap_ts` 是紧凑格式的本地时间戳（`YYYYMMDD-HHMMSS`，无偏移）；gate 按部署机本地时区解析它，再与 verdict 的 ISO `verdict_ts` 比较。同机部署是当前契约。快照来自另一台机器、或跨 DST 切换，是已知假设而非 link 格式当前承载的信息——gate 的未来时间戳检查是兜底，`verdict_ts` 早于 `snap_ts` 会以 `LINK_TS_INVERTED` 拦截。
 
 link 文件位于 `.freeze/link-<卡号>.json`。先跑 `deepfreeze protect --card <卡号>`（它创建文件与 snap 字段组），verdict 产出后再回写 verdict 字段组：
 
