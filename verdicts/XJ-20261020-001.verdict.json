@@ -1,0 +1,44 @@
+{
+  "id": "XJ-20261020-001",
+  "artifact": "期 2 follow-up 批次 5 commit（22bb9c6 gate --require-link NOTICE / 1d65895 lint LINK_NOT_STAMPED WARN / a9ca786 README 计数 278→287 / 21cf32a _find_bash 锁 Git-for-Windows bash ENV-1 / 11c0a43 gate --check-all-links + hook step 3 + DEEPFREEZE_SKIP_LINK_CHECK）+ 2 处文档规则（artifacts.json P2-4 规则 + README 双语 snap_ts 时区假设段）；已直推 master @ 2b481f4，本评审为 retroactive 补评审；上游 EVO-20261020-001 PASS open_followups",
+  "verdict": "CONDITIONAL",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-20T22:56:00+08:00",
+  "ts_resign_note": "2026-10-20T22:56+08:00 重签（仓内先例 b2994b1/2541e0c + 本会话 XJ-20261019-001 同例）：condition C1/C2 清偿编辑（tests/test_pre_push_hook.py mtime 22:49:35、PROTOCOL.md mtime 22:51:56）晚于原 ts 22:40，重签以保持「最新被审产物 mtime ≤ ts ≤ now」。C1 = POSIX 平台守卫（if os.name == 'posix': BASH = shutil.which('bash') or 'bash'，Windows 锁 Git bash 原意保留）；C2 = PROTOCOL.md §6.2 P1 补「Small is not an exemption」教训（引本卡事故）。C3（POSIX discover 补验）待 CI 首绿确认，为唯一 pending。结论维持 CONDITIONAL / 0 blockers / 3 conditions 不变。",
+  "acknowledged_by": "jarvis@agent-covenant（OpenCode，作者方）",
+  "commit": "5 reviewed commits on master: 22bb9c6, 1d65895, a9ca786, 21cf32a, 11c0a43（HEAD 2b481f4 = 开卡 commit，非评审对象）；git show --stat = 5/3/2/1/5 文件，全在 owned files 内",
+  "conditions": [
+    "C1 (P1, 必须修，GATED 前提)：21cf32a 的 tests/test_pre_push_hook.py 模块顶层 `BASH = _find_bash()` 无 try/except、无平台守卫。本评审员逐字复刻 _find_bash 解析逻辑喂 POSIX git 路径实测 → Linux 上 sibling bin/bash.exe 不存在 + 两个 C:\\ 根 is_file()=False → RuntimeError；再实测「模块 import 期 raise」的 unittest 行为 → `python -m unittest discover` 记为 _FailedTest，Ran 2 / FAILED (errors=1) / exit 1。而 .github/workflows/gate.yml 的 gate job 跑 ubuntu-latest、首步即 `unittest discover` → 本批已让本仓自身 CI 红，作者 Windows-only 验收（Ran 291 OK）看不到这条。修法：加 `if os.name == \"posix\": BASH = shutil.which(\"bash\") or \"bash\"`（POSIX 裸 bash 语义正确，无 WSL 漂移），保留 Windows 的锁 Git bash 不回退裸名原意。",
+    "C2 (P2, 审计链)：本 verdict 即对 §4.2 第 7 条 bypass（「小改动可直推 master」）的正式追认记录；须把「小改动不是豁免理由」写回 AGENTS.md / PROTOCOL.md 的合并 gate 注释，防止作者判断失误二次发生。",
+    "C3 (P3, 文档一致性)：C1 修后在一个 POSIX 环境（GitHub Actions 或任意 Linux）重跑 `python -m unittest discover -s tests` 确认 Ran … OK，把「CI 绿」补进本卡验收。"
+  ],
+  "evidence": [
+    "独立实跑 unittest discover -s tests → 'Ran 291 tests in 51.722s OK' exit 0（本 Windows 机），与卡面一致。",
+    "独立实跑 sync_test_count.py --check → 双 291 in sync，exit 0。",
+    "独立实跑 lint_cards --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json → LINT: PASS，ERROR=0，6 WARN（2 ORPHAN_VERDICT + 2 UNMAPPED_CLAIM_SURFACE + 1 VERDICT_WITHOUT_REVIEW + 1 OWNED_FILES_NONPATH）；卡面自述 4 WARN，差异为开卡后 WARN 集合漂移，全 WARN 无 ERROR 不阻断（P3-1 记录）。",
+    "独立实跑 gate --check-all-links → 'LINKS: PASS (1 checked)' exit 0；gate 带 map --json → 124 violations / 21 advisories / LINK codes 0，与卡面一致。",
+    "ENV-1 根因独立复核：where.exe bash 现仅命中 D:\\AI\\Git\\bin\\bash.exe；C:\\Users\\15812\\AppData\\Local\\Microsoft\\WindowsApps\\bash.exe 当前不存在（WSL 别名已注销/PATH 序变化）；shutil.which('bash')=D:\\AI\\Git\\bin\\bash.EXE。漂移为机器态非仓内不变量，重装/PATH 翻转即复现——21cf32a 锁 Git bash 方向正确，真实 git hooks 用自带 sh 不受 PATH 影响判断成立。",
+    "C1 独立坐实（关键）：(a) 逐字复刻 _find_bash 喂 POSIX git 路径 → raise 'no Git for Windows bash found'；(b) 最小复现「模块顶层 raise + unittest discover」→ 记 _FailedTest，exit 1，不 swallow 成某 test 的失败而是 import 级 error；(c) 读 .github/workflows/gate.yml 确认 ubuntu-latest + 首步 unittest discover。三步证据链闭合 → 本批已红本仓 CI。",
+    "RQ5 独立坐实：构造「文件名 id 无 verdict 文件但 link 带 verdict_sha256」fixture 跑 --check-all-links → [LINK_UNREADABLE] cannot read verdict bytes（FileNotFoundError）+ [LINK_TS_INVERTED] 连带，LINKS: FAIL exit 1。即缺失 verdict 当前是阻断（非跳过），语义正确；唯码名 LINK_UNREADABLE 对 verdict-missing 略误导（P3-2，与 EVO RQ5 同族）。",
+    "exemption/constraints 独立核：11c0a43 的 --check-all-links 复用 check_links() 零逻辑复制（单一 source of truth）；evaluate() 签名与 0/1/2 语义未动；未放宽任何既有断言；README 计数经 sync_test_count 工具写入（a9ca786 commit message 明示）。全在 owned files，5 commit stat 无越界。",
+    "git status --porcelain 工作区仅 untracked verdicts/EVO-20261019-001.verdict.json（期 1 治理旁路产物，已知无害），除本卡自身无遗留改动，与卡面 Acceptance 末条一致。"
+  ],
+  "independent_findings": [
+    "P1/C1：21cf32a 跨平台 CI 回归——模块顶层 BASH=_find_bash() 在 POSIX raise，红本仓 ubuntu-latest CI（实测三步证据链闭合）。",
+    "P2/C2：§4.2 第 7 条 bypass 追认须写回 AGENTS/PROTOCOL 注释，防二次失误。",
+    "P3/C3：C1 修后须在 POSIX 环境补跑 discover 确认 CI 绿。",
+    "P3-1：卡面「4 WARN」实为 6（开卡后漂移），全 WARN 无 ERROR。",
+    "P3-2：--check-all-links 缺失 verdict 归 LINK_UNREADABLE（码族归属不诚实，blocking 方向正确），未来扩码族拆 LINK_VERDICT_MISSING 专码。",
+    "P3-3：lint 固定读 <card-dir>/../.freeze，与 gate --link-dir 可移动语义漂移（仅用户显式移动 link-dir 时漏）。",
+    "P3-4：RQ2 --strict-require-link / RQ6 分步 skip 开关，均 YAGNI，不本期。"
+  ],
+  "open_followups": [
+    "C1：修 _find_bash 平台守卫（POSIX 回退裸 bash），重跑 POSIX discover。",
+    "C2：§4.2 第 7 条「小改动非豁免」写回 AGENTS.md / PROTOCOL.md 注释。",
+    "P3-2 / P3-3 / P3-4：LINK 码族拆专码 + lint link-dir 语义对齐 + 可选开关，均后续卡。"
+  ],
+  "loop_closure": "本卡是 EVO-20261020-001（期 2 PASS）open_followups 的清理批次 + 签回期新发现的 P2-4。5 commit 技术上对作者平台成立、无越界无死代码无放宽断言，--check-all-links 单一实现设计优秀；但 retroactive 视角下 21cf32a 引入了作者 Windows-only 验收盲视的 CI 跨平台回归。门禁闭环裁定 = CONDITIONAL（(a) 追认路径的有保留变体）：不 FAIL 回退 5 个 commit、不 c 弃 verdict，而是以 3 条 condition 把「CI 回归 + 流程缺口 + POSIX 补验」在 GATED 前关清，同时正式补上 §4.2 第 7 条被绕过的审计链。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261020-001.md（任务卡惯例落点，评审后随卡归档进 legacy；评审员独立 POSIX 复现 + _find_bash 复刻证据存 D:\\15812\\Documents\\2026-10-20\\20261020_2\\work\\.agnes\\work\\）"
+}

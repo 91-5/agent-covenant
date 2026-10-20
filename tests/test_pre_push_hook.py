@@ -61,7 +61,15 @@ def _find_bash() -> str:
     )
 
 
-BASH = _find_bash()
+if os.name == "posix":
+    # POSIX: bare bash is the correct, drift-free resolution here. The
+    # Windows lookup below would raise at import time on Linux CI (no
+    # bin/bash.exe sibling, no C:\Program Files roots), which is exactly
+    # the cross-platform regression the retroactive review caught (C1 of
+    # XJ-20261020-001). The WSL-alias trap does not exist on POSIX.
+    BASH = shutil.which("bash") or "bash"
+else:
+    BASH = _find_bash()
 
 CARD_ID = "XJ-20261008-001"
 # A second round that is *not* the newest one. Step 2 only gates the newest id,

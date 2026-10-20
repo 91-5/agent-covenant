@@ -291,7 +291,11 @@ assertion count ("41 assertions") that no party had actually counted.
   from inside the work tree. It runs the same two commands CI runs, on the same newest
   round, so a local green and a CI green mean the same thing; `git push --no-verify`
   still skips it, which is why CI remains the backstop and this hook is prevention,
-  not enforcement.
+  not enforcement. **Small is not an exemption**: the gate binds follow-ups, refactors,
+  and one-line fixes identically — the 2026-10-20 batch (`XJ-20261020-001`) landed five
+  follow-up commits straight to `master` on a "small change" theory and paid with a
+  retroactive round plus a cross-platform CI regression the author's own platform could
+  not see.
 - **P2 — If it already landed, say so on the first screen.** A change already on the
   trunk gets a retrospective card whose opening block states that it landed unreviewed,
   how long ago, and what the blast radius is. A retrospective card may never be marked
