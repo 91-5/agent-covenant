@@ -1,0 +1,5 @@
+# Shell scripts must be LF on every platform: POSIX bash rejects CRLF
+# ($'\r': command not found), and a Windows checkout with core.autocrlf
+# would otherwise hand WSL/CI-incompatible scripts to every non-Git-bash
+# caller. Found via the C3 POSIX verification of XJ-20261020-001.
+*.sh text eol=lf
