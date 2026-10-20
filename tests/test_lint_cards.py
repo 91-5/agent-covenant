@@ -325,6 +325,62 @@ class TestVerdictPairing(LintTestCase):
         self.assertEqual(set(), self.codes(out) & {"ORPHAN_VERDICT", "VERDICT_WITHOUT_REVIEW"})
 
 
+class TestLinkNotStamped(LintTestCase):
+    """A verdict on disk whose snapshot link was never stamped (AgnesCode RQ2).
+
+    Phase 1+2 built the link contract: `deepfreeze protect --card` writes
+    `.freeze/link-<id>.json`, `link_card.py` stamps the verdict group back in.
+    The gate reads a link with no `verdict_sha256` as "verdict not yet written"
+    and passes silently. That is right while the review is pending and wrong once
+    `verdicts/<id>.verdict.json` exists: the chain reads intact while it is
+    severed, and the gate cannot tell. The linter is where the signal lives; the
+    gate stays silent on purpose (a gate has no link-directory semantics it will
+    make default-on).
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.verdicts = self.tmp / "verdicts"
+        self.verdicts.mkdir()
+        self.freeze = self.tmp / ".freeze"   # project root is the card dir's parent
+        self.write("AC-20260929-001.md")
+        (self.verdicts / "AC-20260929-001.verdict.json").write_text("{}", encoding="utf-8")
+
+    def _link(self, body):
+        self.freeze.mkdir(exist_ok=True)
+        (self.freeze / "link-AC-20260929-001.json").write_text(
+            json.dumps(body), encoding="utf-8")
+
+    def _run(self):
+        return self.run_lint("--verdict-dir", str(self.verdicts), "--no-verdict-schema")
+
+    def test_snap_only_link_warns(self):
+        """A snap link with no verdict group, next to a verdict file, is the gap."""
+        self._link({"card": "AC-20260929-001", "snap_ts": "20261020-120000"})
+        code, out, _ = self._run()
+        self.assertEqual(lint.EXIT_OK, code, out)   # WARN does not fail by default
+        self.assertIn("LINK_NOT_STAMPED", self.codes(out))
+
+    def test_stamped_link_is_silent(self):
+        """Once link_card writes the verdict group, the chain is intact again."""
+        self._link({"card": "AC-20260929-001", "snap_ts": "20261020-120000",
+                    "verdict_sha256": "abc123", "verdict_ts": "2026-10-20T20:05:00+08:00"})
+        code, out, _ = self._run()
+        self.assertNotIn("LINK_NOT_STAMPED", self.codes(out))
+
+    def test_verdict_without_any_link_is_silent(self):
+        """No link at all is the historical default; the gate skips it, so do we."""
+        code, out, _ = self._run()
+        self.assertNotIn("LINK_NOT_STAMPED", self.codes(out))
+
+    def test_no_freeze_dir_is_zero_cost(self):
+        """A project with no snapshot facility must not even look for links."""
+        # self.freeze is deliberately never created; a stray link elsewhere is moot.
+        self.assertFalse(self.freeze.exists())
+        code, out, _ = self._run()
+        self.assertNotIn("LINK_NOT_STAMPED", self.codes(out))
+
+
 class TestVerdictSchema(LintTestCase):
     """Added with check_verdict_schema (DFB-20261003-007).
 

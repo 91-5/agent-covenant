@@ -76,6 +76,11 @@ ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
 VERDICT_SUFFIX = ".verdict.json"
+# The snapshot-link facility the traceability contract writes into. `link_card.py`
+# owns the prefix/suffix; kept local so lint does not import a writer tool just to
+# name a file (the shape is a data contract, not logic).
+FREEZE_DIRNAME = ".freeze"
+LINK_PREFIX = "link-"
 
 # Must mirror gate.py's default --max-clock-skew (300s) so the future-ts
 # plausibility check cannot drift between lint and gate. Single source of
@@ -1080,6 +1085,57 @@ def check_status_drift(card_dir, verdict_dir):
     return out
 
 
+def check_link_not_stamped(project_root, verdict_dir):
+    """WARN when a verdict exists on disk but its snapshot link was never stamped.
+
+    Phase 1+2 built the link contract: `deepfreeze protect --card` writes a snap
+    link, and `link_card.py` stamps the verdict group (`verdict_sha256`,
+    `verdict_ts`) back into it. `gate.check_links` reads a link with *no* verdict
+    group as "snapshot taken, verdict not written yet" and passes silently -- the
+    right reading while the review is pending, and the wrong one once
+    `verdicts/<id>.verdict.json` is sitting right there with nobody having run
+    link_card. The chain then looks intact while it is severed, and the gate
+    cannot tell the difference (AgnesCode RQ2, EVO-20261020-001).
+
+    The gate deliberately does not warn here (a gate has no link-directory
+    semantics it is willing to make default-on); the linter is where a "smells
+    wrong" signal belongs. WARN, not ERROR: an unstamped link blocks nothing
+    today, it just leaves a signed verdict unlinked.
+
+    Scoped to the *linted* project (`<card-dir>/..`), like the other rules that
+    read a project's own files: running the linter against a scratch tree must
+    not consult this repository's `.freeze/`. When the project has no `.freeze/`
+    the whole rule is off -- zero cost, and the gate's own opt-in posture mirrored.
+    """
+    out = []
+    if not verdict_dir or not verdict_dir.is_dir():
+        return out
+    freeze_dir = project_root / FREEZE_DIRNAME
+    if not freeze_dir.is_dir():
+        return out  # no snapshot facility in this project: rule not enabled
+    for path in sorted(verdict_dir.glob(f"*{VERDICT_SUFFIX}")):
+        vid = path.name[: -len(VERDICT_SUFFIX)]
+        link_path = freeze_dir / f"{LINK_PREFIX}{vid}.json"
+        if not link_path.is_file():
+            continue
+        try:
+            link = json.loads(link_path.read_text(encoding="utf-8-sig"))
+        except Exception:  # noqa: BLE001 - a bad link is gate's LINK_UNREADABLE, not ours
+            continue
+        if not isinstance(link, dict):
+            continue
+        if "verdict_sha256" in link:
+            continue  # stamped: the link points at this verdict's bytes
+        out.append(_finding(
+            "LINK_NOT_STAMPED", "WARN", Path(f"{vid}{VERDICT_SUFFIX}"),
+            f"{freeze_dir.name}/{link_path.name} exists but carries no "
+            f"verdict_sha256: the verdict was signed but never linked, so the "
+            f"traceability chain reads intact while it is severed. Stamp it: "
+            f"python tools/link_card.py --card {vid} --verdict "
+            f"{verdict_dir.name}/{path.name}"))
+    return out
+
+
 def _paths_overlap(left, right):
     """Heuristic overlap test: equality, directory containment, or glob prefix."""
     a = left.strip().strip("/\\").replace("\\", "/")
@@ -1443,6 +1499,7 @@ def main(argv=None):
             return EXIT_USAGE
     findings += check_stale_test_count(project_root)
     findings += check_evo_protected_assets(args.evo_dir)
+    findings += check_link_not_stamped(project_root, verdict_dir)
     findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)
     if artifact_map is not None:
         findings += check_card_self_in_map(artifact_map, card_dir)
