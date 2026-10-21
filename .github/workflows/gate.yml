@@ -36,7 +36,12 @@ jobs:
           --dir .tasks
           --verdict-dir verdicts
           --artifact-map artifacts.json
+          --evo-dir ../_handoffs/evo
           --strict
+        # --evo-dir pairs EVO verdicts with their cards (_handoffs/evo, outside
+        # the repo). On CI that dir never exists → the is_dir() guard skips it,
+        # zero cost; locally it silences the permanent ORPHAN warnings
+        # (XJ-20261021-002).
 
       - name: resolve current round id
         id: current

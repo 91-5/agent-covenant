@@ -97,7 +97,10 @@ fi
 echo "[pre-push] Linting cards and gating round $NEWEST_ID ..."
 
 # --- step 1: lint --strict ---
-if ! "$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict; then
+# --evo-dir: EVO cards live outside the repo (_handoffs/evo) — passing the dir
+# lets the orphan check pair EVO verdicts with their cards instead of warning
+# forever. Absent dir → the is_dir() guard skips it, zero cost (XJ-20261021-002).
+if ! "$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --strict; then
     echo "[pre-push] BLOCKED: lint errors (see above). Fix them or use --no-verify to bypass." >&2
     exit 1
 fi
