@@ -37,15 +37,39 @@ cd "$REPO_ROOT"
 # %LOCALAPPDATA%\Microsoft\WindowsApps\python3, which exists, exits non-zero, and
 # prints nothing. Preferring it on name alone made this hook die with that
 # stub's exit code and no diagnostics. Probe each candidate instead.
+#
+# Probe step 2 (XJ-20261021-002 followup, sir-reported): even a runnable
+# interpreter can fail to IMPORT THIS REPO's test suite — a D:\python\python
+# (3.14) collected only 275 tests with 2 failures + 3 errors (test module
+# import errors), which makes lint's TEST_COUNT discovery raise and blocks
+# every push with TEST_COUNT_UNVERIFIED. So a candidate that CAN import the
+# suite is preferred (it keeps TEST_COUNT live).
+#
+# But the import is a PREFERENCE, not a hard requirement (regression lesson,
+# same card): hook test fixtures and other repos have no tests/ directory, so
+# a hard import gate made every nested hook call exit 2 (12 test failures).
+# Fall back to the last runnable candidate instead — in a tests-less repo,
+# lint's TEST_COUNT silently skips (its documented "off, not passing" state
+# only matters where a suite exists).
+# The import needs bash: tests/test_pre_push_hook.py resolves Git bash at
+# module level, and a python spawned as a Git-bash child cannot see git via
+# shutil.which (Windows PATH entries arrive POSIX-style). This bash knows its
+# own path reliably — export it as the hint before probing (XJ-20261021-002).
+if command -v cygpath >/dev/null 2>&1 && [ -n "${BASH:-}" ]; then
+    COVENANT_BASH_HINT=$(cygpath -w "$BASH" 2>/dev/null) && export COVENANT_BASH_HINT
+fi
 PYTHON=""
 for candidate in python3 python; do
-    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c '' >/dev/null 2>&1; then
-        PYTHON=$candidate
+    command -v "$candidate" >/dev/null 2>&1 || continue
+    "$candidate" -c '' >/dev/null 2>&1 || continue
+    PYTHON=$candidate
+    if "$candidate" -c "import unittest, sys; sys.path.insert(0, '.'); import tests.test_pre_push_hook" >/dev/null 2>&1; then
         break
     fi
 done
 if [ -z "$PYTHON" ]; then
-    echo "[pre-push] ERROR: no usable python interpreter (tried: python3, python)" >&2
+    echo "[pre-push] ERROR: no python interpreter that can run (tried: python3, python)" >&2
+    echo "[pre-push]        hint: run 'python -m unittest discover -s tests' with the interpreter you trust, fix its env, or use --no-verify" >&2
     exit 2
 fi
 
