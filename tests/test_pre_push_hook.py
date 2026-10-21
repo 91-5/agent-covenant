@@ -40,10 +40,23 @@ def _find_bash() -> str:
 
     Locking the Git for Windows bash restores the environment this suite was
     written against instead of skipping anything: the assertions stay exactly
-    as strict. Resolution order: git's sibling bin/bash.exe, then the two
-    standard install roots. No silent fallback to the bare name -- if none
-    is found the suite must fail loudly rather than drift back to WSL.
+    as strict. Resolution order:
+    1. ``COVENANT_BASH_HINT`` env var — an absolute path to bash.exe. The
+       pre-push hook exports it (``cygpath -w`` of its own bash) because a
+       python spawned as a Git-bash child can be blind to Windows PATH
+       entries: ``shutil.which("git")`` returns None there, the install root
+       may be ``D:\\AI\\Git`` (not Program Files), and PATH entries arrive
+       POSIX-style. The hook knows its own bash reliably; this suite does not.
+    2. ``shutil.which("git")`` sibling ``bin/bash.exe`` (PowerShell-spawned
+       runs, where the Windows PATH is intact).
+    3. The two standard Windows install roots.
+    No silent fallback to the bare name -- if none is found the suite must
+    fail loudly rather than drift back to WSL.
     """
+    hint = os.environ.get("COVENANT_BASH_HINT")
+    if hint and Path(hint).is_file():
+        return str(Path(hint))
+
     git = shutil.which("git")
     if git:
         candidate = Path(git).resolve().parent.parent / "bin" / "bash.exe"
@@ -57,7 +70,8 @@ def _find_bash() -> str:
             return candidate
     raise RuntimeError(
         "no Git for Windows bash found; refusing to fall back to a bare "
-        "'bash' (a WSL alias would swallow Windows paths, ENV-1)"
+        "'bash' (a WSL alias would swallow Windows paths, ENV-1). If bash "
+        "exists, set COVENANT_BASH_HINT to its absolute path."
     )
 
 
