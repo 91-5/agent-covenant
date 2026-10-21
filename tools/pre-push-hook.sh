@@ -100,9 +100,29 @@ echo "[pre-push] Linting cards and gating round $NEWEST_ID ..."
 # --evo-dir: EVO cards live outside the repo (_handoffs/evo) — passing the dir
 # lets the orphan check pair EVO verdicts with their cards instead of warning
 # forever. Absent dir → the is_dir() guard skips it, zero cost (XJ-20261021-002).
-if ! "$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --strict; then
-    echo "[pre-push] BLOCKED: lint errors (see above). Fix them or use --no-verify to bypass." >&2
+#
+# EVO_PROTECTED_ASSET_TOUCHED exemption (sir ruling 2026-10-21, option (a) of
+# XJ-20261021-002 C1): that WARN is the by-design audit record of the EVO
+# legitimate-escalation channel — it only fires when protected_assets_changes
+# AND sir_approval are BOTH present (the un-backed variant is an ERROR, which
+# still blocks below). Under --strict it would otherwise block every push
+# while an EVO targeted card is the current round. ERRORs and every other
+# WARN still block: the exemption is exactly one rule code, nothing else.
+LINT_OUT=$("$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --strict 2>&1) && LINT_CODE=0 || LINT_CODE=$?
+NON_EXEMPT=$(printf '%s\n' "$LINT_OUT" | grep -E '^\[(ERROR|WARN)\]' | grep -vE '^\[WARN\] EVO_PROTECTED_ASSET_TOUCHED' || true)
+if [ "$LINT_CODE" -eq 2 ]; then
+    printf '%s\n' "$LINT_OUT"
+    echo "[pre-push] BLOCKED: lint usage error (exit 2 is not a pass)." >&2
     exit 1
+fi
+if [ "$LINT_CODE" -ne 0 ] && [ -n "$NON_EXEMPT" ]; then
+    printf '%s\n' "$LINT_OUT"
+    echo "[pre-push] BLOCKED: lint findings (see above). Fix them or use --no-verify to bypass." >&2
+    exit 1
+fi
+printf '%s\n' "$LINT_OUT"
+if [ "$LINT_CODE" -ne 0 ]; then
+    echo "[pre-push] lint: only the EVO escalation-channel WARN present - exempted (XJ-20261021-002 C1, sir ruling (a)), continuing"
 fi
 
 # --- step 2: gate --require newest round ---
