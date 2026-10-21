@@ -1,0 +1,45 @@
+{
+  "id": "XJ-20261021-001",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-21T21:14:00+08:00",
+  "acknowledged_by": "jarvis@agent-covenant（OpenCode，作者方）",
+  "commit": "11415a2（HEAD master @ ahead 17；本卡纯签名轮，git diff 54b0239..11415a2 仅 .tasks/XJ-20261021-001.md + artifacts.json 追加，零代码/零文档改动）",
+  "artifact": "评审对象 = agent-covenant 的 README.md + README.zh-CN.md 的期2/期3 增量段落 vs 实现（tools/gate.py 的 check_links/check_all_links/_parse_snap_ts/build_parser + tools/pre-push-hook.sh step 3）。纯签名轮：确认双语 README 描述与实现逐条一致后签 PASS，UNMAPPED_CLAIM_SURFACE(README 双语) 随本 verdict 消解，push 恢复。",
+  "consistency_findings": [
+    "Q1 逐条一致（无文档超前）：README EN「What the gate enforces」L302-313 与「Link cards to snapshots」L257-275，及 zh「门禁到底查什么」L213-214，列举的五个 LINK_* blocking 码（LINK_UNREADABLE / LINK_CARD_MISMATCH / LINK_MANIFEST_MISSING / LINK_VERDICT_SHA_MISMATCH / LINK_TS_INVERTED）+ 三参数（--require-link 可重复 / --link-dir 默认 .freeze / --no-link-check 关整族）与 gate.py 实现逐字对上（码位 L438/449/464/479/513/517，参数 L577-583）。README 写的每件事 gate.py 都真的做，无『写了未实现』。",
+    "snap_ts 时区假设段（EN L235-241 / zh L183）与 gate.py _parse_snap_ts（L393-400）一致：`datetime.strptime('%Y%m%d-%H%M%S').astimezone(timezone.utc)` 对 naive 时间戳恰按平台本地时区解释——README『reads it in the deployer's local timezone / 按部署机本地时区解析』逐字准确；`verdict_ts` 早于 `snap_ts` 触发 LINK_TS_INVERTED 与 L477-483 一致；『同机部署是当前契约』的诚实边界与代码假设吻合。",
+    "verdict_sha256『三句钉死』段（EN L257-268 / zh 对应）语义与 gate.py L454-469 一致：锁原始字节（_sha256_file 流式）、重序列化即失配、期2 已由 gate 校验并 blocking；『它证明的是字节不是判断』的诚实表述无过度承诺。",
+    "fail-open / 并发『两写者一文件』段（EN L277-282 / zh L200）与 link_card.py 的 dict 级合并 + 写前 re-stat + 退出码 1 拒绝覆盖的行为一致（该段实现主体在 link_card.py，本卡零改动，属期1 已落地内容，此处核对 README 描述无失真）。"
+  ],
+  "out_of_scope_rows": [
+    "卡面待审表第 4 行『宿主集成小节（插件配置表/节流语义/fail-open 分工/已知边界）+ hook step 3 文档 @ 8a77e5e』存在跨仓库归属错误：`git -C agent-covenant log 8a77e5e` 报 ambiguous revision（不存在于 agent-covenant），`git -C deepfreeze log 8a77e5e` = 'docs(integration): phase 3 host hook - deepfreeze-autosnap OpenCode plugin (DFB-20261021-002)'。即『插件 4-env 配置表/节流/fail-open』落在 deepfreeze 仓的 README（上轮 DFB-20261021-002 已 PASS，4 个 env 名已字符码级核 2-E）。agent-covenant 的两个 README 实测**无**该小节、无 DEEPFREEZE_SCRIPT/AUTOSNAP_* 4 名（grep 全命中仅 hook 自身的 DEEPFREEZE_SKIP_LINK_CHECK，EN L109 / zh L86）。因此『文档侧防线（B1 typo 家族逐字对照）』对 agent-covenant README 属无对象可查——README 未声索该配置表，故无『文档超前/失实』。hook step 3（link sweep）文档确实存在于 agent-covenant（EN L101-117 / zh L86），与 pre-push-hook.sh 一致（见下）。",
+    "DEEPFREEZE_SKIP_LINK_CHECK 语义实测与 pre-push-hook.sh 一致：`DEEPFREEZE_SKIP_LINK_CHECK=1 git push` 只跳 step 3（link sweep），lint + gate 仍跑（hook 注释 + case 分支 1|true|yes|TRUE|YES 坐实）。"
+  ],
+  "evidence": [
+    "独立读 gate.py（741 行）关键符号：_parse_snap_ts L393-400（strptime %Y%m%d-%H%M%S + naive.astimezone(UTC)）；check_links L403-484（缺 link 静默→--require-link 则 LINK_REQUIRED_MISSING L420；link 存在则六码 blocking，snap-only link 跳过 L524）；check_all_links L487-530（遍历 .freeze/link-*.json，仅重校带 verdict 组的）；build_parser L555-586（--require-link L577 可重复 / --link-dir L574 默认 .freeze / --no-link-check L580 / --check-all-links L582）；main L605-712（verdict 缺失已 blocking 则跳过 link check L680-682）。",
+    "独立读 pre-push-hook.sh（138 行）三步：step1 lint --strict（任一 warning 失败）、step2 gate --require 最新轮、step3 check-all-links sweep（.freeze 缺则跳过；DEEPFREEZE_SKIP_LINK_CHECK 只跳此步）。与 README『本仓库 hook 会拦每一次推送，设计而非缺陷，16 条存量 warning』一致。",
+    "独立读 README.md（397 行）与 README.zh-CN.md（288 行）全文 + 关键段行号定位。",
+    "实跑1（gate 全量带 artifact-map）：`python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json` → exit 1，'GATE: FAIL (48 violations across 37 checked)'，其中 99 superseded 为 advisory 不拦；违规主体 = 存量 STALE_VERDICT / VERDICT_FAIL / CONDITIONAL_NOT_ALLOWED（XJ-20261020-001 等），非本卡引入。基线 124（XJ-20261020-001 引用）与本口径不同，『下降』是 PASS 落地后 README 相关 STALE 被退休的后果，非本次可直测。",
+    "实跑2（check-all-links 输出格式）：`python tools/gate.py --check-all-links --link-dir .freeze --verdict-dir verdicts` → 'LINKS: PASS (1 checked)'，exit 0。当前 .freeze 仅 1 个 bound link（link-EVO-20261020-001.json），与 README『no .freeze directory means nothing to sweep』语义一致（此处有 .freeze 则 sweep 之）。",
+    "实跑3（--require-link 报错文案）：点名一个『有 verdict 无 link』的存量卡 `--require XJ-20260929-001 --require-link XJ-20260929-001` → '[LINK_REQUIRED_MISSING] XJ-20260929-001: --require-link names ... but .freeze\\link-XJ-20260929-001.json does not exist; run `deepfreeze protect --card ...` before the review ..., then `python tools/link_card.py` ...'，与 gate.py L419-425 逐字一致。",
+    "实跑4（LINK_NOT_STAMPED 触发条件）：lint_cards.py L1088-1135 check_link_not_stamped——verdict 已存在但 .freeze/link-<id>.json 无 verdict_sha256 时 WARN（非 ERROR），无 .freeze 则整条规则 off。git log 1d65895 'feat(lint): WARN LINK_NOT_STAMPED ...' 坐实。本仓当前未触发（唯一 bound link 已 stamped）。",
+    "实跑5（lint 现状，PASS 落地前）：`python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json` → 'LINT: PASS (5 warnings)'，exit 0（非 strict）；5 条 = 2×UNMAPPED_CLAIM_SURFACE(README/README.zh-CN，本卡 PASS 将消解) + 2×ORPHAN_VERDICT(EVO-20261019-001 untracked stray / EVO-20261020-001，本卡范围外存量) + 1×VERDICT_WITHOUT_REVIEW(XJ-20261021-001 自身，本 verdict 落地即消解)。"
+  ],
+  "independent_findings": [
+    "P2（卡面 scope，非 README 缺陷）：卡面待审表第 4 行把『插件 4-env 配置表/节流/fail-open 分工/已知边界 @ 8a77e5e』记在 agent-covenant 名下，但 8a77e5e 属 deepfreeze 仓；agent-covenant README 实测无该小节。评审对象实际 = 期2 可追溯性 + 期3 snap_ts 时区 + hook step3 文档（这三者在 agent-covenant 且全部一致）；『宿主集成插件配置表』应在 deepfreeze 侧核（上轮 DFB-20261021-002 已 PASS 并字符码级核 4 名 2-E）。不阻断 PASS（README 未声索不存在的内容，无失实），但卡面表应修归属，避免下轮误把 deepfreeze 内容当 agent-covenant 评审对象。",
+    "P3（验收账实）：本 verdict 落地前 lint = 'LINT: PASS (5 warnings)'（2×UNMAPPED + 2×ORPHAN + 1×VERDICT_WITHOUT_REVIEW）。签下本 verdict 后重跑实测 = 'LINT: PASS (3 warnings)'：2×UNMAPPED(README/README.zh-CN) 与 VERDICT_WITHOUT_REVIEW **已消解**（UNMAPPED=0 达成，坐实 lint 措辞『a PASS verdict signed at or after the file's mtime stands behind it』——本 ts 10-21 ≥ README mtime 10-20T13:08Z）。但 acceptance #1『lint 退出码 0（--strict）』仍**不能**单靠本卡达成——剩 2×ORPHAN_VERDICT（EVO-20261019-001 untracked stray + EVO-20261020-001）是本卡范围外存量，--strict 会因它们仍非 0。故『UNMAPPED=0』成立、『lint --strict exit 0』依赖 ORPHAN 另行清理。",
+    "P3（新观察项，本 verdict 落地后冒出）：lint 新增 [WARN] STATUS_DRIFT XJ-20261021-001.md（Status 仍 OPEN 但 verdict 已 PASS，'realign it or archive it'）。这是作者侧收尾动作（卡 Status 改非 open 或按 PROTOCOL 8 归档），非 README 失实、非本卡红线，记 followup。",
+    "P3（stray 观察项）：verdicts/EVO-20261019-001.verdict.json 为 untracked（历史评审暂存未入库，见该 verdict 的 landing_note P2-4 先例），贡献 1 条 ORPHAN_VERDICT。是否入库/归档由作者侧裁定，非本卡红线。"
+  ],
+  "open_followups": [
+    "P2 卡面归属修正（owner = 作者）：待审表第 4 行『宿主集成插件配置表』改挂 deepfreeze（DFB-20261021-002 已覆盖），agent-covenant 侧只留 hook step3 文档。",
+    "P3 ORPHAN 清理（owner = 后续卡）：EVO-20261019-001 untracked stray + EVO-20261020-001 缺卡，清掉后 --strict 才能归 0。",
+    "P3 STATUS_DRIFT 收尾（owner = 作者）：本 verdict PASS 后 XJ-20261021-001.md Status 仍 OPEN，需 realign（改非 open）或按 PROTOCOL 8 归档，清掉这条 warning。",
+    "push 恢复：本 PASS 落地后，README 双语 UNMAPPED 消解；但 16 条存量 warning（含 2 ORPHAN）仍在，`git push origin master` 的 hook 放行还需 --strict 的 16 条全部清零，非本卡单卡可完成。"
+  ],
+  "loop_closure": "agent-covenant 双语 README 的期2（可追溯性/LINK 码/resig）+ 期3（snap_ts 本地时区假设 + hook step3 文档）增量段落与实现（gate.py check_links/check_all_links/_parse_snap_ts + pre-push-hook.sh）逐条实测一致，无文档超前、无过度承诺，已知边界表述诚实。签名 PASS：UNMAPPED_CLAIM_SURFACE(README/README.zh-CN) 随本 verdict 消解。卡面待审表第 4 行的『宿主集成插件配置表』属跨仓库归属笔误（实为 deepfreeze 侧，上轮已 PASS），不构成本仓 README 失实，记 P2 不改判。--strict 归 0 仍被 2 条范围外 ORPHAN 阻塞，记 P3。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261021-001.md（评审正文，随卡归档；实跑落盘在 D:\\15812\\Documents\\2026-10-21\\20261021_1\\work\\{gate_before.txt, lint_strict.txt, checkalllinks.txt, requirelink.txt}）"
+}
