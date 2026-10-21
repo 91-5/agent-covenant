@@ -1,0 +1,82 @@
+{
+  "id": "XJ-20261021-002",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-21T22:37:00+08:00",
+  "acknowledged_by": "jarvis@agent-covenant（OpenCode，作者方）",
+  "commit": "fb49db9（git show fb49db9 --stat = gate.yml +5 / lint-rules.md +2/-1 / pre-push-hook.sh +5/-1 / 卡自身 +58；lint_cards.py + gate.py 零改动坐实）",
+  "artifact": "lint 调用侧补 --evo-dir（pre-push-hook.sh + CI gate.yml 各 1 行参数 + docs 1 行说明），消最后 2 条永久 ORPHAN_VERDICT。纯调用侧，机制已在 lint_cards.py（check_verdict_pairs extra_known_ids ← _evo_card_ids(args.evo_dir)，test_lint_cards L1437-1444 已测）。",
+  "change_quality": [
+    "改动最小化且 surgical：2 文件各 +1 行参数（--evo-dir ../_handoffs/evo）+ 注释 + docs 1 行。lint_cards.py / gate.py 零改动坐实（约束满足）。",
+    "相对路径 ../_handoffs/evo 无硬编码绝对路径（约束满足）。CI 上该目录不存在 → is_dir() 守卫零成本跳过（实测 /nonexistent 不崩、行为与不传一致）。",
+    "unittest 291 OK（hook fixture 无 evo dir 不破，约束满足）。",
+    "commit body 透明披露张力（--strict 与 EVO 合法 WARN 互斥），不掩盖，选项 (a)(b)(c) 明确路由给 sir。"
+  ],
+  "acceptance_verification": [
+    "✅ `--evo-dir ../_handoffs/evo` → LINT: PASS (2 warnings)，ORPHAN=0（2 条 ORPHAN 全消）。",
+    "✅ `--strict --evo-dir /nonexistent/evo`（CI 模拟）→ 不崩、LINT: FAIL (0 errors, 3 warnings)，行为与不传 --evo-dir 一致（ORPHAN 回归 + VERDICT_WITHOUT_REVIEW）。",
+    "✅ `python -m unittest discover -s tests` → Ran 291 tests in 51.093s, OK。",
+    "✅ git diff fb49db9 仅 4 文件（3 owned + 卡自身），无越界。",
+    "⚠️ hook 实弹 push（acceptance #2）作者自报 deferred「等 sir 对张力的裁定后执行」——本 verdict 不阻断改动质量判定，但如实记录。"
+  ],
+  "tension_ruling": {
+    "statement": "本地 `--strict --evo-dir ../_handoffs/evo` = FAIL (0 errors, 2 warnings)：VERDICT_WITHOUT_REVIEW（本 verdict 落地即消）+ EVO_PROTECTED_ASSET_TOUCHED EVO-20261020-001（by-design WARN，L823-828 `changes && approval` 双背书 → 合法升级通道记录审计，非 error）。CI 侧（--evo-dir 不存在）= FAIL (0 errors, 3 warnings)：ORPHAN×2 回归 + VERDICT_WITHOUT_REVIEW。→ 本地绿（ORPHAN 消）CI 红（ORPHAN 回归）固有不一致；且 --strict 与 EVO_PROTECTED_ASSET_TOUCHED（合法 WARN）互斥：EVO-20261020-001 作为当前轮时本地 --strict 永远红。",
+    "reviewer_assessment": "这是 --strict 语义（任一 WARN 即 FAIL）与 EVO 升级通道（by-design WARN 记录审计）的结构性矛盾，非本卡改动引入、非作者能裁的缺陷。本卡改动（调用侧补参数）本身正确且最小化。作者如实上报、选项 (a)(b)(c) 路由 sir，行为正确。",
+    "options_assessment": {
+      "a_hook_exempt": "hook 对 EVO_PROTECTED_ASSET_TOUCHED 单独豁免：最低风险（它有 sir_approval 背书 + 仅 WARN 级非 ERROR + 合法升级通道非普通 warning）。副作用：hook 多一条豁免逻辑（与 'hook 不判 CI 不判的东西' 原则张力——但该判断在 lint 侧已做，hook 只是不拦合法 WARN）。推荐作为首选方案。",
+      "b_strict_warnlist": "--strict 改为 WARN 白名单级（指定 WARN 码豁免）：更通用但扩大 blast radius（需维护白名单枚举 + 与 CI 的 gate.yml 同步 + 任何新增 WARN 码须评估是否入白名单）。复杂度高于 (a)。",
+      "c_evo_clear_targeted": "EVO targeted 卡 GATED 后清空 targeted 字段（临时态）：最轻但最脆——每次 EVO 卡 GATED 须手动清字段 + 若忘清则 lint 仍 WARN + 丢失审计记录（protected_assets_targeted 是规则演化的历史追溯凭证）。不推荐单独使用，可作为辅助动作。"
+    },
+    "recommendation": "(a) 为首选（精准豁免 + 保留审计）；(b) 作为通用化后备；(c) 作为辅助非独立方案。三者组合 (a)+(c) 最稳妥：hook 豁免合法 WARN + EVO GATED 后清 targeted 减少 WARN 触发面。最终拍板归 sir。",
+    "ci_inconsistency": "ORPHAN×2 在 CI 上永久回归（EVO 卡在 repo 外 _handoffs/evo/，CI 的 GitHub runner 无此路径）。彻底解决需拓扑变更：EVO 卡复制到 repo 内（如 .tasks/evo/）或 CI 的 lint 特设 ORPHAN 豁免。本卡范围外，记 P1 路由。"
+  },
+  "review_questions_answered": [
+    "Q1（../_handoffs/evo 相对推导——换仓库名/布局时行为）：is_dir() 守卫 → 目录不存在时静默跳过（零成本，不崩）。行为 = 静默跳过，非告警。这是安全默认（CI 零成本）但可能 mask 配置错误（本地路径 typo 导致目录找不到 → 静默回退到 ORPHAN 报警）。建议（非阻断）：lint 在 --evo-dir 传入但 is_dir()=False 时打一行 NOTICE（不 FAIL 仅提示），不改变判定语义。",
+    "Q2（CI vs 本地 lint 结论一致性）：不一致，坐实。本地 --evo-dir 有 → ORPHAN=0；CI 无 → ORPHAN=2 回归。根因 = EVO 卡在 repo 外（_handoffs/evo/），CI runner 不可见。非本卡引入（拓扑固有），解决需拓扑变更或 ORPHAN 码在 CI 侧的独立豁免策略。",
+    "Q3（EVO verdict 的卡被删/改名 → 回退 ORPHAN 是否可发现）：可发现——lint 每次实跑 fresh，卡文件消失 → verdict 重新无配对 → ORPHAN VERDICT WARN 回归。不静默（lint 输出会打 warning），但若调用者只看 exit code 不看 warning 内容，--strict 会 FAIL（可见）。结论：可发现，不需额外动作。"
+  ],
+  "conditions": [
+    {
+      "id": "C1",
+      "priority": "P1",
+      "desc": "--strict 与 EVO_PROTECTED_ASSET_TOUCHED（合法升级通道 by-design WARN）互斥。EVO-20261020-001 targeted 'gate.py 判定逻辑' + 双背书 → WARN 记录审计；--strict 任何 WARN 即 FAIL → 本地 hook 永远红。",
+      "status": "Routing to sir（非本卡红线，作者如实上报）",
+      "options": "(a) hook 豁免 EVO_PROTECTED_ASSET_TOUCHED（推荐，精准）/ (b) --strict 白名单级（通用化）/ (c) EVO GATED 后清 targeted（辅助）",
+      "reviewer_reco": "(a)+(c) 组合：hook 单独豁免 + GATED 后清字段减少触发面。sir 拍板。"
+    },
+    {
+      "id": "C2",
+      "priority": "P1",
+      "desc": "CI 固有不一致：EVO 卡在 repo 外（_handoffs/evo/），CI runner 无此路径 → ORPHAN×2 永久回归 → CI --strict 永远红。本地绿 CI 红。",
+      "status": "Routing to sir（拓扑级问题，非调用侧可解）",
+      "options": "(i) EVO 卡复制到 repo 内（.tasks/evo/ 或类似）CI 可配对 / (ii) CI 侧 ORPHAN 码特设豁免策略 / (iii) 接受不一致并文档化（ORPHAN 在 CI 侧为 known-accepted WARN）"
+    }
+  ],
+  "evidence": [
+    "git show fb49db9 全 diff：gate.yml +5（--evo-dir 1 行 + 4 行注释）/ pre-push-hook.sh +5/-1（--evo-dir 替换 + 4 行注释）/ lint-rules.md +2/-1（ORPHAN 行补 --evo-dir 说明）/ 卡自身 +58。lint_cards.py + gate.py 零改动坐实。",
+    "实跑1（本地带 --evo-dir）：python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo → 'LINT: PASS (2 warnings)' exit 0。ORPHAN=0，2 warnings = VERDICT_WITHOUT_REVIEW XJ-20261021-002（本 verdict 落地即消）+ EVO_PROTECTED_ASSET_TOUCHED EVO-20261020-001（by-design）。",
+    "实跑2（不带 --evo-dir）：同上但无 --evo-dir → 'LINT: PASS (3 warnings)' exit 0。ORPHAN=2 回归（EVO-20261019-001 / EVO-20261020-001），验证调用侧 gap 确为 ORPHAN 根因。",
+    "实跑3（CI 模拟）：--strict --evo-dir /nonexistent/evo → 'LINT: FAIL (0 errors, 3 warnings)' exit 1。不崩，ORPHAN×2 回归（与不传一致），坐实 is_dir() 守卫零成本。",
+    "实跑4（实弹 hook 等价）：--strict --evo-dir ../_handoffs/evo → 'LINT: FAIL (0 errors, 2 warnings)' exit 1。2 warnings = VERDICT_WITHOUT_REVIEW（本 verdict 落地后消）+ EVO_PROTECTED_ASSET_TOUCHED（by-design，C1 裁定对象）。",
+    "实跑5（unittest）：python -m unittest discover -s tests → Ran 291 tests in 51.093s OK。hook fixture 无 evo dir 不破。",
+    "机制核对：lint_cards.py L818-836——EVO_PROTECTED_ASSET_TOUCHED 双分支：changes+approval 双背书 → WARN（L825，合法升级通道审计记录）；缺任一 → ERROR（L831，自我授权拦截）。作者自报 'by-design WARN' 坐实。",
+    "拓扑核对：_handoffs/evo/ 真身在（14 个 EVO-*.json 文件），EVO-20261019-001.json / EVO-20261020-001.json 存在 → --evo-dir 传入时 check_verdict_pairs 的 extra_known_ids 可匹配这 2 张 verdict → ORPHAN 消解机制坐实。"
+  ],
+  "independent_findings": [
+    "P1/C1：--strict（任一 WARN 即 FAIL）与 EVO_PROTECTED_ASSET_TOUCHED（合法升级 by-design WARN）结构性互斥。EVO-20261020-001 作为当前轮时本地 hook 永远红。路由 sir 裁定 (a)/(b)/(c)。",
+    "P1/C2：CI 固有不一致——EVO 卡在 repo 外，CI runner 不可见 → ORPHAN×2 永久回归。路由 sir 裁定拓扑级方案。",
+    "P3：--evo-dir 传入但 is_dir()=False 时静默跳过（安全默认），可加一行 NOTICE 提示（非阻断，防 typo mask）。",
+    "P3：EVO verdict 卡被删/改名后 ORPHAN 回归可发现（lint WARN 重新出现），不需额外动作。"
+  ],
+  "open_followups": [
+    "C1（P1）：sir 裁定 --strict 与 EVO_PROTECTED_ASSET_TOUCHED 的豁免策略（(a) hook 豁免 / (b) 白名单 / (c) 清 targeted）。",
+    "C2（P1）：sir 裁定 CI ORPHAN 拓扑方案（EVO 卡入 repo / CI 侧 ORPHAN 豁免 / 接受不一致文档化）。",
+    "P3：--evo-dir 不存在时打 NOTICE（非阻断，下卡顺手做）。",
+    "P3 STATUS_DRIFT（本 verdict 落地后新冒出，与 XJ-20261021-001 同族）：XJ-20261021-002.md Status 仍 OPEN 但 verdict 已 PASS，需作者 realign（改非 open）或按 PROTOCOL 8 归档。范围外收尾，owner = 作者。",
+    "push 实弹（acceptance #2）：待 C1+C2 裁定落地后执行，本 verdict 不阻断改动质量。"
+  ],
+  "loop_closure": "本卡改动（调用侧补 --evo-dir）质量合格：最小化（2 行参数 + 注释 + docs）、约束满足（lint_cards.py/gate.py 零改动、相对路径、unittest 291 OK、CI 零成本守卫）、效果坐实（ORPHAN 0 vs 2 对照）。PASS 签回消 VERDICT_WITHOUT_REVIEW。两项 P1 张力（--strict × EVO 合法 WARN 互斥 + CI ORPHAN 拓扑）如实路由 sir 裁定，非本卡引入、非本卡可解。改动可合并，push 实弹等 C1+C2 落地。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261021-002.md（评审正文，随卡归档；实跑落盘在 D:\\15812\\Documents\\2026-10-21\\20261021_1\\work\\{l002_evo.txt, l002_noevo.txt, l002_cisim.txt, l002_strict.txt, l002_unittest.txt}）"
+}
