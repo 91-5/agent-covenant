@@ -478,7 +478,7 @@ def _check_unblocks_dangling(verdict_dir):
     return out
 
 
-def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None):
+def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None, allow_orphan_ids=None):
     """Pair verdicts against cards, in both directions.
 
     `extra_known_ids` are ids that count as "a card exists" for the orphan
@@ -486,6 +486,14 @@ def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None):
     `_handoffs/evo/EVO-*.json`, so their in-repo verdicts used to be reported
     as ORPHAN_VERDICT -- four false positives (EVO-20261010-001..004), each of
     which had both a PASS verdict and a review document.
+
+    `allow_orphan_ids` (XJ-20261021-003, dp 大脑裁定) are ids whose orphan
+    finding is DOWNGRADED to NOTICE — still printed, still in the JSON, but
+    not counted as a failure under --strict. This is the constrained green:
+    the topology-accepted orphans stay visible, and any NEW orphan id (a
+    verdict nobody expected) still warns and fails strict. Purely removing
+    the finding would swallow future unknowns; permanent red would kill the
+    CI's signal value.
 
     Deliberately one-sided. Folding these ids into `card_ids` proper would make
     the reverse direction fire for the seven EVO cards with no in-repo verdict,
@@ -498,9 +506,15 @@ def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None):
         return out
     verdict_ids = {p.name[: -len(VERDICT_SUFFIX)] for p in verdict_dir.glob(f"*{VERDICT_SUFFIX}")}
     known_ids = card_ids | set(extra_known_ids or ())
+    allowed = set(allow_orphan_ids or ())
     for vid in sorted(verdict_ids - known_ids):
-        out.append(_finding("ORPHAN_VERDICT", "WARN", Path(f"{vid}{VERDICT_SUFFIX}"),
-                            "verdict has no matching card in the card directory"))
+        if vid in allowed:
+            out.append(_finding("ORPHAN_VERDICT", "NOTICE", Path(f"{vid}{VERDICT_SUFFIX}"),
+                                "verdict has no matching card in the card directory "
+                                "(allow-listed topology orphan; still visible, not a failure)"))
+        else:
+            out.append(_finding("ORPHAN_VERDICT", "WARN", Path(f"{vid}{VERDICT_SUFFIX}"),
+                                "verdict has no matching card in the card directory"))
     for vid in sorted(card_ids - verdict_ids):
         out.append(_finding("VERDICT_WITHOUT_REVIEW", "WARN", Path(f"{vid}.md"),
                             "card has no machine-readable verdict file"))
@@ -1458,6 +1472,9 @@ def build_parser():
                         help="directory of EVO rule-evolution cards (EVO-*.json) to "
                              "check the protected-asset boundary against; neither "
                              "flag nor directory = check not enabled")
+    parser.add_argument("--allow-orphan-id", action="append", default=[], metavar="ID",
+                        help="orphan verdicts for these ids downgrade to NOTICE (visible, "
+                             "not a failure); unknown orphan ids still warn and fail --strict")
     parser.add_argument("--json", action="store_true", dest="as_json", help="emit JSON findings")
     parser.add_argument("--quiet", action="store_true", help="suppress output; use the exit code")
     return parser
@@ -1476,7 +1493,8 @@ def main(argv=None):
     # Cards parked in legacy/ are evidence, not linted - but they still exist, so
     # their verdicts are neither orphaned nor missing.
     findings += check_verdict_pairs(card_ids | _legacy_card_ids(card_dir), verdict_dir,
-                                    extra_known_ids=_evo_card_ids(args.evo_dir))
+                                    extra_known_ids=_evo_card_ids(args.evo_dir),
+                                    allow_orphan_ids=getattr(args, "allow_orphan_id", []))
     findings += check_status_drift(card_dir, verdict_dir)
     if not getattr(args, "no_verdict_schema", False):
         findings += check_verdict_schema(verdict_dir, skipped=args.no_verdict_schema)

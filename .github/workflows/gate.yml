@@ -37,11 +37,18 @@ jobs:
           --verdict-dir verdicts
           --artifact-map artifacts.json
           --evo-dir ../_handoffs/evo
+          --allow-orphan-id EVO-20261020-001
           --strict
         # --evo-dir pairs EVO verdicts with their cards (_handoffs/evo, outside
         # the repo). On CI that dir never exists → the is_dir() guard skips it,
         # zero cost; locally it silences the permanent ORPHAN warnings
         # (XJ-20261021-002).
+        #
+        # --allow-orphan-id (XJ-20261021-003, dp 大脑裁定): the topology-accepted
+        # orphan (EVO-20261020-001's verdict is in-repo, its card is not) is
+        # downgraded to NOTICE — visible, not a failure. Any NEW orphan id
+        # still warns and fails strict: this is a constrained green, not a
+        # blind exemption.
 
       - name: resolve current round id
         id: current

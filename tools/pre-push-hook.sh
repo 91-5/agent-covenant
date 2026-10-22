@@ -125,14 +125,11 @@ echo "[pre-push] Linting cards and gating round $NEWEST_ID ..."
 # lets the orphan check pair EVO verdicts with their cards instead of warning
 # forever. Absent dir → the is_dir() guard skips it, zero cost (XJ-20261021-002).
 #
-# EVO_PROTECTED_ASSET_TOUCHED exemption (sir ruling 2026-10-21, option (a) of
-# XJ-20261021-002 C1): that WARN is the by-design audit record of the EVO
-# legitimate-escalation channel — it only fires when protected_assets_changes
-# AND sir_approval are BOTH present (the un-backed variant is an ERROR, which
-# still blocks below). Under --strict it would otherwise block every push
-# while an EVO targeted card is the current round. ERRORs and every other
-# WARN still block: the exemption is exactly one rule code, nothing else.
-LINT_OUT=$("$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --strict 2>&1) && LINT_CODE=0 || LINT_CODE=$?
+# --allow-orphan-id (XJ-20261021-003, dp 大脑裁定): the two in-repo EVO verdicts
+# whose cards live in _handoffs/evo are topology-accepted orphans — downgraded
+# to NOTICE, still printed. Any NEW orphan id still warns and fails strict.
+# (EVO_PROTECTED_ASSET_TOUCHED exemption unchanged: sir ruling (a), C1.)
+LINT_OUT=$("$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --allow-orphan-id EVO-20261019-001 --allow-orphan-id EVO-20261020-001 --strict 2>&1) && LINT_CODE=0 || LINT_CODE=$?
 NON_EXEMPT=$(printf '%s\n' "$LINT_OUT" | grep -E '^\[(ERROR|WARN)\]' | grep -vE '^\[WARN\] EVO_PROTECTED_ASSET_TOUCHED' || true)
 if [ "$LINT_CODE" -eq 2 ]; then
     printf '%s\n' "$LINT_OUT"
