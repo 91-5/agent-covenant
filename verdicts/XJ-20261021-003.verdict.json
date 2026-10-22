@@ -1,0 +1,51 @@
+{
+  "id": "XJ-20261021-003",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-22T22:05:00+08:00",
+  "acknowledged_by": "jarvis@agent-covenant（OpenCode，作者方）",
+  "commit": "c8af306 / abf231c / 878f5f3 / 5272816（4 commits；lint_cards.py +26/-~6，gate.yml mtime 恢复步 +22，pre-push-hook.sh 白名单 +13/-6，test_lint_cards.py +36，docs/lint-rules.md ORPHAN 行 +1，README 双语 291→294，artifacts.json 登记 003。gate.py 零改动坐实（受保护资产 #5 未越）。",
+  "artifact": "lint_cards.py 加 --allow-orphan-id 白名单（白名单内 ORPHAN 降级 NOTICE：仍打印、仍进 JSON、strict 不计入；清单外 ORPHAN 照 WARN → strict 失败）+ CI mtime 恢复步（全新 checkout 把 UNMAPPED_CLAIM_SURFACE 的 freshness 对比恢复为 coherent 而非永久红）——「有约束的绿」。",
+  "design_assessment": [
+    "对抗性①（NOTICE 级设计）：三半边**实测全成立**。白名单内 ORPHAN → [NOTICE]（l003_wl.txt 两条 EVO 全降 NOTICE，可见不失败）；白名单外 ORPHAN → 照 WARN（l003_nowl.txt 不带白名单时 EVO-20261019-001/20261020-001 都 WARN）；strict 计数 `failed = errors>0 or (strict and warnings>0)`（lint_cards.py L1527）NOTICE 两不沾——白名单价值真实成立，非假绿。取舍与 dp 裁定一致：既非静默吞（NOTICE 仍在 JSON+stdout），亦非永久红（清单内不失败），是「有约束的绿」。",
+    "NOTICE 悬挂（Q1）：若 EVO 卡全迁入 repo，`--evo-dir` 会让 known_ids 吞掉 ORPHAN，白名单那条 NOTICE 自然消失——悬挂期 = EVO 卡迁入前，无自动清理但**无悬挂危害**（NOTICE 不影响 exit code，纯可见）。到期清理机制非必需（P3 观察）。",
+    "白名单漂移（Q2）：gate.yml 只写 EVO-20261020-001（CI 上唯一拓扑 ORPHAN），pre-push-hook.sh 写两个 EVO id（本地盘上都躺着）。两处各写各的 → 漂移风险真实存在（新增 EVO verdict 忘进 CI 清单 → CI 仍 WARN 红）。当前无错（两个 id 都对），但命令参数非单一 source of truth。P3 建议（非阻断）：把白名单收进 artifacts.json 或 .lint-config，hook/CI 读同一份。",
+    "清单外误伤（Q3）：`--allow-orphan-id` 只降白名单内的 id；agent 手注册新卡忘进 artifacts.json 产生的 ORPHAN 不在清单 → 照 WARN → strict 红，**不会被白名单掩盖**。语义保留正确，无误伤路径。"
+  ],
+  "d6_mtime_assessment": [
+    "结构修复坐实（本地复现）：不带白名单 lint（l003_nowl.txt）→ UNMAPPED_CLAIM_SURFACE README/README.zh-CN 两条红着，根因 = README mtime `2026-10-22T12:31` 晚于 `XJ-20261021-001` PASS ts `2026-10-21T21:14`——「文件 mtime 比 verdict 晚」正是 CI 全新 checkout 戳所有文件为 now 的同族问题。mtime 恢复步（per-file `git log -1 --format=%aI` → os.utime）把 mtime 拉回 commit 时间后 UNMAPPED 恢复 coherent（作者 CI-clone 实测 163 files 消 UNMAPPED×3）。",
+    "性能（对抗性②）：per-file `git log` 子进程 = `git ls-files` 文件数 × 1 次 subprocess（本仓 ~163-200 tracked 文件 → 200+ git 子进程 + 1 次 ls-files）。每次 CI 跑 ~200 个 git 子进程，单次 git log 毫秒级 → 总计数秒，**可接受**（CI 非热路径）。更快替代（P3，非阻断）：`git log --format=%aI --name-only` 单次遍历 or `git log --diff-filter --pretty` 批量，可压到 1 个子进程；或 `git show -s --format=%aI` 对 last-touch commit。作者提的 `%aI --name-only` 一次遍历可行。",
+    "掩盖风险（对抗性②）：mtime 恢复把文件戳回 commit 时间——若某文件在 commit 后被意外改动（工作树 dirty），`git ls-files` 只列 tracked 文件的 last commit date，不反映 dirty 改动 → 意外改动会被 mtime 恢复掩盖。**但**：CI 的 checkout 是干净 clone（`actions/checkout` 无 working-tree 改动），恢复前无 dirty 状态可掩盖；且 unittest step 在 mtime 恢复后跑（gate.yml 顺序：restore → unittest → lint），若真有意外改动 unittest 会先炸。风险在 CI 场景**不成立**（干净 checkout + unittest 前置）。本地 dev 仓不适用此步（只 CI 有）。",
+    "Py3.9 兼容（对抗性④）：`git log --format=%aI` 输出 `2026-10-22T13:43:58+08:00`（`+HH:MM` 形态，非 `Z` 后缀）。`datetime.fromisoformat` 自 3.7 支持 `+HH:MM` offset，3.9 完全可用；3.11 才支持的 `Z` 后缀本就不出现在 %aI 输出里 → **无兼容风险**。实测 git log -1 --format=%aI 两文件均出 +08:00 形态。"
+  ],
+  "d4_tests_assessment": [
+    "+3 用例实测（unittest 294 OK）：test_allow_orphan_id_downgrades_to_notice_and_unknown_id_still_warns（EVO-1 白名单→NOTICE + EVO-2 fixture 补上使「unknown 仍 WARN」半边真实）+ test_..._still_reported_not_silently_dropped（allow-listed 仍 1 条 visible）+ test_..._never_counts_as_strict_failure（`failed = errors>0 or (True and warnings>0)` 仅白名单内时 False）。",
+    "连带修的 2 个测试 bug（commit body 透明披露）：①levels dict 原来用 rule 做 key → 多 finding 同 rule 互相覆盖，改成用 file stem 做 key；②引用未 import 的 `VERDICT_SUFFIX` → NameError，补字面量 suffix + import。EVO-2 fixture 缺失也补上。这些是**修测试本身**（不改 lint 行为），合理。",
+    "README 计数 291→294：STALE_TEST_COUNT 抓住的「老坑再犯」（3 个新测试没同步计数）——机制有效（规则没退化），修复正确。"
+  ],
+  "evidence": [
+    "实跑1（带白名单 hook 形态）：`--dir .tasks --verdict-dir verdicts --allow-orphan-id EVO-20261019-001 --allow-orphan-id EVO-20261020-001 --strict` → exit 1，ORPHAN 2 条全 [NOTICE]（可见不失败），FAIL 原因 = 3 WARN（VERDICT_WITHOUT_REVIEW 003 + UNMAPPED README + UNMAPPED README.zh-CN），与降级 ORPHAN 无关。l003_wl.txt。",
+    "实跑2（不带白名单对照）：`--dir .tasks --verdict-dir verdicts` → exit 0 PASS(5 warnings)，ORPHAN×2 是 WARN（非 NOTICE）。l003_nowl.txt。证明白名单开关即 ORPHAN 0↔2 降级。",
+    "实跑3（unittest）：`python -m unittest discover -s tests` → Ran 294 tests in 71.484s, OK（291 + 3 新增 + 修 2 bug）。l003_unittest.txt。",
+    "实跑4（mtime 恢复步的 Python 逻辑）：per-file `git log -1 --format=%aI -1 -- <f>` → 实测 README.md 出 `2026-10-22T21:12:57+08:00`、lint_cards.py 出 `2026-10-22T13:43:58+08:00`，`+HH:MM` 非 Z；`datetime.fromisoformat` 3.9 支持该形态（3.7+）。Py3.9 无虞。",
+    "UNMAPPED 本地红着坐实 D6 问题真实性：l003_nowl.txt 两条 UNMAPPED(README/zh-CN)，根因 README mtime `2026-10-22T12:31:38` > 001 PASS ts `2026-10-21T21:14:00`——「文件 mtime 晚于 verdict」= CI 全新 checkout 的同族结构问题。",
+    "diff 边界核：git show c8af306/abf231c/878f5f3 --stat 全文件清单 = lint_cards.py + gate.yml + pre-push-hook.sh + test_lint_cards.py + lint-rules.md + README 双语 + artifacts.json + 卡自身。**gate.py 不在任何 diff**（受保护 #5 零改动坐实）。",
+    "本地 mtime 核（verdict ts 落点）：7 owned files 中最新 gate.yml mtime 21:03:40+08:00，verdict ts 取 22:05:00+08:00 ≥ 全部 mtime 且非未来（< 300s skew from now 22:05）。"
+  ],
+  "independent_findings": [
+    "P3（mtime 恢复步性能）：per-file git 子进程 = 本仓 ~200+ 次，CI 可接受但非最优化。建议（非阻断）换 `git log --format=%aI --name-only` 单遍历（作者已提此方向，P3 落地时做）。",
+    "P3（白名单漂移）：gate.yml 1 id / hook 2 id 各写各的清单，新增 EVO verdict 易漏进 CI 清单 → CI 仍 WARN。建议（非阻断）收进单一配置（artifacts.json 或 .lint-config）。",
+    "P3（NOTICE 悬挂到期清理）：EVO 全迁入 repo 后白名单条目自然失效，无清理机制但无悬挂危害（NOTICE 不影响 exit）。建议（非阻断）EVO 迁入后删对应 --allow-orphan-id 参数。",
+    "P3（本地 UNMAPPED 红）：dev 仓 README mtime 晚于 001 PASS ts → 本地 --strict 仍红（UNMAPPED×2）。CI 有 mtime 恢复步所以 CI 不红；本地 dev 可跑同逻辑或接受本地 UNMAPPED 为已知 dev-only 红（与 D6 同族，CI 侧已解，本地可选）。"
+  ],
+  "open_followups": [
+    "P3 mtime 恢复步性能优化（owner = 后续卡 / 或本卡 push 后 CI 实跑确认耗时可接受）：per-file → 单遍历。",
+    "P3 白名单收进单一配置（owner = 后续卡）：gate.yml + hook 两处漂移风险。",
+    "P3 NOTICE 悬挂到期清理（owner = EVO 全迁入 repo 时顺手做）。",
+    "CI 首绿（本卡 push 后）：unittest 已本地 294 OK + mtime 恢复步实测消 UNMAPPED×3 + 白名单消 ORPHAN → CI lint step 预期全绿。本卡 PASS 落地（本 verdict）→ push 实弹 → CI 全绿 = 最终验收。"
+  ],
+  "loop_closure": "本卡改动质量合格：D1 白名单三半边实测全成立（NOTICE 降级可见不失败 / 清单外 WARN 不变 / strict 不计入）——「有约束的绿」如 dp 裁定，非假绿。D6 mtime 恢复步是结构修复（CI 全新 checkout 的 UNMAPPED 永久红 → coherent），per-file 性能可接受、掩盖风险在干净 CI checkout 不成立、Py3.9 兼容实证无虞。D4 +3 测试实测 294 OK 且修 2 测试 bug 透明披露。gate.py 零改动守红线。4 个 P3（性能 / 白名单漂移 / NOTICE 悬挂 / 本地 UNMAPPED）路由后续卡，不阻断。PASS 签回：verdict ts ≥ 全部文件 mtime，UNMAPPED/VERDICT_WITHOUT_REVIEW 随 PASS 消。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261021-003.md（评审正文，随卡归档；实跑落盘在 D:\\15812\\Documents\\2026-10-21\\20261021_1\\work\\{l003_wl.txt, l003_nowl.txt, l003_unittest.txt}）"
+}
