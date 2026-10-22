@@ -11,6 +11,11 @@ directory. Three tests in this file passed for the wrong reason because of the
 same bug -- the hook looked for ``tools/lint_cards.py`` in a temp repo that had
 none, so every push was blocked no matter what the fixture claimed.
 """
+# Runtime-evaluated `X | Y` annotations in this file (the hook-test helpers)
+# are a TypeError on Python 3.9 -- which is exactly what CI runs. Deferring
+# annotation evaluation keeps the 3.9 gate green without rewriting them.
+from __future__ import annotations
+
 import json
 import os
 import hashlib
