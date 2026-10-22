@@ -193,5 +193,6 @@
   "XJ-20261016-001": ["README.md", "README.zh-CN.md", "artifacts.json"],
   "XJ-20261019-001": ["tools/link_card.py", "tests/test_link_card.py", "README.md", "README.zh-CN.md"],
   "XJ-20261020-001": ["tools/gate.py", "tools/lint_cards.py", "tools/pre-push-hook.sh", "tests/test_gate.py", "tests/test_lint_cards.py", "tests/test_pre_push_hook.py", "docs/lint-rules.md", "README.md", "README.zh-CN.md"],
-  "XJ-20261021-001": ["README.md", "README.zh-CN.md"]
+  "XJ-20261021-001": ["README.md", "README.zh-CN.md"],
+  "XJ-20261021-003": ["tools/lint_cards.py", ".github/workflows/gate.yml", "tools/pre-push-hook.sh", "tests/test_lint_cards.py", "docs/lint-rules.md", "README.md", "README.zh-CN.md"]
 }

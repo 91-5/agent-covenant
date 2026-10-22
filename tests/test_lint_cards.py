@@ -1448,6 +1448,42 @@ class TestEvoVerdictPairing(unittest.TestCase):
     def test_extra_known_ids_clears_the_orphan(self):
         self.assertNotIn("ORPHAN_VERDICT", self._orphans(set(), extra={"EVO-1"}))
 
+    # -- allow_orphan_ids (XJ-20261021-003, dp 大脑裁定): the constrained
+    # green. Allow-listed orphans downgrade to NOTICE — visible, in the JSON,
+    # not counted as a failure; ANY other orphan id keeps its WARN and still
+    # fails --strict. The two assertions below pin both halves of that deal.
+
+    def test_allow_orphan_id_downgrades_to_notice_and_unknown_id_still_warns(self):
+        # a second unknown verdict so the "not allow-listed -> WARN" half is real
+        (self.verdicts / "EVO-2.verdict.json").write_text(
+            '{"id": "EVO-2", "verdict": "PASS"}', encoding="utf-8")
+        findings = lint.check_verdict_pairs(set(), self.verdicts,
+                                            allow_orphan_ids={"EVO-1"})
+        levels = {f["file"][: -len(".verdict.json")]: f["level"]
+                  for f in findings if f["rule"] == "ORPHAN_VERDICT"}
+        # EVO-1 is allow-listed -> NOTICE (visible, not a failure)...
+        self.assertEqual(levels.get("EVO-1"), "NOTICE")
+        # ...EVO-2 is NOT allow-listed -> keeps its WARN (constrained green)
+        self.assertEqual(levels.get("EVO-2"), "WARN")
+
+    def test_allow_orphan_id_is_still_reported_not_silently_dropped(self):
+        findings = lint.check_verdict_pairs(set(), self.verdicts,
+                                            allow_orphan_ids={"EVO-1"})
+        orphans = [f for f in findings if f["rule"] == "ORPHAN_VERDICT"]
+        self.assertEqual(len(orphans), 1, "allow-listed orphan must stay visible")
+        self.assertEqual(orphans[0]["level"], "NOTICE")
+        self.assertIn("allow-listed", orphans[0]["detail"])
+
+    def test_allow_orphan_id_never_counts_as_strict_failure(self):
+        """The point of the whitelist: strict passes when ONLY allow-listed
+        orphans remain."""
+        findings = lint.check_verdict_pairs(set(), self.verdicts,
+                                            allow_orphan_ids={"EVO-1"})
+        errors = sum(1 for f in findings if f["level"] == "ERROR")
+        warnings = sum(1 for f in findings if f["level"] == "WARN")
+        failed = errors > 0 or (True and warnings > 0)
+        self.assertFalse(failed, "only allow-listed orphans must not fail --strict")
+
     def test_extra_known_ids_do_not_create_missing_verdicts(self):
         """The whole point of one-sided pairing: no reverse-direction fallout."""
         self.assertEqual(set(), self._without_review(set(), extra={"EVO-1"}))

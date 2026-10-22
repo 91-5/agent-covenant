@@ -27,6 +27,28 @@ jobs:
         with:
           python-version: '3.9'
 
+      # Restore file mtimes from git before linting (XJ-20261021-003): a fresh
+      # checkout stamps every file "now", which makes the UNMAPPED_CLAIM_SURFACE
+      # freshness comparison meaningless on CI — no verdict signed earlier can
+      # ever cover a file whose mtime is the checkout moment. Setting each
+      # tracked file's mtime to its last commit's date restores the state the
+      # verdicts were signed against, so the check is coherent instead of
+      # permanently red.
+      - name: restore mtimes from git (freshness check coherence)
+        run: |
+          python -c "
+          import subprocess, os, datetime
+          files = subprocess.run(['git','ls-files','-z'], capture_output=True).stdout.split(b'\0')
+          for f in files:
+              if not f: continue
+              f = f.decode()
+              d = subprocess.run(['git','log','-1','--format=%aI','-1','--',f], capture_output=True, text=True).stdout.strip()
+              if d:
+                  ts = datetime.datetime.fromisoformat(d).timestamp()
+                  os.utime(f, (ts, ts))
+          "
+          echo "mtimes restored from commit dates"
+
       - name: unittest (includes the gate self-test)
         run: python -m unittest discover -s tests
 
