@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # Full history on purpose (same reason the dryrun job below uses it):
+        # the mtime-restore step runs `git log -1 -- <file>` per tracked file —
+        # in a shallow clone (fetch-depth: 1 default) every file's log collapses
+        # to HEAD's date, which stamps ALL files with the HEAD time and makes
+        # every earlier PASS verdict "stale" (UNMAPPED×N, XJ-20261021-003 D6).
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
