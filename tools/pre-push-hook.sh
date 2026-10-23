@@ -147,8 +147,28 @@ if [ "$LINT_CODE" -ne 0 ]; then
 fi
 
 # --- step 2: gate --require newest round ---
+# Phase 4b (XJ-20261021-004, dp 大脑 conservative ruling): on gate FAIL, emit a
+# structured disposition block — the violations (already printed by gate) plus
+# a rollback GUIDE built from .freeze/state.json, IF deepfreeze is managing this
+# tree. The guide is TEXT ONLY: per the phase-4 ruling, the hook never executes
+# a restore itself — FAIL may be a stale verdict or an environment issue, and an
+# automatic /MIR would delete uncommitted work irreversibly. The human decides.
 if ! "$PYTHON" tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require "$NEWEST_ID"; then
     echo "[pre-push] BLOCKED: gate violations for round $NEWEST_ID (see above)." >&2
+    # --- disposition guidance (text only, never executed) ---
+    echo "[pre-push] ---- gate FAIL disposition ----" >&2
+    echo "[pre-push] common causes: verdict missing/stale/CONDITIONAL; artifact mtime outran the verdict ts (re-sign or re-review); link sha mismatch (re-run link_card.py)" >&2
+    if [ -f ".freeze/state.json" ]; then
+        SNAP_TS=$(python -c "import json,sys; d=json.load(open('.freeze/state.json')); print(d.get('latest_snapshot',''))" 2>/dev/null)
+        if [ -n "$SNAP_TS" ]; then
+            echo "[pre-push] rollback guide (MANUAL - the hook will NOT run this):" >&2
+            echo "[pre-push]   deepfreeze.ps1 restore -Source \"\$PWD\" -Snapshot $SNAP_TS -AutoConfirm" >&2
+            echo "[pre-push]   (quarantine preserves post-snapshot new files; verify the FAIL is real before rolling back)" >&2
+        fi
+    else
+        echo "[pre-push] (no deepfreeze state in this tree - no snapshot rollback available)" >&2
+    fi
+    echo "[pre-push] --------------------------------" >&2
     exit 1
 fi
 
