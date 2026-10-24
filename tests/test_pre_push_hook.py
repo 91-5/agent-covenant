@@ -413,6 +413,106 @@ class PrePushHookTestCase(unittest.TestCase, SeededRepoMixin):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("BLOCKED", result.stdout + result.stderr)
 
+    def _break_gate_only(self) -> None:
+        """Make the newest round fail gate step 2 while lint step 1 stays green.
+
+        Two rounds: an older PASS round whose artifact-map entry retires the
+        claim-surface staleness for README.md (lint green), plus the newest
+        round flipped to FAIL (schema-valid; gate rejects it). Every
+        single-round shortcut trips lint first and never reaches the gate
+        step whose 4b disposition block these tests assert on:
+        deleting the verdict draws VERDICT_WITHOUT_REVIEW; touching the
+        artifact draws UNMAPPED_CLAIM_SURFACE; PASS+blockers=1 draws
+        VERDICT_SCHEMA_NONCOMPLIANT; a lone CONDITIONAL draws
+        UNMAPPED_CLAIM_SURFACE again (a listing only retires staleness
+        once a PASS covers it).
+        """
+        # Older round: PASS, owns the claim surface, inserted FIRST so
+        # CARD_ID stays the newest (artifacts.json insertion order decides).
+        (self.repo / ".tasks" / "legacy" / f"{OLD_ID}.md").write_text(
+            _card_text(OLD_ID), encoding="utf-8"
+        )
+        old_verdict = {
+            "id": OLD_ID,
+            "artifact": "README.md",
+            "verdict": "PASS",
+            "blockers": 0,
+            "conditions": [],
+            "independent": True,
+            "verifier": "reviewer@local",
+            "ts": _now(),
+            "evidence": ["git init -> success"],
+        }
+        (self.repo / "verdicts" / f"{OLD_ID}.verdict.json").write_text(
+            json.dumps(old_verdict), encoding="utf-8"
+        )
+        map_path = self.repo / "artifacts.json"
+        artifact_map = json.loads(map_path.read_text(encoding="utf-8"))
+        # OLD_ID first (owns README.md's claim surface for lint), CARD_ID last
+        # (stays the newest round -- gate step 2 targets it). CARD_ID keeps a
+        # map entry even though its verdict is FAIL so the hook still finds
+        # and gates it; dropping the entry instead would re-target OLD_ID
+        # and the gate would pass.
+        entries = {OLD_ID: ["README.md"]}
+        entries.update(artifact_map)
+        map_path.write_text(json.dumps(entries), encoding="utf-8")
+
+        # Newest round: FAIL verdict -- gate step 2 rejects it.
+        verdict_path = self.repo / "verdicts" / f"{CARD_ID}.verdict.json"
+        verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+        verdict["verdict"] = "FAIL"
+        verdict["blockers"] = 1
+        verdict_path.write_text(json.dumps(verdict), encoding="utf-8")
+
+    def test_gate_fail_with_freeze_state_prints_rollback_guide(self):
+        """Phase 4b: a gate FAIL in a deepfreeze-managed tree prints the manual
+        rollback guide (command TEXT read from .freeze/state.json) and the
+        common-causes line -- but the hook still just exits 1; it never runs
+        the restore itself."""
+        self._break_gate_only()  # PASS + blockers=1 -> gate BAD_VERDICT_VALUE, lint green
+        freeze = self.repo / ".freeze" / "state.json"
+        freeze.parent.mkdir(parents=True, exist_ok=True)
+        freeze.write_text(
+            json.dumps({"latest_snapshot": "snap-20261024-012602"}), encoding="utf-8"
+        )
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+        output = result.stdout + result.stderr
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("gate FAIL disposition", output)
+        self.assertIn("common causes", output)
+        self.assertIn("rollback guide (MANUAL", output)
+        self.assertIn("snap-20261024-012602", output)
+        self.assertIn("quarantine preserves post-snapshot new files", output)
+
+    def test_gate_fail_without_freeze_state_says_no_snapshot(self):
+        """Phase 4b: with no .freeze the disposition block still prints, but
+        with the no-deepfreeze line instead of a rollback guide."""
+        self._break_gate_only()  # gate-only FAIL; lint stays green
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+        output = result.stdout + result.stderr
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("gate FAIL disposition", output)
+        self.assertIn("no deepfreeze state", output)
+        self.assertNotIn("rollback guide", output)
+
+    def test_gate_pass_prints_no_disposition_block(self):
+        """Phase 4b: a green push stays green -- the disposition block (and the
+        guide) must not leak into the happy path."""
+        freeze = self.repo / ".freeze" / "state.json"
+        freeze.parent.mkdir(parents=True, exist_ok=True)
+        freeze.write_text(
+            json.dumps({"latest_snapshot": "snap-20261024-012602"}), encoding="utf-8"
+        )
+        result = run_hook(self.repo, HOOK_STDIN_BRANCH)
+        output = result.stdout + result.stderr
+
+        self.assertEqual(result.returncode, 0, output)
+        self.assertNotIn("gate FAIL disposition", output)
+        self.assertNotIn("rollback guide", output)
+
+
     def test_tag_push_bypasses_gate(self):
         """A tag push exits 0 even with the round's verdict deleted."""
         (self.repo / "verdicts" / f"{CARD_ID}.verdict.json").unlink()

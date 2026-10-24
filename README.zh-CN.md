@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->294<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->297<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -86,6 +86,8 @@ jobs:
 hook 的**第 3 步**会扫一遍 `.freeze/link-*.json`：凡是绑定了 verdict 的 link，都复用 gate 自己的 `check_links()` 重校 `verdict_sha256`（对 verdict 原始字节）、`verdict_ts` 与 `snap_ts` 的先后、以及快照 manifest 是否存在。它抓的是这样一个坑——**verdict 重签了，`link_card.py` 没重跑**：失配的往往是「已经不是最新轮」的那张卡，常规 gate 只审最新轮，于是永远看不到；现在 push 前就会被 `LINK_VERDICT_SHA_MISMATCH` 拦下，修复命令是 `python tools/link_card.py --card <卡号> --verdict verdicts/<卡号>.verdict.json`。没有 `.freeze` 目录就什么都不做；只想跳过这一步（lint 与 gate 照跑）用 `DEEPFREEZE_SKIP_LINK_CHECK=1 git push`。
 
 **本仓库现在装上 hook 会拦掉每一次推送，这是设计，不是缺陷。** `lint_cards.py --strict` 把**任何一条** warning 都当失败，而当前树上有 **16 条**——全是存量债，没有一条是 hook 引入的。轮次已签好名、lint 也干净的推送仍然会被拒；而把 hook 摘掉之后，同一次推送就成功了。这两条是**实测**的，不是推断。`XJ-20261013-004` 的评审选择保留 `--strict`，而不是让 hook 判得比 CI 更严——判官分叉就意味着 hook 在审 CI 从不审的东西。存量正在 `XJ-20261014-002` 下清理；在它归零之前，请把 `[pre-push] BLOCKED` 当成一份告警清单读完，别直接摸 `--no-verify`。
+
+**gate FAIL 时的处置引导（期 4b，`XJ-20261021-004`）。** 当推送被 **gate 步**（不是 lint 步）拒绝时，hook 会在违例列表之后多打一段处置块：常见原因（verdict 缺失/过期/CONDITIONAL、产物 mtime 反超 verdict 时间戳、link sha 漂移），以及——若本树由 deepfreeze 管理（`.freeze/state.json` 里有 `latest_snapshot`）——一条**回滚引导**：完整可复制的 `deepfreeze.ps1 restore -Snapshot <ts>` 命令行。hook **绝不执行它**：按期 4 的保守裁定，FAIL 可能只是 verdict 过期或环境问题，自动 `/MIR` 会不可逆地删掉未提交的工作。先确认 FAIL 是真的，再手动执行 restore——快照之后新增的文件由 quarantine 保全（期 4a）。
 
 ## 鎬庝箞鍙戣捣涓€娆¤瘎瀹?
 

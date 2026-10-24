@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->294<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->297<!-- /test-count --> tests
 ```
 
 ## Install
@@ -119,6 +119,17 @@ judges more strictly than CI would be judging something CI never judges. The
 backlog is being cleared under `XJ-20261014-002`; until it reaches zero, expect
 `[pre-push] BLOCKED` and read the warnings rather than reaching for
 `--no-verify`.
+
+**Gate-FAIL disposition (phase 4b, `XJ-20261021-004`).** When the gate step —
+not lint — refuses a push, the hook prints a disposition block after the
+violations: the common causes (stale/missing/CONDITIONAL verdict, artifact mtime
+outrunning the verdict ts, link sha drift) and, if deepfreeze manages the tree
+(`.freeze/state.json` with a `latest_snapshot`), a **rollback guide** — the
+exact `deepfreeze.ps1 restore -Snapshot <ts>` command line. The hook **never
+executes it**: per the phase-4 conservative ruling, a FAIL may be a stale
+verdict or an environment issue, and an automatic `/MIR` would delete
+uncommitted work irreversibly. Confirm the FAIL is real, then run the restore
+by hand — post-snapshot new files are preserved by quarantine (phase 4a).
 
 ## Ask for a review
 
