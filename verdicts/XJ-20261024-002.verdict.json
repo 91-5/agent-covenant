@@ -1,45 +1,41 @@
 {
   "id": "XJ-20261024-002",
-  "commit": "4c74bc2（feature/xj-20261024-002-report-and-prereg-v11 末端，基线 master @ fd4582a，未 push）",
+  "commit": "4c74bc2（卡 002 主 commit）+ 62a4269（C1 裸「证明」修正 + F2 artifacts 缩进 churn 销账）",
   "artifact": [
     "docs/eval-report-v1.md",
     "docs/eval-prereg.md",
     "artifacts.json"
   ],
-  "verdict": "CONDITIONAL",
+  "verdict": "PASS",
   "blockers": 0,
+  "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-24T14:39:03Z",
-  "acknowledged_by": "jarvis@agent-covenant（出卡方/实现方）——作者合并前签：修正 docs/eval-report-v1.md §0 L11 裸「证明」（改为「它验证的是…」）并把派发自扫数字由「2 处」更正为「5 处（L7×2 禁令 + L11×1 + prereg L16×2）」，再走 merge gate --allow-conditional。本评审（agnes-code）不代签作者方。【2026-10-24 实际销账确认】C1 已执行：docs/eval-report-v1.md §0 L11「它证明的是」→「它验证的是」，commit 62a4269；node 复扫（不用 findstr，规避 CJK 假阴性）report+prereg 全文 0 处裸命中，剩 2 行 4 处「证明」全在禁令声明内。自扫数字更正：原报「2 处」实为 5 处（L7×2 禁令 + L11×1 肯定式 + prereg L16×2 禁令），更正后 4 处。F2（artifacts.json 缩进 churn）同提交一并治好：恢复原字节 + 文本插入新键，diff 从 294+/290− 降至 4 行纯新增。",
-  "conditions": [
-    "C1（措辞铁律 · 合并前需修正，非结构性 blocker）：报告 §0 L11「它证明的是测量仪器…按设计工作」是肯定式裸「证明」，与同节 L7 的措辞纪律（全部结论只可表述为『预注册条件下的对照证据』，禁『证明』类措辞）自相矛盾；且派发单自报「2 处『证明』命中均为禁令声明自身」漏计了 L11。node 实扫 report+prereg 共 5 处「证明」（L7×2 禁令声明自身 + L11×1 肯定式 + prereg L16×2 禁令声明自身）；被禁的具体措辞「证明降低幻觉/证明有效」全文确无（故 Acceptance 措辞项在字面 sense 上成立）。改法：L11「它证明的是」→「它验证的是」，并更正自扫数字。一行，不 block 合并的语义。"
-  ],
+  "ts": "2026-10-24T14:52:00Z",
+  "ts_resign_note": "2026-10-24T14:52:00Z 重签（CONDITIONAL→PASS）：初版 13:56:00Z 判 CONDITIONAL，唯一条件 C1 = 报告 §0 L11 裸「证明」（肯定式）+ 派发自扫数字漏计（报 2、实 5）。作者以 commit 62a4269 销账（L11「它证明的是」→「它验证的是」；artifacts.json 缩进 churn 恢复为纯新增 4 行；自扫数字更正）。评审（浮香）独立复验 C1/F2 均已闭环（见 evidence），重签为 PASS、清空 conditions。verdict 值由评审方改动（初版 CONDITIONAL→重签 PASS），符合「verdict 值由评审员定，作者不代改判定」的评审权边界——作者只销账、不改判定。ts 取重签当刻 14:52:00Z，晚于被 C1/F2 触碰后刷新的产物 mtime（docs/eval-report-v1.md = 14:40:25.939Z 为最大）。",
   "evidence": [
-    "unittest: python -m unittest discover -s tests（设 COVENANT_BASH_HINT）-> Ran 373 tests, OK（无代码改动，仅确认不破坏；首跑因报告缺模板契约小节名失败，交付方补标题「## 2. 配对差表与解盲附录」修复，复跑全绿）",
-    "lint: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json -> LINT: PASS (4 warnings), 0 ERROR（4 warnings 全为既有类别/过渡态）",
-    "报告声明句: docs/eval-report-v1.md L11「本轮不构成门禁有效性的对照证据」原样命中（§0 结论边界首条，最硬一刀）",
-    "解盲数字原样: 报告 §2 表 M1 配对数 0、M2 −100.0%、CI [−100.0%,−100.0%]、覆盖率 A 30/30 B 30/30、M1 排除 48 / M2 排除 18 —— 与卡内「不许事后改数」逐格一致，无粉饰",
-    "v1.0.0 冻结文本零改写: git diff fd4582a..4c74bc2 -- docs/eval-prereg.md 仅新增（版本行 1.0.0(冻结版)->1.1(修订版) + 末尾追加 §7 变更记录）；§1-§6 + 附录 A-D 原文零删除/零改写；§3.2 原文未被就地改（C1 去退化写在 §7 delta，符合卡 D2/Constraint 3「历史不可改写」设计）",
-    "M1 去退化 (评审重点2): v1.1 §7 C1 把 B 臂由「不要求证据行」改为「要求证据行(同 A 语法)、但无独立评审与门禁兜底」-> M1 分母(E2+E3+E4)不再按构造为 0，主指标可计算；并配「额外执行约束#1 两臂对称性检查」：B 臂仍大面积零证据任务则该轮判为再次退化、不得进入配对分析",
-    "artifacts.json 584 行 diff 为纯 whitespace 重排: git diff --ignore-all-space fd4582a..4c74bc2 --numstat -- artifacts.json -> 5 + / 1 -（净 delta 仅为新增 XJ-20261024-002 key，2 文件）；其余 4 空格->2 空格 + JSON 转义归一，node 解析新旧文件均 valid、值零变化（F2 机械churn，非扩权）",
-    "措辞实扫（node，非 findstr 规避 CJK 假阴性）: docs/eval-report-v1.md 3 hits（L7「『证明降低幻觉』『证明有效』一类措辞被禁止」×2=禁令声明自身 + L11「它证明的是测量仪器」×1=肯定式）；docs/eval-prereg.md 2 hits（L16「禁写『证明降低幻觉』『证明有效』」×2=禁令声明自身）。合计 5。被禁 efficacy 措辞「证明降低幻觉/证明有效」作为*违规使用*确无；L11 为肯定式裸「证明」= C1 条件项",
-    "预注册后变更声明（评审重点4）: prereg §7 明写「变更发生时间 2026-10-24，在第一轮解盲之后。因此本节的任何内容都属『预注册后变更』，必须与 v1.0.0 下第一轮的失败结果分开阅读」；报告 §7 同步 + §0 声明不构成有效性证据——自曝位置（专设 §7）与力度（明写解盲后、不得混谈）足够",
-    "报告诚实度（评审重点1）: §3 把 M2=−100pp 归并为「条件定义机械后果」并明写「没有测量门禁流程在真实 agent 工作中的效力」；§5 主动自曝「A/B 无 E1/E2/E3 的『干净』是 B 臂退化与同执行者的直接后果，不能读作执行者零失误」；§6 在五条既有局限性外加第六条（v1.0.0 设计缺陷）——失败未留台阶",
-    "新鲜度: verdict ts 2026-10-24T13:56:00Z > 全部被审产物 mtime（docs/eval-report-v1.md=13:34:26Z、artifacts.json=13:24:57Z、docs/eval-prereg.md=13:21:52Z）；非未来时间戳"
+    "Re-sign precondition (independently re-verified, not taken on author's word): git log shows 62a4269 'fix(eval): discharge C1 - bare 证明 in report section 0 + artifacts indent churn (F2)' as HEAD~1 of a5e5739",
+    "C1 discharge re-verified with reviewer's own node scan (not findstr, avoids CJK false negatives): docs/eval-report-v1.md now 2 「证明」hits BOTH on L7 (the 措辞纪律 prohibition declaration, self-referential ✅); docs/eval-prereg.md 2 hits BOTH on L16 (prohibition declaration ✅). TOTAL = 4, ALL inside prohibition declarations; the bare affirmative usage at old L11 ('它证明的是测量仪器…按设计工作') is GONE (now reads 验证/记录). The banned efficacy phrases 证明降低幻觉 / 证明有效 have zero affirmative usages anywhere — Acceptance wording item holds airtight",
+    "Dispatch self-scan number corrected by author as reported (5 → post-fix 4, all in prohibition quotes); review's original 5-count (incl. the then-present L11) is the accurate pre-fix figure, now retired by the fix",
+    "F2 discharge re-verified: cumulative git diff fd4582a..HEAD --numstat -- artifacts.json = 4 insertions / 0 deletions (pure addition of the XJ-20261024-002 key, 2 files); the 588-line whole-file re-indent churn that 4c74bc2 introduced has been reverted — artifacts.json is now a clean additive-only delta, no unrelated lines touched",
+    "unittest: python -m unittest discover -s tests (COVENANT_BASH_HINT set) -> Ran 373 tests, OK (unchanged; confirms no code touched)",
+    "lint: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json -> LINT: PASS, 0 ERROR",
+    "v1.0.0 frozen text zero-rewrite (re-confirmed): docs/eval-prereg.md net diff base..HEAD is additive (version line + §7 change-record only); §1-§6 + appendix A-D verbatim preserved; §3.2 NOT edited in place (C1 de-degeneration written as a §7 delta, per Constraint 3 'history not re-writable')",
+    "Report honesty (re-confirmed): §0 boundary is the hardest line ('本轮不构成门禁有效性的对照证据' + 'any such citation is a mis-citation'); §3 attributes M2=−100pp to the mechanical consequence of the arm definition, explicitly 'not efficacy evidence'; §5 self-discloses that the clean A/B (no E1/E2/E3) is a *consequence* of the degenerate B arm + same executor, 'cannot be read as the executor having zero errors'; §6 adds a 6th limitation on top of the frozen five. No hedging left for the failure",
+    "C1 de-degeneration adequacy (Review focus #2): v1.1 §7 changes B arm to 'requires evidence lines (same syntax as A), but without independent review/gate backstop' -> M1 denominator (E2+E3+E4) no longer structurally zero, so the primary metric becomes computable; safeguard = v1.1 extra execution constraint #1 'two-arm symmetry check: if B arm still has large-area zero-evidence tasks, that round is re-degenerate and must NOT enter paired analysis' — a check-and-reject, not a magic floor. Ruling: correct and cleaner than a hard 'B-arm evidence-claim ratio >= X' threshold (which would itself need preregistration). No floor needed",
+    "Post-prereg-change self-disclosure (Review focus #4): §7 states 'change occurred 2026-10-24, AFTER the first round unblinding; therefore every item here is a post-preregistration change and must be read separately from the v1.0.0 first-round failure' — disclosure location (dedicated §7) and strength (explicit 'after unblinding, do not conflate with the failure result') are sufficient",
+    "Freshness: re-signed ts 2026-10-24T14:52:00Z > newest covered artifact mtime (docs/eval-report-v1.md = 14:40:25.939Z, docs/eval-prereg.md = 14:40:25.937Z, artifacts.json = 14:40:25.936Z); not a future timestamp (now = 14:51:53Z at verification time)"
   ],
   "review_q_rulings": [
-    "Q1（第三臂）：两臂（A=证据+评审/gate，B=证据无评审/gate）足以回答 v1.1 的 M1/M2 主指标；第三臂（有评审无 gate / 有 gate 无评审）是分解归因的 v1.1+ 增强，本卡为文档/设计卡，不开第三臂不影响主指标可测。",
-    "Q2（M1 可计算的最小条件）：v1.1 的「两臂对称性检查 + 退化则拒入配对」是正确对策，不需要再加「B 臂带证据断言占比下限」（那会引入新的魔法阈值 X；靠检查拒绝比硬下限更干净）。",
-    "Q3（失败记录够不够诚实）：够。§0 边界首条最硬 + §3 三根因归并 + §5 主动自曝 + §6 主动加第六条局限性，没有给自己留台阶。"
+    "Q1 (third arm): two arms (A = evidence + review/gate, B = evidence, no review/gate) suffice for v1.1's M1/M2 primary metrics; a third arm (review w/o gate, or gate w/o review) is a v1.1+ attribution-decomposition enhancement, not required for this doc/design card to make the primary metrics testable.",
+    "Q2 (min condition for M1 computability): v1.1's 'two-arm symmetry check + reject-degenerate-from-pairing' is the correct countermeasure; do NOT add a 'B-arm evidence-claim ratio floor' (that would introduce a new magic threshold X).",
+    "Q3 (failure recording honest enough): yes — §0 boundary hardest-first, §3 three-root-cause merging, §5 self-disclosure, §6 added 6th limitation; no escape hatch left for the failure."
   ],
   "advisory_findings": [
-    "F1 -> 已升为 Condition C1（措辞铁律）：报告 L11 裸「证明」 + 派发自扫漏计（2 vs 实际 5）。非 efficacy 违规（被禁的「证明降低幻觉/证明有效」确无），一行可改，不 block 合并语义，但本卡存在理由即措辞纪律，故升为合并前需修正的条件。",
-    "F2（artifacts.json 机械churn）：登记本卡时顺带全文件 re-indent（4->2 空格 + 转义归一），值零变化、JSON valid。无害但 584 行噪声会误导 merge reviewer；建议后续登记类改动保持既有缩进、只追加目标 key。advisory，不 block。"
+    "F1 -> discharged as C1 (bare 证明 at report L11 + dispatch self-scan undercount). FIXED in 62a4269; the fixed report now has zero bare 「证明」 (all 4 remaining hits are prohibition-declaration self-references)."
   ],
   "notes": [
-    "两个交付（诚实的仪器校验报告 + 冻结文本零改写的 v1.1 去退化预注册）结构上都做对了：A/B 数据原样落盘无粉饰、失败根因如实归因、v1.0.0 历史不可改写原则守住、预注册后变更自曝到位。唯一未 airtight 的是措辞纪律（C1）——本卡恰恰以措辞纪律为存在理由，故判 CONDITIONAL 而非 PASS，0 结构性 blocker。",
-    "Merge gate: CONDITIONAL 需 --allow-conditional + 非空 acknowledged_by（已在 acknowledged_by 字段注明作者 jarvis 合并前签 C1 修正）。先例 mtime 时序：合并后若 verdict ts 被 checkout/commit 刷新，按 resign 机制处理。"
-  ],
-  "ts_resign_note": "2026-10-24T14:39:03Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d，第五次）：C1 是评审员自己下的条件——要求把报告 §0 L11 的裸「证明」改掉。作者按 C1 执行（commit 62a4269），使 docs/eval-report-v1.md mtime（14:07Z）晚于原签字 ts（13:56Z）→ gate STALE_VERDICT。重签 ts 覆盖该修复；verdict 值不变（CONDITIONAL / blockers=0 / 1 condition，condition 已销账于 acknowledged_by）。注意：语义上 C1 已闭环，若评审员愿意可升 PASS 重签——本次不做，避免替评审员改判定。"
+    "Re-signed from CONDITIONAL to PASS by the reviewer (not the author): the only open condition (C1 wording) was discharged by author commit 62a4269 and independently re-verified; both deliverables (the honest instrument-validation report + the zero-rewrite v1.1 de-degeneration prereg) hold. conditions[] is now empty; no structural blocker at any point.",
+    "Merge gate: this is now a plain PASS (no --allow-conditional needed, no acknowledged_by needed for PASS). Precedent mtime timing: after merge, if a later git op refreshes a covered artifact's mtime past ts, re-sign per the 004 precedent."
+  ]
 }
