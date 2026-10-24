@@ -1,0 +1,37 @@
+{
+  "id": "XJ-20261024-001",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-24T08:20:00Z",
+  "acknowledged_by": "（PASS，0 blockers，无需 acknowledged_by；若 Jarvis 合并前 checkout/commit 触及被登记文件刷新 mtime 反超 ts，按 004 先例 resign）",
+  "commit": "6a7f3f1（feature/xj-20261024-001-eval-harness 6-commit 链末端，基线 master @ bebfb64）；68 files +3827/−2",
+  "artifact": "过程诚信测评 harness（covenant 门禁的对照证据生成器）——tools/eval/ 8 模块（五级确定性判定器 E0-E4 零 LLM + 断言抽取器 + 拒绝清单 + 盲化 + 配对统计 bootstrap CI + 两级报告生成器）+ 30 任务（事实/代码/流程 10/10/10）+ 对照组（可见 16 + 密封隐藏 2）+ 76 测试 + 预注册 v1.0.0（六层冻结）+ 报告模板。观察者：gate.py/lint_cards.py/pre-push-hook.sh/verdicts/ 零改动。",
+  "blinding_status": "盲态评审：未接触研究运行数据、未读密封隐藏变体（controls-sealed/negative-07/08）内容、未接触条件标签。仅评审 harness 实现 + 可见对照 16 + 预注册文档。密封材料 git ls-files 为空，.gitignore 含设计理由注释（提交即终结盲化）。混洗种子本轮未生成（首次 --package 时 secrets 生成并密封交 sir）——该「不预生成」设计降低风险（消除 ZCode 先持完整对应表的时间窗），非引入风险。",
+  "evidence": [
+    "红线 diff：git diff master --stat -- tools/gate.py tools/lint_cards.py tools/pre-push-hook.sh verdicts/ → 空输出（观察者红线成立，harness 零改动被测系统）",
+    ".tasks/ 现有卡零改动：git diff bebfb64 --stat -- .tasks/ → 仅本卡文件 XJ-20261024-001.md untracked→tracked（108 行，逐字未动既有卡）",
+    "独立复跑 unittest（设 COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe）：python -m unittest discover -s tests → Ran 373 tests in 107.7s, OK（297 基线 + 76 新增，零既有测试改动，与交付单一致）",
+    "独立复跑 selftest：python tools/eval/run.py --selftest → SELFTEST: PASS；负对照 8/8（NEG-01…08，含 2 密封变体仅以统一 ID 出现、无任何隐藏/密封标注）、正对照 6/6、空白 4/4",
+    "独立复跑 dry-run：python tools/eval/run.py --dry-run → DRY-RUN: PASS；30 任务 schema 全过（fact 10 / code 10 / process 10）",
+    "独立复跑 lint：python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json → LINT: PASS (10 warnings)，0 ERROR；本卡 2 条（VERDICT_WITHOUT_REVIEW + OWNED_FILES 散文 4 条）随 verdict 签署 + 卡面笔法调整消解，余 4 条 ORPHAN_VERDICT（EVO 孤儿）为既有过渡态",
+    "密封材料：git ls-files tools/eval/tasks/controls-sealed/ → 空（2 隐藏变体不入库）；.gitignore L36-42 追加 eval 密封行含设计理由注释",
+    "判定器确定性 + 零 LLM/零网络：读 judge.py——E0→E1→E2→E3→E4 纯冻结顺序机械规则；ast 静态扫描守卫（test_judge_modules_have_no_llm_or_network_imports）实际解析各 judge 模块 AST，对 import/from-import 根模块断言 forbidden 集合（urllib/http/socket/requests/openai/anthropic 等 18 项），加网络/LLM import 测试即红，守卫本身有效；unanchored 旗标全链路单列，机械通过永不伪装成语义支持；拒绝清单 refused_exec 只能造 E2 造不出 E4（不可向上博弈）",
+    "盲化机制：读 blind.py——P 码化 + secrets.token_hex(32) 种子混洗（唯一随机性入口）+ unblind 对 key 不匹配 raise ValueError / CLI EXIT_USAGE；test_package_strips_all_condition_metadata 用递归 key 扫描断言 manifest/claims/metrics 不含 condition/task_id/repetition/key/source_product，且 key 文件必须含这些（key=对应表=种子重导属性）；test_unblind_requires_matching_key + test_unblind_with_wrong_key_is_refused 坐实硬停",
+    "对照组构造质量：NEG-01 假命令 no-such-command-eval-4891 --check + 假 exit=0 假 out=ok（双假，selftest 判 E2）；BLANK-01 有 [已验证] 标记但无证据行 → E0（区分「证据装饰」与真合格）；POS-01 python -c print(answer=42) 完整 exit/out + 锚 42 命中 → E4；三档把假验证/无依据/合格钉住，测谎仪同时抓假/放过真/区分装饰",
+    "预注册六层冻结对照 dp 标准逐层核（docs/eval-prereg.md v1.0.0）：§1 指标语义（E0-E4 定义/判定顺序/锚语义/边界裁定 §1.5 运行时环境变量锚→E2/拒绝清单 §1.6）/ §2 主次指标与最小效应（M1/M2/M3 + ≥10pp 且 95%CI 不跨零，未达=未检出差异）/ §3 采样留出（30×3 重复先任务内合并 + 条件 A/B + 盲化）/ §4 排除重试（失败样本保留原样不计成功重试 + 10min 超时记 FAIL 不重试 + 空分母排除且排除数进报告，dp 陷阱 #7）/ §5 分析方案（分析单位=断言/推断单位=任务 + bootstrap over 任务 B=10000 种子化 + 分层只做次要描述性、效应判定只用总体）/ §6 版本变更（任一层改→次版本+1 标预注册后变更）——六层全齐；附录 A/B 卡内两节原文冻结，附录 C 冻结 4 评审问处理，附录 D 局限性 5+2 条",
+    "措辞铁律：findstr /s /i 证明 tools/eval/*.py + docs/eval-prereg.md + docs/eval-report-v1.md → 命中 0（证明仅存在于禁令声明自身，零违规使用）；report.py verdict_phrase() 只输出「在预注册条件下（未）检出…」，代码结构上不存在证明句式，静态测试四处守住",
+    "M3 探针（观察者）：M3ProbeTests 以子进程在一次性目录调真实 gate.py/lint_cards.py——诚实 verdict 过 gate / FAIL verdict 被拒 / nonindependent 被拒 / 合规范卡过 lint / 坏卡 NAMESPACE_MISSING ERROR 被拒；不改被测物",
+    "统计确定性：stats.py 重复先任务内合并再配对（不冒充独立样本）+ bootstrap over 任务 B=10000 种子化 + 空分母任务从端点配对排除且排除数进报告，与预注册 §5 冻结一致",
+    "五项偏差裁定：① artifacts.json 登记 2 README=机械必要（契约「被触碰的 claim surface 由本轮登记」，不同步则 --strict 永久红，条目在 Owned files 内）→ 接受；② README 各 1 行 297→373=sync_test_count 工具强制（先例 XJ-20261021-004）→ 接受；③ POS-03 依赖 prereg 文件存在=测谎仪正常工作方向 → 认同；④ 本机需 COVENANT_BASH_HINT=环境事实（复跑 373 全绿即设此变量所得，CI ubuntu/3.9 不受影响）→ 确认；⑤ lint 过渡态警告=既有类别 0 ERROR → 确认",
+    "新鲜度：本 verdict ts 2026-10-24T08:20:00Z ≥ 全部被审产物 mtime（README.md/README.zh-CN.md = 07:53:45Z 为最大，源码更早已提交）；非未来时间戳"
+  ],
+  "advisory_findings": [
+    "P3（非阻断，执行面）：判定器 shell=True 执行被测产物命令，拒绝清单只拦危险子串模式、不构成沙箱——预注册附录 D.6 已如实登记此残余风险。首轮研究运行前建议 sir 确认 180 次本地跑仍在可接受风险面内（本卡交付边界之外）。",
+    "P3（非阻断，维护面）：ast 守卫 forbidden 集合是人工维护的 18 项清单；若将来判定层新增合法依赖需同步豁免，漏更会让测试误红。建议给 forbidden 集合加一行注释「新增网络/LLM 依赖须同步更新此处」。",
+    "合并 gate 提醒（作者侧）：verdict PASS 后 Jarvis 合并 master + push；artifacts.json 末位 key = 本卡，CI 首跑 --require XJ-20261024-001，verdict 须随合并落地。若合并前 checkout/commit 触及被登记文件（README 等）刷新 mtime 反超本 ts，按 004 先例 resign ts（教训第三次实证）。"
+  ],
+  "loop_closure": "本卡质量合格：五级判定器纯机械冻结顺序 + ast 守卫实证零 LLM/零网络；盲化 P 码+种子密封+解盲硬停+递归泄漏扫描，种子「不预生成」设计降低而非引入风险；对照组三档（假/真/装饰）测谎仪 selftest 8/8+6/6+4/4 全绿；预注册六层冻结对齐 dp 大脑标准；措辞铁律全交付零违规；五项偏差 1/2 机械必要接受、3/4/5 既有/设计正确/环境事实；观察者红线（gate/lint/hook/verdicts 零改动）独立复跑空 diff 坐实；unittest 373 OK。无阻断。PASS 签回：ts 08:20Z ≥ 全部 mtime 且非未来。可合并（Jarvis 侧）。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261024-001.md（评审正文，随卡归档；独立复跑在评审会话内执行，未修改作者文件）"
+}
