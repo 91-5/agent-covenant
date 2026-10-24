@@ -32,3 +32,11 @@ Thumbs.db
 # files, so without this line `git status` reports the whole tree as untracked and
 # `git add -A` would stage a second copy of the repository.
 .agnes/
+
+# Eval harness sealed materials (XJ-20261024-001). The two hidden negative-control
+# variants (controls-sealed/) and the runtime blind seeds / condition maps /
+# packages (.eval-sealed/) are sir's custody by design: committing them would
+# end the blinding that the study's validity depends on. Unlike verdicts/
+# (deliberately kept above), these MUST NOT be tracked.
+tools/eval/tasks/controls-sealed/
+.eval-sealed/
