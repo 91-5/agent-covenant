@@ -1,198 +1,225 @@
 {
-  "_comment": "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read. A card's OWN file (.tasks/<id>.md) is NOT a judged artifact and must not be listed for that id: its Status/progress fields change as part of normal lifecycle closing (IN_REVIEW -> CLOSED), which would make the round's own verdict stale the moment the card is closed, and no later round revisits a closed card to supersede it. List the code, docs and evidence the reviewer read, not the card that records the review. See EVO-20261010-001. EVO verdicts are deliberately NOT listed here (rule, P2-4 of EVO-20261020-001, 2026-10-20): an EVO verdict is produced in the reviewer's own workspace, so the FF merge that lands it refreshes this tree's mtimes after the verdict's ts -- measured: registering one made its own four artifacts STALE (gate 124 -> 128) -- and re-signing its ts would forge the review timeline. Claim surfaces an EVO round touched are covered by the next task-card round that lists them with a PASS; UNMAPPED_CLAIM_SURFACE warnings in between are transient by design.",
-  "XJ-20260929-001": [
-    "PROTOCOL.md",
-    "README.md",
-    "README.zh-CN.md",
-    "postmortems.md",
-    "docs/lint-rules.md",
-    "templates/TASK.md",
-    "tools/gate.py",
-    "tools/lint_cards.py"
-  ],
-  "XJ-20260929-002": [
-    "PROTOCOL.md",
-    "ADR-0001.md",
-    "README.md",
-    "README.zh-CN.md",
-    "postmortems.md",
-    "tools/gate.py",
-    "tools/lint_cards.py"
-  ],
-  "XJ-20260930-004": [
-    "PROTOCOL.md",
-    "postmortems.md",
-    "docs/lint-rules.md",
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py"
-  ],
-  "XJ-20260930-005": [
-    "PROTOCOL.md",
-    "postmortems.md",
-    "docs/lint-rules.md",
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py"
-  ],
-  "XJ-20260930-006": [
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md",
-    "templates/REVIEW.md",
-    ".github/workflows/gate.yml",
-    "PROTOCOL.md",
-    "docs/lint-rules.md",
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py"
-  ],
-  "XJ-20260930-007": [
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md",
-    "postmortems.md",
-    "docs/lint-rules.md",
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py"
-  ],
-  "XJ-20260930-008": [
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20260930-009": [
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md",
-    "postmortems.md"
-  ],
-  "XJ-20260930-010": [
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20260930-011": [
-    "tools/gate.py",
-    "tests/test_gate.py",
-    "PROTOCOL.md",
-    "README.md",
-    "README.zh-CN.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20260930-012": [
-    "CHANGELOG.md",
-    "PROTOCOL.md",
-    "README.md",
-    "README.zh-CN.md"
-  ],
-  "XJ-20260930-013": [
-    "CHANGELOG.md",
-    "PROTOCOL.md",
-    "README.md",
-    "README.zh-CN.md"
-  ],
-  "XJ-20260930-014": [
-    "tools/gate.py",
-    "tests/test_gate.py",
-    "PROTOCOL.md",
-    "CHANGELOG.md",
-    "README.md",
-    "README.zh-CN.md"
-  ],
-  "XJ-20260930-015": [
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py",
-    "docs/lint-rules.md",
-    "CHANGELOG.md",
-    "README.md",
-    "README.zh-CN.md",
-    "artifacts.json",
-    ".tasks/XJ-20260930-015.md"
-  ],
-  "XJ-20261004-001": [
-    "PROTOCOL.md",
-    "docs/lint-rules.md",
-    "CHANGELOG.md",
-    ".gitignore"
-  ],
-  "XJ-20261004-002": [
-    "PROTOCOL.md",
-    "CHANGELOG.md",
-    ".tasks/XJ-20261004-002.md"
-  ],
-  "XJ-20261004-003": [
-    "tools/lint_cards.py",
-    "tests/test_lint_cards.py",
-    ".tasks/XJ-20261004-003.md"
-  ],
-  "XJ-20261004-004": [
-    "ADR-0002.md"
-  ],
-  "XJ-20261004-005": [
-    "ADR-0002.md"
-  ],
-  "XJ-20261004-006": [
-    "tools/gate.py",
-    "tools/lint_cards.py",
-    "tests/test_gate.py",
-    "tests/test_lint_cards.py",
-    "templates/verdict.json",
-    "docs/lint-rules.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20261006-001": [
-    "tools/lint_cards.py",
-    "tools/gate.py",
-    "tests/test_gate.py",
-    "tests/test_lint_cards.py",
-    "docs/lint-rules.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20261006-002": [
-    "PROTOCOL.md",
-    "ADR-0002.md",
-    "ADR-0001.md",
-    "postmortems.md",
-    "CHANGELOG.md"
-  ],
-  "XJ-20261008-001": [
-    "tools/check_owned_files.py",
-    "tools/lint_cards.py",
-    "tests/test_check_owned_files.py",
-    "tests/test_lint_cards.py",
-    "docs/lint-rules.md",
-    ".github/CODEOWNERS",
-    ".github/workflows/gate.yml",
-    "policy/owned-files-whitelist.yml",
-    "README.md",
-    "README.zh-CN.md"
-  ],
-  "XJ-20261008-002": [
-    "tools/check_owned_files.py",
-    "tests/test_check_owned_files.py",
-    "README.md",
-    "README.zh-CN.md"
-  ],
-  "XJ-20261008-003": [
-    "tools/check_owned_files.py",
-    "tools/sync_test_count.py",
-    "tools/lint_cards.py",
-    "tests/test_check_owned_files.py",
-    "tests/test_lint_cards.py",
-    "tests/test_sync_test_count.py",
-    "README.md",
-    "README.zh-CN.md",
-    "docs/lint-rules.md"
-  ],
-  "XJ-20261013-004": [
-    "tools/pre-push-hook.sh",
-    "tools/install-hooks.sh",
-    "tests/test_pre_push_hook.py",
-    "README.md",
-    "README.zh-CN.md",
-    "PROTOCOL.md"
-  ],
-  "XJ-20261016-001": ["README.md", "README.zh-CN.md", "artifacts.json"],
-  "XJ-20261019-001": ["tools/link_card.py", "tests/test_link_card.py", "README.md", "README.zh-CN.md"],
-  "XJ-20261020-001": ["tools/gate.py", "tools/lint_cards.py", "tools/pre-push-hook.sh", "tests/test_gate.py", "tests/test_lint_cards.py", "tests/test_pre_push_hook.py", "docs/lint-rules.md", "README.md", "README.zh-CN.md"],
-  "XJ-20261021-001": ["README.md", "README.zh-CN.md"],
-  "XJ-20261021-003": ["tools/lint_cards.py", ".github/workflows/gate.yml", "tools/pre-push-hook.sh", "tests/test_lint_cards.py", "docs/lint-rules.md", "README.md", "README.zh-CN.md"]
+    "_comment":  "The repo gates itself. Every id listed here gets the freshness check when you pass --artifact-map; an id with no entry prints a NOTICE saying so. Keep this list equal to what the reviewer actually read. A card\u0027s OWN file (.tasks/\u003cid\u003e.md) is NOT a judged artifact and must not be listed for that id: its Status/progress fields change as part of normal lifecycle closing (IN_REVIEW -\u003e CLOSED), which would make the round\u0027s own verdict stale the moment the card is closed, and no later round revisits a closed card to supersede it. List the code, docs and evidence the reviewer read, not the card that records the review. See EVO-20261010-001. EVO verdicts are deliberately NOT listed here (rule, P2-4 of EVO-20261020-001, 2026-10-20): an EVO verdict is produced in the reviewer\u0027s own workspace, so the FF merge that lands it refreshes this tree\u0027s mtimes after the verdict\u0027s ts -- measured: registering one made its own four artifacts STALE (gate 124 -\u003e 128) -- and re-signing its ts would forge the review timeline. Claim surfaces an EVO round touched are covered by the next task-card round that lists them with a PASS; UNMAPPED_CLAIM_SURFACE warnings in between are transient by design.",
+    "XJ-20260929-001":  [
+                            "PROTOCOL.md",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "postmortems.md",
+                            "docs/lint-rules.md",
+                            "templates/TASK.md",
+                            "tools/gate.py",
+                            "tools/lint_cards.py"
+                        ],
+    "XJ-20260929-002":  [
+                            "PROTOCOL.md",
+                            "ADR-0001.md",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "postmortems.md",
+                            "tools/gate.py",
+                            "tools/lint_cards.py"
+                        ],
+    "XJ-20260930-004":  [
+                            "PROTOCOL.md",
+                            "postmortems.md",
+                            "docs/lint-rules.md",
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py"
+                        ],
+    "XJ-20260930-005":  [
+                            "PROTOCOL.md",
+                            "postmortems.md",
+                            "docs/lint-rules.md",
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py"
+                        ],
+    "XJ-20260930-006":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md",
+                            "templates/REVIEW.md",
+                            ".github/workflows/gate.yml",
+                            "PROTOCOL.md",
+                            "docs/lint-rules.md",
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py"
+                        ],
+    "XJ-20260930-007":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md",
+                            "postmortems.md",
+                            "docs/lint-rules.md",
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py"
+                        ],
+    "XJ-20260930-008":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20260930-009":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md",
+                            "postmortems.md"
+                        ],
+    "XJ-20260930-010":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20260930-011":  [
+                            "tools/gate.py",
+                            "tests/test_gate.py",
+                            "PROTOCOL.md",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20260930-012":  [
+                            "CHANGELOG.md",
+                            "PROTOCOL.md",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20260930-013":  [
+                            "CHANGELOG.md",
+                            "PROTOCOL.md",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20260930-014":  [
+                            "tools/gate.py",
+                            "tests/test_gate.py",
+                            "PROTOCOL.md",
+                            "CHANGELOG.md",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20260930-015":  [
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py",
+                            "docs/lint-rules.md",
+                            "CHANGELOG.md",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "artifacts.json",
+                            ".tasks/XJ-20260930-015.md"
+                        ],
+    "XJ-20261004-001":  [
+                            "PROTOCOL.md",
+                            "docs/lint-rules.md",
+                            "CHANGELOG.md",
+                            ".gitignore"
+                        ],
+    "XJ-20261004-002":  [
+                            "PROTOCOL.md",
+                            "CHANGELOG.md",
+                            ".tasks/XJ-20261004-002.md"
+                        ],
+    "XJ-20261004-003":  [
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py",
+                            ".tasks/XJ-20261004-003.md"
+                        ],
+    "XJ-20261004-004":  [
+                            "ADR-0002.md"
+                        ],
+    "XJ-20261004-005":  [
+                            "ADR-0002.md"
+                        ],
+    "XJ-20261004-006":  [
+                            "tools/gate.py",
+                            "tools/lint_cards.py",
+                            "tests/test_gate.py",
+                            "tests/test_lint_cards.py",
+                            "templates/verdict.json",
+                            "docs/lint-rules.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20261006-001":  [
+                            "tools/lint_cards.py",
+                            "tools/gate.py",
+                            "tests/test_gate.py",
+                            "tests/test_lint_cards.py",
+                            "docs/lint-rules.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20261006-002":  [
+                            "PROTOCOL.md",
+                            "ADR-0002.md",
+                            "ADR-0001.md",
+                            "postmortems.md",
+                            "CHANGELOG.md"
+                        ],
+    "XJ-20261008-001":  [
+                            "tools/check_owned_files.py",
+                            "tools/lint_cards.py",
+                            "tests/test_check_owned_files.py",
+                            "tests/test_lint_cards.py",
+                            "docs/lint-rules.md",
+                            ".github/CODEOWNERS",
+                            ".github/workflows/gate.yml",
+                            "policy/owned-files-whitelist.yml",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20261008-002":  [
+                            "tools/check_owned_files.py",
+                            "tests/test_check_owned_files.py",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20261008-003":  [
+                            "tools/check_owned_files.py",
+                            "tools/sync_test_count.py",
+                            "tools/lint_cards.py",
+                            "tests/test_check_owned_files.py",
+                            "tests/test_lint_cards.py",
+                            "tests/test_sync_test_count.py",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "docs/lint-rules.md"
+                        ],
+    "XJ-20261013-004":  [
+                            "tools/pre-push-hook.sh",
+                            "tools/install-hooks.sh",
+                            "tests/test_pre_push_hook.py",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "PROTOCOL.md"
+                        ],
+    "XJ-20261016-001":  [
+                            "README.md",
+                            "README.zh-CN.md",
+                            "artifacts.json"
+                        ],
+    "XJ-20261019-001":  [
+                            "tools/link_card.py",
+                            "tests/test_link_card.py",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20261020-001":  [
+                            "tools/gate.py",
+                            "tools/lint_cards.py",
+                            "tools/pre-push-hook.sh",
+                            "tests/test_gate.py",
+                            "tests/test_lint_cards.py",
+                            "tests/test_pre_push_hook.py",
+                            "docs/lint-rules.md",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20261021-001":  [
+                            "README.md",
+                            "README.zh-CN.md"
+                        ],
+    "XJ-20261021-004":  [
+                            "tools/pre-push-hook.sh",
+                            "tests/test_pre_push_hook.py",
+                            "README.md",
+                            "README.zh-CN.md"
+                        ]
 }

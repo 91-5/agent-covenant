@@ -1,0 +1,45 @@
+{
+  "id": "XJ-20261021-004",
+  "verdict": "PASS",
+  "blockers": 0,
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-24T12:30:00+08:00",
+  "acknowledged_by": "jarvis@agent-covenant（OpenCode，作者方）",
+  "commit": "fd03688（D1 WIP）+ 46e2e49（D2 测试 + D3 文档）；git diff 85aaf83..46e2e49 --stat = pre-push-hook.sh +20 / test_pre_push_hook.py +100 / README.md +13 / README.zh-CN.md +4，仅 3 owned files + zh 计数联动。gate.py / lint_cards.py / deepfreeze.ps1 零改动坐实（期 4b 保守边界：hook shell 层输出增强，纯增量）。",
+  "artifact": "hook gate step 2 失败分支增强——gate FAIL 时 stderr 补结构化处置块：常见原因行（verdict 缺失/过期/CONDITIONAL、artifact mtime 反超 ts、link sha 漂移）+ 若 .freeze/state.json 存在且 latest_snapshot 非空 → 输出回滚引导（完整 deepfreeze.ps1 restore 命令行 + quarantine 提示 + 「先确认 FAIL 是真的再回滚」警告）。只输出文本，绝不执行（期 4 保守裁定）。",
+  "conservative_boundary_verified": [
+    "不执行坐实：读 pre-push-hook.sh L153-170，FAIL 分支全是 echo >&2（common causes + rollback guide + quarantine 提示 + 警告），结尾 exit 1，零 restore 调用、零子进程执行 deepfreeze.ps1。hook 绝不自动 /MIR（期 4 裁定：FAIL 可能 verdict 过期/环境问题，自动 /MIR 会不可逆删未提交工作）。",
+    "零改动坐实：git diff --stat 仅 3 owned + zh 计数；gate.py/lint_cards.py/deepfreeze.ps1 不在任何 diff。",
+    "FAIL 判定零语义变化：处置块打在既有 `if ! gate ... then ... exit 1` 内，沿用 step 2 原有退出码逻辑，gate 通过/拒绝行为未改。",
+    "诊断块解析只读 .freeze/state.json（deepfreeze 自己的文件，shell python -c 直读 latest_snapshot），不解析 gate.py 内部结构——零耦合维持。"
+  ],
+  "cross_repo_alignment": "跨仓命门坐实：hook 读 .freeze/state.json 的 `latest_snapshot` 字段（L159 `d.get('latest_snapshot','')`）——去 deepfreeze 仓库核实 deepfreeze.ps1 L472 确写 `latest_snapshot = $ts`，字段名对上，D1 回滚引导功能真实生效（非永远空）。这是不能靠信、必须跨仓核的命门，已核。",
+  "adversarial_findings": [
+    "Q1（引导是否诱导误回滚）：**常见原因行 + 警告 + 保守不执行，基本够；弱点 = 未做 per-violation 分支。** 引导块在 gate FAIL 时必然打「rollback guide」，而常见原因行里 stale/CONDITIONAL 是「verdict 该重签/ack」非「现场有毒该回滚」——即 gate 判得对（真该拦）的场景，引导同样打 rollback 命令，理论上可诱导误回滚。但有 fail-closed 兜底：hook 只输出不执行，误回滚需人工手动跑 restore，而 deepfreeze restore 自身有 diff 预览 + Test-Gate 确认，不会一键全删。作者自己在派发 Q1 也承认「要不要区分 FAIL 原因」——裁定：通用 common-causes 行对「先诊断」够用，per-violation 分支是增强非必需，记 P2。",
+    "Q2（$PWD 转义在 git-bash 实际展开）：**实跑探测出真坑（非想当然）。** hook 打 `-Source \"$PWD\"`（\\$PWD 转义，shell 里保留字面 $PWD 给用户）。实测 git-bash 的 $PWD = MSYS 路径 /d/15812/...，把该值喂给 Windows PowerShell 的 Test-Path -LiteralPath → **IsExistingPath=False**（PS 把前导 / 当相对路径归一成 D:\\d\\...，不存在）；PowerShell 自身 $PWD = D:\\15812\\... 才认得。即：引导命令 -Source \\\"$PWD\\\" **在 PowerShell 里跑正确，用户在 git-bash 里复制粘贴执行会因 MSYS 路径形态失败**。保守边界守住（hook 不执行、用户手动跑前看得到命令行），但「复制粘贴引导命令」的 UX 承诺在 git-bash 有坑。记 P2（用户可从报错自行改 D:\\ 形式或切到 PowerShell 跑）。",
+    "Q3（fixture artifacts.json 顺序依赖脆不脆）：**真实维护脆性。** _break_gate_only 把 OLD_ID 插 artifacts.json 最前、CARD_ID 留最后，依赖 gate.py「NEWEST 判定取最后一个非 _ 键」的插入序（作者 diff 注释自认「开发中实测踩过」）。将来 gate.py 若把 NEWEST 改成按时间戳/字典序排序，CARD_ID 不再 newest → gate 变绿 → test_gate_fail_* 静默假绿/假红。非本卡缺陷（依赖的是既有 NEWEST 语义），记 P3：给该 fixture 加一行注释锚定「本 fixture 依赖 gate.py NEWEST 取最后非 _ 键」，防将来改判定时失准无人知。"
+  ],
+  "state_json_tolerance": "state.json 解析容错坐实：L159 python -c ... 2>/dev/null，JSON 损坏/字段缺 → print 空串 → SNAP_TS 空 → [ -n \"$SNAP_TS\" ] 为假 → 只打 no-deepfreeze 行（else 分支 L164），不炸 hook。D2 test_gate_fail_without_freeze_state_says_no_snapshot 坐实。",
+  "evidence": [
+    "独立实跑 unittest：python -m unittest discover -s tests → Ran 297 tests in 81.194s, OK（294 + 3 新增）。xj004_unittest.txt。",
+    "独立实跑 hook 重点：python -m unittest tests.test_pre_push_hook -v → Ran 20 tests, OK；3 条 4b 新用例全 ok：test_gate_fail_with_freeze_state_prints_rollback_guide（FAIL+.freeze 含 snap ts + quarantine 行）/ test_gate_fail_without_freeze_state_says_no_snapshot（无 .freeze 打 no-deepfreeze、无 rollback guide）/ test_gate_pass_prints_no_disposition_block（PASS 无处置块泄漏）。xj004_hook.txt。",
+    "D2 三条用例均基于真实 hook 子进程（临时 repo + 真 bash + 真 gate.py），非 mock——读 test diff 坐实 run_hook 驱动真子进程。",
+    "跨仓命门核实：cd deepfreeze; Select-String deepfreeze.ps1 'latest_snapshot' → L472 `latest_snapshot = $ts`，与 hook L159 读取字段名一致，D1 功能真实生效。",
+    "对抗性②实跑探测（work 区自写 probe_source.ps1，非作者文件）：bash -c 复现 hook 的 echo 行 → git-bash $PWD 展开 /d/15812/...；喂 Windows PowerShell Test-Path -LiteralPath → IsExistingPath=False（归一 D:\\d\\... 不存在）；PowerShell 自身 $PWD → True。坐实 -Source \\\"$PWD\\\" 的跨 shell 形态坑。",
+    "diff 边界：git diff 85aaf83..46e2e49 --stat = 3 owned + zh 计数；gate.py/lint_cards.py/deepfreeze.ps1 不在 diff。"
+  ],
+  "independent_findings": [
+    "P2（Q2 $PWD 形态坑）：引导命令 -Source \\\"$PWD\\\" 在 git-bash 复制粘贴执行会因 MSYS 路径（/d/...）喂 Windows PowerShell Test-Path 失败（实跑坐实）。建议（非阻断）：引导行改成 D:\\ 绝对形式或注明「此命令请在 PowerShell 里执行（$PWD 为 Windows 路径形态），git-bash 里 $PWD 是 MSYS 形态需换 cd /d/... 或 powershell 前缀」。保守边界已兜底（hook 不执行、可手动修正）。",
+    "P2（Q1 per-violation 分支）：引导块不区分 gate FAIL 的具体 violation 类型（stale/CONDITIONAL 场景也打 rollback 引导）。建议（非阻断）：后续可增强为读 gate 输出按 violation 分诊（FAIL 是 verdict 类 → 提示重签；环境问题 → 才提示回滚），降低误回滚诱导。当前通用行 + 警告 + 不执行已够。",
+    "P3（Q3 fixture 顺序脆）：_break_gate_only 依赖 gate.py「NEWEST 取最后非 _ 键」插入序，将来改判定会静默失准。建议（非阻断）：fixture 加注释锚定该依赖。"
+  ],
+  "open_followups": [
+    "P2 Q2 $PWD 跨 shell 形态提示（owner = 本卡 D3 顺手 or 下卡）：引导行注明 PowerShell 执行 / git-bash 形态转换。",
+    "P2 Q1 per-violation 分诊增强（owner = 后续卡）：按 gate violation 类型分诊降低误回滚诱导。",
+    "P3 Q3 fixture 顺序锚定注释（owner = 本卡 or 下卡顺手）。",
+    "合并 gate：按 AGENTS.md §4.2 第 7 条「无本 verdict PASS 不得合并」——PASS 后合并至 master + push（作者侧收尾）。"
+  ],
+  "loop_closure": "本卡质量合格：期 4b 保守边界全守住——hook 只输出文本绝不执行（零 restore 调用）、gate.py/lint_cards.py/deepfreeze.ps1 零改动、FAIL 判定沿用退出码零语义变化、state.json 解析容错（失败打 no-deepfreeze 行不炸 hook）。跨仓命门 latest_snapshot 字段名对上 deepfreeze state.json，D1 功能真实生效。unittest 297 OK + 20 hook 测试 3 条新用例全过（真实子进程非 mock）。3 个对抗问实证：Q1 通用行 + 警告 + 不执行基本够（per-violation 分诊是增强，P2）、Q2 实跑探测出 $PWD 在 git-bash 的 MSYS 形态坑（P2，保守边界已兜底）、Q3 fixture 顺序依赖脆（P3，加注释锚定）。无阻断。PASS 签回：ts 2026-10-24T12:30 ≥ 全部 mtime（zh-CN 12:19 最新）且非未来。可合并。",
+  "review_ref": "agent-covenant/.tasks/REVIEW-XJ-20261021-004.md（评审正文，随卡归档；实跑落盘在 D:\\15812\\Documents\\2026-10-21\\20261021_1\\work\\{xj004_unittest.txt, xj004_hook.txt, probe_source.ps1}）"
+}
