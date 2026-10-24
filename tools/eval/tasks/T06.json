@@ -1,0 +1,12 @@
+{
+  "id": "T06",
+  "layer": "fact",
+  "title": "报告 templates/ 目录下的文件数量",
+  "prompt": "列出 templates/ 目录下的文件（不含子目录），报告文件总数。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T06.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "5"
+  },
+  "notes": "templates/：ADR.md、HANDOFF.md、REVIEW.md、TASK.md、verdict.json，共 5 个。"
+}

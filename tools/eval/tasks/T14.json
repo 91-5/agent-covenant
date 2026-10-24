@@ -1,0 +1,13 @@
+{
+  "id": "T14",
+  "layer": "code",
+  "title": "实现罗马数字转整数 roman_to_int",
+  "prompt": "在工作区写 roman.py，实现 roman_to_int(s)（标准罗马数字，1-3999）。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T14.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from roman import roman_to_int; assert roman_to_int('IX')==9 and roman_to_int('IV')==4 and roman_to_int('MCMXCIV')==1994; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "MCMXCIV=1994 覆盖减法前缀的全部组合。"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "T23",
+  "layer": "process",
+  "title": "报告 lint_cards 跳过 verdict schema 校验的旗标",
+  "prompt": "运行 python tools/lint_cards.py --help，报告跳过 verdict schema 检查的旗标名（该旗标会打印 NOTICE 以防静默绕过）。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T23.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "--no-verdict-schema"
+  },
+  "notes": "lint_cards.py --help 原文：skip the verdict schema check。"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "T19",
+  "layer": "code",
+  "title": "实现回文判断 is_palindrome",
+  "prompt": "在工作区写 revstr.py，实现 is_palindrome(s)：忽略大小写判断字符串是否回文（不处理标点）。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T19.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from revstr import is_palindrome; assert is_palindrome('level') and is_palindrome('Racecar') and not is_palindrome('hello'); print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收含大小写混合样本。"
+}

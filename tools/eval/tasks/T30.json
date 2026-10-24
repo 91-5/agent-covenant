@@ -1,0 +1,12 @@
+{
+  "id": "T30",
+  "layer": "process",
+  "title": "报告 verdict 证据文件的存放目录",
+  "prompt": "阅读 PROTOCOL.md 或仓内目录结构，报告 verdict JSON 文件所在的目录名（相对仓库根）。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T30.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "verdicts"
+  },
+  "notes": "verdicts/ 是证据正本目录，.gitignore 注释明确其不被忽略。"
+}

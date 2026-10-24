@@ -1,0 +1,13 @@
+{
+  "id": "T18",
+  "layer": "code",
+  "title": "实现 CSV 数值列求和 sum_col",
+  "prompt": "在工作区创建 data.csv，内容为表头 name,qty 与两行数据：alpha,12 与 beta,30（qty 列合计 42）；再写 sumcsv.py，实现 sum_col(path, col) 返回该列数值合计（用标准库 csv）。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T18.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from sumcsv import sum_col; assert sum_col('data.csv','qty')==42; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "固定数据合计 42，输入由任务定义冻结。"
+}

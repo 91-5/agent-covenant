@@ -1,0 +1,13 @@
+{
+  "id": "T11",
+  "layer": "code",
+  "title": "实现 fib(n) 并通过验收断言",
+  "prompt": "在工作区写 fib.py，实现 fib(n)（fib(0)=0, fib(1)=1，递推即可）。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T11.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from fib import fib; assert fib(10)==55 and fib(1)==1 and fib(0)==0; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收命令只依赖执行者产出的 fib.py，不依赖仓内可变状态。"
+}

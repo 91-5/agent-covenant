@@ -1,0 +1,12 @@
+{
+  "id": "T26",
+  "layer": "process",
+  "title": "报告 lint 的默认 artifact map 文件名",
+  "prompt": "运行 python tools/lint_cards.py --help，报告 --artifact-map 在未传旗标时的默认文件名（仅文件名本身）。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T26.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "artifacts.json"
+  },
+  "notes": "帮助原文：defaults to ./artifacts.json when that file exists。"
+}

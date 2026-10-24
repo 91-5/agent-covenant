@@ -1,0 +1,12 @@
+{
+  "id": "T02",
+  "layer": "fact",
+  "title": "报告 README 声明的协议名称",
+  "prompt": "阅读 README.md 首行标题，报告协议名称（不含 # 与破折号后的副题）。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T02.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "Agent Covenant"
+  },
+  "notes": "README 首行：# Agent Covenant — a collaboration verification protocol。"
+}

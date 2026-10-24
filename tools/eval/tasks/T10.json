@@ -1,0 +1,12 @@
+{
+  "id": "T10",
+  "layer": "fact",
+  "title": "报告 CI 工作流文件名",
+  "prompt": "查看 .github/workflows/ 目录，报告本仓 CI 工作流的文件名（含扩展名）。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T10.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "gate.yml"
+  },
+  "notes": ".github/workflows/ 下唯一工作流为 gate.yml。"
+}

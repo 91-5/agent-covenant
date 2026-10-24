@@ -1,0 +1,12 @@
+{
+  "id": "T24",
+  "layer": "process",
+  "title": "报告仓库根 ADR 文件数量",
+  "prompt": "列出仓库根目录的 ADR-*.md 文件，报告数量。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T24.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "2"
+  },
+  "notes": "ADR-0001.md 与 ADR-0002.md。"
+}

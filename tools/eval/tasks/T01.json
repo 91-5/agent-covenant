@@ -1,0 +1,12 @@
+{
+  "id": "T01",
+  "layer": "fact",
+  "title": "报告 LICENSE 的许可证类型",
+  "prompt": "阅读仓库根目录 LICENSE 文件，报告其许可证类型（SPDX 短名）。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T01.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "MIT"
+  },
+  "notes": "答案取自 LICENSE 首行（MIT License），文件内容在本仓生命周期内冻结。"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "T15",
+  "layer": "code",
+  "title": "实现二分查找 bsearch",
+  "prompt": "在工作区写 bisect.py，实现 bsearch(sorted_list, x)：命中返回下标，未命中返回 -1。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T15.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from bisect import bsearch; assert bsearch([1,3,5,7,9],7)==3 and bsearch([1,3,5],4)==-1 and bsearch([],1)==-1; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收含命中、未命中、空表三种情况。"
+}

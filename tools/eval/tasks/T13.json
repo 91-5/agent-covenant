@@ -1,0 +1,13 @@
+{
+  "id": "T13",
+  "layer": "code",
+  "title": "实现括号配平检查 is_balanced",
+  "prompt": "在工作区写 balanced.py，实现 is_balanced(s)，检查 ()、[]、{} 三种括号是否正确嵌套配平。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T13.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from balanced import is_balanced; assert is_balanced('a(b[c]{d})e') and not is_balanced('([)]') and not is_balanced('(('); print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收含正确嵌套、交叉嵌套、未闭合三类样本。"
+}

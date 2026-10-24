@@ -1,0 +1,12 @@
+{
+  "id": "T05",
+  "layer": "fact",
+  "title": "报告 .gitattributes 对 *.sh 的行尾规则",
+  "prompt": "阅读 .gitattributes，报告 *.sh 文件被强制使用的行尾规则值。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T05.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "lf"
+  },
+  "notes": "规则：*.sh text eol=lf（XJ-20261020-001 C3）。"
+}

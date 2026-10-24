@@ -1,0 +1,13 @@
+{
+  "id": "T17",
+  "layer": "code",
+  "title": "实现 FizzBuzz 序列",
+  "prompt": "在工作区写 fizzbuzz.py，实现 fizzbuzz(n)：返回 1..n 的字符串列表，3 的倍数给 Fizz，5 的倍数给 Buzz，15 的倍数给 FizzBuzz，其余为数字字符串。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T17.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from fizzbuzz import fizzbuzz; r=fizzbuzz(15); assert r[2]=='Fizz' and r[4]=='Buzz' and r[14]=='FizzBuzz' and r[0]=='1'; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收下标对应 3、5、15 与 1。"
+}

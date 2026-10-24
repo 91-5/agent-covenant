@@ -1,0 +1,12 @@
+{
+  "id": "T27",
+  "layer": "process",
+  "title": "报告基线提交 bebfb64 的变更类型前缀",
+  "prompt": "运行 git log --oneline -1 bebfb64，报告提交主题最前面的变更类型前缀（冒号前的第一个词）。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T27.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "docs"
+  },
+  "notes": "bebfb64：docs(gate): resign XJ-20261021-004 ts to cover checkout mtime refresh；基线 commit 在本卡冻结。"
+}

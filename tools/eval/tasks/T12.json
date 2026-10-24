@@ -1,0 +1,13 @@
+{
+  "id": "T12",
+  "layer": "code",
+  "title": "实现闰年判断 is_leap",
+  "prompt": "在工作区写 is_leap.py，实现 is_leap(year)（公历闰年规则：四年一闰，百年不闰，四百年再闰）。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T12.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from is_leap import is_leap; assert is_leap(2000) and not is_leap(1900) and is_leap(2024) and not is_leap(2023); print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收断言覆盖世纪年与非世纪年两类边界。"
+}

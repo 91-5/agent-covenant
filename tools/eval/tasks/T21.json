@@ -1,0 +1,12 @@
+{
+  "id": "T21",
+  "layer": "process",
+  "title": "运行 owned-files 影子检查并报告退出码",
+  "prompt": "在仓库根运行 python tools/check_owned_files.py --card-dir .tasks，报告其进程退出码。该工具为影子期设计，退出码恒定。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T21.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "0"
+  },
+  "notes": "check_owned_files.py 决策 2：exit code is always 0（shadow period）。"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "T16",
+  "layer": "code",
+  "title": "实现词数统计 count_words",
+  "prompt": "在工作区创建 text.txt，内容为一行：the quick brown fox jumps over lazy dog（UTF-8，无标点）；再写 wordcount.py，实现 count_words(path) 返回按空白切分的词数。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T16.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from wordcount import count_words; assert count_words('text.txt')==8; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "固定语料 8 词，输入由任务定义冻结。"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "T20",
+  "layer": "code",
+  "title": "实现嵌套 dict 展平 flatten",
+  "prompt": "在工作区写 flatten.py，实现 flatten(d)：把嵌套 dict 用点号键展平为一层（{'a':{'b':1}} 变为 {'a.b':1}），非 dict 值原样保留。同时产出实现说明报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T20.md",
+  "acceptance": {
+    "type": "command",
+    "command": "python -c \"from flatten import flatten; assert flatten({'a':{'b':1},'c':2})=={'a.b':1,'c':2}; print('accept: ok')\"",
+    "expect_exit": 0
+  },
+  "notes": "验收含嵌套与平铺混合结构。"
+}

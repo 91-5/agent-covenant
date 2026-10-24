@@ -1,0 +1,12 @@
+{
+  "id": "T29",
+  "layer": "process",
+  "title": "报告 README 测试计数锚的注释名",
+  "prompt": "运行 python tools/sync_test_count.py --help 或阅读 README.md，报告声明测试总数的 HTML 注释锚的名称（不含尖括号与斜杠）。产出报告。产出为一份 markdown 报告；对报告中每条事实性结论，按 harness 证据语法（运行时由 runner 按条件附加）标注。报告末尾必须有一行 `答案：<值>`。",
+  "product": "T29.md",
+  "acceptance": {
+    "type": "answer",
+    "value": "test-count"
+  },
+  "notes": "sync_test_count.py 的 ANCHOR_RE 使用 <!-- test-count -->。"
+}
