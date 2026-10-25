@@ -291,5 +291,14 @@
   "XJ-20261024-002":  [
                             "docs/eval-prereg.md",
                             "docs/eval-report-v1.md"
+                        ],
+  "XJ-20261024-003":  [
+                            "tools/eval/study_runner.py",
+                            "tools/eval/m3_probe.py",
+                            "tests/test_study_runner.py",
+                            "tests/test_m3_probe.py",
+                            "docs/eval-runner-protocol.md",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }
