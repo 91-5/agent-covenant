@@ -354,9 +354,29 @@ Now a tracked EVO verdict is a plain `ORPHAN_VERDICT` error, and
 `--allow-orphan-id` is gone from CI and from the pre-push hook. `--evo-dir`
 stays: `check_evo_protected_assets` needs it.
 
-**Known CI blind spot (recorded, not fixed):** because CI has no `_handoffs`
-checkout, `check_evo_protected_assets` is a no-op there - the protected-asset
-guard effectively runs only on a developer machine.
+**Known CI blind spot (accepted by AgnesCode, XJ-20261024-005 - not fixed):**
+because CI has no `_handoffs` checkout, `check_evo_protected_assets` returns
+early there. That is not a gap waiting to be closed; it is the enforcement
+boundary of this policy:
+
+- **The pre-push hook is where this guard is enforced.** EVO cards live on the
+  machine by policy, so the moment they must be checked is the push
+  (`tools/pre-push-hook.sh`: `--evo-dir ../_handoffs/evo --strict`). CI is a
+  second witness, not the first.
+- Both alternative fixes are structurally dead *today*, which is why this is
+  recorded rather than scheduled. (a) Checking out `_handoffs` in CI requires it
+  to have a remote - it has none - and even then `EVO-20261020-001` is a
+  legitimate escalation (declared `protected_assets_targeted` +
+  `protected_assets_changes` + `sir_approval`), which the guard reports as a
+  permanent `EVO_PROTECTED_ASSET_TOUCHED` WARN; under `--strict` that is a
+  permanently red build for an already-approved card. (b) Copying EVO cards into
+  this repo violates the 2026-10-25 ruling and brings back the per-card
+  allow-list line that turned run 40192728367 red.
+- **Open a card when any one of these becomes true:** `_handoffs` gains a remote;
+  a multi-author or multi-machine setup makes the pre-push hook no longer
+  installed by default; or someone raises "what does a legitimate escalation
+  state mean under `--strict`?" - that last one is a design question worthy of
+  its own card, and it is the real blocker, not the checkout.
 
 ## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
 
