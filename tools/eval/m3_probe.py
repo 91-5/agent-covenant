@@ -82,7 +82,12 @@ def _run_tool(tool: Path, cwd: Path, args: List[str]) -> Tuple[int, Optional[dic
     observes the tools exactly as CI would, via exit code and stdout."""
     completed = subprocess.run(
         [sys.executable, str(tool), *args],
-        cwd=str(cwd), capture_output=True, text=True, timeout=300,
+        cwd=str(cwd), capture_output=True, timeout=300,
+        # Explicit UTF-8 with replacement: the tools print CJK violation text and
+        # this runs under whatever locale the caller has (measured: text=True on a
+        # GBK console dies with UnicodeDecodeError before the probe can parse
+        # --json). Same console discipline as judge.run_command.
+        encoding="utf-8", errors="replace",
     )
     payload: Optional[dict] = None
     try:
