@@ -20,6 +20,7 @@ Exit codes
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -1480,6 +1481,78 @@ def build_parser():
     return parser
 
 
+def check_subprocess_text_no_encoding(project_root):
+    """ERROR when a tools/ call decodes subprocess output with the ambient locale.
+
+    ``subprocess.run(..., text=True)`` without ``encoding=`` decodes the child's
+    bytes with the *caller's* preferred locale. On a cp936/GBK console that
+    mangles (or, for strict codecs, kills) any non-ASCII output -- and this repo
+    prints CJK violation text from both gate.py and lint_cards.py.
+
+    Measured (XJ-20261024-003): ``tools/eval/m3_probe.py`` did exactly this and
+    died with ``UnicodeDecodeError`` before it could parse ``--json``, so the
+    whole probe returned nothing on a GBK machine while passing on a UTF-8 one.
+    AgnesCode isolated the root cause and scanned every subprocess call site in
+    tools/**; this rule is the guard so the class cannot come back.
+
+    ERROR, not WARN: the failure is silent on the developer's machine (their
+    locale hides it) and loud only for whoever reproduces the work -- precisely
+    the kind of defect that needs to fail at the door.
+
+    Exempt with a trailing ``# noqa: SUBPROCESS_TEXT_NO_ENCODING`` when the
+    decode genuinely happens elsewhere (caller passes bytes on purpose).
+
+    Scope: ``<project>/tools/**/*.py`` only. Not a general codebase policy --
+    the argument is about this repo's own tooling, and widening the scope is how
+    a guard turns into noise.
+    """
+    out = []
+    tools_dir = project_root / "tools"
+    if not tools_dir.is_dir():
+        return out  # project without a tools/ tree: rule not enabled
+
+    subprocess_callees = {"run", "call", "check_call", "check_output", "Popen", "popen"}
+    for path in sorted(tools_dir.rglob("*.py")):
+        try:
+            # utf-8-sig, not utf-8: a BOM is legal in Python source but makes
+            # ast.parse raise, and a skipped file is a silently unguarded file
+            # (measured while testing this rule -- the first injected sample was
+            # written by PowerShell, which prepends a BOM).
+            source = path.read_text(encoding="utf-8-sig", errors="replace")
+            tree = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            continue  # a file that does not parse is somebody else's finding
+        lines = source.splitlines()
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            callee = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+            if callee not in subprocess_callees:
+                continue
+            keywords = {kw.arg for kw in node.keywords if kw.arg}
+            text_mode = "text" in keywords or "universal_newlines" in keywords
+            if not text_mode or "encoding" in keywords:
+                continue
+            start = getattr(node, "lineno", 1)
+            end = getattr(node, "end_lineno", start) or start
+            # Exemption window: the call's own lines plus the line immediately
+            # above it. A multi-line call naturally carries its noqa on the
+            # preceding comment line (measured: without the lookback the
+            # documented exemption did not work).
+            span = "\n".join(lines[max(0, start - 2): end])
+            if "SUBPROCESS_TEXT_NO_ENCODING" in span:
+                continue  # explicit # noqa
+            out.append(_finding(
+                "SUBPROCESS_TEXT_NO_ENCODING", "ERROR", path, 
+                f"{callee}(...) uses text=True without encoding=: the child's bytes "
+                f"are decoded with the caller's locale, so non-ASCII output either "
+                f"mangles or raises UnicodeDecodeError depending on the machine. Pass "
+                f'encoding="utf-8", errors="replace" (or add '
+                f"`# noqa: SUBPROCESS_TEXT_NO_ENCODING` if bytes are intended)", line=start))
+    return out
+
+
 def main(argv=None):
     _safe_utf8()
     args = build_parser().parse_args(argv)
@@ -1516,6 +1589,7 @@ def main(argv=None):
             print(f"[USAGE] {exc}", file=sys.stderr)
             return EXIT_USAGE
     findings += check_stale_test_count(project_root)
+    findings += check_subprocess_text_no_encoding(project_root)
     findings += check_evo_protected_assets(args.evo_dir)
     findings += check_link_not_stamped(project_root, verdict_dir)
     findings += check_unmapped_claim_surface(project_root, artifact_map, verdict_dir)

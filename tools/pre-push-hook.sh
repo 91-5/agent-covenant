@@ -121,15 +121,14 @@ fi
 echo "[pre-push] Linting cards and gating round $NEWEST_ID ..."
 
 # --- step 1: lint --strict ---
-# --evo-dir: EVO cards live outside the repo (_handoffs/evo) — passing the dir
-# lets the orphan check pair EVO verdicts with their cards instead of warning
-# forever. Absent dir → the is_dir() guard skips it, zero cost (XJ-20261021-002).
-#
-# --allow-orphan-id (XJ-20261021-003, dp 大脑裁定): the two in-repo EVO verdicts
-# whose cards live in _handoffs/evo are topology-accepted orphans — downgraded
-# to NOTICE, still printed. Any NEW orphan id still warns and fails strict.
+# --evo-dir stays for check_evo_protected_assets (EVO cards' protected-asset
+# declarations), not for pairing verdicts. EVO verdicts live in _handoffs/evo
+# only (sir ruling 2026-10-25, XJ-20261024-005), so --allow-orphan-id is gone:
+# an EVO verdict in this repo is now a plain ORPHAN_VERDICT error. (The local
+# hook still differs from CI here — locally the dir exists, so the guard runs;
+# CI has no _handoffs checkout and the guard no-ops.)
 # (EVO_PROTECTED_ASSET_TOUCHED exemption unchanged: sir ruling (a), C1.)
-LINT_OUT=$("$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --allow-orphan-id EVO-20261019-001 --allow-orphan-id EVO-20261020-001 --strict 2>&1) && LINT_CODE=0 || LINT_CODE=$?
+LINT_OUT=$("$PYTHON" tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo --strict 2>&1) && LINT_CODE=0 || LINT_CODE=$?
 NON_EXEMPT=$(printf '%s\n' "$LINT_OUT" | grep -E '^\[(ERROR|WARN)\]' | grep -vE '^\[WARN\] EVO_PROTECTED_ASSET_TOUCHED' || true)
 if [ "$LINT_CODE" -eq 2 ]; then
     printf '%s\n' "$LINT_OUT"

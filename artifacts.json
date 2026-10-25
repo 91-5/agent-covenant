@@ -300,5 +300,14 @@
                             "docs/eval-runner-protocol.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261024-005":  [
+                            ".github/workflows/gate.yml",
+                            "tools/pre-push-hook.sh",
+                            "tools/lint_cards.py",
+                            "tests/test_lint_cards.py",
+                            "docs/lint-rules.md",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }

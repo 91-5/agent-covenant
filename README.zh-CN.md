@@ -9,7 +9,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # 闂ㄧ
 python tools/lint_cards.py --dir .tasks         # 鍗＄墖 schema 涓庡懡鍚嶆鏌?
-python -m unittest discover -s tests            # <!-- test-count -->394<!-- /test-count --> 个单测
+python -m unittest discover -s tests            # <!-- test-count -->402<!-- /test-count --> 个单测
 ```
 
 ## 瀹夎
@@ -49,6 +49,12 @@ python -m unittest discover -s tests            # <!-- test-count -->394<!-- /te
 python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict
 python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require <NS>-YYYYMMDD-001
 ```
+
+> **EVO verdict 不在本仓跟踪。** 规则演进卡的 `verdict.json` 与其卡片同放
+> `_handoffs/evo/EVO-<id>.verdict.json`。CI 只 checkout 本仓，所以任何入库的
+> EVO verdict 在那边都会变成 `ORPHAN_VERDICT` 错误——放回卡片旁边就是整个修法
+> （XJ-20261024-005）。`verdicts/` 只放任务卡 verdict。
+
 
 閫€鍑虹爜 `0` 琛ㄧず verdict 婊¤冻绛栫暐銆俙1` 琛ㄧず涓嶆弧瓒斥€斺€斿幓璇绘墦鍗板嚭鏉ョ殑鍘熷洜锛岃€屼笉鏄噸璇曘€?
 `2` 鏄敤娉曢敊璇紝涓嶇畻閫氳繃銆?

@@ -10,7 +10,7 @@ git clone https://github.com/91-5/agent-covenant.git
 cd agent-covenant
 python tools/gate.py --verdict-dir verdicts     # the gate
 python tools/lint_cards.py --dir .tasks         # card schema + naming
-python -m unittest discover -s tests            # <!-- test-count -->394<!-- /test-count --> tests
+python -m unittest discover -s tests            # <!-- test-count -->402<!-- /test-count --> tests
 ```
 
 ## Install
@@ -57,6 +57,13 @@ FAIL, is in `examples/deepfreeze-pilot/`.
 python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --strict
 python tools/gate.py --verdict-dir verdicts --artifact-map artifacts.json --require <NS>-YYYYMMDD-001
 ```
+
+> **EVO verdicts are not tracked in this repository.** A rule-evolution card's
+> `verdict.json` lives beside the card in `_handoffs/evo/EVO-<id>.verdict.json`.
+> CI checks out this repository only, so a tracked EVO verdict becomes an
+> `ORPHAN_VERDICT` error there - keeping them next to their cards is the whole
+> fix (XJ-20261024-005). `verdicts/` holds task-card verdicts only.
+
 
 Exit `0` means the verdict satisfies the policy. Exit `1` means it does not 鈥?read the
 printed reason rather than retrying. Exit `2` is a usage error, which is not a pass.

@@ -1637,5 +1637,99 @@ class TestPrePushHookSuiteIsClean(unittest.TestCase):
                          "was signed off on it, so this is a regression")
 
 
+class TestSubprocessTextNoEncoding(LintTestCase):
+    """A tools/ call must not decode child output with the ambient locale.
+
+    Measured (XJ-20261024-003): m3_probe.py used subprocess.run(text=True) with
+    no encoding and died with UnicodeDecodeError on a GBK console before it
+    could parse --json -- invisible on the author's UTF-8 machine, fatal for
+    whoever reproduces the work. AgnesCode isolated the cause and scanned every
+    call site; this rule keeps the class out.
+    """
+
+    def _tool(self, name, body):
+        tools = self.tmp / "tools"
+        tools.mkdir(exist_ok=True)
+        (tools / f"{name}.py").write_text(
+            "import subprocess\n\n\n" + body, encoding="utf-8")
+
+    def test_single_line_text_true_without_encoding_is_an_error(self):
+        self._tool("bad", "def f(cmd):\n    return subprocess.run(cmd, text=True)\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_multi_line_call_is_detected(self):
+        self._tool(
+            "bad_multi",
+            "def f(cmd):\n"
+            "    return subprocess.run(\n"
+            "        cmd,\n"
+            "        capture_output=True,\n"
+            "        text=True,\n"
+            "    )\n",
+        )
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_universal_newlines_counts_as_text_mode(self):
+        self._tool("uni", "def f(cmd):\n    return subprocess.check_output(cmd, universal_newlines=True)\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_explicit_encoding_is_accepted(self):
+        self._tool(
+            "good",
+            "def f(cmd):\n"
+            '    return subprocess.run(cmd, text=True, encoding="utf-8", errors="replace")\n',
+        )
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_bytes_mode_without_text_is_accepted(self):
+        self._tool("bytesmode", "def f(cmd):\n    return subprocess.run(cmd, capture_output=True)\n")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_noqa_exempts(self):
+        self._tool(
+            "exempt",
+            "def f(cmd):\n"
+            "    # noqa: SUBPROCESS_TEXT_NO_ENCODING -- decode happens in the caller\n"
+            "    return subprocess.run(cmd, text=True)\n",
+        )
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_bom_prefixed_file_is_still_scanned(self):
+        # A BOM is legal in Python source but makes ast.parse raise; skipping the
+        # file would mean a silently unguarded file. Found by the card's own
+        # real-injection acceptance step: PowerShell's UTF8 writer prepends one,
+        # and the first version of this rule skipped the sample entirely.
+        tools = self.tmp / "tools"
+        tools.mkdir(exist_ok=True)
+        body = "\ufeffimport subprocess\n\n\ndef f(cmd):\n    return subprocess.run(cmd, text=True)\n"
+        (tools / "bommed.py").write_text(body, encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_ERROR, code)
+        self.assertIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+    def test_files_outside_tools_are_not_scanned(self):
+        # Same offending call, placed outside tools/: the rule is scoped to the
+        # repo's own tooling, and widening it is how a guard becomes noise.
+        (self.tmp / "scripts").mkdir()
+        (self.tmp / "scripts" / "bad.py").write_text(
+            "import subprocess\n\ndef f(cmd):\n    return subprocess.run(cmd, text=True)\n",
+            encoding="utf-8")
+        code, out, _ = self.run_lint()
+        self.assertEqual(lint.EXIT_OK, code, out)
+        self.assertNotIn("SUBPROCESS_TEXT_NO_ENCODING", self.codes(out))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

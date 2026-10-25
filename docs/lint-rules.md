@@ -334,6 +334,30 @@ Tracked as a review question on `XJ-20261013-002`, not fixed here.
 Without `--evo-dir` the four findings return unchanged: the directory was not
 named, so lint does not guess at it.
 
+## Where EVO verdicts live (policy, not a rule)
+
+EVO verdicts are **not** tracked in this repository. They live beside their cards
+in `_handoffs/evo/EVO-<id>.verdict.json` (sir ruling 2026-10-25, XJ-20261024-005).
+
+They used to be tracked here with `--allow-orphan-id` downgrading them on CI, and
+that arrangement was a trap rather than a convenience:
+
+- CI checks out **this repository only**. `--evo-dir ../_handoffs/evo` therefore
+  never resolves there, so every tracked EVO verdict was an orphan.
+- Each new EVO card needed a new allow-list line. Measured cost: landing
+  `EVO-20261024-001.verdict.json` without that line turned the build red and the
+  commit had to be reverted (`3651aac` -> `98c8626`).
+- Locally the trap is invisible: `_handoffs/evo` exists, so pairing succeeds and
+  the hook goes green. The breakage only shows up on CI.
+
+Now a tracked EVO verdict is a plain `ORPHAN_VERDICT` error, and
+`--allow-orphan-id` is gone from CI and from the pre-push hook. `--evo-dir`
+stays: `check_evo_protected_assets` needs it.
+
+**Known CI blind spot (recorded, not fixed):** because CI has no `_handoffs`
+checkout, `check_evo_protected_assets` is a no-op there - the protected-asset
+guard effectively runs only on a developer machine.
+
 ## EVO protected assets (`EVO_PROTECTED_ASSET_TOUCHED`)
 
 A rule-evolution card must not quietly rewrite the system that judges it. Two
@@ -445,3 +469,32 @@ Four decisions worth knowing, because each rejects an easier wrong answer:
   fails the moment a test is added without syncing, because that test *is* a
   test. That pressure is the point: the fix is one command, and the alternative
   is a number that rots quietly.
+
+## `SUBPROCESS_TEXT_NO_ENCODING`: text mode without an explicit codec
+
+`subprocess.run(..., text=True)` without `encoding=` decodes the child's bytes
+with the **caller's preferred locale**. On a cp936/GBK console that mangles
+non-ASCII output, and with a strict codec it raises `UnicodeDecodeError`. This
+repository prints CJK violation text from both `gate.py` and `lint_cards.py`.
+
+Measured (`XJ-20261024-003`): `tools/eval/m3_probe.py` did exactly this and the
+whole probe returned nothing on a GBK machine while passing on a UTF-8 one - the
+defect was invisible to whoever wrote it and fatal for whoever reproduced it.
+AgnesCode isolated the cause and scanned every call site under `tools/`.
+
+**ERROR, not WARN.** A defect that hides on the author's machine and breaks on
+someone else's needs to fail at the door.
+
+Scope and shape:
+
+- `tools/**/*.py` only. This is about *this repo's tooling*; widening the scan is
+  how a guard becomes noise.
+- Detected by AST, so single-line and multi-line calls both count.
+- `universal_newlines=True` counts as text mode.
+- A call with `capture_output=True` and no text mode is fine (bytes are the point).
+- Exempt with `# noqa: SUBPROCESS_TEXT_NO_ENCODING`, on the call's own lines or on
+  the line immediately above it, when the decode genuinely happens in the caller.
+
+Known boundary: only direct calls are seen. A wrapper that hides `subprocess.run`
+behind its own helper is not followed, and that is deliberate - following it means
+building a call graph, which is a different tool.

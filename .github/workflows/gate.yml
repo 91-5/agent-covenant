@@ -66,18 +66,22 @@ jobs:
           --verdict-dir verdicts
           --artifact-map artifacts.json
           --evo-dir ../_handoffs/evo
-          --allow-orphan-id EVO-20261020-001
           --strict
-        # --evo-dir pairs EVO verdicts with their cards (_handoffs/evo, outside
-        # the repo). On CI that dir never exists → the is_dir() guard skips it,
-        # zero cost; locally it silences the permanent ORPHAN warnings
-        # (XJ-20261021-002).
+        # --evo-dir stays for check_evo_protected_assets (the EVO cards' protected-
+        # asset declarations), NOT for pairing verdicts.
         #
-        # --allow-orphan-id (XJ-20261021-003, dp 大脑裁定): the topology-accepted
-        # orphan (EVO-20261020-001's verdict is in-repo, its card is not) is
-        # downgraded to NOTICE — visible, not a failure. Any NEW orphan id
-        # still warns and fails strict: this is a constrained green, not a
-        # blind exemption.
+        # EVO verdicts live in ../_handoffs/evo only (sir ruling 2026-10-25,
+        # XJ-20261024-005). They used to be tracked here as well, with
+        # --allow-orphan-id downgrading them on CI. That was a trap: CI never
+        # checks out _handoffs, so every tracked EVO verdict was an orphan, and
+        # each new EVO card needed another allow-list line. Measured: landing
+        # EVO-20261024-001's verdict this way turned the build red and had to be
+        # reverted. Now any EVO verdict appearing in this repo is a plain
+        # ORPHAN_VERDICT error.
+        #
+        # Known CI blind spot (recorded, not fixed here): with no _handoffs
+        # checkout in CI, check_evo_protected_assets is a no-op there -- the
+        # protected-asset guard only actually runs locally.
 
       - name: resolve current round id
         id: current
