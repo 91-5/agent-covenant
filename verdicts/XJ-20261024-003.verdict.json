@@ -1,0 +1,54 @@
+{
+  "id": "XJ-20261024-003",
+  "artifact": [
+    "tools/eval/study_runner.py",
+    "tools/eval/m3_probe.py",
+    "tests/test_study_runner.py",
+    "tests/test_m3_probe.py",
+    "docs/eval-runner-protocol.md",
+    "artifacts.json"
+  ],
+  "commit": "79c7feb（ZCode 实现）+ 6663c28（作者侧 m3_probe 跨 locale 编码修复，已披露）",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-25T12:00:00Z",
+  "ts_note": "ts 12:00Z 晚于被覆盖产物最大 mtime（m3_probe.py = 2026-10-25T06:52:59Z，来自 6663c28；study_runner 13:53 本地=05:53Z）且非未来时刻；gate freshness 不 stale。合并 master+push 后若后续 git 操作刷新被覆盖产物 mtime 晚于 ts，按 004 先例重签。",
+  "evidence": [
+    "ACCEPT unittest: python -m unittest discover -s tests (COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe, bash 5.3.15, py3.14) -> Ran 394 tests, OK, exit 0",
+    "ACCEPT m3_probe: python tools/eval/m3_probe.py -> M3-1 MISSING_VERDICT / M3-2 STALE_VERDICT / M3-3 BLOCKERS_PRESENT / M3-4 UNMAPPED_CLAIM_SURFACE / M3-5 LINK_VERDICT_SHA_MISMATCH all caught=True exit=1; M3-6 clean round caught=False exit=0; interception 5/5, false_positive_rate 0.0, M3: PASS, exit 0",
+    "ACCEPT selftest: python tools/eval/study_runner.py --selftest -> SELFTEST: PASS (B-arm zero-execution proven via marker file absence + empty run-log; A-arm execution traced; run-data round-trips via blind.load_run_data), exit 0",
+    "ACCEPT run-data contract (independent mini two-arm run T01-answer + T11-command): B-arm run-log = 0 records, A-arm run-log = 3 records (evidence x2 + acceptance x1); blind.load_run_data parses 2 entries per arm; claim text lines byte-identical A/B -> B zero-execution is a code-path fact, not a default-off flag",
+    "ACCEPT red-line: git diff master --stat -- tools/eval/judge.py tools/eval/extract.py tools/eval/blind.py tools/eval/stats.py tools/eval/report.py tools/eval/run.py tools/gate.py tools/lint_cards.py -> EMPTY (8 instrument files byte-untouched)",
+    "ACCEPT lint: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json -> LINT: PASS, 0 ERROR (6 WARN all transient: 3 ORPHAN_VERDICT + 1 VERDICT_WITHOUT_REVIEW + 2 README UNMAPPED_CLAIM_SURFACE, matches implementer deviation 4)",
+    "Owned-file boundary: git show 6663c28 --stat = tools/eval/m3_probe.py only (+7/-1, single-point fix, nothing else touched); full 3651aac..6663c28 = 9 files +1683/-2 where -2 = two README test-count anchor lines (deviation 1); verdicts/ .tasks/ existing cards docs/eval-prereg.md zero-touched"
+  ],
+  "adjudication_6663c28": [
+    "Adversarial repro (independent, not taken on author's word): subprocess.run(text=True) WITHOUT encoding decodes child stdout via the CALLER's preferred console locale. Simulated cp936/GBK caller -> CJK violation text lost/mangled, probe's --json payload becomes None (root cause of author's 3 unittest errors on a GBK machine; why ZCode's UTF-8-default machine self-tested green). WITH encoding='utf-8',errors='replace' the CJK text is intact and JSON parseable -> locale-independent.",
+    "Fix is correct and does NOT hide the defect: it fixes the actual crashing subprocess.run call, semantics-equivalent to judge.run_command's existing bytes+decode('utf-8',errors='replace') console discipline (reviewer read judge.py L90-110 directly).",
+    "Repo-wide gap scan (reviewer's own): 5 in-repo subprocess call sites (judge.py:98, controls.py:213/242 = bytes+explicit-decode; check_owned_files.py:103 = encoding+text; m3_probe.py:83 = now encoding+text). The 'text=True without encoding' class had exactly one live instance repo-wide = the one 6663c28 fixed; it is now closed. No second live instance -> no followup repair card required; see advisory F1 for an optional lint guardrail."
+  ],
+  "review_q_rulings": [
+    "Q1 (ZCode executes both arms / de-contamination): adequate for this tool-only card - runner promotes 'B does not execute' to a code-path fact (B branch has structurally no run_command call site) + 3 tests + selftest marker, plus draft-before-execution pollution boundary (protocol §2). Harder physical isolation (no-repo-copy sandbox) is a future card, recorded not required.",
+    "Q2 (B-arm writes evidence without executing = manufactured error?): NO - the measured failure mode itself (claiming verification that never happened); two-arm products syntax-identical, only difference is evidence-value source; believed values are the executor's genuine knowledge state, judged later by the unified judge round-trip. Ruling: position holds.",
+    "Q3 (M3 only 5 gate-checkable defect classes enough?): YES and correctly bounded - M3 per C3 frozen definition IS 'gate interception rate' (mechanical backstop layer); 'reviewer catches bad evidence' (M4) belongs to the blind adjudication layer (E2/E3 + fuxiang blind judging), out of M3 scope. Gap is real but non-blocking; see advisory F3 wording guardrail.",
+    "Q4 (run-log tamperable?): YES at the tool layer (no cryptographic seal), honestly self-disclosed by implementer (protocol §10.2). Current defenses (draft-first boundary + B structural zero-execution + product/log cross-check + run-dir custody to sir) suffice for this tool-only card; stronger seal is a round-2 execution-card concern, recorded not required.",
+    "FOCUS 5 (--dispatch B brief 'do not run verification commands for this'): RULING = the condition DEFINITION itself, not a product-side loosening. Condition B is defined as 'write believed values from your existing knowledge, do not run'; the phrase operationalizes that. The evidence-grammar section stays verbatim identical A/B with a test guard (B brief must not contain 'skip evidence lines / write whatever'). Approved as written."
+  ],
+  "deviation_rulings": [
+    "deviation 1 (README 1 line each 373->394 + artifacts.json registers two READMEs): UPHOLD - mechanical consequence of sync_test_count.py (not syncing would raise STALE_TEST_COUNT ERROR), not self-authored scope creep; precedent XJ-20261024-001 deviations 1/2 already upheld.",
+    "deviation 2 (local run needs COVENANT_BASH_HINT): UPHOLD - environment fact (Git at D:\\AI\\Git), not a code change; reviewer's own machine confirmed the same path works (394 OK); precedent XJ-20261024-001 deviation 4.",
+    "deviation 3 (coverage command-type asymmetry, B arm takes draft self-report, does not run acceptance): ACCEPTED - B condition is defined as 'no verification floor', so self-reported coverage is the honest form; running acceptance in B would break the B-arm-zero-execution red line AND pollute the run-log invariant with a third execution state. Two-harms weighing favors zero-execution. Obligation recorded in protocol §5 + §10.3 (report must cite this)."
+  ],
+  "advisory_findings": [
+    "F1: add an optional lightweight lint guardrail - any subprocess.run(text=True) under tools/**/*.py must carry an explicit encoding=, to prevent regression of the 6663c28 class. Non-blocking, not this card's obligation; the class is currently fully closed repo-wide.",
+    "F2: run-directory sealing (a .eval-sealed-style flow) for tamper-resistance is deferred to the round-2 execution card; documented in protocol §10.2; not this card's scope.",
+    "F3: round-2 report must (a) explicitly cite protocol §5 coverage asymmetry and (b) bound M3 5/5 to 'mechanical gate interception', NOT read out as 'gate covers all study-required risk' (M4 lives at the adjudication layer)."
+  ],
+  "notes": [
+    "Independent reviewer: AgnesCode (fuxiang). Did not author ZCode's implementation nor Jarvis's 6663c28; 6663c28 is a disclosed author-side integration fix to a real cross-locale portability defect, adjudicated above. No modifications made to any author file during this review.",
+    "Merge gate: plain PASS (blockers=0) -> no --allow-conditional / acknowledged_by needed. Precedent mtime timing: after merge, if a later git op refreshes a covered artifact mtime past ts, re-sign per the 004 precedent."
+  ]
+}
