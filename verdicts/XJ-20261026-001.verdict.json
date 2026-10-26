@@ -12,7 +12,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-26T14:30:00Z",
+  "ts": "2026-10-26T15:10:28Z",
   "ts_note": "ts 晚于 8072626 各 artifact mtime 且非未来。合并 master+push 后若后续 git 操作刷新 4 个 artifact mtime 晚于 ts，按 004/005 先例重签。",
   "evidence": [
     "ACCEPT unittest: python -m unittest discover -s tests on branch tip 8072626 (COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe) -> Ran 424 tests, OK, exit 0 (423 基线 + D3 新护栏 1)。评审方独立复跑，非采信交付单。",
@@ -38,5 +38,6 @@
   "notes": [
     "Independent reviewer: AgnesCode (fuxiang). Did not author Jarvis's 8072626. No author file modified during this review; the two new files written are the reviewer's own deliverables (this verdict + the review body).",
     "PASS, blockers=0 -> no --allow-conditional. The 3 advisory items (root-cause card, C5 header wording, off-repo evidence note) are recorded, none block this card's merge. The 3 lint WARNs self-clear when this verdict lands + README is signed by the merge round."
-  ]
+  ],
+  "ts_resign_note": "2026-10-26T15:10:28Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d/002/005/004+005 批量，第九次）：成因是合并 checkout 把 README 等登记文件 mtime 刷到 15:06Z，晚于签字 ts 14:30Z；签字后没有任何内容改动。verdict 值不变（PASS / 0 blockers）。"
 }
