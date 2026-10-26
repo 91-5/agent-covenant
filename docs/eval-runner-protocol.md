@@ -135,6 +135,9 @@ v1.1 附加约束 3 标注端点缺失。
 6. 核对 `run-log.json`：B 记录为空、A 记录数 = A 臂命令型证据断言数 + command
    型 acceptance 数。
 7. `run-data.json` summary 对称性检查（§6）→ 通过后 `run.py --package <run-dir>`。
+8. **密封**：打包前 `python tools/eval/seal_run.py <run-dir> --move-to <custody>`
+   对整个 run 目录取 SHA-256 清单（§11）；核对 `VERIFY: OK` 后把 seal.json 与
+   custody 副本一并移交 sir。
 
 ## §10 边界与已知局限
 
@@ -146,3 +149,47 @@ v1.1 附加约束 3 标注端点缺失。
 3. coverage 的 command 型不对称（§5）已登记，报告须显式引用本节。
 4. 探针的 fixture 构造是「规则感知」的（要构造过期就得动 mtime），但一切判定
    都出自真实工具；探针零规则复实现是卡面红线，由测试监视子进程调用面守卫。
+
+## §11 运行密封（XJ-20261024-004，闭合 §10.2 的可检出部分）
+
+**边界先行**：密封是**可检出改动**（tamper-evident），**不是防篡改**
+（tamper-proof）。它不回答「谁的日志是真的」，只回答「封存之后动过没有」。
+无签名、无私钥设施；以下三条局限是能力边界本身，引用本节时必须连同引用：
+
+1. **seal.json 自身无防线**：能写 run 目录的人也能重写 seal.json（重算全部
+   哈希）让改动隐身。缓解靠保管而非密码学——seal.json 必须离开执行者的写权限
+   （移交 sir / custody），否则密封只对无写权限的改动方有意义。
+2. **整体替换不可检出**：换上另一份「内容 + 哈希自洽」的目录，verify 照样
+   通过。哈希清单只证明**恒定**，不证明**来源**；把目录绑定到「产生它的那次
+   运行」的是 custody 链，不是哈希。
+3. **封住的谎言仍是谎言**：密封发生在运行结束时；runner 封存前记录了什么，
+   由 §2 污染边界 + §3 零执行 + 事后交叉核对约束，密封工具不在其覆盖内。
+
+### 11.1 何时密封
+
+runbook（§9）第 7 步对称性检查通过之后、`run.py --package` 之前：此时证据面
+（run-data.json / run-log.json / products/）已定形，而打包操作尚未来得及引入
+任何中间态。密封后 run 目录即视为**只读**——后续任何阶段（打包、判定、评审）
+若需要动它，必须在 seal 之外留痕并重新核对。
+
+### 11.2 怎么密封
+
+```bash
+python tools/eval/seal_run.py <run-dir> --move-to <custody-dir>
+python tools/eval/seal_run.py --verify <run-dir>   # 之后任何时点，0=一致 / 1=漂移 / 2=用法错误
+```
+
+- 产出 `seal.json`：每个文件的 posix 相对路径 + SHA-256 + 字节数，外加
+  `sealed_at_utc` / `file_count` / `root_label`；seal.json 自身不入清单（自指）。
+- 哈希流式分块（1 MiB），目录大小只受磁盘约束；纯 stdlib，工具自身零子进程。
+- `--move-to` 是**复制**不是移动：原件留在执行侧原地不动，密封副本 + seal 落入
+  custody，复制后立即对副本重验。custody 目标已存在时拒绝（append-only）。
+
+### 11.3 seal.json 的保管（两种放法的攻击面）
+
+- **留在 run 目录内**：方便——verify 随手可跑；但执行者对目录仍有写权限时，
+  局限 1 完全敞开，密封退化为「提示牌」。
+- **单独移交 custody（本协议的取法）**：runbook 第 8 步用 `--move-to` 一步做到
+  「副本 + seal 同时落入执行者写不到的地方」。此后即便 run 目录原位被改，sir
+  手里的 seal.json 仍能逐字节指出改了什么。要攻破就得出 custody 链的假——
+  那已经是局限 2 的范畴，诚实记录，不谎称密码学可解。

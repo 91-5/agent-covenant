@@ -309,5 +309,12 @@
                             "docs/lint-rules.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261024-004":  [
+                            "tools/eval/seal_run.py",
+                            "tests/test_seal_run.py",
+                            "docs/eval-runner-protocol.md",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }
