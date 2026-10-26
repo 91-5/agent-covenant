@@ -323,5 +323,11 @@
                             "tests/test_eval_harness.py",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261026-002":  [
+                            "tools/eval/stats.py",
+                            "tests/test_eval_harness.py",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }

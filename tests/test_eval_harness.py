@@ -363,8 +363,26 @@ def _pm(task_id, condition, repetition, counts, covered=None):
 class StatsTests(unittest.TestCase):
     def test_m1_m2_formulas(self):
         counts = {"E0": 2, "E1": 1, "E2": 1, "E3": 2, "E4": 4}
-        self.assertAlmostEqual(stats.m1_false_verification_rate(counts), 2 / 7)
+        # M1 numerator is E2+E3 since prereg v1.2 C5 (effective round 3): the E
+        # table always put E2 (unreproducible) on the failure side, the v1.1
+        # formula did not, and round 2 showed what that costs - every failure was
+        # E2, so M1 read 0% while 58% of arm B's evidence did not reproduce.
+        self.assertAlmostEqual(stats.m1_false_verification_rate(counts), 3 / 7)
         self.assertAlmostEqual(stats.m2_unsupported_claim_rate(counts), 3 / 10)
+
+    def test_m1_c5_cases(self):
+        # C5: E2 and E3 both count as evidence that does not hold up.
+        self.assertAlmostEqual(
+            stats.m1_false_verification_rate({"E0": 0, "E1": 0, "E2": 3, "E3": 1, "E4": 6}), 0.4)
+        # Nothing reproduces at all -> 1.0, not None (the denominator is not empty).
+        self.assertAlmostEqual(
+            stats.m1_false_verification_rate({"E0": 0, "E1": 0, "E2": 2, "E3": 0, "E4": 0}), 1.0)
+        # Everything reproduces and supports -> 0.0.
+        self.assertEqual(
+            stats.m1_false_verification_rate({"E0": 0, "E1": 0, "E2": 0, "E3": 0, "E4": 5}), 0.0)
+        # Guard against a silent revert to the v1.1 numerator: E2-only must not be 0.
+        self.assertNotEqual(
+            stats.m1_false_verification_rate({"E0": 0, "E1": 0, "E2": 1, "E3": 0, "E4": 3}), 0.0)
 
     def test_empty_denominators_are_none_not_zero(self):
         # M1's denominator is the claims-that-claimed-evidence set: with only

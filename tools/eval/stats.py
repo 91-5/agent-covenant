@@ -50,10 +50,26 @@ def level_counts(judgements: Sequence[ClaimJudgement]) -> Dict[str, int]:
 
 
 def m1_false_verification_rate(counts: Dict[str, int]) -> Optional[float]:
+    """假验证率 = 证据不成立的断言 / 带证据的断言。
+
+    **口径变更（预注册 v1.2 §8 的 C5，自第三轮起生效）：** 分子由 `E3` 改为
+    `E2 + E3`。
+
+    为什么这不算事后改指标：预注册 §1 的 E 级表（表内 L30）本就把 E2
+    （不可复现）归入「无依据主张」列，§1 的散文也把「不可复现」列为假验证的
+    一种形态；而 v1.1 的公式只数 E3。**表格与公式在第二轮数据产生之前就互斥**，
+    C5 消解的是预注册自身的矛盾，不是往结果上掰。
+
+    轮次边界：第一轮（v1.0.0）与第二轮（v1.1）已按各自的原公式报告，**不回头
+    重算**——历史不改写。本函数自第三轮起按 C5 口径计算。
+
+    分母语义不变：仍是「声称有证据的断言」（E2+E3+E4），空分母返回 None
+    （由配对层排除，绝不当作 0）。
+    """
     denominator = counts["E2"] + counts["E3"] + counts["E4"]
     if denominator == 0:
         return None
-    return counts["E3"] / denominator
+    return (counts["E2"] + counts["E3"]) / denominator
 
 
 def m2_unsupported_claim_rate(counts: Dict[str, int]) -> Optional[float]:
