@@ -1,0 +1,43 @@
+{
+  "id": "XJ-20261024-004",
+  "artifact": [
+    "tools/eval/seal_run.py",
+    "tests/test_seal_run.py",
+    "docs/eval-runner-protocol.md",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "commit": "be29884（ZCode 交付：seal/verify/custody 复制 + 287 行测试 + §11 文档；README 各 1 行是测试计数同步 394→415）",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-26T05:09:00Z",
+  "ts_note": "ts 05:09:00Z 晚于 004 判据 5 artifact 的 mtime（全部 = 2026-10-26T05:06:36Z，f4baf6c-era checkout 时间戳）且非未来（评审机实测 now = 05:10:59Z）。gate freshness 不 stale。合并 004 后若后续 git 操作刷新 5 个 artifact mtime 晚于 ts，按 005 先例重签。",
+  "evidence": [
+    "ACCEPT unittest: python -m unittest discover -s tests on branch be29884 (COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe) -> Ran 415 tests, OK, exit 0 (reviewer re-ran independently; 394 + 21 new, matches dispatch note's 415)",
+    "ACCEPT red-zone (true baseline, NOT fast-forwarded master): git diff --stat 98c8626..be29884 -- <10 instrument files: judge/extract/blind/stats/report/run/study_runner/m3_probe/gate/lint_cards> -> EMPTY. Reviewer deliberately avoided the author's self-reported trap: using `git diff master` after 005 fast-forwarded master produced a phantom 74-line deletion (looked like lint_cards.py was touched); against the card's true baseline 98c8626 the red zone is clean.",
+    "ACCEPT 4-step adversarial (reviewer-built synthetic run dir, author files untouched): seal -> 'files: 3, boundary: tamper-evident, not tamper-proof' exit 0; verify clean -> 'VERIFY: OK (3 files match)' exit 0; XOR-flip 1 byte in products/T01-A1.md -> 'MODIFIED products/T01-A1.md, VERIFY: DRIFT' exit 1; delete file -> 'MISSING' exit 1; add unregistered file -> 'ADDED EXTRA.md' exit 1. All four classes of post-seal drift are named file-by-file, as the card promises.",
+    "ACCEPT Limitation-2 measurement (dispatch Q1): replaced the ENTIRE run directory with a different-but-internally-consistent one and re-sealed it; --verify then passes (exit 0). Whole-directory substitution is genuinely undetectable by a hash manifest - and docs/eval-runner-protocol.md §11 局限2 + seal_run.py docstring both name exactly this hole ('attests constancy, not origin; the chain of custody, not the hash, binds the directory to the run'). Measured, not assumed.",
+    "ACCEPT §9 append-only: git diff of docs/eval-runner-protocol.md 98c8626..be29884 shows ONLY + lines inside §9 (new step 8 inserted after step 7, i.e. after symmetry check, before --package, exactly as card D3 prescribes); runbook steps 1-7 byte-identical; §10 pre-existing text untouched. New §11 adds the sealing section without editing any existing clause.",
+    "ACCEPT streaming hash + large-file test: tests/test_seal_run.py test_streaming_hash_matches_direct_hash_beyond_chunk_size feeds >2*CHUNK_SIZE (1 MiB) payload and asserts the manifest sha256 equals hashlib.sha256 of the payload; seal_run.py carries no subprocess call at all, so the F1 cross-locale class has zero surface in this tool (verified by reading the source, not just the docstring claim)"
+  ],
+  "review_q_rulings": [
+    "Q1 (seal.json itself is not in the manifest - the 'replace everything with another self-consistent dataset' attack surface; is the doc honest about it?): RULING = YES, honestly bounded, and the reviewer verified the bound is REAL. seal.json is excluded only at the top level (a nested products/seal.json IS hashed - correct: the manifest cannot hash itself, but nested evidence can). The three holes are named in the docstring AND §11: (1) in-place seal rewriting - mitigated procedurally, not cryptographically (custody); (2) whole-directory substitution - reviewer measured it passes verify, exit 0, so the doc's claim 'hash manifest attests constancy, not origin' is accurate and not wishful; (3) a sealed lie is still a lie. The verify output itself prints 'boundary: tamper-evident, not tamper-proof', so a casual reader of the CLI output sees the boundary, not just the doc. Wording iron rule (EVO-20261024-001) is held: no '防篡改' claim anywhere in code, doc or output.",
+    "Q2 ('tamper-evident, not tamper-proof' output wording - enough against misreading?): RULING = yes at the output level. The boundary string is in three places that a reader is guaranteed to hit: the tool's --help description, the seal/verify stdout line, and the seal.json 'boundary' field (so the artifact itself carries its own limit). The one residual risk is the §11 title '运行密封' reading as 'sealed/proof' to a skimmer - §11's first line immediately corrects it ('可检出改动，不是防篡改') and prescribes that the three limitations must be quoted together with any citation. Accepted as written.",
+    "Q3 (runbook append-only - are §9's original steps preserved verbatim?): RULING = VERIFIED YES. Reviewer diffed 98c8626 vs be29884 for the doc: §9's only delta is the inserted step 8 (seal after step 7 symmetry check, before --package); steps 1-7 and all §1/§2/§3 text are byte-identical. The insertion point is also the right one by protocol logic: evidence surface (run-data/run-log/products) is final after step 7, and --package would otherwise introduce intermediate state after sealing.",
+    "Q4 (custody copy --move-to: does copying instead of moving leave TWO readable copies and expand the surface? is the no-copy-by-default correct?): RULING = yes on both, and the design is correct as bounded. A second readable copy DOES exist after --move-to, but it lands in the custody directory, which by definition the executor cannot write to - the second copy is precisely what makes limitation (1) actionable (the seal outlives the executor's write access), not an expansion of the exploitable surface: an executor-controlled duplicate of the seal is worthless, an executor-inaccessible one is the mitigation. Two safety properties were verified: copy_to_custody REFUSES to overwrite (append-only custody - reviewer's test confirmed exit 1 on an existing target) and the copy is immediately re-verified against the seal ('custody: <target> (copy verified)') so the copy is not a blind-trust surface. Default no-copy is correct: sealing is a read-only operation on the run dir, and custody movement is a policy act that should be an explicit flag, not a side effect."
+  ],
+  "cross_card_note": [
+    "Merge key: this verdict unlocks BOTH lines. 005's push is currently blocked by two non-exempt strict WARNs that only 004's merge retires: OWNED_FILES_CONFLICT (004 and 005 both claim artifacts.json - retires when 004 closes/archives) and VERDICT_WITHOUT_REVIEW XJ-20261024-004 (retired by THIS verdict file landing). Correct sequence: merge 004 (this verdict) first, then 005's push passes with only the hook-exempted EVO_PROTECTED_ASSET_TOUCHED WARN remaining. This matches the dispatch note's gate explanation and the 005 verdict's merge_gate_operative_facts.",
+    "Baseline discipline (author self-reported, reviewer confirmed): the instrument red-zone must always be diffed against 98c8626, the card's declared base - NOT against master, which 005 has since fast-forwarded. Using the fast-forwarded master manufactures phantom deletions in the diff (measured: a 74-line 'removal' that was actually 005's C1 rewrite, not 004's work). Recorded so the next card with a forked master does not repeat it."
+  ],
+  "advisory_findings": [
+    "A1 (non-blocking, record only): the in-run-dir seal.json default is safe only as the custody handoff's staging area - if a run is sealed and then left writable in place (no --move-to, no manual handoff), limitation 1 stays fully open and the seal degrades to a 'sign' (the doc's own word, §11.3). Protocol §9 step 8 already mandates the handoff; a future card could add a lint-style reminder that a sealed-but-unmoved run dir is a standing WARN. No action this card."
+  ],
+  "notes": [
+    "Independent reviewer: AgnesCode (fuxiang). Did not author ZCode's be29884. No author file modified during this review; the two files written by the reviewer are this verdict + the review body, landed as untracked additions on the 004 branch worktree for the author to commit with the card.",
+    "PASS, blockers=0 -> no --allow-conditional needed. The 005-reviewer A2 note (tests/ live text=True instance) is untouched by this card: seal_run.py itself spawns zero subprocesses, so the cross-locale discipline holds by construction rather than by encoding=."
+  ]
+}
