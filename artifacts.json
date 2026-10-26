@@ -320,6 +320,8 @@
   "XJ-20261026-001":  [
                             "docs/eval-report-v2.md",
                             "docs/eval-prereg.md",
-                            "tests/test_eval_harness.py"
+                            "tests/test_eval_harness.py",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }
