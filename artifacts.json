@@ -316,5 +316,10 @@
                             "docs/eval-runner-protocol.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261026-001":  [
+                            "docs/eval-report-v2.md",
+                            "docs/eval-prereg.md",
+                            "tests/test_eval_harness.py"
                         ]
 }

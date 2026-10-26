@@ -595,6 +595,49 @@ class ReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             report.unblind_fragment(self.package, wrong, REPO_ROOT)
 
+    def test_summary_matches_its_own_per_code_table(self):
+        """Self-consistency guard (XJ-20261026-001).
+
+        Measured on the round-2 package: three report captures said 158 claims
+        while their own P-code table summed to 258, and five later runs said 258.
+        The discrepancy was never explained, so the cheapest thing that would
+        have caught it at once is this invariant: the summary block must equal
+        the sum of the table it printed above itself.
+        """
+        text = report.blind_report(self.package, REPO_ROOT)
+
+        table_rows = [line for line in text.splitlines()
+                      if line.startswith("| P") and line.count("|") >= 9]
+        self.assertTrue(table_rows, "no P-code rows in the report")
+        table_sum = 0
+        level_sums = {"E0": 0, "E1": 0, "E2": 0, "E3": 0, "E4": 0}
+        for row in table_rows:
+            cols = [c.strip() for c in row.strip().strip("|").split("|")]
+            try:
+                claims = int(cols[1])
+            except (ValueError, IndexError):
+                continue  # the "| P码 | 断言数 |" header row
+            table_sum += claims
+            for offset, level in enumerate(("E0", "E1", "E2", "E3", "E4"), start=2):
+                level_sums[level] += int(cols[offset])
+
+        summary_total = None
+        summary_levels = {}
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("- 断言总数"):
+                summary_total = int(stripped.split("：")[-1].strip())
+            for level in level_sums:
+                if stripped.startswith(f"- {level}（"):
+                    summary_levels[level] = int(stripped.split("：")[-1].strip())
+
+        self.assertIsNotNone(summary_total, "summary block missing")
+        self.assertEqual(table_sum, summary_total,
+                         "summary total disagrees with the P-code table it printed")
+        for level, expected in level_sums.items():
+            self.assertEqual(expected, summary_levels.get(level),
+                             f"{level} summary disagrees with the P-code table")
+
     def test_m3_section_reads_run_data(self):
         run_dir = self.tmp / "run2"
         run_dir.mkdir()
