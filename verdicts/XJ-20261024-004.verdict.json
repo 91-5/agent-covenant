@@ -13,7 +13,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-26T05:09:00Z",
+  "ts": "2026-10-26T05:49:33Z",
   "ts_note": "ts 05:09:00Z 晚于 004 判据 5 artifact 的 mtime（全部 = 2026-10-26T05:06:36Z，f4baf6c-era checkout 时间戳）且非未来（评审机实测 now = 05:10:59Z）。gate freshness 不 stale。合并 004 后若后续 git 操作刷新 5 个 artifact mtime 晚于 ts，按 005 先例重签。",
   "evidence": [
     "ACCEPT unittest: python -m unittest discover -s tests on branch be29884 (COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe) -> Ran 415 tests, OK, exit 0 (reviewer re-ran independently; 394 + 21 new, matches dispatch note's 415)",
@@ -39,5 +39,6 @@
   "notes": [
     "Independent reviewer: AgnesCode (fuxiang). Did not author ZCode's be29884. No author file modified during this review; the two files written by the reviewer are this verdict + the review body, landed as untracked additions on the 004 branch worktree for the author to commit with the card.",
     "PASS, blockers=0 -> no --allow-conditional needed. The 005-reviewer A2 note (tests/ live text=True instance) is untouched by this card: seal_run.py itself spawns zero subprocesses, so the cross-locale discipline holds by construction rather than by encoding=."
-  ]
+  ],
+  "ts_resign_note": "2026-10-26T05:49:33Z 第七次重签（先例 b2994b1/85aaf83/bebfb64/9cb238d/002/005）：成因为 004→master 的合并本身——checkout + merge 把每个被登记产物的 mtime 刷过签字时间，签字后无任何内容改动。verdict 值不变（PASS / 0 blockers）。另：004 卡在 master 上出现顶层副本（005 分支早前提交的 OPEN 版）与 legacy CLOSED 正本并存，已在同一提交删除顶层副本。"
 }

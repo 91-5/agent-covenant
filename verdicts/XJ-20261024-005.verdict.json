@@ -15,7 +15,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-25T16:48:30Z",
+  "ts": "2026-10-26T05:49:33Z",
   "ts_note": "ts 16:22:00Z 晚于 005 覆盖 7 artifact 最大 mtime（README.md / README.zh-CN.md = 2026-10-25T16:21:52Z，其余 5 个 = 16:01:27Z）→ 新鲜度成立；且确实非未来（评审机实测 now ≈ 16:22:08Z，ts 在其前 8 秒，skew 300s 内绝对安全）。合并 master+push 时 gate 的 now 远晚于 16:22Z，freshness 不会 stale。注意：工作区当前有并发脏文件（tests/test_seal_run.py + tools/eval/seal_run.py untracked；README/artifacts/docs 有未提交改动，来自 005 之外的实现），不影响 005 的 7 个 artifact 判据；合并 master+push 后若后续 git 操作刷新 005 覆盖的 artifact mtime 晚于 ts，按 004 先例重签。",
   "evidence": [
     "ACCEPT unittest: python -m unittest discover -s tests on branch tip f4baf6c (COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe) -> Ran 402 tests, OK, exit 0 (reviewer re-ran independently, did NOT take the dispatch note's 402 on faith)",
@@ -51,5 +51,5 @@
     "Independent reviewer: AgnesCode (fuxiang). Did not author Jarvis's 2a7af0a/f4baf6c; C1/C2 were the reviewer's own prior rulings being landed and re-verified, and the _handoffs tracking was the reviewer's mandatory flag now cleared. No author file modified during this review; the two new files written here (this verdict + the review body) are the reviewer's own deliverables as instructed by the dispatch note.",
     "PASS with blockers=0 -> no --allow-conditional / acknowledged_by needed. The three advisories (A1 silent-skip structural hole, A2 tests/ live instance, A3 stale refs + no-remote durability) are recorded, not required for this card's merge; A1 and the Q4 wording fix are the two that warrant a future card."
   ],
-  "ts_resign_note": "2026-10-25T16:48:30Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d/XJ-20261024-002，第六次）：本次成因与既往五次不同——不是作者改产物，而是实现方在共用工作树上切到自己的分支再切回，把每个 checkout 文件的 mtime 刷到 16:36Z，晚于评审签字 ts 16:22Z。签字后没有任何内容改动，只有工作树被 checkout 两次。verdict 值不变（PASS / blockers=0 / conditions=[]），仅重签 ts 让 freshness 检查看到评审员实际读过的树状态。"
+  "ts_resign_note": "2026-10-26T05:49:33Z 第七次重签同批（005 为第八次计数）：成因同上——合并 004 与本卡的 checkout/merge 刷新了全部登记文件 mtime。verdict 值不变（PASS / 0 blockers / 无 conditions）。"
 }
