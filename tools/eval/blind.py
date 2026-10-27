@@ -40,6 +40,22 @@ JUDGEMENTS_FILE = "judgements-blind.json"
 ROOT_STATE_FILE = "root-state.json"
 
 
+def file_sha256(path: Path) -> str:
+    """Streaming SHA-256 of one file (never reads the whole thing into memory)."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def product_hashes(products_dir: Path, files: Dict[str, str]) -> Dict[str, str]:
+    """SHA-256 per packaged product, keyed by P-code."""
+    return {code: file_sha256(products_dir / name) for code, name in files.items()}
+
+
 def root_state(root: Path) -> Dict[str, object]:
     """Snapshot enough of the repository to tell 'same tree' from 'moved on'.
 
@@ -205,6 +221,14 @@ def build_package(run_dir: Path, out_dir: Path, seed: str,
     # --- sealed judgements + root snapshot (XJ-20261027-001) -------------------
     if root is not None:
         from judge import DEFAULT_TIMEOUT_SECONDS, judge_markdown  # lazy, as above
+
+        # Product seal (XJ-20261027-002, A1): sealed judgements describe exactly
+        # these bytes, so readers must be able to prove the bytes did not change.
+        # Legacy packages (no sealed judgements) re-judge from disk and need no
+        # such binding -- they are consistent with disk by construction.
+        manifest["product_sha256"] = product_hashes(package_products, manifest_files)
+        (out_dir / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
         sealed: Dict[str, List[Dict[str, object]]] = {}
         for code in sorted(manifest_files):

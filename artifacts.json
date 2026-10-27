@@ -341,5 +341,13 @@
                             "docs/eval-runner-protocol.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261027-002":  [
+                            "tools/eval/blind.py",
+                            "tools/eval/report.py",
+                            "tests/test_eval_harness.py",
+                            "docs/eval-runner-protocol.md",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }

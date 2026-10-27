@@ -86,6 +86,77 @@ def sealed_judgements(package_dir: Path) -> Optional[Dict[str, List]]:
     }
 
 
+def check_product_seal(package_dir: Path) -> None:
+    """Verify every packaged product against the manifest's hashes.
+
+    A1 (XJ-20261027-002): sealed judgements are returned without re-reading the
+    products, so an edit after packaging would leave them silently stale. A
+    mismatch here is tampering or a broken package, not repository drift -- it
+    gets no --allow-drift escape hatch.
+
+    Legacy packages carry no ``product_sha256``; they are accepted and the
+    report header says the cross-check was not enabled.
+    """
+    import blind as blind_mod
+
+    manifest = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
+    recorded = manifest.get("product_sha256")
+    if not recorded:
+        return
+    products_dir = package_dir / "products"
+    bad = []
+    for code, expected in sorted(recorded.items()):
+        name = manifest["products"].get(code)
+        if not name:
+            bad.append(f"{code}: missing from manifest products")
+            continue
+        path = products_dir / name
+        if not path.is_file():
+            bad.append(f"{code}: file missing ({name})")
+            continue
+        actual = blind_mod.file_sha256(path)
+        if actual != expected:
+            bad.append(f"{code}: {expected[:12]} -> {actual[:12]}")
+    if bad:
+        raise ValueError(
+            "产物与打包时的封签不一致（" + "; ".join(bad[:5]) +
+            ("…" if len(bad) > 5 else "") +
+            "）：密封判定描述的是打包当时的产物字节，产物被改动后判定即失效。"
+            "本检查不提供 --allow-drift 开关（篡改不等于仓库漂移）。"
+        )
+
+
+def product_seal_status(package_dir: Path) -> bool:
+    """True when the package carries product hashes (cross-check enabled)."""
+    manifest_path = package_dir / "manifest.json"
+    if not manifest_path.is_file():
+        return False
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    return bool(manifest.get("product_sha256"))
+
+
+def snapshot_lines(package_dir: Path, root: Path, drift: Optional[str]) -> List[str]:
+    """A2: the snapshot (and any drift) must live in the body, not only stderr.
+
+    Someone who reads only the report must be unable to quote a drifted number
+    as if it were the single truth.
+    """
+    lines: List[str] = []
+    state_path = package_dir / "root-state.json"
+    if state_path.is_file():
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        head = str(state.get("git_head") or "unknown")[:12]
+        lines.append(
+            f"- 判定快照：`git_head={head}`（dirty={bool(state.get('dirty'))}）——"
+            f"本文件全部数字均为该仓库状态下的密封判定值"
+        )
+    if drift:
+        lines.append(f"- **⚠ 漂移**：{drift}")
+    if not product_seal_status(package_dir):
+        lines.append("- 本包无产物封签（旧包）：产物与判定的交叉校验未启用")
+    return lines
+
+
 def check_root_state(package_dir: Path, root: Path, allow_drift: bool = False) -> Optional[str]:
     """Compare the packaging-time repository snapshot with *root* now.
 
@@ -133,7 +204,9 @@ def judge_package(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TI
     """
     sealed = sealed_judgements(package_dir)
     if sealed is not None:
+        check_product_seal(package_dir)  # A1: bytes must still be the ones judged
         return sealed
+    check_product_seal(package_dir)  # A1: same gate for the re-judge path
     products_dir = package_dir / "products"
     manifest = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
     out: Dict[str, List] = {}
@@ -160,6 +233,7 @@ def blind_report(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TIM
                  f"生成于 {manifest['generated_utc']}（全部为伪码，无条件标签）")
     lines.append("- 判定：确定性规则判定器（E0-E4，见 docs/eval-prereg.md §1），"
                  "同输入必同输出；LLM 判定属于盲化 adjudication 层，不在此文件")
+    lines.extend(snapshot_lines(package_dir, root, drift))
     lines.append("")
     lines.append("## 按 P 码判定表")
     lines.append("")
@@ -267,6 +341,7 @@ def unblind_fragment(
     lines.append("# 解盲附录（sir 专用，报告定稿后执行）")
     lines.append("")
     lines.append(f"- 解盲对象：{package_dir}")
+    lines.extend(snapshot_lines(package_dir, root, drift))
     lines.append(f"- 配对任务数：{len(endpoints['M1'].diffs)}（M1 口径）；"
                  f"{len(endpoints['M2'].diffs)}（M2 口径）；"
                  f"排除任务：M1 {endpoints['M1'].excluded_tasks}，M2 {endpoints['M2'].excluded_tasks}")

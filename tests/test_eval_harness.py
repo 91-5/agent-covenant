@@ -667,6 +667,52 @@ class ReportTests(unittest.TestCase):
         judged = report.judge_package(self.package, REPO_ROOT)
         self.assertTrue(judged)
 
+    def test_product_seal_is_recorded_and_verified(self):
+        """A1 (XJ-20261027-002): the package records product hashes, and a
+        one-byte change to a packaged product must stop the report."""
+        out_dir = self.tmp / "pkg-seal"
+        blind.build_package(self.run_dir, out_dir, seed="aa" * 32, root=REPO_ROOT)
+        manifest = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
+        self.assertTrue(manifest.get("product_sha256"), "no product seal recorded")
+
+        first_code = sorted(manifest["products"])[0]
+        product = out_dir / "products" / manifest["products"][first_code]
+        data = bytearray(product.read_bytes())
+        data[0] ^= 0x01
+        product.write_bytes(bytes(data))
+
+        with self.assertRaises(ValueError) as ctx:
+            report.blind_report(out_dir, REPO_ROOT)
+        self.assertIn("产物与打包时的封签不一致", str(ctx.exception))
+        # Tampering is not drift: the drift escape hatch must not bypass it.
+        with self.assertRaises(ValueError):
+            report.blind_report(out_dir, REPO_ROOT, allow_drift=True)
+
+    def test_report_body_carries_the_snapshot_line(self):
+        """A2: the snapshot belongs in the body, not only on stderr."""
+        out_dir = self.tmp / "pkg-snap"
+        blind.build_package(self.run_dir, out_dir, seed="bb" * 32, root=REPO_ROOT)
+        text = report.blind_report(out_dir, REPO_ROOT)
+        self.assertIn("判定快照", text)
+        self.assertIn("git_head=", text)
+        self.assertNotIn("无产物封签", text)
+
+    def test_report_body_carries_the_drift_line_when_allowed(self):
+        out_dir = self.tmp / "pkg-drift-body"
+        blind.build_package(self.run_dir, out_dir, seed="cc" * 32, root=REPO_ROOT)
+        state_path = out_dir / "root-state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["git_head"] = "1" * 40
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+
+        text = report.blind_report(out_dir, REPO_ROOT, allow_drift=True)
+        self.assertIn("⚠ 漂移", text)
+        self.assertIn("git_head=", text)
+
+    def test_legacy_package_header_says_no_product_seal(self):
+        text = report.blind_report(self.package, REPO_ROOT)
+        self.assertIn("无产物封签", text)
+
     def test_unblind_fragment_rejects_wrong_key(self):
         wrong = self.tmp / "wrong.json"
         wrong.write_text(json.dumps({"seed": "ff" * 32, "mapping": []}), encoding="utf-8")
