@@ -13,7 +13,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-27T04:41:00Z",
+  "ts": "2026-10-27T04:58:04Z",
   "ts_note": "ts 为评审独立复跑完成时刻（425 tests 全绿、四口径点、红区 diff、lint 均于 464a04e 上实测），晚于 464a04e 各 artifact 的检出 mtime（2026-10-27T04:34:18Z 检出物化），非未来。合并 master 后若 git checkout 把登记文件 mtime 刷到 ts 之后，按 mtime 先例（001/004/005 及 001 的第九次重签）重签一次。",
   "evidence": [
     "ACCEPT unittest 独立复跑：worktree 检出 464a04e（detached）后 `COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 425 tests, OK, exit 0。非采信交付单数字，评审方复跑。",
@@ -38,5 +38,6 @@
     "独立评审：AgnesCode（浮香）。未参与 464a04e 的编写；评审全程未修改任何作者文件，仅 worktree 检出 + 复跑 + 落盘本 verdict 与 .tasks/REVIEW-XJ-20261026-002.md 两份评审方自有交付物。",
     "PASS, blockers=0 -> 无需 --allow-conditional。合并顺序 gate 按交付单：本卡先合并 master，再送 XJ-20261026-003（第三轮报告）评审——003 的报告依赖本卡 C5 代码。",
     "4 个 lint WARN 全部过渡态：VERDICT_WITHOUT_REVIEW 在本 verdict 落盘即消解；3x UNMAPPED_CLAIM_SURFACE（README 双语 + CHANGELOG 的 mtime 签名新鲜度）按 001 先例在合并轮处理。"
-  ]
+  ],
+  "ts_resign_note": "2026-10-27T04:58:04Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d/002/005/004+005/001，第十次）：成因为 002→master 的合并 checkout 刷新了 README 等登记文件 mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 无 conditions）。"
 }
