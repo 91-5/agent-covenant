@@ -1,0 +1,42 @@
+{
+  "id": "XJ-20261026-002",
+  "artifact": [
+    "tools/eval/stats.py",
+    "tests/test_eval_harness.py",
+    "artifacts.json",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "commit": "464a04e（C5 实现：m1_false_verification_rate 分子 E3 -> E2+E3 + 测试 C5 用例块 + 反向护栏 + artifacts.json 登记 + 两个 README 的 test-count 424->425 机械同步）",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-27T04:41:00Z",
+  "ts_note": "ts 为评审独立复跑完成时刻（425 tests 全绿、四口径点、红区 diff、lint 均于 464a04e 上实测），晚于 464a04e 各 artifact 的检出 mtime（2026-10-27T04:34:18Z 检出物化），非未来。合并 master 后若 git checkout 把登记文件 mtime 刷到 ts 之后，按 mtime 先例（001/004/005 及 001 的第九次重签）重签一次。",
+  "evidence": [
+    "ACCEPT unittest 独立复跑：worktree 检出 464a04e（detached）后 `COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 425 tests, OK, exit 0。非采信交付单数字，评审方复跑。",
+    "ACCEPT 四个口径点独立复跑：`{E0:0,E1:0,E2:3,E3:1,E4:6}` -> 0.4；纯 E2 `{E2:2,E4:0}` -> 1.0；纯 E4 `{E4:5}` -> 0.0；空分母 -> None。与卡内 Acceptance 及交付单实测值逐项一致。",
+    "ACCEPT 红区 diff（真基线 a7f979b）：`git diff --name-only a7f979b..464a04e -- tools/` 仅 `tools/eval/stats.py` 一个文件；judge/extract/blind/report/run/study_runner/m3_probe/seal_run/gate/lint_cards 全部零改动，constraint 1（只改 M1 分子、不动仪器十文件）成立。",
+    "ACCEPT lint：`python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json` -> LINT: PASS，0 ERROR；4 WARN 全过渡态：VERDICT_WITHOUT_REVIEW（本卡 verdict 落盘即消解 1 条）+ 3x UNMAPPED_CLAIM_SURFACE（README/README.zh-CN/CHANGELOG 的 mtime 签名新鲜度，合并轮按 001 先例处理）。",
+    "ACCEPT 变更边界：git diff 全部 6 个文件逐行核对——逻辑改动仅 stats.py 一行 return + docstring；test_eval_harness.py 的既有断言 2/7->3/7 已标 C5 注释，新增 test_m1_c5_cases 四断言（0.4 / 1.0 / 0.0 / 反向护栏 assertNotEqual 0.0）；artifacts.json 登记键 XJ-20261026-002 含 5 文件；两个 README 仅 test-count 注释 424->425，无内容漂移。",
+    "ACCEPT 公式锚点核实：docs/eval-prereg.md L259 §8 C5 行（001 卡冻结）原文即 `M1 = (E2+E3) / (E2+E3+E4)`、生效边界「只对第三轮起生效；第二轮按 v1.1 原公式报告为未检出差异」——本卡代码与该冻结行逐字符一致，无口径漂移。",
+    "ACCEPT 历史可复算性：本卡不重算第一/第二轮（constraint 2），git 历史保留 a7f979b 时代 stats.py 的 v1.1 口径可供按轮复算；docstring 已写明变更来源（v1.2 §8 C5）、轮次边界（第三轮起）、不重算声明。",
+    "REVIEWER 探针：反向护栏实际拦截能力——若在 464a04e 上把分子改回 `counts[\"E3\"]`（模拟未来误改回旧口径），test_m1_m2_formulas 的 3/7 断言与 test_m1_c5_cases 的 0.4 断言都会失败（旧口径下为 2/7 与 0.3），反向护栏 0.0 断言亦在纯 E2 分支失效——三层独立断言共同覆盖，护栏非摆设。"
+  ],
+  "review_q_rulings": [
+    "Q1（函数名要不要改）：RULING = 维持不改名，只改 docstring（作者倾向正确）。理由：(a) 函数名是 `report.py` L105 与 stats.py 内部（L95/L127）引用的既有 API，改名必然触碰 report.py——本卡 constraint 1 红线外，越界代价大于收益；(b) C5 把 M1 定义为「证据不成立率」，名字里的 false_verification 语义并不错（E2=不可复现 也是假验证的一种），只是比旧口径更宽——名字未失准，仅需 docstring 精确化，作者已做到（docstring 含 C5 来源、轮次边界、为何非事后改指标、分母语义不变四要素）；(c) 若日后要做改名，应单独立一张卡（连 report.py 调用点一起走红区 diff + 测试），塞进本卡违反 owned-files 边界。",
+    "Q2（历史可复算性：docstring 够不够）：RULING = docstring 足够，不必在 docs/lint-rules.md 或 README 补一句。理由：(a) 已核实 README.md / README.zh-CN.md / PROTOCOL.md / docs/lint-rules.md / CHANGELOG.md 均未书面记载 M1 的分子公式（仅 docs/eval-runner-protocol.md 提到分母 E2+E3+E4，本卡未动分母，无过时陈述产生）——不存在「其他地方还写着旧公式」的漂移面；(b) 公式的唯一权威源是 prereg §8 C5 行（001 已冻结，含生效边界原句），历史轮次可复算性由 git 历史（a7f979b 时代代码）+ docstring 轮次边界共同保证；(c) 往 lint-rules.md 补一句会把它变成双源维护点，反而制造未来漂移。建议（非阻塞）：第三轮报告（XJ-20261026-003）的 header 原样复述 001 卡 A2 的建议——「本轮 M1 按 C5（v1.2）口径；第二轮仍为 v1.1 公式」，让只读报告不读 prereg 的人也不会误读。",
+    "Q3（反向护栏是否够）：RULING = 够，不需要额外的公式字符串/常量断言。理由：(a) 「纯 E2 不得为 0.0」这条单独看确实窄（旧口径下纯 E2 是 0/2=0.0，会被抓住；但它抓不住把分子改成 E1+E3 之类的奇怪变体）；(b) 真正的拦截主力是同一用例块里的 `test_m1_c5_cases` 0.4 断言 + 既有的 3/7 断言——旧口径下这两个值分别是 0.3 与 2/7，任何「把分子改回/改歪」的尝试都会在跑测试时红灯；三层断言（3/7、0.4、纯E2≠0.0、纯E4=0.0、纯E2=1.0）互相冗余，误改回旧口径需要同时改五个断言才可能静默通过，这在测试文件评审 diff 里一目了然；(c) 直接断言公式字符串（如读取源码文本）是坏味道：它把实现细节焊死，未来合法的等价重构（比如把分子抽成局部变量 `_numerator = e2+e3`）会被误伤，得不偿失。"
+  ],
+  "advisory_findings": [
+    "A1（非阻塞，001 卡 A2 的延续）：XJ-20261026-003 的第三轮报告 header 应原样带上 C5 生效边界声明（「本轮 M1 = (E2+E3)/(E2+E3+E4)；第二轮为 v1.1 公式」），防止只读报告的人把 C5 数字当成第二轮口径。这是展示卫生，不是本卡缺陷。",
+    "A2（记录项）：本机用 python -c 直接执行 from tools.eval.stats import 会 ModuleNotFoundError——D:\\python 全局 site-packages 存在同名 tools 常规包（D:\\python\\Lib\\site-packages\\tools\\__init__.py），遮蔽了仓库的命名空间包；须加 python -S 或直接在 tools/eval 目录下导入。评审方已用等价方式完成四个口径点复测，数值与交付单一致。此遮蔽不影响 unittest discover（tests 内兄弟导入路径不受影响，425 全绿已证），属执行环境噪声而非本卡缺陷，建议 sir 知悉验收命令中该 import 形式在此环境下的行为。"
+  ],
+  "notes": [
+    "独立评审：AgnesCode（浮香）。未参与 464a04e 的编写；评审全程未修改任何作者文件，仅 worktree 检出 + 复跑 + 落盘本 verdict 与 .tasks/REVIEW-XJ-20261026-002.md 两份评审方自有交付物。",
+    "PASS, blockers=0 -> 无需 --allow-conditional。合并顺序 gate 按交付单：本卡先合并 master，再送 XJ-20261026-003（第三轮报告）评审——003 的报告依赖本卡 C5 代码。",
+    "4 个 lint WARN 全部过渡态：VERDICT_WITHOUT_REVIEW 在本 verdict 落盘即消解；3x UNMAPPED_CLAIM_SURFACE（README 双语 + CHANGELOG 的 mtime 签名新鲜度）按 001 先例在合并轮处理。"
+  ]
+}
