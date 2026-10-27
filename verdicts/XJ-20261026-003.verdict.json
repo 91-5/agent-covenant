@@ -12,7 +12,7 @@
   ],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-27T09:20:00Z",
+  "ts": "2026-10-27T09:25:18Z",
   "ts_note": "重签 ts（C1 销账核验完成时刻）：晚于 b3376da 各文件检出 mtime，非未来。原签 2026-10-27T05:35Z（CONDITIONAL）见 ts_resign_note。合并 master 后若 checkout 刷新登记文件 mtime，按 mtime 先例再重签。",
   "evidence": [
     "ACCEPT unittest 独立复跑：worktree @ 3bb8ae1，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 425 tests, OK。",
@@ -50,5 +50,5 @@
     "PASS，blockers=0，conditions=[]（C1 已于 b3376da 销账并逐条核验，见 conditions_discharged + C1-1/2/3）。无需 --allow-conditional。合并 gate：verdict 值翻 PASS 后按派发单合并 master + push，mtime 先例第 11 次 resign 照做并记录；A3 措辞小修可挂第四轮或合并轮顺手做，不阻合并。",
     "XJ-20261027-001（仪器根治）为本卡 A1 的承接卡，待其自身评审；在那之前 §4 可复算性注记是报告层永久护栏。"
   ],
-  "ts_resign_note": "2026-10-27T05:35Z 初签 CONDITIONAL（1 condition C1 + 4 advisory，0 blockers）。C1 于 b3376da 销账（§4 注记 + Q4 表头行 + XJ-20261027-001 开立）；2026-10-27T09:20Z 重签 PASS：销账核查 C1-1（注记逐条对齐规格、零越界）/ C1-2（b3376da 树下重解盲 −48.3% 与注记及 sir 复验三方一致）/ C1-3（A1 已转卡且 D2 必做）全部通过。verdict 值 CONDITIONAL -> PASS，blockers 0 -> 0，原 conditions 移入 conditions_discharged。"
+  "ts_resign_note": "2026-10-27T09:25:18Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d/002/005/004+005/001，第十一次）：成因为 003→master 的合并 checkout 刷新了 docs/eval-report-v3.md 的 mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 无 conditions）。"
 }
