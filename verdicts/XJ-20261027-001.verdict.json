@@ -16,7 +16,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-27T10:55:00Z",
+  "ts": "2026-10-27T11:13:15Z",
   "ts_note": "ts 为评审独立复跑完成时刻（429 单测、四步真实数据验证、红区 diff、lint、独立盲化泄漏扫描均于 cedeaff 实测），晚于 cedeaff 检出 mtime（10:48 检出物化），非未来。合并 master 后若 checkout 刷新登记文件 mtime，按 mtime 先例（001/003 共 11 次）重签一次。",
   "evidence": [
     "ACCEPT unittest 独立复跑：worktree @ cedeaff，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 429 tests, OK, exit 0（425 基线 + 4 新测试）。",
@@ -45,5 +45,6 @@
     "独立评审：AgnesCode（浮香）。本卡修的就是评审方在 XJ-20261026-003 挖出的仪器缺陷（解盲随 root 漂移），评审方未参与 cedeaff 的编写；全程未修改任何作者文件（worktree 检出 + 重打包 + 四步解盲 + 独立泄漏扫描均为只读探针，重打包产物落在 worktree 的 .eval-sealed 内，未触碰作者树），verdict 与 .tasks/REVIEW-XJ-20261027-001.md 为评审方自有交付物。",
     "PASS, blockers=0, conditions=[] -> 无需 --allow-conditional。合并 gate 按派发单：本卡合并 master + push；mtime 先例第 12 次 resign 照做并记录。A1/A2 为非阻塞加固，A3 为记录项，均不阻本卡合并。",
     "评审方独立复算闭合：密封重打包、旧包重判、--allow-drift 三条独立路径收敛到同一 M1=−48.3%，与 003 卡 C1 注记记录值三方一致——这正是 D1 要证明的「判定冻结在打包时刻、此后不再漂移」的实测证据。"
-  ]
+  ],
+  "ts_resign_note": "2026-10-27T11:13:15Z resign（先例 b2994b1/85aaf83/bebfb64/9cb238d/002/005/004+005/001，第十二次）：成因为 027-001→master 的合并 checkout 刷新了 README 等登记文件 的 mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 无 conditions）。"
 }
