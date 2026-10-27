@@ -1,0 +1,49 @@
+{
+  "id": "XJ-20261027-001",
+  "artifact": [
+    "tools/eval/blind.py",
+    "tools/eval/report.py",
+    "tools/eval/run.py",
+    "tests/test_eval_harness.py",
+    "docs/eval-runner-protocol.md",
+    "README.md",
+    "README.zh-CN.md",
+    "artifacts.json"
+  ],
+  "commit": "cedeaff（D1 密封判定进包 + D2 钉死 root 快照 + 漂移硬停 + 协议 §12 + 4 新测试 + 两个 README test-count 425->429 机械同步；D3 降级为协议 §12.5 文档说明不做）",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "ts": "2026-10-27T10:55:00Z",
+  "ts_note": "ts 为评审独立复跑完成时刻（429 单测、四步真实数据验证、红区 diff、lint、独立盲化泄漏扫描均于 cedeaff 实测），晚于 cedeaff 检出 mtime（10:48 检出物化），非未来。合并 master 后若 checkout 刷新登记文件 mtime，按 mtime 先例（001/003 共 11 次）重签一次。",
+  "evidence": [
+    "ACCEPT unittest 独立复跑：worktree @ cedeaff，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 429 tests, OK, exit 0（425 基线 + 4 新测试）。",
+    "ACCEPT 4 新测试逐一跑通：test_package_seals_judgements_and_root_state / test_sealed_judgements_short_circuit_rejudging（patch judge_markdown 抛错仍通过，证明密封包不触碰仓库）/ test_drift_against_recorded_root_hard_stops（篡改 git_head -> 硬停；--allow-drift 放行）/ test_legacy_package_without_seal_still_rejudges（旧包回退重判）。Ran 4 tests, OK。",
+    "ACCEPT 红区八文件 diff 空：`git diff --name-only 61791c3..cedeaff` over judge/extract/stats/study_runner/m3_probe/seal_run/gate/lint_cards -> 无输出；`git diff --stat 61791c3..cedeaff -- tools/` 仅 blind.py(+72)/report.py(+91)/run.py(±29) 三个 owned 文件，constraint 1 成立。",
+    "ACCEPT lint：`python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json` -> 0 ERROR，4 WARN 全过渡态（本卡 VERDICT_WITHOUT_REVIEW 落盘即消解 + README/README.zh-CN/CHANGELOG 的 mtime 签名新鲜度按 001/003 先例合并轮处理）。",
+    "ACCEPT 真实数据验证 STEP1（密封包解盲，root 匹配）：评审方在 cedeaff worktree 用新代码重打包 `_eval_run\\r3` -> `judgements-blind.json`（120 产物、252 判定：E4=174/E2=69/E3=9）+ `root-state.json`（git_head=cedeaff, dirty=True）；解盲 -> M1 = −48.3% [−65.8%, −30.0%]，读的是打包时刻冻结的 252 条判定，不再触碰仓库。",
+    "ACCEPT 真实数据验证 STEP2（篡改 git_head -> 硬停）：把 root-state.json 的 git_head 改成 0*40 后解盲 -> ValueError「仓库状态与打包时不一致（git_head 000000000000 -> cedeafffc001）」，exit 2 语义，拒绝执行。",
+    "ACCEPT 真实数据验证 STEP3（--allow-drift 放行）：同一篡改 + allow_drift=True -> 仍给 −48.3% [−65.8%, −30.0%]（密封判定不依赖仓库，故与匹配 root 时数字一致），且 stderr 打印 `[DRIFT]` 行（实测 drift_mark=True）。非静默漂移成立。",
+    "ACCEPT 真实数据验证 STEP4（旧包回退）：第三轮真实包 `pkg-34a935f3` 无 `judgements-blind.json`/`root-state.json`，judge_package 回退到现场重判且不触发漂移硬停，仍可读 -> M1 = −48.3%。constraint 5（旧包必须继续可读、不触发硬停）成立。",
+    "ACCEPT 独立盲化泄漏扫描：评审方自行对 `judgements-blind.json` 做递归 key 扫描（condition/task_id/repetition 全字段 + 大小写归一）-> 全部 0 命中，密封判定不携带任何条件/任务/重复元数据，constraint 3（盲化不变）成立，且比 blind.py 自带扫描测试更独立（评审方实现，非采信作者测试）。",
+    "ACCEPT 数字一致性：密封重打包的 M1=−48.3% 与 STEP4 旧包重判的 M1=−48.3% 一致，也与 003 卡 C1 注记里记录的 eb667ea 时刻值一致——三个独立路径收敛到同一数字，证明 D1 已把「跨时刻漂移」这一缺陷类彻底关死。"
+  ],
+  "review_q_rulings": [
+    "Q1（D3 不做对不对）：RULING = 对，D3 本期不做是正确取舍。理由：(a) D1 生效后，T21/T27 的 live-git 断言错误已被冻结在打包时刻，`time_sensitive` 字段不再承担任何漂移防护职责，只剩文档价值；(b) 它的成本却是要动预注册 §3.1 冻结的任务清单，风险收益比为负；(c) 作者对卡内 Q3 自己的倾向是「保留 + 单列、不缩减样本」，与「样本 20 已因 C4 降过、再砍 1-2 个逼近可解释下限」的判断一致。残余的「任务清单混入非 belief 断言」是预注册层的问题，应另立卡裁定，塞进本卡违反 owned-files 边界。协议 §12.5 已把 T21 的断言性质写成文档，是最低限度的诚实记录，够了。",
+    "Q2（--allow-drift 是否给作弊留门）：RULING = 显式 + 必打 stderr 的当前设计**够用**，且比旧路径的作弊面小。关键事实（评审方实测）：对**密封包**而言，--allow-drift 与否**数字不变**——都是打包时刻的 −48.3%，因为密封判定根本不再碰仓库；--allow-drift 只是「抑制硬停 + 打 [DRIFT]」，不是「换个仓库重判出另一个数」。所以旧的「静默换 root 拿到漂移数字」的门已经被 D1 关死了，--allow-drift 只服务于「引用两个数字」的正当场景。残余风险纯粹是引用纪律（有人读了 [DRIFT] 却没在正文带双数字），已由协议 §12.4 明文约束。非阻塞建议见 advisory A2。",
+    "Q3（root_state 只比 HEAD+dirty，不比工作树内容哈希）：RULING = 认可这个取舍。理由：(a) 我们实测的失败类是「merge 推进 HEAD」，HEAD 比较精确命中；(b) dirty 标志把任何未提交改动都保守视为「不同」-> 硬停，方向是安全的（它只会多拦、绝不会静默放行一个已漂移的数）；(c) 唯一的不安全方向是「说相同其实变了」——而 HEAD+dirty 无法产生这个：任何内容变化要么是 HEAD 移动（HEAD 比中）要么是 dirty 树（dirty 比中），两个都拦。工作树全哈希跨平台不稳的成本确实高于它换来的边际收益。残余边界见 advisory A1（packaging 在 dirty 树上本身被 runbook 不鼓励，clean 树 + 已提交内容变化必然走 HEAD 分支被拦）。",
+    "Q4（判定时机提前 -> 先打包后补数据的新不可比）：RULING = 在受控流程内**不产生新不可比**，但评审方探针发现一个真实残留（advisory A1）。理由：(a) 当前 runbook 固定 seal -> package -> report 顺序，products 在打包前已定稿，判定时刻明确且稳定；(b) 评审方探针：`judge_package` 遇密封即返回、**不再读 products/**，因此若有人在 --package 之后改 products/*.md，密封判定会静默过时且无 manifest-vs-products 复核——但这条正好落在 seal_run.py 的产物 SHA 密封防区内（run-dir 的 products 已被 seal，被改即 verify 失败），是纵深防御而非漏洞。建议把「密封判定 + 产物 SHA 密封须成对引用」写进 §12.5，见 advisory。"
+  ],
+  "advisory_findings": [
+    "A1（非阻塞，补文档）：`judge_package` 读密封判定后不再读 products/，因此 --package 之后若 products/*.md 被改动，密封判定会静默过时。当前由 seal_run.py 的产物 SHA 密封兜底（被改 -> seal verify 失败），但两者是**独立的两道闸**，建议在协议 §12.5 加一句「引用密封包数字时须同时确认 seal_run.py --verify 仍通过」，把「判定密封」与「产物密封」的成对关系写明。这是展示卫生 + 纵深防御文档化，不是本卡缺陷（本卡只负责判定密封，产物密封属 seal_run.py 既有职责）。",
+    "A2（非阻塞，防引用纪律被跳过）：--allow-drift 放行时只往 stderr 打 [DRIFT] 行，正文/报告正文不会自动带上「双数字 + 两个 root 时刻」。建议在报告模板的解盲 footer（report.unblind_fragment 末尾）当 allow_drift=True 时自动追加一段「本数字读自打包时刻 <git_head>；当前 root 为 <current_head>，若引用须同时列两值」，让引用者跳不过去。当前靠 §12.4 明文约束已足够 PASS，此为加固项，可挂第四轮或下一张报告卡顺手做。",
+    "A3（记录项）：历史三轮包（pkg-6b4d29f9 / pkg-1cee9567 / pkg-34a935f3）均为旧包（无密封），按 §12.4 保持可读 + 引用须注解盲时刻 commit。派发单合并 gate 已提示「本卡改了 run.py --package 需 root 才能密封，历史上三次打包无密封」。本卡不改任何历史报告数字（constraint 2），该标注义务落在**下一次**引用历史数字的报告上，非本卡。"
+  ],
+  "notes": [
+    "独立评审：AgnesCode（浮香）。本卡修的就是评审方在 XJ-20261026-003 挖出的仪器缺陷（解盲随 root 漂移），评审方未参与 cedeaff 的编写；全程未修改任何作者文件（worktree 检出 + 重打包 + 四步解盲 + 独立泄漏扫描均为只读探针，重打包产物落在 worktree 的 .eval-sealed 内，未触碰作者树），verdict 与 .tasks/REVIEW-XJ-20261027-001.md 为评审方自有交付物。",
+    "PASS, blockers=0, conditions=[] -> 无需 --allow-conditional。合并 gate 按派发单：本卡合并 master + push；mtime 先例第 12 次 resign 照做并记录。A1/A2 为非阻塞加固，A3 为记录项，均不阻本卡合并。",
+    "评审方独立复算闭合：密封重打包、旧包重判、--allow-drift 三条独立路径收敛到同一 M1=−48.3%，与 003 卡 C1 注记记录值三方一致——这正是 D1 要证明的「判定冻结在打包时刻、此后不再漂移」的实测证据。"
+  ]
+}
