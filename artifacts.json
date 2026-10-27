@@ -329,5 +329,8 @@
                             "tests/test_eval_harness.py",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261026-003":  [
+                            "docs/eval-report-v3.md"
                         ]
 }
