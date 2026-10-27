@@ -52,10 +52,29 @@ def _fmt_pct(value: Optional[float]) -> str:
 
 
 class _SealedClaim:
-    """Just enough of Claim for the report's failure appendix."""
+    """Read-through view over a sealed claim dict.
 
+    Mirrors every field of ``schema.Claim.to_dict()``. Hand-picking fields is
+    how the failure appendix broke: the sealed view exposed ``text`` only, and
+    the appendix reads ``source_line`` too, so --report crashed on any sealed
+    package that actually contained a failing judgement (XJ-20261027-002 C1).
+    Tests did not catch it because every fixture judged all-E4, leaving the
+    appendix loop empty.
+    """
+
+    #: Field contract: the report may read any attribute listed here. Kept in
+    #: sync with schema.Claim by test_sealed_claim_exposes_every_claim_field.
     def __init__(self, data: Dict[str, object]) -> None:
         self.text = str(data.get("text") or "")
+        raw_line = data.get("source_line")
+        try:
+            self.source_line = int(raw_line) if raw_line is not None else 0
+        except (TypeError, ValueError):
+            self.source_line = 0
+        self.product = str(data.get("product") or "")
+        self.anchors = list(data.get("anchors") or [])
+        self.unanchored = bool(data.get("unanchored"))
+        self.evidence = data.get("evidence")
 
 
 class _SealedJudgement:

@@ -713,6 +713,66 @@ class ReportTests(unittest.TestCase):
         text = report.blind_report(self.package, REPO_ROOT)
         self.assertIn("无产物封签", text)
 
+    def _make_run_dir_with_failures(self, name: str = "run-fail") -> Path:
+        """A run dir whose products contain E2 judgements.
+
+        The stock fixture judges all-E0, and the failure appendix only lists
+        E1/E2/E3 -- which is exactly why the sealed-view crash slipped past 433
+        green tests (XJ-20261027-002 C1, AgnesCode's finding).
+        """
+        run_dir = self.tmp / name
+        (run_dir / "products").mkdir(parents=True)
+        entries = []
+        for task_number, condition in ((1, "A"), (1, "B"), (2, "A"), (2, "B")):
+            key = "T%02d-%s-r1" % (task_number, condition)
+            body = (
+                "- [已验证] 示例断言：本行声称某命令退出码为 0。\n"
+                '  证据：cmd=`python -c "import sys; sys.exit(1)"` exit=0 out=`ok`\n'
+            )
+            (run_dir / "products" / (key + ".md")).write_text(body, encoding="utf-8")
+            entries.append({
+                "key": key,
+                "task_id": "T%02d" % task_number,
+                "condition": condition,
+                "repetition": 1,
+                "product": "products/" + key + ".md",
+                "coverage": True,
+            })
+        (run_dir / "run-data.json").write_text(
+            json.dumps({"entries": entries}, ensure_ascii=False), encoding="utf-8")
+        return run_dir
+
+    def test_sealed_package_with_failures_renders_the_appendix(self):
+        """C1: a sealed package containing E2s must produce a report, not a crash."""
+        run_dir = self._make_run_dir_with_failures()
+        out_dir = self.tmp / "pkg-fail"
+        blind.build_package(run_dir, out_dir, seed="dd" * 32, root=REPO_ROOT)
+
+        text = report.blind_report(out_dir, REPO_ROOT)  # used to raise AttributeError
+        self.assertIn("失败样本附录", text)
+        # The appendix renders '- **P001** 行 1 判 E2：断言「…」——…'; the source
+        # line number is precisely the field the sealed view was missing.
+        self.assertIn("行 1 判 E2", text)
+
+    def test_sealed_claim_exposes_every_claim_field(self):
+        """C1/A2: the sealed view must mirror Claim.to_dict() -- hand-picking
+        fields is what broke the appendix."""
+        from schema import Claim  # local: same style as the other schema imports
+
+        sample = Claim(text="t", source_line=7, product="P001")
+        expected = set(sample.to_dict())
+        run_dir = self._make_run_dir_with_failures("run-fields")
+        out_dir = self.tmp / "pkg-fields"
+        blind.build_package(run_dir, out_dir, seed="ee" * 32, root=REPO_ROOT)
+
+        sealed = report.sealed_judgements(out_dir)
+        self.assertIsNotNone(sealed)
+        first = next(iter(sealed.values()))[0]
+        for field_name in expected:
+            self.assertTrue(hasattr(first.claim, field_name),
+                            f"sealed claim is missing Claim.{field_name}")
+        self.assertEqual(first.claim.source_line, 1)
+
     def test_unblind_fragment_rejects_wrong_key(self):
         wrong = self.tmp / "wrong.json"
         wrong.write_text(json.dumps({"seed": "ff" * 32, "mapping": []}), encoding="utf-8")
