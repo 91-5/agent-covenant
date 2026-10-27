@@ -32,6 +32,42 @@ PACKAGE_VERSION = 1
 
 SEALED_DIR_NAME = ".eval-sealed"
 
+#: E-level judgements sealed at packaging time (XJ-20261027-001). Present only
+#: in packages built with a ``root``; older packages fall back to re-judging.
+JUDGEMENTS_FILE = "judgements-blind.json"
+
+#: The repository state the sealed judgements were formed against.
+ROOT_STATE_FILE = "root-state.json"
+
+
+def root_state(root: Path) -> Dict[str, object]:
+    """Snapshot enough of the repository to tell 'same tree' from 'moved on'.
+
+    ``git_head`` plus a dirty flag, not a full worktree hash: the cheap check
+    already catches the failure we measured (a merge moving HEAD), and a full
+    hash would make packaging depend on hash stability across platforms.
+    """
+    import subprocess
+
+    def _git(*args: str) -> str:
+        try:
+            done = subprocess.run(["git", "-C", str(root), *args],
+                                  capture_output=True, timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            return ""
+        if done.returncode != 0:
+            return ""
+        return done.stdout.decode("utf-8", errors="replace").strip()
+
+    return {
+        "root": str(root),
+        "git_head": _git("rev-parse", "HEAD"),
+        "dirty": bool(_git("status", "--porcelain")),
+        "computed_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "note": "judgements in this package were formed against this repository "
+                "state; a different state means the numbers are not comparable",
+    }
+
 
 def generate_seed() -> str:
     """Cryptographically random seed; this is the only place randomness is
@@ -78,7 +114,9 @@ def load_run_data(run_dir: Path) -> List[RunEntry]:
     return entries
 
 
-def build_package(run_dir: Path, out_dir: Path, seed: str) -> Tuple[Path, Path, List[Dict[str, object]]]:
+def build_package(run_dir: Path, out_dir: Path, seed: str,
+                  root: Optional[Path] = None,
+                  timeout: Optional[int] = None) -> Tuple[Path, Path, List[Dict[str, object]]]:
     """Build the blinded adjudication package and the sealed key.
 
     Returns (package_dir, key_path, mapping) where mapping is the full
@@ -87,6 +125,21 @@ def build_package(run_dir: Path, out_dir: Path, seed: str) -> Tuple[Path, Path, 
 
     P-codes are assigned in *seeded shuffled* order of the runner keys, so
     package order carries no information about task/condition layout.
+
+    **Judgements are sealed here when ``root`` is given** (XJ-20261027-001):
+    every product is judged once, at packaging time, and the E-levels are
+    written into ``judgements-blind.json``. ``report``/``unblind`` then read the
+    sealed levels instead of re-judging against whatever the repository looks
+    like later. Measured cost of the old behaviour: round 3's primary endpoint
+    read -50.0% at the analysis commit and -48.3% after the next merge, because
+    one task's claims quote live-git facts.
+
+    Sealing at packaging time is also the stronger integrity story: judging
+    happens before anyone can see the blind/condition mapping, so there is no
+    "re-judge after the results are known" surface at all.
+
+    ``root-state.json`` records the repository state the judgements were formed
+    against, so a later mismatch can be reported instead of silently absorbed.
     """
     entries = load_run_data(run_dir)
     if not entries:
@@ -148,6 +201,23 @@ def build_package(run_dir: Path, out_dir: Path, seed: str) -> Tuple[Path, Path, 
         json.dumps(claims_by_code, ensure_ascii=False, indent=2), encoding="utf-8")
     (out_dir / "metrics-blind.json").write_text(
         json.dumps(metrics_by_code, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # --- sealed judgements + root snapshot (XJ-20261027-001) -------------------
+    if root is not None:
+        from judge import DEFAULT_TIMEOUT_SECONDS, judge_markdown  # lazy, as above
+
+        sealed: Dict[str, List[Dict[str, object]]] = {}
+        for code in sorted(manifest_files):
+            text = (package_products / manifest_files[code]).read_text(
+                encoding="utf-8", errors="replace")
+            judgements = judge_markdown(text, Path(root), product=code,
+                                        timeout=timeout or DEFAULT_TIMEOUT_SECONDS)
+            sealed[code] = [judgement.to_dict() for judgement in judgements]
+        (out_dir / JUDGEMENTS_FILE).write_text(
+            json.dumps(sealed, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out_dir / ROOT_STATE_FILE).write_text(
+            json.dumps(root_state(Path(root)), ensure_ascii=False, indent=2),
+            encoding="utf-8")
 
     key_path = out_dir.parent / f"key-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
     key_payload = {

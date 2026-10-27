@@ -51,9 +51,89 @@ def _fmt_pct(value: Optional[float]) -> str:
     return f"{value * 100:.1f}%"
 
 
+class _SealedClaim:
+    """Just enough of Claim for the report's failure appendix."""
+
+    def __init__(self, data: Dict[str, object]) -> None:
+        self.text = str(data.get("text") or "")
+
+
+class _SealedJudgement:
+    """Attribute view over a sealed judgement dict.
+
+    Same attributes the report already reads from ClaimJudgement
+    (``level`` / ``flags`` / ``detail`` / ``observation`` / ``claim.text``), so
+    the report code does not branch on where the judgement came from.
+    """
+
+    def __init__(self, data: Dict[str, object]) -> None:
+        self.level = str(data.get("level") or "")
+        self.flags = list(data.get("flags") or [])
+        self.detail = str(data.get("detail") or "")
+        self.observation = str(data.get("observation") or "")
+        self.claim = _SealedClaim(data.get("claim") or {})  # type: ignore[arg-type]
+
+
+def sealed_judgements(package_dir: Path) -> Optional[Dict[str, List]]:
+    """Judgements sealed at packaging time, or None for a legacy package."""
+    path = package_dir / "judgements-blind.json"
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return {
+        code: [_SealedJudgement(row) for row in rows]
+        for code, rows in payload.items()
+    }
+
+
+def check_root_state(package_dir: Path, root: Path, allow_drift: bool = False) -> Optional[str]:
+    """Compare the packaging-time repository snapshot with *root* now.
+
+    Returns a human-readable drift description (or None when consistent).
+    Raises ValueError on drift unless ``allow_drift`` -- silent drift is the
+    exact failure this exists to stop: round 3's primary endpoint moved from
+    -50.0% to -48.3% because one task's claims quote live-git facts.
+    """
+    path = package_dir / "root-state.json"
+    if not path.is_file():
+        return None
+    import blind as blind_mod  # local import, same style as unblind_fragment
+
+    recorded = json.loads(path.read_text(encoding="utf-8"))
+    current = blind_mod.root_state(root)
+    diffs = []
+    if recorded.get("git_head") and recorded.get("git_head") != current["git_head"]:
+        diffs.append(f"git_head {recorded.get('git_head')[:12]} -> {str(current['git_head'])[:12]}")
+    if bool(recorded.get("dirty")) != bool(current["dirty"]):
+        diffs.append(f"dirty {recorded.get('dirty')} -> {current['dirty']}")
+    if not diffs:
+        return None
+    detail = (
+        "仓库状态与打包时不一致（" + "; ".join(diffs) + "）：密封判定是在打包时刻形成的，"
+        "用当前仓库重新解盲会得到不同数字（实测：第三轮 M1 由 -50.0% 漂到 -48.3%）。"
+        "要么在打包时的仓库状态上复算，要么显式加 --allow-drift 并同时引用两个数字。"
+    )
+    if not allow_drift:
+        raise ValueError(detail)
+    # Opt-in must still leave a loud trace on stderr: a drifted number that got
+    # printed quietly is how -50.0% and -48.3% end up cited as the same thing.
+    import sys
+
+    print(f"[DRIFT] {detail}", file=sys.stderr)
+    return detail
+
+
 def judge_package(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TIMEOUT_SECONDS) -> Dict[str, List]:
     """Deterministically re-judge every packaged product. Same products =>
-    same judgements, always."""
+    same judgements, always.
+
+    **Sealed judgements win** (XJ-20261027-001): when the package carries
+    ``judgements-blind.json`` we return those and never touch the repository.
+    Re-judging is the legacy path for packages built before sealing existed.
+    """
+    sealed = sealed_judgements(package_dir)
+    if sealed is not None:
+        return sealed
     products_dir = package_dir / "products"
     manifest = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
     out: Dict[str, List] = {}
@@ -63,9 +143,11 @@ def judge_package(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TI
     return out
 
 
-def blind_report(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TIMEOUT_SECONDS) -> str:
+def blind_report(package_dir: Path, root: Path, timeout: int = judge.DEFAULT_TIMEOUT_SECONDS,
+                 allow_drift: bool = False) -> str:
     """Stage 1: the blind report. Contains zero condition information by
     construction -- it reads only package contents."""
+    drift = check_root_state(package_dir, root, allow_drift=allow_drift)
     judged = judge_package(package_dir, root, timeout=timeout)
     manifest = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
     metrics_blind = json.loads((package_dir / "metrics-blind.json").read_text(encoding="utf-8"))
@@ -143,15 +225,20 @@ def unblind_fragment(
     run_dir: Optional[Path] = None,
     seed_for_bootstrap: Optional[int] = None,
     timeout: int = judge.DEFAULT_TIMEOUT_SECONDS,
+    allow_drift: bool = False,
 ) -> str:
     """Stage 2 (sir only): the paired analysis, using the sealed key.
 
     ``seed_for_bootstrap``: the study's bootstrap draws must be reproducible;
     the caller passes the seed recorded in the prereg run log (derived from
     the sealed seed). None => derived deterministically from the key seed.
+
+    ``allow_drift``: packages built with a root snapshot refuse to be unblinded
+    against a different repository state (measured drift: -50.0% -> -48.3%).
     """
     import blind as blind_mod
 
+    drift = check_root_state(package_dir, root, allow_drift=allow_drift)
     judged = judge_package(package_dir, root, timeout=timeout)
     mapping_rows = blind_mod.unblind(package_dir, key_path)
     metrics_blind = json.loads((package_dir / "metrics-blind.json").read_text(encoding="utf-8"))

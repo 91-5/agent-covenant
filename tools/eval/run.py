@@ -88,6 +88,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help="output dir for --package (default: .eval-sealed/pkg-<ts>)")
     parser.add_argument("--report", metavar="PACKAGE_DIR",
                         help="generate the stage-1 blind report from a package")
+    parser.add_argument("--allow-drift", action="store_true",
+                        help="report/unblind even though the repository state differs "
+                             "from the one the package's judgements were sealed against; "
+                             "the drift is printed and must be cited alongside the numbers")
     parser.add_argument("--unblind", nargs=2, metavar=("PACKAGE_DIR", "KEY"),
                         help="sir-only: paired analysis from package + sealed key")
     parser.add_argument("--root", metavar="DIR", default=str(REPO_ROOT),
@@ -182,13 +186,15 @@ def cmd_judge(path: Path, root: Path, timeout: int) -> int:
     return EXIT_OK
 
 
-def cmd_package(run_dir: Path, out_dir: Optional[Path]) -> int:
+def cmd_package(run_dir: Path, out_dir: Optional[Path], root: Path,
+                timeout: int) -> int:
     seed = blind.generate_seed()
     if out_dir is None:
         sealed_root = REPO_ROOT / blind.SEALED_DIR_NAME
         out_dir = sealed_root / f"pkg-{seed[:8]}"
     try:
-        package_dir, key_path, _mapping = blind.build_package(run_dir, out_dir, seed)
+        package_dir, key_path, _mapping = blind.build_package(
+            run_dir, out_dir, seed, root=root, timeout=timeout)
     except (OSError, ValueError) as exc:
         print(f"[ERROR] --package refused: {exc}", file=sys.stderr)
         print("        run 目录须含 run-data.json（runner 产出）与 products/。", file=sys.stderr)
@@ -200,14 +206,18 @@ def cmd_package(run_dir: Path, out_dir: Optional[Path]) -> int:
     return EXIT_OK
 
 
-def cmd_report(package_dir: Path, root: Path, timeout: int) -> int:
-    print(report.blind_report(package_dir, root, timeout=timeout))
+def cmd_report(package_dir: Path, root: Path, timeout: int,
+               allow_drift: bool = False) -> int:
+    print(report.blind_report(package_dir, root, timeout=timeout,
+                              allow_drift=allow_drift))
     return EXIT_OK
 
 
-def cmd_unblind(package_dir: Path, key_path: Path, root: Path, timeout: int) -> int:
+def cmd_unblind(package_dir: Path, key_path: Path, root: Path, timeout: int,
+                allow_drift: bool = False) -> int:
     try:
-        fragment = report.unblind_fragment(package_dir, key_path, root, timeout=timeout)
+        fragment = report.unblind_fragment(package_dir, key_path, root, timeout=timeout,
+                                          allow_drift=allow_drift)
     except (ValueError, OSError, KeyError) as exc:
         print(f"[ERROR] unblind refused: {exc}", file=sys.stderr)
         return EXIT_USAGE
@@ -238,12 +248,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.judge:
         return cmd_judge(Path(args.judge), root, timeout)
     if args.package:
-        return cmd_package(Path(args.package), Path(args.out) if args.out else None)
+        return cmd_package(Path(args.package), Path(args.out) if args.out else None,
+                           root, timeout)
     if args.report:
-        return cmd_report(Path(args.report), root, timeout)
+        return cmd_report(Path(args.report), root, timeout, args.allow_drift)
     if args.unblind:
         package_dir, key_path = Path(args.unblind[0]), Path(args.unblind[1])
-        return cmd_unblind(package_dir, key_path, root, timeout)
+        return cmd_unblind(package_dir, key_path, root, timeout, args.allow_drift)
     return EXIT_USAGE
 
 

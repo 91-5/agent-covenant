@@ -581,6 +581,7 @@ class ReportTests(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.addCleanup(self._tmp.cleanup)
         run_dir = _make_run_dir(self.tmp)
+        self.run_dir = run_dir  # XJ-20261027-001: sealed-package tests rebuild from it
         self.out_dir = self.tmp / "pkg"
         self.package, self.key_path, _mapping = blind.build_package(
             run_dir, self.out_dir, seed="ab" * 32)
@@ -606,6 +607,65 @@ class ReportTests(unittest.TestCase):
         self.assertIn("M2", text)
         self.assertIn("未运行", text)  # M3 section without run data
         self.assertIn("T01", text)  # unblinded: task ids visible again
+
+    def test_package_seals_judgements_and_root_state(self):
+        """XJ-20261027-001: packing with a root seals the E-levels and records
+        the repository state they were formed against."""
+        out_dir = self.tmp / "pkg-sealed"
+        blind.build_package(self.run_dir, out_dir, seed="cd" * 32, root=REPO_ROOT)
+        self.assertTrue((out_dir / "judgements-blind.json").is_file())
+        self.assertTrue((out_dir / "root-state.json").is_file())
+
+        sealed = json.loads((out_dir / "judgements-blind.json").read_text(encoding="utf-8"))
+        self.assertTrue(sealed)
+        for code, rows in sealed.items():
+            self.assertRegex(code, r"^P\d{3}$")
+            for row in rows:
+                self.assertIn(row["level"], {"E0", "E1", "E2", "E3", "E4"})
+                keys = set(json.dumps(row, ensure_ascii=False).split('"'))
+                for forbidden in ("condition", "task_id", "repetition"):
+                    self.assertNotIn(forbidden, keys,
+                                     f"sealed judgement leaks {forbidden}")
+
+    def test_sealed_judgements_short_circuit_rejudging(self):
+        """A sealed package must not touch the repository again: if re-judging
+        were attempted the patched judge_markdown below would explode."""
+        out_dir = self.tmp / "pkg-sealed2"
+        blind.build_package(self.run_dir, out_dir, seed="ef" * 32, root=REPO_ROOT)
+        original = report.judge.judge_markdown
+        report.judge.judge_markdown = lambda *a, **k: (_ for _ in ()).throw(
+            AssertionError("re-judged a sealed package"))
+        try:
+            judged = report.judge_package(out_dir, REPO_ROOT)
+        finally:
+            report.judge.judge_markdown = original
+        self.assertTrue(judged)
+        first = next(iter(judged.values()))[0]
+        self.assertIn(getattr(first, "level"), {"E0", "E1", "E2", "E3", "E4"})
+
+    def test_drift_against_recorded_root_hard_stops(self):
+        """The measured failure: -50.0% at one commit, -48.3% after the next
+        merge. A package sealed against a different HEAD must refuse."""
+        out_dir = self.tmp / "pkg-drift"
+        blind.build_package(self.run_dir, out_dir, seed="ab" * 31 + "cd", root=REPO_ROOT)
+        state_path = out_dir / "root-state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["git_head"] = "0" * 40
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+
+        with self.assertRaises(ValueError) as ctx:
+            report.blind_report(out_dir, REPO_ROOT)
+        self.assertIn("仓库状态与打包时不一致", str(ctx.exception))
+
+        # Explicit opt-in still works, so a reviewer can cite both numbers.
+        text = report.blind_report(out_dir, REPO_ROOT, allow_drift=True)
+        self.assertIn("P001", text)
+
+    def test_legacy_package_without_seal_still_rejudges(self):
+        """Packages built before sealing existed must keep working."""
+        self.assertIsNone(report.sealed_judgements(self.package))
+        judged = report.judge_package(self.package, REPO_ROOT)
+        self.assertTrue(judged)
 
     def test_unblind_fragment_rejects_wrong_key(self):
         wrong = self.tmp / "wrong.json"
