@@ -16,7 +16,7 @@
   "acknowledged_by": "sir（合并轮 gate 以 --allow-conditional 验收；本 condition 为功能性修复，非数字问题）",
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-27T15:18:00Z",
+  "ts": "2026-10-27T15:47:19Z",
   "ts_note": "重签 ts（C1 销账核验完成时刻）：晚于 065b3d9 检出 mtime，非未来。C1 销账后 verdict 由 CONDITIONAL 翻 PASS；若合并 master 后 checkout 刷新登记文件 mtime，按 mtime 先例重签。",
   "evidence": [
     "ACCEPT unittest 独立复跑：worktree @ b9350c0，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 433 tests, OK, exit 0（429 基线 + 4 新测试）。",
@@ -55,5 +55,5 @@
   "conditions_discharged": [
     "C1 已于 065b3d9 销账并逐条核验（见 evidence C1-D1/D2/D3）：_SealedClaim 镜像 schema.Claim.to_dict() 全字段（text/source_line/product/anchors/unanchored/evidence，含 source_line 的 int 归一与 None 兜底），并补两条回归测试（带 E2 判定的最小 fixture 断言附录渲染『行 1 判 E2』；字段契约测试断言 sealed view 暴露 Claim.to_dict() 全字段防再掉字段）——同时落实评审方 advisory A2（全字段镜像而非单补 source_line）与 A3（带失败判定 fixture 专属覆盖）。销项核查 3 条见 evidence。"
   ],
-  "ts_resign_note": "2026-10-27T14:30Z 初签 CONDITIONAL（1 condition C1：_SealedClaim 缺 source_line 致带失败行密封包 --report 崩）。C1 于 065b3d9 销账（_SealedClaim 镜像 Claim.to_dict() 全字段 + 2 回归测试，落实 advisory A2/A3）；2026-10-27T15:18Z 重签 PASS：销账核查 C1-D1（diff 逐条对齐、tools/ 仅 report.py + 红区九文件仍空）/ C1-D2（评审方在 065b3d9 树重打包 r3 密封包，78 条失败判定跑 report.blind_report -> exit 0、附录渲染 78 行『行 N 判 E』）/ C1-D3（435 单测 OK，含 2 新回归测试；A1 三态 / A2 双态 / 旧包态不受本次修复影响）全部通过。"
+  "ts_resign_note": "2026-10-27T15:47:19Z resign（先例家族 b2994b1/…/027-001，第十三次）：成因为 002→master 的合并 checkout 刷新了 README 等登记文件 mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 无 conditions）。"
 }
