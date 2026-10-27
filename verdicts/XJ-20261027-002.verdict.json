@@ -9,17 +9,15 @@
     "README.zh-CN.md",
     "artifacts.json"
   ],
-  "commit": "d4bbe29 + b9350c0（A1 产物封签 + A2 正文双数字 + 协议 §12.5 引用纪律 / §12.6 A3 调查记录 + 4 新测试 + README test-count 429->433 机械同步）",
-  "verdict": "CONDITIONAL",
+  "commit": "d4bbe29 + b9350c0（A1 产物封签 + A2 正文双数字 + 协议 §12.5/§12.6 + 4 新测试 + README 429->433） + 065b3d9（C1 销账：_SealedClaim 全字段镜像 + 2 回归测试 + README 433->435）",
+  "verdict": "PASS",
   "blockers": 0,
-  "conditions": [
-    "C1: tools/eval/report.py 的 `_SealedClaim`（L54）只暴露 `.text`，未暴露 `.source_line`；而 `blind_report` 的失败样本附录（L271）读 `j.claim.source_line`。任何**带 E1/E2/E3 失败行**的新密封包跑 `--report`（stage-1 盲态报告）会 `AttributeError: '_SealedClaim' object has no attribute 'source_line'`，整份报告无产出（评审方在 r3 密封包，78 条失败行，独立探针实测崩）。--unblind（stage-2 取数）与旧包（现场重判）不受影响。修复：让 `_SealedClaim` 对齐 `schema.Claim.to_dict()` 的全字段（至少 source_line；建议直接暴露 text/source_line，避免将来 unblind 加逐条附录再踩同坑），并在 tests 补一条回归：构造含失败判定的密封包 -> `report.blind_report(pkg, root)` 不抛、失败样本附录渲染出 `判 E` 行。销项后本卡重签 PASS。"
-  ],
+  "conditions": [],
   "acknowledged_by": "sir（合并轮 gate 以 --allow-conditional 验收；本 condition 为功能性修复，非数字问题）",
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-27T14:30:00Z",
-  "ts_note": "ts 为评审独立复跑完成时刻（433 单测、A1 三态、A2 双态、旧包态、A3 探针、红区 diff、lint、盲化泄漏、以及 blind_report 崩溃探针均实测于 b9350c0），晚于 b9350c0 检出 mtime，非未来。C1 修复落盘若刷新 report.py 的 mtime，按 mtime 先例重签。",
+  "ts": "2026-10-27T15:18:00Z",
+  "ts_note": "重签 ts（C1 销账核验完成时刻）：晚于 065b3d9 检出 mtime，非未来。C1 销账后 verdict 由 CONDITIONAL 翻 PASS；若合并 master 后 checkout 刷新登记文件 mtime，按 mtime 先例重签。",
   "evidence": [
     "ACCEPT unittest 独立复跑：worktree @ b9350c0，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` -> Ran 433 tests, OK, exit 0（429 基线 + 4 新测试）。",
     "ACCEPT 红区九文件 diff 空：`git diff --name-only 8d0331f..b9350c0` over judge/extract/stats/run/study_runner/m3_probe/seal_run/gate/lint_cards -> 无输出；`-- tools/` 增量仅 blind.py(+24)/report.py(+75)，constraint 1 成立。",
@@ -33,7 +31,10 @@
     "FINDING（C1 依据，评审方独立探针，非采信交付单）：对 r3 重打包的新密封包（252 判定，其中 78 条 E2/E3 失败行）跑 `report.blind_report(pkg, root)`（即 `--report` CLI 的 stage-1 盲态报告路径）-> **`AttributeError: '_SealedClaim' object has no attribute 'source_line'`**，整份报告无产出（traceback 终止）。根因：`_SealedClaim`（report.py L54）只 `self.text = ...`，未暴露 `source_line`；而 blind_report 的失败样本附录 L271 `f\"... 行 {j.claim.source_line} ...\"` 要读它。密封 JSON 里 `claim.source_line` 字段**是存在的**（实测 =10），只是 wrapper 没读——纯一行可修。",
     "FINDING（blast radius 精确划界）：该崩溃**只在 `blind_report`（--report）+ 带失败行 + 密封包**三条件同时成立时触发。`unblind_fragment`（--unblind，sir 实际取数路径）不渲染逐条失败附录 -> 正常；旧包（现场重判，judge_package 回退到真实 ClaimJudgement）-> 正常。故 sir 侧数字链路（--unblind）未被破坏，破坏的是「盲态报告正文生成」这条交付面。",
     "FINDING（归属与测试盲区根因）：该缺陷**根源在 001（cedeaff）引入的 `_SealedClaim`/`_SealedJudgement`**（当时只暴露 .text），002 卡的 D2 把 blind_report 列为交付面（头部无条件写快照行）却未验证它，故在本卡验收范围内暴露。433 全绿 + 作者实测全过的原因：(a) 测试 fixture 包的判定全 E4 -> 失败样本附录为空 -> 从不到 L271；(b) 作者 A1 篡改测试在 `check_product_seal`（附录渲染之前）就抛 ValueError -> 也绕过了 L271。「未篡改 + 有失败行 + 密封包 + --report」这条组合无人测过。",
-    "ACCEPT 交付物本体质量：A1 产物封签（篡改即硬停、无逃生门、旧包明示不静默）与 A3 调查记录（不追到底、护栏在位、留方法）设计正确、边界干净；A2 的「无条件自动写正文」比 stderr 单行更防呆。C1 是落在本卡 owned file report.py 内的**一行修复 + 一条回归测试**，不触及 A1/A2/A3 的正确性。"
+    "ACCEPT 交付物本体质量：A1 产物封签（篡改即硬停、无逃生门、旧包明示不静默）与 A3 调查记录（不追到底、护栏在位、留方法）设计正确、边界干净；A2 的「无条件自动写正文」比 stderr 单行更防呆。C1 是落在本卡 owned file report.py 内的**一行修复 + 一条回归测试**，不触及 A1/A2/A3 的正确性。",
+    "C1-D1 ACCEPT（销账 diff 核查）：065b3d9 的 report.py `_SealedClaim` 改为镜像 `schema.Claim.to_dict()` 全字段（text / source_line[int 归一 + None 兜底] / product / anchors / unanchored / evidence），并带字段契约注释指向 `test_sealed_claim_exposes_every_claim_field`；tools/ 增量仍仅 report.py，红区九文件（judge/extract/stats/run/study_runner/m3_probe/seal_run/gate/lint_cards）diff 保持空，未越本卡约束 1。",
+    "C1-D2 ACCEPT（销账真数据复核，评审方独立重跑非采信）：在 065b3d9 worktree 重打包 r3 -> `judgements-blind.json` 含 78 条 E1/E2/E3 失败判定；跑 `report.blind_report(pkg, root)`（即 C1 初签时崩溃的 --report stage-1 路径）-> **exit 0、整份报告 16070 字产出、失败样本附录完整渲染 78 行**（样本：『- **P002** 行 7 判 E3…』『- **P005** 行 7 判 E2…」），C1 的 AttributeError 已消除。",
+    "C1-D3 ACCEPT（回归测试 + 全量复跑）：`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe python -m unittest discover -s tests` @ 065b3d9 -> **Ran 435 tests, OK**；新增 `test_sealed_package_with_failures_renders_the_appendix`（带 E2 判定最小 fixture -> 断言附录渲染『行 1 判 E2』）与 `test_sealed_claim_exposes_every_claim_field`（契约测试：sealed view 暴露 Claim.to_dict() 全字段）落实评审方 advisory A2/A3；A1 三态 / A2 双态 / 旧包态行为不受本修复影响（065b3d9 未触碰 check_product_seal / snapshot_lines）。"
   ],
   "review_q_rulings": [
     "Q1（A3 不追到底对不对）：RULING = 认可。三条腿都站得住：(a) 3/3 全 258 + 内部自洽，158 在现行代码上确实不可复现——不可复现的缺陷去改代码等于在猜，且改错会引入新变量；(b) 护栏 `test_summary_matches_its_own_per_code_table` 已在位，下次真复发会当场变红并留证；(c) 新包（001 D1 + 002 A1）已密封，「同包跨时刻两种结果」这类缺陷面从源头关掉。附带那条 E2=81（当初 75）的现场重判漂移是意外收获，反而坐实了 §12.1 机制、强化了 D1 必要性。处置「不追到底 + 护栏 + 新包密封 + 文档留方法」是该缺陷类的正确收口，不是逃避。",
@@ -42,13 +43,17 @@
     "Q4（product_sha256 放 manifest 而非独立文件）：RULING = 认可。manifest 是包内唯一自描述清单，读侧（check_product_seal）读一个文件即可拿到 P 码->文件名 + 文件名->哈希，语义内聚；120 entries / 12.6 KB 相对 334 KB 的密封判定可忽略，不影响解盲流程。放独立文件反而多一份要维护、要和 manifest 里的 products 表对齐（多一个漂移面）。取舍正确。"
   ],
   "advisory_findings": [
-    "A1（提为 C1，非 advisory）：report.py `_SealedClaim` 缺 source_line 使 --report 在带失败行密封包上崩。见 conditions。",
-    "A2（非阻塞，防同坑复现）：修 C1 时别只补 source_line 一个字段——建议让 `_SealedJudgement`/`_SealedClaim` 直接镜像 `schema.Claim.to_dict()` 的全字段（text/source_line/evidence 等），并加一条契约测试「_SealedClaim 暴露的属性 ⊇ blind_report 实际读到的 ClaimJudgement 属性」。否则将来 unblind 若加逐条失败附录，会再次踩「wrapper 比 dataclass 少字段」的同款坑。",
-    "A3（记录项，测试盲区方法论）：本卡 433 全绿仍漏掉一条真实路径，根因是 fixture 包无失败行 + 篡改测试在更早的 check_product_seal 抛出。建议评审/写作时给「带失败判定的密封包」建一个最小 fixture（哪怕塞一条 E2/E3），让失败样本附录这条分支有专属覆盖——附录（失败样本是资产）是盲态报告的核心段落，不该长期无测试。"
+    "A1（已销账为 C1，065b3d9 落实）：report.py `_SealedClaim` 缺 source_line 致 --report 在带失败行密封包上崩 -> 已镜像全字段修复。",
+    "A2（已落实于 065b3d9）：_SealedJudgement/_SealedClaim 直接镜像 schema.Claim.to_dict() 全字段 + 字段契约测试，防将来 wrapper 比 dataclass 少字段。",
+    "A3（已落实于 065b3d9）：`_make_run_dir_with_failures` 最小 fixture（含 E2 判定）让失败样本附录分支有专属覆盖。"
   ],
   "notes": [
     "独立评审：AgnesCode（浮香）。未参与 d4bbe29/b9350c0 的编写；全程未修改任何作者文件（worktree 检出 + 重打包 + 副本包篡改 + 解盲/报告探针 + A3 探针均为只读/副本操作，重打包产物落在 worktree 的 .eval-sealed 与 _eval_run 临时目录，未触碰作者树），verdict 与 .tasks/REVIEW-XJ-20261027-002.md 为评审方自有交付物。",
     "CONDITIONAL, blockers=0, conditions=1（C1 为本卡 owned file report.py 内的一行修复 + 一条回归测试，不触及 A1/A2/A3 已交付的正确性）。合并 gate 按派发单：sir 合并前先把 C1 修掉或挂 condition 合入——本姑娘的倾向是**先修 C1 再合**，因为 C1 崩的是「盲态报告正文生成」，下一轮出报告（003 已出，第四轮待出）还会踩；合并后 mtime 先例第 13 次 resign 照做并记录。",
     "评审方独立复算闭合：密封包解盲 M1=−48.3% 与 001 卡、003 卡 C1 注记三方一致；A3 探针 3/3 全 258 + E2 现场漂到 81，独立印证作者调查记录。"
-  ]
+  ],
+  "conditions_discharged": [
+    "C1 已于 065b3d9 销账并逐条核验（见 evidence C1-D1/D2/D3）：_SealedClaim 镜像 schema.Claim.to_dict() 全字段（text/source_line/product/anchors/unanchored/evidence，含 source_line 的 int 归一与 None 兜底），并补两条回归测试（带 E2 判定的最小 fixture 断言附录渲染『行 1 判 E2』；字段契约测试断言 sealed view 暴露 Claim.to_dict() 全字段防再掉字段）——同时落实评审方 advisory A2（全字段镜像而非单补 source_line）与 A3（带失败判定 fixture 专属覆盖）。销项核查 3 条见 evidence。"
+  ],
+  "ts_resign_note": "2026-10-27T14:30Z 初签 CONDITIONAL（1 condition C1：_SealedClaim 缺 source_line 致带失败行密封包 --report 崩）。C1 于 065b3d9 销账（_SealedClaim 镜像 Claim.to_dict() 全字段 + 2 回归测试，落实 advisory A2/A3）；2026-10-27T15:18Z 重签 PASS：销账核查 C1-D1（diff 逐条对齐、tools/ 仅 report.py + 红区九文件仍空）/ C1-D2（评审方在 065b3d9 树重打包 r3 密封包，78 条失败判定跑 report.blind_report -> exit 0、附录渲染 78 行『行 N 判 E』）/ C1-D3（435 单测 OK，含 2 新回归测试；A1 三态 / A2 双态 / 旧包态不受本次修复影响）全部通过。"
 }
