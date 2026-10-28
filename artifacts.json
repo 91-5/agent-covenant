@@ -349,5 +349,10 @@
                             "docs/eval-runner-protocol.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261027-003":  [
+                            "docs/eval-reproduce.md",
+                            "README.md",
+                            "README.zh-CN.md"
                         ]
 }

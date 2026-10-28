@@ -340,6 +340,25 @@ since it was read, exits `1` with a "re-run" message rather than overwriting.
 
 If a person clicks "approve" in the loop, you are at **L1**. Say L1.
 
+## Process-integrity evaluation
+
+There is a measurement harness in `tools/eval/` and three written rounds behind
+it. It does **not** measure whether an agent is right — it measures whether the
+claims it marks as verified actually hold up (`E0` no evidence line … `E4`
+reproduces and supports), in a two-arm paired design: one arm really executes
+the evidence commands, the other writes the same claims from belief alone.
+
+Results are stated as **controlled comparison evidence under pre-registered
+conditions** — never as "proven to reduce hallucination". Round 1 was an
+instrument-validation round (the primary endpoint was not computable), round 2
+reported no detectable difference, round 3 detected one (M1 −50.0pp,
+95% CI [−67.5, −32.5], 20 tasks — below the pre-registered floor of 30, so a
+preliminary signal).
+
+- What you can verify **without** any private material: [docs/eval-reproduce.md](docs/eval-reproduce.md) §A
+- Frozen rules: [docs/eval-prereg.md](docs/eval-prereg.md) · execution protocol: [docs/eval-runner-protocol.md](docs/eval-runner-protocol.md)
+- Reports: [round 1](docs/eval-report-v1.md) · [round 2](docs/eval-report-v2.md) · [round 3](docs/eval-report-v3.md)
+
 ## Adapters
 
 Documentation, not code, so the protocol cannot rot with a vendor's API:

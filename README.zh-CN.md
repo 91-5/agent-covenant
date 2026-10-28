@@ -298,3 +298,13 @@ python tools/link_card.py --card XJ-20261019-001 --verdict verdicts/XJ-20261019-
 鍏堣 `PROTOCOL.md`锛屽啀璇?`postmortems.md`鈥斺€斿悗鑰呮墠鏄繖涓」鐩瓨鍦ㄧ殑鐞嗙敱銆傛渶娆㈣繋鐨勮础鐚槸閫傞厤鍣ㄥ拰楠岃瘉鍣ㄣ€侾R 瑕佽繃鍜屾湰椤圭洰涓€鏍风殑闂ㄧ锛岃 `CONTRIBUTING.md`銆?
 
 MIT 漏 15812
+
+## 过程诚信测评
+
+`tools/eval/` 下有一套测量工具，外加三轮书面报告。它**不测** agent 说得对不对，测的是它标为「已验证」的断言**是否真的立得住**（`E0` 无证据行 … `E4` 可复现且支持），用的是两臂配对设计：一臂真执行证据命令，另一臂只凭知识写同样的断言。
+
+结论只以「**预注册条件下的对照证据**」表述，绝不写成「证明降低幻觉」。第一轮是仪器校验轮（主端点不可计算），第二轮报「未检出差异」，第三轮检出差异（M1 −50.0pp，95% CI [−67.5, −32.5]；20 任务，低于预注册下限 30，属初步信号）。
+
+- **不需要**任何私有材料就能验的：见 [docs/eval-reproduce.md](docs/eval-reproduce.md) 的 A 档
+- 冻结规则：[docs/eval-prereg.md](docs/eval-prereg.md) · 执行协议：[docs/eval-runner-protocol.md](docs/eval-runner-protocol.md)
+- 三份报告：[第一轮](docs/eval-report-v1.md) · [第二轮](docs/eval-report-v2.md) · [第三轮](docs/eval-report-v3.md)
