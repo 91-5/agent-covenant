@@ -354,5 +354,8 @@
                             "docs/eval-reproduce.md",
                             "README.md",
                             "README.zh-CN.md"
+                        ],
+  "XJ-20261028-001":  [
+                            "docs/eval-report-v3.md"
                         ]
 }
