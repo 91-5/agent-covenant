@@ -12,7 +12,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "agnes-code",
-  "ts": "2026-10-28T05:14:00Z",
+  "ts": "2026-10-28T09:40:58Z",
   "ts_note": "ts 为评审独立复跑完成时刻（A 档五条命令、unittest 435、lint、红区 diff、措辞扫描、四轮数字三方核对均实测于 8e16694），取真实时刻 05:14Z（非未来，早于 300s skew 容差上界）。合并 master 后若 checkout 刷新登记文件 mtime，按 mtime 先例（001/003 共 13 次后）第 14 次 resign。",
   "evidence": [
     "ACCEPT A 档五条逐条独立复跑（worktree @ 8e16694，`COVENANT_BASH_HINT=D:\\AI\\Git\\usr\\bin\\bash.exe` 下执行）：`--selftest` -> `SELFTEST: PASS`；`--dry-run` -> `fixture level hits: {'E0': 2, 'E1': 2, 'E2': 2, 'E3': 1, 'E4': 3}` + `DRY-RUN: PASS`；`m3_probe.py` -> `interception: 5/5 clean-round false positives: 0.0` + `M3: PASS`；`--tasks` -> 30 行 T01-T30；`python -m unittest discover -s tests` -> **Ran 435 tests, OK**。文档 §A 的引文与实测输出**逐字一致**（constraint 5 成立）。",
@@ -41,5 +41,6 @@
     "独立评审：AgnesCode（浮香）。未参与 8e16694 的编写；评审全程未修改任何作者文件（worktree 检出 + 五条命令复跑 + 措辞/链接/数字三方核对均只读探针），verdict 与 .tasks/REVIEW-XJ-20261027-003.md 为评审方自有交付物。",
     "PASS, blockers=0, conditions=[]。合并 gate 按派发单：本卡合并 master + push，mtime 先例第 14 次 resign 照做并记录；合并后项目对外有了第一个入口：README → 复现指南 → 三份报告 → 冻结预注册。",
     "本卡与前三张卡的连续性（仪器根治 027-001 / 产物封签 027-002 / 本卡外部入口）共同把「三轮数字 + 判定 + 报告 + 门禁」这条链从**内部纪律**拉到了**外人从零可验证**的层级。A3 记录项里「评审方按 §A 走下来全通过」这一句，是这条链的第一次外部独立复核记录。"
-  ]
+  ],
+  "ts_resign_note": "2026-10-28T09:40:58Z resign（先例家族，第十四次）：成因为 003→master 的合并 checkout 刷新了 README 等登记文件 mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers）。"
 }
