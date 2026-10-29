@@ -1,0 +1,45 @@
+{
+  "id": "XJ-20261028-002",
+  "artifact": [
+    "docs/eval-report-v3.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261028-002-round3-report-wording-fix @ 039c5b5（d484305 报告措辞修复 + 039c5b5 artifacts 登记，基线 master 线 8fcc256，未 push；改动 3 文件：.tasks/XJ-20261028-002.md 新开 + docs/eval-report-v3.md（§0 结论句 1 处 + §5 附录 1 处）+ artifacts.json（登记本卡）；tools/、tests/、gate.py、lint_cards.py 零改动",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "agnes-code",
+  "acknowledged_by": "sir（本卡 PASS + 001 重签 PASS 后，gate 按 001→002 顺序合并并 push；第 15/16 次 mtime resign 由出卡方按 PROTOCOL 记录）",
+  "ts": "2026-10-29T11:13:28Z",
+  "ts_note": "ts 为本评审独立复跑完成时刻（2026-10-29 11:13 UTC）：unittest 435 复跑（143.9s）/ lint 0 ERROR / 措辞扫描 / git diff master..HEAD hunk 审计（仅 2 hunk）/ pkg-34a935f3 --report 现场重判独立复现 78 条与逐条明细取法 / 001 verdict 重签，全部实测于分支 worktree @ 039c5b5；非未来时刻（早于 300s skew 容差上界）。",
+  "evidence": [
+    "范围纪律（Constraints 2 机械核对）：git diff master..HEAD --stat 全量 = 仅 3 文件（.tasks/XJ-20261028-002.md +64 / artifacts.json +3 / docs/eval-report-v3.md +6-3），tools/、tests/、gate.py、lint_cards.py 零改动，与交付自述「只改 docs/eval-report-v3.md + artifacts.json」逐字吻合。",
+    "数字未变（Acceptance 4，权威铁证）：git diff master..HEAD -- docs/eval-report-v3.md 仅 **2 个 hunk**（@@ -10,7 = §0 结论句；@@ -85,8 = §5 附录），§1 的 −50.0% / CI [−67.5%, −32.5%]、§2 分臂（A 臂 7.1%、B 臂 52.4%、66 E2 / 9 E3）、§4 双快照表（−48.3% [−65.8%, −30.0%] / 9.5%·52.4%）全部不在 diff 中 → 数字/CI/分臂/双快照零改动。比交付「脚本核过」自报更强的独立证据。",
+    "Acceptance 1（§5 不再指向 metrics-blind.json 取逐条 E 级）：diff 已删除「逐条见包内 metrics-blind.json」原指引（L90-91 改标注「打包时刻值」），L92 新增「逐条明细取法（审计卡 C1 订正）：metrics-blind.json 不含逐条 E 级（只有 claims/unanchored/coverage）；密封包看 judgements-blind.json（每条含 claim 文本 + E 级）；旧包重跑 python tools/eval/run.py --report <包> --root . 取得现场判定」。Select-String 确认旧指引字样已清零。",
+    "逐条明细取法可执行性独立坐实（对抗点 2）：本方核 run.py --help → --report PACKAGE_DIR（generate the stage-1 blind report from a package）/ --unblind PACKAGE_DIR KEY / --root DIR 三参数真实存在；blind.py:37 JUDGEMENTS_FILE='judgements-blind.json'；.eval-sealed/pkg-34a935f3/ 实测仅 metrics-blind.json（9795B，结构 {P码:{claims,unanchored,coverage}} 无逐条 E 级）= 旧包，与 §5 注记「本包属此类旧包」逐字吻合。本方独立复跑 python tools/eval/run.py --report .eval-sealed/pkg-34a935f3 --root . → 输出含逐 P-code 逐条 E 级明细（P003/P006/P009/P014/P016/P020/P021/P022/P025/P029/P031/P032/P033/P034 等），且 T21 同源漂移实证（P034 的 check_owned_files base=a7f979b changed=6 断言现场不再复现 → E2），78 条现场值与 §5 注记逐字对应。指引准确可执行，读者重跑得 78 时根因已随行在手，不会误判「报告漏 3 条」。",
+    "Acceptance 2（§5 双快照注记 75 vs 78 + T21 根因）：§5 L88「双快照注记（与 §4 对称）：以下计数为打包时刻（a7f979b）的统计值。用当前仓库现场重判时，失败总数会变为 78 条（多出的 3 条是 T21 的 A 臂断言由 E4 翻为 E2，根因见 §4）。引用时请连 commit。」——与 §4 双快照表同 commit 锚（a7f979b）、同根因引用（T21）、同引用纪律（连 commit），无矛盾、无第二张表（防双表漂移），75（B66+A9）与 78 双值同处并置且差异归因写明。达成。",
+    "C2 修复（Acceptance 3）：§0「显著低于无兜底条件」→「低于无兜底条件，且达到预注册最小效应（本设计用最小效应决策规则，不报告 p 值）」；全文「显著」清零（master 版 §0 唯一 1 处）。",
+    "Acceptance 5（unittest）：本方独立复跑 python -m unittest discover -s tests → Ran 435 tests in 143.899s / OK / exit 0。",
+    "Acceptance 6（lint）：本方独立复跑 python tools/lint_cards.py --dir .tasks --verdict-dir verdicts → LINT: PASS（0 ERROR），2 WARN 均为过渡态且与交付自述逐字一致：VERDICT_WITHOUT_REVIEW XJ-20261028-002（= 本 verdict 正在补，落盘即消）；CLOSED_NOT_ARCHIVED XJ-20261028-001（审计卡重签 PASS 后 1 个工作日内归档，属合并流程内动作）。",
+    "Acceptance 7（措辞扫描）：本方全文扫描——「显著」0；「证明降低幻觉」2 / 「证明有效」2 全部保留在两处禁令句（L9 §0 头措辞纪律条「…一类措辞被 EVO-20261024-001 禁止」+ L109 §7「禁止…」），与 001 verdict 维度6 的机械扫描基线一致；「证明了」0、「证伪」0。「p 值」仅 1 处、位于 C2 新句「不报告 p 值」防御性声明内，非断言。",
+    "对抗点 3（§0 新措辞残留误读审计）：新句「M1 检出配对差异 −50.0pp（95% CI [−67.5%, −32.5%]，区间不跨零）…低于无兜底条件，且达到预注册最小效应（本设计用最小效应决策规则，不报告 p 值）」——「检出配对差异」「区间不跨零」均为预注册决策规则的机械量词（|差|≥10pp 且 95% CI 不跨零），与 §7 既有措辞（L109「M1 本轮达到预注册最小效应，表述为『检出配对差异』」）字面一致，非新造术语；「达到预注册最小效应」前置 + 「不报告 p 值」收尾两端钳制，无剩余可被读成 p<0.05 的措辞。",
+    "001 重签（派发单第 2 件事）：verdicts/XJ-20261028-001.verdict.json 由 CONDITIONAL → **PASS**；C1/C2 两条 condition 原文移入 conditions_discharged（销账依据 = 本卡证据 3/4/5/6/7，逐条对应）；ts 取重签当刻 2026-10-29T11:13:28Z；evidence 数组与 review_q_rulings 字节保留。gate.py L21-24：CONDITIONAL 需 --allow-conditional + 非空 acknowledged_by，重签 PASS 后该要求消失 → push gate（CONDITIONAL_NOT_ALLOWED，与 004 同机制）解除。",
+    "artifacts.json（D3）：新增 XJ-20261028-002 → [docs/eval-report-v3.md]，与 001 条目同构，JSON 语法校验通过。"
+  ],
+  "review_q_rulings": [
+    "对抗点 1（§5 双快照注记与 §4 是否真对称 /「一行 + 引用 §4 根因」取舍是否认可）：**认可**。§4 用完整双快照表是数字主承载（需并置引用）；§5 是附录、计数级，风险面集中在「读者抓错数据源」，一行注记 + 「根因见 §4」精确命中风险面，同时避免第二张与 §4 表互相漂移的更危险失效模式。§4/§5 共享同一 commit 锚（a7f979b）与同一根因引用（T21），信息无丢失、无矛盾。",
+    "对抗点 2（逐条明细取法是否准确可执行 / 78 vs 75 读者困惑风险）：**准确可执行，困惑已控制**（本方独立复跑 --report pkg-34a935f3 实证，见 evidence 4）。新注记本身并置 75（打包时刻值，显式标注）与 78（现场重判值 + T21 三条根因），重跑得 78 的读者根因随行在手；「引用请连 commit」纪律与 §4 一致。",
+    "对抗点 3（§0 改后是否还有可被读成 p 值的措辞）：**残留风险已堵**（见 evidence 10）。「检出配对差异」「区间不跨零」是预注册规则机械量词且与 §7 字面一致，非统计术语误用；「不报告 p 值」防御句显式闭环。",
+    "卡面 Q3（把 001 一并重签 PASS）：**已完成**（见 notes 销账记录与 evidence 11）。C1/C2 销项证据逐条对应 002 卡 D1/D2，重签机制与 004 先例一致，两条一起收口、省一轮 relay 成立。"
+  ],
+  "advisory_findings": [
+    "A1（non-blocking，001 审计卡 A2 遗留，不扩本卡范围）：§2 标题「分臂明细（同一确定性判定器）」与 §4「数字随仓库 commit 漂移」表面略矛盾（判定规则确定，但旧包现场重判数字依赖解盲时刻 root 状态）。本卡按约束 1「只改两处表述」未扩修，正确。建议挂 027-002 卡 A2 加固项（footer 自动追双数字）一并处理。",
+    "A2（non-blocking，合并流程备忘）：001 卡重签 PASS 后 1 个工作日内归档（PROTOCOL §8，清 CLOSED_NOT_ARCHIVED WARN）；本卡 VERDICT_WITHOUT_REVIEW WARN 随本 verdict + REVIEW 落盘即清。合并顺序 gate 规定：001（重签 PASS）→ 002 → push → CI；预计第 15/16 次 mtime resign，出卡方已声明照做并记录。"
+  ],
+  "notes": [
+    "本评审（AgnesCode/浮香）非实现方（jarvis/OpenCode）。独立复跑在分支 worktree @ 039c5b5；作者源码（tools/、tests/、docs/ 原文）、卡面文件均未修改。",
+    "C1/C2 销账记录：001 verdict 之 C1（§5 数据源指错 metrics-blind.json + 75/78 计数不对称无注记）由本卡 D1 销账（双快照注记 + 逐条明细取法改准，证据 3/4/5）；C2（§0「显著低于」可被读成 p<0.05）由 D2 销账（改为「达到预注册最小效应（最小效应决策规则，不报告 p 值）」，证据 6/7/10）。两条均为表述级修复、不改任何数字与结论方向，故 001 重签 PASS、conditions_discharged 保留两条原文备审计追溯。",
+    "001 重签为派发单指派的字段变更（verdict / conditions→conditions_discharged / ts / ts_note / notes），001 verdict 的 evidence、review_q_rulings、advisory_findings 数组逐字保留，未删改审计证据链。"
+  ]
+}
