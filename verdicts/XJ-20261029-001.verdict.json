@@ -1,0 +1,50 @@
+{
+  "id": "XJ-20261029-001",
+  "artifact": [
+    "docs/eval-prereg.md",
+    "docs/eval-runner-protocol.md",
+    "tools/eval/report.py",
+    "tests/test_eval_harness.py",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261029-001-round4-prereg-v13-and-a1a2 @ 31eb36f (3b144b4 实现 + aaa3ab9 交接 + 31eb36f council 预审加固，基线 master @ e8e52f9，未 push；改动 8 文件：.tasks/XJ-20261029-001.md 开卡 + docs/eval-prereg.md(版本行 1.3 + 新增 §9 C6/C7 + 5 执行约束) + docs/eval-runner-protocol.md(§12.5 A1 文档句) + tools/eval/report.py(snapshot_lines drift 引用规则行) + tests/test_eval_harness.py(2 新测试) + artifacts.json(登记) + README×2(435→437 sync)；tools/、blind.py、gate.py、lint_cards.py 判定器/盲化/密封仪器 9 文件零改动",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-10-29T15:30:00Z",
+  "ts_note": "ts 取正本落盘时刻(2026-10-29 23:30 +08 = 15:30Z，非未来；晚于全部独立复跑动作)：全量单测 437 复跑(93s)、red-zone 9 文件 diff 空核验、§9 第四轮零数据时间线核验(无 eval-report-v4/run-log-r4/run-* 目录/无 seal.json)、snapshot_lines 三 regime 独立驱动、seal_run.py --verify argparse 实证、违禁词扫描、sync_test_count --check exit 0，全部实跑于分支 worktree @ 31eb36f。",
+  "evidence": [
+    "范围纪律(A4/A5/Constraints 1·3·5)：本方独立 git diff --name-only e8e52f9..HEAD = 8 文件(.tasks 卡 + 5 owned + README×2) ⊆ 允许集；red-zone 九文件(judge/extract/stats/run/study_runner/m3_probe/seal_run/gate/lint_cards) diff 零输出；blind.py 单列 diff 亦空——C6/C7 只动样本构成与执行者边界，判定器/盲化仪器零改动；diff 不触 eval-report-v{1,2,3}.md，历史数字零改动。",
+    "Q1 v1.3 冻结合法性：时间线事实核验通过——仓库无第四轮数据(无 eval-report-v4/run-log-r4/run-*/任何 seal.json)；§9 锚点 commit 3b144b4 经 git show 实证存在(2026-10-29 22:48:40+08，实现 commit)，'seal.json 时间戳须晚于该 commit' 机械锚可核验(council 采纳项已落 31eb36f)。§0.1 四项逐条对照：(a)标注(§9 标题+冻结时机声明段含锚点 commit)(b)影响声明(C6/C7 表独立列填'是'+影响面)(c)版本递增(1.2→1.3，v1.2 行保留为'文档版本(v1.2)') (d)原文保留(§1–§7+附录零 diff，仅版本区+文末追加§9)；'不重算不追溯不影响已产生数据轮次'句显式声明。双声明自洽。",
+    "Q2 C6/C7 未偷改判定器：blind/judge/extract/stats/seal_run 全链 diff 空；C7 E2 表述('证据行声称的输出与真实执行输出不符')与 §1.3 冻结表(L61 实际退出码≠声称exit 或 out 片段不在实际输出→E2)逐字级同义复述，无扩大解释；§9'未变更项'显式把'判定器代码(C6/C7 只动样本构成与执行者边界，不动判定器)'列入继续有效清单；约束2'判定器读产物以密封副本为准'为 027-001/002 既有仪器纪律复述非新规则。",
+    "Q3 A2 引用规则行完备性：交付 2 新测试(drift 含双 head/clean 无行)在全量 437 OK 内通过；本方独立驱动 report.snapshot_lines() 三 regime(review_xj/q3_check.py 全 PASS)——(1)等值 regime(recorded==current，dirty-only drift 合法形态)：引用规则行出现且两槽同值 31eb36fd8791/31eb36fd8791，测试 docstring 明确两 head 可合法相等、未把'必须不同'当验收标准；(2)异值 regime(git_head 篡改)：两槽 222222222222/31eb36fd8791；(3)clean regime(drift=None)：正文零新增行(无引用规则无漂移行)。check_root_state 机制核验：drift 由 git_head 或 dirty 任一不同触发，等值 head+dirty 翻转即触发，与机制对应。",
+    "Q4 A1 文档句可执行性：seal_run.py argparse 实证存在 --verify 旗标(build_parser L193-201 + verify() L160)，退出码 0/1/2 文档化；新句 python tools/eval/seal_run.py --verify <run-dir> 与协议 L179 既有写法逐字一致。自洽性：锚定'报告生成时'(judge_package/blind_report 生成期 check_product_seal 硬停) vs'引用时刻仓库/包可能已变化'，与 §12.5 L244(只拿 judgements-blind.json 不带 manifest.json 即不完整证据)闭合，三处措辞无矛盾。",
+    "Q5 措辞铁律：§9 全文+2 新测试 docstring+report.py 改动段违禁词(证明降低幻觉/证明有效/显著)零误用；全仓 3 处 HIT 均合法位置(eval-prereg L18 铁律定义句本身、test_eval_harness L962 既有护栏测试、report.py L323 防御性禁止陈述)，与 002 verdict 维度7 机械扫描基线一致；'预注册条件下的对照证据'完整表述在 §9 约束4(L303)复述。",
+    "Q6 README 计数：python tools/sync_test_count.py --check exit 0，README.md/README.zh-CN.md 均 in sync at 437；本方独立 python -m unittest discover -s tests → Ran 437 tests OK exit 0(93.059s)=435 基线+2 新测试，与 README 标注一致。",
+    "ACCEPTANCE 全复跑：A1 Ran437/OK/exit0；A2 drift 双 12 位 head + 非 drift 无行(交付测试+本方 q3_check 三 regime)；A3 LINT PASS(3 WARN 全过渡态：VERDICT_WITHOUT_REVIEW 本 verdict 落盘即消，2×README UNMAPPED_CLAIM_SURFACE=计数 437 刷新 mtime 已知过渡态与本卡 PASS 后覆盖预期一致)；A4 8 文件⊆允许集；A5 red-zone 零输出；A6 prereg 版本行'1.3(修订版,2026-10-29,冻结于第四轮数据产生之前)'+§9 含 C6/C7/30 任务/带工具。",
+    "COUNCIL 预审核对：采纳1(锚点 commit+seal.json 时间戳锚+约束5 分臂呈现)已落 31eb36f 与文本逐字对应；不采纳1/2(无工具臂 E2 N/A 与 §1 冻结表冲突)正确——C7 未扩 E2 语义、分臂呈现由约束5覆盖；不采纳2/2(report 不自动 seal verify、成功态无正向标记)经本方 Q3 regime-3 实证属实(test_product_seal_is_recorded_and_verified 硬停存在)，已知形态挂第四轮报告卡、本卡不扩 scope，判定合理。",
+    "INDEPENDENCE：本方非卡作者/非实现方/非 council；全程独立复跑+diff 审计，未改作者任何文件；verdicts/XJ-20261029-001.verdict.json 与本 REVIEW 正本为本评审新增。"
+  ],
+  "review_q_rulings": [
+    "Q1 v1.3 冻结合法性: 通过。第四轮零数据(时间线成立)+锚点 commit 3b144b4 可核验+§0.1 四项(标注/影响/递增/保留原文)逐条对照满足，双声明自洽。",
+    "Q2 C6/C7 判定器语义: 通过(零偷改)。判定器/盲化 9 文件+blind.py diff 全空；C7 E2 表述与 §1.3 冻结表逐字级同义复述无扩大解释。",
+    "Q3 A2 引用规则行: 通过。交付 2 测试+本方独立三 regime(等值/异值/clean)坐实双 head 成对、干净零新增、等值 head 为合法场景未误判为缺陷。",
+    "Q4 A1 文档句: 通过。seal_run.py --verify argparse 实证+与协议 L179 逐字一致；'报告生成时 vs 引用时刻'三处措辞自洽闭合。",
+    "Q5 措辞铁律: 通过。§9/测试 docstring/report.py 违禁词零误用，3 处 HIT 全为合法定义/护栏/禁令位置；对照证据表述完整。",
+    "Q6 README 计数: 通过。sync_test_count --check exit 0(in sync at 437)+unittest Ran437 实跑一致。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (known-form, 记录不阻断): seal 校验通过时报告正文无正向'封签校验通过'标记(仅负向'无产物封签(旧包)'行)。council 预审已定性已知形态、挂第四轮报告卡处理。test_product_seal_is_recorded_and_verified 硬停保证'封签未验不能出报告'，无安全缺口。",
+    "ADV-2 (trivial, 记录不阻断): '未变更项'汇总行 E0–E4(en-dash)→E0-E4(连字符)归一。非 §1 冻结表正文(冻结表零 diff)，§0.1(d)'原文保留'指 §1–§7+附录 A–D 原文，未触发。纯排版，零语义影响。"
+  ],
+  "not_verified_disclosed": [
+    "未独立重跑完整 5 轮黑闪/共存类实验(本卡为第四轮前置预注册+报告加固卡，无 live 实验对象)；本卡验收项(单测/lint/diff/§9 时间线/引用规则行/seal 语法/计数)全部本方实跑覆盖。",
+    "C6/C7 的实际测评效果(第四轮 30 任务+带工具执行者)为未来轮次产物，本卡仅预注册(冻结于第四轮数据前)，第四轮数据产生后须按 §9 锚点核验 seal.json 时间戳晚于 3b144b4，本方不预先验证未产生数据。"
+  ],
+  "subcard_note": [
+    "无独立子卡。council 参谋预审记录(采纳1/不采纳2/2)经本方逐条与 diff 核对相符；本方核验的是最终交付(31eb36f，含 council 预审加固 commit)。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261029-001 @ 31eb36f by AgnesCode (fuxiang)，非卡作者/非实现方/非 council。Acceptance A1–A6 全部独立复跑通过(unittest Ran437 OK / lint 0 ERROR / red-zone 9 文件 diff 空 / 触碰⊆允许集 / prereg A6 内容核验)；对抗性六问全部坐实(v1.3 第四轮零数据时间线+锚点 commit 可核验+§0.1 四项 / C6C7 判定器零偷改 / A2 三 regime 含等值 head 合法场景 / A1 seal --verify 语法实证 / 措辞违禁词零误用 / README 437 同步)。0 condition；2 advisory(已知形态+纯排版)。未修改作者任何文件；本 REVIEW + verdict.json 为本评审新增正本。verdict PASS，第四轮前置解锁。"
+}
