@@ -713,6 +713,37 @@ class ReportTests(unittest.TestCase):
         text = report.blind_report(self.package, REPO_ROOT)
         self.assertIn("无产物封签", text)
 
+    def test_drifted_report_body_carries_both_heads_citation_rule(self):
+        """XJ-20261029-001 D2 (027-001 A2): a number printed under
+        --allow-drift must be unquotable as the single truth - the body
+        carries the pairing rule with BOTH the packaged and the current
+        head, so a reader cannot cite one without tripping over the other."""
+        out_dir = self.tmp / "pkg-drift-cite"
+        blind.build_package(self.run_dir, out_dir, seed="dd" * 32, root=REPO_ROOT)
+        state_path = out_dir / "root-state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        packaged_head = str(state["git_head"])[:12]
+        state["git_head"] = "2" * 40
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+
+        text = report.blind_report(out_dir, REPO_ROOT, allow_drift=True)
+        self.assertIn("引用规则", text)
+        self.assertIn(packaged_head, text)
+        # Both slots of the pairing rule must carry a head value. The two
+        # heads CAN legitimately be equal (drift may be triggered by the
+        # dirty flag alone), so we assert the rule line exists and names the
+        # packaged head, not that the two heads differ.
+        self.assertRegex(text, r"引用规则.*?打包时刻 `\w{12}`.*?当前仓库为 `\w{12}`", )
+
+    def test_clean_report_has_no_citation_rule_line(self):
+        """XJ-20261029-001 D4: the pairing rule belongs to drift scenarios
+        only - a clean report must not grow the extra line."""
+        out_dir = self.tmp / "pkg-clean-norule"
+        blind.build_package(self.run_dir, out_dir, seed="ee" * 32, root=REPO_ROOT)
+        text = report.blind_report(out_dir, REPO_ROOT)
+        self.assertNotIn("引用规则", text)
+        self.assertIn("判定快照", text)
+
     def _make_run_dir_with_failures(self, name: str = "run-fail") -> Path:
         """A run dir whose products contain E2 judgements.
 

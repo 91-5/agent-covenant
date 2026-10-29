@@ -162,6 +162,7 @@ def snapshot_lines(package_dir: Path, root: Path, drift: Optional[str]) -> List[
     """
     lines: List[str] = []
     state_path = package_dir / "root-state.json"
+    current_head: Optional[str] = None
     if state_path.is_file():
         state = json.loads(state_path.read_text(encoding="utf-8"))
         head = str(state.get("git_head") or "unknown")[:12]
@@ -171,6 +172,19 @@ def snapshot_lines(package_dir: Path, root: Path, drift: Optional[str]) -> List[
         )
     if drift:
         lines.append(f"- **⚠ 漂移**：{drift}")
+        # XJ-20261029-001 D2 (027-001 A2): when a drifted number was printed
+        # under --allow-drift, the body must carry the pairing rule with BOTH
+        # heads. The recorded head is already in the snapshot line above; the
+        # current head comes from the repository the report is being generated
+        # against, re-read here so this function stays self-contained.
+        import blind as blind_mod  # same local-import style as check_root_state
+
+        current = blind_mod.root_state(root)
+        current_head = str(current.get("git_head") or "unknown")[:12]
+        lines.append(
+            f"- **引用规则**：本文件数字读自打包时刻 `{head}`；当前仓库为 "
+            f"`{current_head}`。引用本数字须同时列出两个 commit，缺一即误引。"
+        )
     if not product_seal_status(package_dir):
         lines.append("- 本包无产物封签（旧包）：产物与判定的交叉校验未启用")
     return lines

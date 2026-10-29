@@ -360,5 +360,12 @@
                         ],
   "XJ-20261028-002":  [
                             "docs/eval-report-v3.md"
+                        ],
+  "XJ-20261029-001":  [
+                            "docs/eval-prereg.md",
+                            "docs/eval-runner-protocol.md",
+                            "tools/eval/report.py",
+                            "tests/test_eval_harness.py",
+                            "artifacts.json"
                         ]
 }
