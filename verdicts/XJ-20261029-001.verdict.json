@@ -13,7 +13,8 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-10-29T15:30:00Z",
+  "ts": "2026-10-29T15:44:00Z",
+  "ts_resign_note": "resign #17 (global mtime-resign count): merge checkout to master (3a10628) refreshed artifact mtimes after AgnesCode signed at 15:30Z; ts bumped to merge-time, zero content change. Same mechanism as resign #15/#16 (XJ-20261028-001/002).",
   "ts_note": "ts 取正本落盘时刻(2026-10-29 23:30 +08 = 15:30Z，非未来；晚于全部独立复跑动作)：全量单测 437 复跑(93s)、red-zone 9 文件 diff 空核验、§9 第四轮零数据时间线核验(无 eval-report-v4/run-log-r4/run-* 目录/无 seal.json)、snapshot_lines 三 regime 独立驱动、seal_run.py --verify argparse 实证、违禁词扫描、sync_test_count --check exit 0，全部实跑于分支 worktree @ 31eb36f。",
   "evidence": [
     "范围纪律(A4/A5/Constraints 1·3·5)：本方独立 git diff --name-only e8e52f9..HEAD = 8 文件(.tasks 卡 + 5 owned + README×2) ⊆ 允许集；red-zone 九文件(judge/extract/stats/run/study_runner/m3_probe/seal_run/gate/lint_cards) diff 零输出；blind.py 单列 diff 亦空——C6/C7 只动样本构成与执行者边界，判定器/盲化仪器零改动；diff 不触 eval-report-v{1,2,3}.md，历史数字零改动。",
