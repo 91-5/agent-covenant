@@ -4,17 +4,18 @@
     "docs/eval-report-v3.md"
   ],
   "commit": "被审对象 docs/eval-report-v3.md @ master 8cc83e9（已合并、已上线，对外入口 README→复现指南→三份报告的第一份证据）；本卡为审计卡 a9ac1d6（review-only，零改动产物）",
-  "verdict": "CONDITIONAL",
+  "verdict": "PASS",
   "blockers": 0,
-  "conditions": [
+  "conditions": [],
+  "conditions_discharged": [
     "C1（§5 失败样本附录，可引性缺陷，非数字错误）：§5 写「B 臂 66 条 E2（逐条见包内 metrics-blind.json）」+「A 臂 9 条 E3」= 75 条。两个问题：(a) 数据源指错——包内 metrics-blind.json 实测结构为 {P码: {claims, unanchored, coverage}}，不含逐条 E 级判定，逐条失败样本要现场 --judge/重判才产出，报告「全量保留失败样本」的承诺指向了一个没有全量样本的文件；(b) 计数不对称——75 是打包时刻(a7f979b)冻结值（A 臂 9 E3、B 臂 66 E2），现场重判（当前 master / 002 合并后 eb667ea）为 78（T21 A 臂 3 条 E4 翻 E2），§5 缺 §4 式双快照注记，照 §5 拿当前包对账会撞 78 误判「漏 3 条」。修复方向：§5 把「逐条见 metrics-blind.json」改为正确的逐条来源（现场重判；metrics-blind.json 仅承载 per-P-code 汇总计数），并补一句「75 为打包时刻值；现场重判因 T21 live-git 断言 E4→E2 变 78，与 §4 注记同因」，与 §4 对称。",
     "C2（§0 结论句，措辞卫生，027-002 卡 A3 遗留正式入审计清单）：§0「门禁条件下『证据不成立的断言占比』显著低于无兜底条件」——本 harness 用的是预注册冻结的最小效应决策规则（|差|≥10pp 且 95% CI 不跨零），不是 p 值；「显著」在统计语境默认指 p<0.05，会被外部读者误读为假设检验显著。修复方向：§0「显著低于」改为「达到预注册最小效应，配对差均值低于无兜底条件」，与 §7「检出配对差异」措辞对齐。"
   ],
   "independent": true,
   "verifier": "agnes-code",
   "acknowledged_by": "sir（合并轮 gate 以 --allow-conditional 验收；C1/C2 为表述级修复，按本卡纪律另开修复卡销账）",
-  "ts": "2026-10-28T14:20:00Z",
-  "ts_note": "ts 为评审独立复跑完成时刻（解盲 pkg-34a935f3、逐条 E 级现场重判计数、metrics-blind.json 结构核对、措辞扫描、v1/v2/prereg §8/eval-reproduce §B 交叉比对，均实测于 8cc83e9），取真实时刻 14:20Z（非未来，早于 300s skew 容差上界）。本卡为审计卡：CONDITIONAL，修复 C1/C2 需另开修复卡（026-003 卡先例），本卡只出结论不改报告。合并 gate 按派发单：登记 verdict + 归档本卡；缺陷修复另卡。",
+  "ts": "2026-10-29T11:13:28Z",
+  "ts_note": "ts 为重签时刻（2026-10-29 11:13 UTC）：因 XJ-20261028-002 修复销账，C1/C2 两条 condition 由 002 卡的 D1/D2 落地，经 AgnesCode 独立复核确认后，本 verdict 由 CONDITIONAL 重签为 PASS；conditions 清空，原文逐字移入 conditions_discharged；evidence / review_q_rulings / advisory_findings 原文逐字未动。",
   "evidence": [
     "维度1 数字一致性·解盲复跑（审计必做的数字复核记录）：对旧包 pkg-34a935f3 + custody sealed-key-r3.json 解盲 -> M1 = −48.3% [−65.8%, −30.0%]、M2 = 0.0% [0.0%,0.0%]、配对 20、排除 M1 0/M2 0、T21=+0.333。解盲头明示「本包无产物封签（旧包）：交叉校验未启用」，回退现场重判（027-001 D2 设计：旧包无 root-state.json 不触发漂移硬停）。报告 §1 的 −50.0% [−67.5%, −32.5%] 是打包时刻 a7f979b 冻结值，§4 C1 注记把它与 −48.3% 并置双快照——三方自洽（§1 打包时刻值 / §4 双快照 / 我独立解盲现场值）。",
     "维度1 分臂数字复核（独立现场重判）：B 臂 126 断言 E2=66/E3=0/E4=60 -> M1=52.4%（与 §2 逐字一致，B 臂判定不依赖 git 状态，跨时刻稳定）；A 臂 126 断言现场 E2=3/E3=9/E4=114 -> M1=9.5%（= §4 注记的漂移值），而 §2 表列的 A 臂 E2=0/E3=9/E4=117 -> 7.1% 是打包时刻值。差的 3 条 = T21 A 臂 live-git 断言（E4 打包时->E2 现场），与 §4 注记逐字对应。核心数字无誊写错误，差异全部可归因于 §4 已记载的 root 状态漂移。",
@@ -39,6 +40,7 @@
   ],
   "notes": [
     "审计卡（review-only，024-003 先例）：AgnesCode（浮香）独立复算于 worktree @ 8cc83e9 + 主仓解盲/现场重判探针，未修改任何被测产物（约束 1/2 成立），结论只落本 verdict 与 .tasks/REVIEW-XJ-20261028-001.md。",
-    "CONDITIONAL, blockers=0, conditions=2（C1 §5 数据源指错 + 计数不对称无注记；C2 §0「显著」措辞）——两条均为表述级修复，不改核心数字/结论方向。按本卡纪律与 026-003 先例：修复另开卡（建议标题「第三轮报告 §5 数据源指引 + §0 措辞修正」），本卡登记 verdict + 归档。合并 gate 按派发单：CONDITIONAL 则登记 verdict + 归档本卡 + 按缺陷清单另开修复卡。"
+    "CONDITIONAL, blockers=0, conditions=2（C1 §5 数据源指错 + 计数不对称无注记；C2 §0「显著」措辞）——两条均为表述级修复，不改核心数字/结论方向。按本卡纪律与 026-003 先例：修复另开卡（建议标题「第三轮报告 §5 数据源指引 + §0 措辞修正」），本卡登记 verdict + 归档。合并 gate 按派发单：CONDITIONAL 则登记 verdict + 归档本卡 + 按缺陷清单另开修复卡。",
+    "重签记录（2026-10-29）：001 verdict 由 CONDITIONAL 重签为 PASS。依据 = XJ-20261028-002 修复（D1：§5 数据源指引修正 + 75/78 计数注记；D2：§0 措辞清零）+ AgnesCode 复核确认（002 verdict evidence 3/4/5/6/7：C1 §5 指引可执行 + 75/78 双快照注记；C2 §0 措辞归零）。合并 gate 现为 PASS，无需 --allow-conditional，解除 CONDITIONAL_NOT_ALLOWED 阻塞。"
   ]
 }
