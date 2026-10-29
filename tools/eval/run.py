@@ -26,6 +26,15 @@ Modes (composable flags, stdlib argparse only):
     python tools/eval/run.py --unblind <package-dir> --key <key.json>
         Stage-2 paired analysis. Sir-only; wrong key is a hard stop.
 
+    python tools/eval/run.py --exec "<command>" --runlog <path> [--condition A|B]
+        The execution wrapper (XJ-20261030-001 D1): runs one command, records
+        it (command / cwd / exit code / stdout+stderr summaries / UTC time)
+        into a run-log v2 file -- created or appended, never clobbered. The
+        frozen denylist is consulted first (imported from judge, never
+        copied): a refused command is recorded, not executed, and exits
+        nonzero. Requires --runlog: an execution without a trace is exactly
+        what v1.3 constraint 1 forbids.
+
 This script runs from a checkout (like the repo's other tools): it puts its
 own directory on sys.path so plain imports work under
 ``python tools/eval/run.py`` as well as under unittest discovery.
@@ -45,7 +54,9 @@ import blind  # noqa: E402  (path shim above)
 import controls  # noqa: E402
 import judge  # noqa: E402
 import report  # noqa: E402
+import runlog  # noqa: E402
 import stats  # noqa: E402
+import tasks  # noqa: E402
 from schema import (  # noqa: E402
     LAYER_COUNTS,
     TOTAL_TASKS,
@@ -94,6 +105,19 @@ def build_parser() -> argparse.ArgumentParser:
                              "the drift is printed and must be cited alongside the numbers")
     parser.add_argument("--unblind", nargs=2, metavar=("PACKAGE_DIR", "KEY"),
                         help="sir-only: paired analysis from package + sealed key")
+    parser.add_argument("--exec", metavar="COMMAND", dest="exec_command",
+                        help="run one command through the recording execution "
+                             "wrapper (v1.3 constraint 1); requires --runlog")
+    parser.add_argument("--runlog", metavar="PATH", default=None,
+                        help="run-log v2 file for --exec (JSON, created or appended)")
+    parser.add_argument("--condition", default="", metavar="A|B",
+                        help="arm tag recorded on --exec records (default: empty)")
+    parser.add_argument("--task-id", default="", metavar="T##",
+                        help="task tag recorded on --exec records")
+    parser.add_argument("--key", default="", metavar="KEY",
+                        help="run entry key recorded on --exec records")
+    parser.add_argument("--exec-cwd", metavar="DIR", default=None,
+                        help="working directory for --exec (default: current dir)")
     parser.add_argument("--root", metavar="DIR", default=str(REPO_ROOT),
                         help="workspace root for ref-form paths and command cwd")
     parser.add_argument("--timeout", type=int, default=judge.DEFAULT_TIMEOUT_SECONDS,
@@ -153,12 +177,46 @@ def cmd_dry_run(root: Path, timeout: int) -> int:
 
 
 def cmd_tasks() -> int:
-    tasks, task_errors = load_task_dir(TASK_DIR)
-    for task in sorted(tasks, key=lambda item: item.id):
-        print(f"{task.id} [{task.layer}] {task.title}")
-    for error in task_errors:
+    result = tasks.census(TASK_DIR)
+    errors = tasks.census_errors(result)
+    for line in tasks.format_census(result):
+        print(line)
+    total = result["total"]
+    verdict = "ok" if not errors else "FAIL"
+    print(f"census assertion: {total} == {TOTAL_TASKS}: {verdict}")
+    for error in errors:
         print(f"[ERROR] {error}")
-    return EXIT_OK if not task_errors else EXIT_FAIL
+    return EXIT_OK if not errors else EXIT_FAIL
+
+
+def cmd_exec(command: str, runlog_path: Path, condition: str, task_id: str,
+             key: str, cwd: Path, timeout: int) -> int:
+    """The recording execution wrapper (XJ-20261030-001 D1). One command in,
+    one trace record out; the log accumulates across invocations. Exit code
+    is the command's own; a refusal or a failed spawn exits nonzero -- the
+    record, not the console, is the authoritative trace."""
+    log = runlog.RunLog.load(runlog_path, workspace=REPO_ROOT)
+    context = {"condition": condition, "task_id": task_id, "key": key}
+    matched = judge.command_refused(command)
+    if matched is not None:
+        log.record(command, cwd=cwd, executed=False, refused=matched, **context)
+        log.save(runlog_path)
+        print(f"[REFUSED] command matches frozen denylist ({matched!r}); "
+              f"recorded to {runlog_path}, not executed", file=sys.stderr)
+        return EXIT_FAIL
+    entry, full_out, full_err = runlog.execute(command, cwd=cwd,
+                                               timeout=timeout, log=log,
+                                               **context)
+    log.save(runlog_path)
+    if full_out:
+        print(full_out, end="" if full_out.endswith("\n") else "\n")
+    if full_err:
+        print(full_err, end="" if full_err.endswith("\n") else "\n",
+              file=sys.stderr)
+    print(f"[runlog] +1 record -> {runlog_path} "
+          f"(total {len(log.records)}, exit={entry['exit_code']})",
+          file=sys.stderr)
+    return entry["exit_code"] if entry["exit_code"] is not None else EXIT_FAIL
 
 
 def cmd_judge(path: Path, root: Path, timeout: int) -> int:
@@ -234,7 +292,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     timeout = args.timeout
 
     any_mode = (args.selftest or args.dry_run or args.judge or args.tasks
-                or args.package or args.report or args.unblind)
+                or args.package or args.report or args.unblind
+                or args.exec_command)
     if not any_mode:
         parser.print_help()
         return EXIT_USAGE
@@ -245,6 +304,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         return cmd_dry_run(root, timeout)
     if args.tasks:
         return cmd_tasks()
+    if args.exec_command:
+        if not args.runlog:
+            print("[ERROR] --exec requires --runlog PATH: an execution without "
+                  "a trace is what v1.3 constraint 1 forbids", file=sys.stderr)
+            return EXIT_USAGE
+        cwd = Path(args.exec_cwd).resolve() if args.exec_cwd else Path.cwd()
+        return cmd_exec(args.exec_command, Path(args.runlog), args.condition,
+                        args.task_id, args.key, cwd, timeout)
     if args.judge:
         return cmd_judge(Path(args.judge), root, timeout)
     if args.package:

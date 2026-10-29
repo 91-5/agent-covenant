@@ -44,7 +44,9 @@ import extract  # noqa: E402
 import judge  # noqa: E402
 import report  # noqa: E402
 import run as eval_run  # noqa: E402
+import runlog  # noqa: E402
 import stats  # noqa: E402
+import tasks  # noqa: E402
 from schema import EvidenceLine, validate_task, load_task_dir  # noqa: E402
 
 PY = sys.executable
@@ -1136,6 +1138,137 @@ class CliTests(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()) as captured:
                 self.assertEqual(eval_run.main(["--report", str(package)]), eval_run.EXIT_OK)
             self.assertIn("P001", captured.getvalue())
+
+
+# ---------------------------------------------------------------------------
+# run-log v2 recorder + 30-task census (XJ-20261030-001 D1/D2/D5)
+# ---------------------------------------------------------------------------
+
+
+class RunLogV2Tests(unittest.TestCase):
+    def test_record_carries_v2_fields_over_complete_v1_fields(self):
+        rec = runlog.record("python -c \"print(1)\"", cwd="D:/run/workspace",
+                            exit_code=0, stdout="1\n", stderr="")
+        # v2 fields (D1: command / cwd / exit code / summaries / timestamp)
+        for field in ("command", "cwd", "exit_code", "stdout_summary",
+                      "stderr_summary", "utc"):
+            self.assertIn(field, rec)
+        # every v1 field kept verbatim: run-log-r3.json readers keep working
+        for field in runlog.V1_RECORD_FIELDS:
+            self.assertIn(field, rec)
+        self.assertTrue(rec["executed"])
+        json.dumps(rec, ensure_ascii=False)  # must be JSON-serializable
+
+    def test_record_timestamp_is_utc_iso8601(self):
+        rec = runlog.record("cmd", cwd=".", exit_code=0)
+        parsed = datetime.fromisoformat(rec["utc"])
+        self.assertEqual(parsed.utcoffset(), timezone.utc.utcoffset(None))
+
+    def test_summaries_truncated_to_fixed_length(self):
+        rec = runlog.record("cmd", cwd=".", exit_code=0,
+                            stdout="x" * 1000, stderr=None)
+        self.assertEqual(len(rec["stdout_summary"]), runlog.SUMMARY_MAX_CHARS)
+        self.assertTrue(rec["stdout_truncated"])
+        self.assertIsNone(rec["stderr_summary"])  # a missing observation stays missing
+        self.assertFalse(rec["stderr_truncated"])
+
+    def test_execute_records_real_process_and_appends_across_saves(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            log_path = tmp_path / "run-log-exec.json"
+            log = runlog.RunLog(workspace=tmp_path)
+            entry = log.execute(_cmd("print(7)"), cwd=tmp_path, timeout=30,
+                                condition="A", task_id="T11")
+            self.assertEqual(entry["exit_code"], 0)
+            self.assertIn("7", entry["stdout_summary"])
+            self.assertEqual(entry["cwd"], str(tmp_path))
+            log.save(log_path)
+            payload = json.loads(log_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["runlog_version"], runlog.FORMAT_VERSION)
+            self.assertEqual(payload["runlog_version"], 2)
+            self.assertEqual(len(payload["records"]), 1)
+            # append-resume: a second wrapper invocation accumulates, never clobbers
+            resumed = runlog.RunLog.load(log_path, workspace=tmp_path)
+            resumed.execute(_cmd("print(8)"), cwd=tmp_path, timeout=30)
+            resumed.save(log_path)
+            payload = json.loads(log_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(payload["records"]), 2)
+
+    def test_timeout_recorded_not_raised(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = runlog.RunLog(workspace=Path(tmp))
+            entry = log.execute(_cmd("import time; time.sleep(5)"),
+                                cwd=Path(tmp), timeout=1)
+            self.assertIsNone(entry["exit_code"])
+            self.assertFalse(entry["executed"])
+            self.assertIn("timeout", entry["error"])
+
+    def test_b_arm_shape_zero_records(self):
+        log = runlog.RunLog(workspace=Path("."))
+        log.record("cmd", cwd=".", exit_code=0, condition="A")
+        self.assertEqual(len(log.records_for("A")), 1)
+        self.assertEqual(log.records_for("B"), [])  # B arm: zero execution records
+
+    def test_load_refuses_to_clobber_unparseable_log(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "run-log-exec.json"
+            log_path.write_text("not json at all", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                runlog.RunLog.load(log_path)
+
+
+class ExecWrapperCliTests(unittest.TestCase):
+    def test_exec_records_and_passes_exit_through(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log_path = Path(tmp) / "run-log-exec.json"
+            with contextlib.redirect_stdout(io.StringIO()) as out, \
+                    contextlib.redirect_stderr(io.StringIO()):
+                code = eval_run.main(["--exec", _cmd("print(9)"),
+                                      "--runlog", str(log_path),
+                                      "--condition", "A", "--task-id", "T11"])
+            self.assertEqual(code, 0, out.getvalue())
+            payload = json.loads(log_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["runlog_version"], 2)
+            self.assertEqual(len(payload["records"]), 1)
+            record = payload["records"][0]
+            self.assertEqual(record["exit_code"], 0)
+            self.assertEqual(record["condition"], "A")
+            self.assertEqual(record["task_id"], "T11")
+
+    def test_exec_without_runlog_is_usage_error(self):
+        with contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
+            code = eval_run.main(["--exec", "echo hi"])
+        self.assertEqual(code, eval_run.EXIT_USAGE)
+
+
+class TasksCensusTests(unittest.TestCase):
+    def test_census_reports_thirty_across_three_layers(self):
+        result = tasks.census(EVAL_DIR / "tasks")
+        self.assertEqual(result["total"], 30)
+        self.assertEqual(result["layers"], {"fact": 10, "code": 10, "process": 10})
+        self.assertEqual(result["tasks"][0]["id"], "T01")
+        self.assertEqual(result["tasks"][-1]["id"], "T30")
+        self.assertEqual(tasks.census_errors(result), [])
+
+    def test_census_assertion_fires_when_total_drifts(self):
+        result = {"total": 20, "layers": {"fact": 10, "code": 0, "process": 10},
+                  "tasks": [], "errors": []}
+        errors = tasks.census_errors(result)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("30", errors[0])
+
+    def test_cli_tasks_output_carries_census_assertion(self):
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            code = eval_run.main(["--tasks"])
+        output = out.getvalue()
+        self.assertEqual(code, eval_run.EXIT_OK, output)
+        self.assertIn("T30 [process]", output)  # the original listing shape, kept
+        self.assertIn("tasks total: 30 (frozen C6 census: 30)", output)
+        self.assertIn("layer fact: 10/10", output)
+        self.assertIn("layer code: 10/10", output)
+        self.assertIn("layer process: 10/10", output)
+        self.assertIn("census assertion: 30 == 30: ok", output)
 
 
 if __name__ == "__main__":

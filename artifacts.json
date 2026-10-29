@@ -369,5 +369,15 @@
                             "README.md",
                             "README.zh-CN.md",
                             "artifacts.json"
+                        ],
+  "XJ-20261030-001":  [
+                            "tools/eval/runlog.py",
+                            "tools/eval/run.py",
+                            "tools/eval/tasks.py",
+                            "docs/eval-runner-protocol.md",
+                            "tests/test_eval_harness.py",
+                            "README.md",
+                            "README.zh-CN.md",
+                            "artifacts.json"
                         ]
 }
