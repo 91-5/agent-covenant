@@ -11,7 +11,8 @@
   "independent": true,
   "verifier": "agnes-code",
   "acknowledged_by": "sir（本卡 PASS + 001 重签 PASS 后，gate 按 001→002 顺序合并并 push；第 15/16 次 mtime resign 由出卡方按 PROTOCOL 记录）",
-  "ts": "2026-10-29T11:13:28Z",
+  "ts": "2026-10-29T12:13:15Z",
+  "ts_resign_note": "2026-10-29T12:13:15Z resign（先例家族 …/027-003，第十六次，merge checkout）：成因为 002→master 的合并 checkout 刷新 docs/eval-report-v3.md mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 0 conditions）。",
   "ts_note": "ts 为本评审独立复跑完成时刻（2026-10-29 11:13 UTC）：unittest 435 复跑（143.9s）/ lint 0 ERROR / 措辞扫描 / git diff master..HEAD hunk 审计（仅 2 hunk）/ pkg-34a935f3 --report 现场重判独立复现 78 条与逐条明细取法 / 001 verdict 重签，全部实测于分支 worktree @ 039c5b5；非未来时刻（早于 300s skew 容差上界）。",
   "evidence": [
     "范围纪律（Constraints 2 机械核对）：git diff master..HEAD --stat 全量 = 仅 3 文件（.tasks/XJ-20261028-002.md +64 / artifacts.json +3 / docs/eval-report-v3.md +6-3），tools/、tests/、gate.py、lint_cards.py 零改动，与交付自述「只改 docs/eval-report-v3.md + artifacts.json」逐字吻合。",

@@ -14,7 +14,8 @@
   "independent": true,
   "verifier": "agnes-code",
   "acknowledged_by": "sir（合并轮 gate 以 --allow-conditional 验收；C1/C2 为表述级修复，按本卡纪律另开修复卡销账）",
-  "ts": "2026-10-29T11:13:28Z",
+  "ts": "2026-10-29T12:13:15Z",
+  "ts_resign_note": "2026-10-29T12:13:15Z resign（先例家族 …/027-003，第十五次，merge checkout）：成因为 002→master 的合并 checkout 刷新 docs/eval-report-v3.md mtime；签字后无内容改动。verdict 值不变（PASS / 0 blockers / 0 conditions / 2 discharged）。",
   "ts_note": "ts 为重签时刻（2026-10-29 11:13 UTC）：因 XJ-20261028-002 修复销账，C1/C2 两条 condition 由 002 卡的 D1/D2 落地，经 AgnesCode 独立复核确认后，本 verdict 由 CONDITIONAL 重签为 PASS；conditions 清空，原文逐字移入 conditions_discharged；evidence / review_q_rulings / advisory_findings 原文逐字未动。",
   "evidence": [
     "维度1 数字一致性·解盲复跑（审计必做的数字复核记录）：对旧包 pkg-34a935f3 + custody sealed-key-r3.json 解盲 -> M1 = −48.3% [−65.8%, −30.0%]、M2 = 0.0% [0.0%,0.0%]、配对 20、排除 M1 0/M2 0、T21=+0.333。解盲头明示「本包无产物封签（旧包）：交叉校验未启用」，回退现场重判（027-001 D2 设计：旧包无 root-state.json 不触发漂移硬停）。报告 §1 的 −50.0% [−67.5%, −32.5%] 是打包时刻 a7f979b 冻结值，§4 C1 注记把它与 −48.3% 并置双快照——三方自洽（§1 打包时刻值 / §4 双快照 / 我独立解盲现场值）。",
