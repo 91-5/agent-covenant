@@ -366,6 +366,8 @@
                             "docs/eval-runner-protocol.md",
                             "tools/eval/report.py",
                             "tests/test_eval_harness.py",
+                            "README.md",
+                            "README.zh-CN.md",
                             "artifacts.json"
                         ]
 }
