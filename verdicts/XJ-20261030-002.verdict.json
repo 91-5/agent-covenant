@@ -1,0 +1,61 @@
+{
+  "id": "XJ-20261030-002",
+  "artifact": [
+    "docs/executor-fingerprint-minimax.md",
+    "docs/dryrun-b-arm-tool-deny.md",
+    "docs/dryrun-runlog-coverage.md",
+    "docs/dryrun-seal-capture.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261030-002-minimax-executor-onboarding @ 98400a5（基线 master ced90ed，未 push；改动 6 文件：.tasks/XJ-20261030-002.md 卡(IN_REVIEW + dry-run 结论节) + docs/executor-fingerprint-minimax.md(D1 指纹,全字段复跑命令+退出码,4 不可锁项声明) + docs/dryrun-b-arm-tool-deny.md(D2 HARD_DENY_OK,权限引擎实测+5 残留缺口) + docs/dryrun-runlog-coverage.md(D3 覆盖内 9/10 + 6 未覆盖/1 部分/1 失真,零记录≠未执行) + docs/dryrun-seal-capture.md(D4 run-dir 内全捕获+7 隐藏面,H6 整体替换干净通过) + artifacts.json(XJ-20261030-002 登记 5 文件);红区九文件(本卡约束 1 口径: judge/seal_run/report/schema/prereg/gate/lint_cards/tasks/runlog) master..HEAD diff 零输出; dryrun/ 2.1MB 未跟踪未提交不在触碰面(交 Jarvis 处置)",
+  "verdict": "CONDITIONAL",
+  "acknowledged_by": "jarvis@agent-covenant",
+  "blockers": 0,
+  "conditions": [
+    "C1 协议 §13.2 增补「执行面封堵」条文：两臂一切命令执行只能经 run.py --exec；agent 自带 Bash/Write/Edit/MCP 执行面被权限层 deny（B 臂全量含只读面，A 臂经 wrapper 代执行）；责任方 sir/adjudicator，按 prereg §9 变更记录口径。",
+    "C2 B 臂权限规则预置：整工具 deny（运行时精确工具名；MCP 用服务器级 mcp__<server>）；只读面（read/glob/grep）取舍由 C1 一并裁定——本方建议 deny 到只读面（理由见 review_q_rulings），最终裁定挂 adjudicator（sir）；预置后开跑前复跑 D2 compact_probe 取预置生效证据；责任方 执行卡。",
+    "C3 轮次前环境固定：config.yaml 设 promptConfig.autoUpdate:false（实测当前未设→默认 true，更新器每小时静默检查）；轮次开始与结束各采集 F2/F3/F4/F5 并比对；责任方 执行卡（指纹文档 §4 P1/P3）。",
+    "C4 取证补强（机制闭合轮，备选 A 形态）：正式 run 前用 1-2 个代码层任务做零数据轮——A 臂经 wrapper 执行并核对记录、B 臂 deny 现场取 permission.enforcement 拒绝记录、产物落 products/<task-id>/ 并密封校验；闭合 C1-C4 后另开正式执行卡；责任方 执行卡/sir。"
+  ],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-10-30T23:25:00+08:00",
+  "ts_fix_note": "original ts 2026-10-30T23:40:00+08:00 was future-dated vs gate clock (15 min skew); bumped back to real signing time, zero content change",
+  "ts_note": "ts 取正本落盘时刻(+08,非未来,晚于全部独立复跑动作):449 单测复跑(109.6s)、红区双口径 diff(卡面字面 2b39767..HEAD 与本方实际基线 master..HEAD 均零输出)、A3 census 30==30、D2 compact_probe 独立复跑(真实权限引擎 deny 复现)、D1 指纹全字段独立复采(asar 解析器/exe 版本/state.json/更新器日志 22:37 仍在检查/config.yaml autoUpdate 键缺失)、D3 C3 cwd 失真独立复现、D4 三处 verify(custody/run2/substituted H6)、坑 12 四文件 ?{3,} 扫描 0,全部实跑于分支 worktree @ 98400a5。",
+  "evidence": [
+    "范围纪律(A5/A6)：本方独立 git diff --name-only master..HEAD = 6 文件(.tasks 卡 + 4 新 docs + artifacts.json) ⊆ 卡面 Owned files;本卡约束 1 红区九文件(judge.py/seal_run.py/report.py/schema.py/docs/eval-prereg.md/tools/gate.py/tools/lint_cards.py/tools/eval/tasks.py/tools/eval/runlog.py) master..HEAD diff 零输出;卡面字面 2b39767..HEAD 口径红区亦零输出(该锚带出的 runlog.py/tasks.py 属 001 卡已 PASS 存量,非本卡触碰),双口径均核。",
+    "A1/A3：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 OK exit 0(109.6s,本卡未新增测试,套件数与 README 449 一致,sync_test_count --check 复核 exit 0 in sync at 449);run.py --tasks -> census assertion: 30 == 30: ok + 三分层 10/10/10,30 任务未污染。",
+    "A7：python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict -> 0 errors, 1 warning(VERDICT_WITHOUT_REVIEW,本 verdict 落盘即消的瞬态,与派发单预告一致);非 strict 0 ERROR。",
+    "Q1 D2 可信性（独立坐实）：本方独立复跑 node dryrun/d2/compact_probe.mjs -> bash/write/web_fetch/task 四工具整工具 deny 全部 deny,reason=rule:<tool>,exit 0,与报告 §3.2 输出一致;实测对象为随包真实权限引擎(@mavis/permission/dist/engine.js,从本机 app.asar 解包原样取出,dryrun/asar/node_modules/ 内可核);机制面核对:deny 在归约入口生效(permission-core.js 整工具规则先于 bypass 快路径,引擎注释 'Step 1 - Reject check (hard block, bypass-immune)'),拒绝落 permission.enforcement 结构化日志(session/turn/tool_call 字段可回溯)。判定:引擎层实测非提示层推断,限定三条(未走真实模型回合 §6.1/工具名精确 §6.2/子会话继承代码面阅读 §6.4)随结论引用,形态正确。",
+    "Q2 D3 绕过面诚实性（独立坐实）：B1-B10 逐项标注(6 未覆盖 + B5 部分覆盖 + B7 失真 + B9 不适用 + B10 已被记录);本方独立复现 C3:命令内部 cd 到 dryrun\\d3 落文件,run-log 记录 cwd 仍为 wrapper 启动目录 dryrun\\d3\\run,失真属实;核心读数『run-log 零记录 ≠ 未执行』直接压掉 run-log 项 OK 并推导到 NO-GO,未覆盖项未藏脚注——清单诚实。",
+    "Q3 D1 指纹可复现性（独立坐实）：本方独立复采全字段:exe 版本 3.1.7.195(asar 外壳)、asar 内 package.json 3.1.7、shellFingerprint 11c2328d0e7ec036f12fd025a1e06d75f987c164a37ae4a9b76ebcc85b737f72(asar 单行解析器原样复跑)、state.json enabled:true/channel:prod/lastUpdateTime:0、local-runtime-v2 0.1.0 private、config.yaml defaultModel/permissionMode: bypassPermissions/baseURL 逐字一致;F13 自动更新:更新器日志实测每小时静默检查(本方复采 22:37 末次检查,网络错误为环境抖动不改结论)+ promptConfig.autoUpdate 键缺失(复采确认)-> 默认 true,可锁开关 resolvePromptConfig 代码面(显式布尔优先)原样复取;4 项不可锁(temperature 数值/catalog 布尔能力标志 L22 L40 复证、top_p 全配置包 0 命中、每请求 max_tokens 仅天花板、服务端快照无客户端观测面)逐条带证据未推测;自我报告风险被卡面约束 6(可复跑命令+退出码)压住,本方全程逐条复采未采信自述。",
+    "Q4 GO/NO-GO 未倾斜（独立坐实）：三项无一被粉饰成 OK——D2 取最乐观 HARD_DENY_OK 但挂 5 条残留缺口;D3 明记『不满足』+ 6 未覆盖/1 部分/1 失真;D1 明记自动更新开启与第四轮要求相反;NO-GO 由卡面规则『任一非 OK -> NO-GO』驱动;转 GO 四条件(C1-C4)与备选方案 A/B/C 均写明责任方,未代裁协议条文、未代设 B 臂权限,边界守住;卡内 §5 自查与实现方两处未决(A5 锚点/dryrun 清理)均如实登记未自行改写条文。",
+    "D4 密封捕获（独立坐实）：本方独立三处 verify——custody 副本 VERIFY: OK(5 files)、run2(junction+run-log 入清单形态) VERIFY: OK(3 files)、substituted(整体替换) VERIFY: OK(2 files,干净通过=工具自述已知洞 H6 复现);MODIFIED/ADDED/MISSING 三检出与 7 隐藏面清单(尤其 H1 run-dir 外产物无封签、H6 封签不绑来源须 custody 规程)与 seal_run.py 文件头 tamper-evident-not-tamper-proof 自述一致,seal_run.py 本身零改动(红区)。",
+    "协议级张力(Jarvis 补充视角,独立判断)：C7(a)『两臂同执行者同工具集』vs B 臂零执行=机制张力非概念矛盾——C7(a) 管身份面(同执行者/同工具清单/同配置),B 臂零执行由权限门控这一实验干预实现(同第三轮 A 真执行/B 零执行干预,执行形态换为带工具 agent),差异收敛为门控变量可解释;只读面取舍为实质设计决策,本方建议 B 臂 deny 到只读面(read/glob/grep 一并 deny)以复现第三轮『执行者无任何工具』语义、保 B 臂零记录佐证形态与第三轮对照锚,放行只读面则 B 臂变『弱工具臂』且第四轮分臂数失去第三轮对照锚;最终裁定挂 adjudicator(sir),本方不代裁。",
+    "坑12/术语纪律：4 份新 docs ?{3,} 命中 0、raw ? = 0(独立扫描);JSON 机读本文件 UTF-8 写盘,落盘后自查 ?{3,}=0;全卡+报告违禁词(显著/证明降低幻觉/证明有效)零误用,效果类表述均『实测/可复现/机制边界』口径,『预注册条件下的对照证据』纪律未破。",
+    "INDEPENDENCE：本方非卡作者/非实现方 minimax code/非 dp 参谋;全程独立复跑+复采+diff 审计,未改实现方任何文件,dryrun/ 保持原样;review/AGNES 正本与本 verdict.json 为本评审新增正本;artifacts.json 5 文件登记由实现方完成(登记面=触碰面,含 artifacts.json 自身,卡自身按 EVO-20261010-001 约定不入登记面),本方未改。"
+  ],
+  "review_q_rulings": [
+    "Q1 D2 可信性: 坐实。引擎层实测(本方独立复跑 compact_probe 复现 4 工具 deny + bypass 免疫 + permission.enforcement 结构化记录),非提示层推断;三条限定(未实测真实模型回合/工具名精确/子会话继承)已随结论引用,不构成粉饰。",
+    "Q2 D3 绕过面: 坐实(诚实)。10 项逐项标注覆盖/未覆盖/失真/部分覆盖;C3 cwd 失真本方独立复现;核心读数反噬自身 OK 并推导 NO-GO。",
+    "Q3 D1 指纹: 坐实(可复现)。全字段本方独立复采逐字一致;自动更新为『开启』系日志+代码面双证据实测,非假设;4 不可锁项带证据未填充;自我报告形态被约束 6 复跑命令压住。",
+    "Q4 未粉饰: 坐实。NO-GO 规则驱动;D2 最乐观结论挂 5 缺口、D3 明记不满足、D1 明记开启;备选方案与责任方齐全,未代裁。"
+  ],
+  "adjudicator_pending": [
+    "C2 只读面取舍（read/glob/grep 是否并入 B 臂 deny）: 本方建议 DENY 到只读面(第三轮 B 臂『执行者无任何工具』语义 + B 臂零记录佐证形态 + 第四轮分臂数与第三轮对照锚),但若 sir 裁定放行只读面,须同步在报告模板登记『B 臂 = 只读工具臂』形态声明;裁定权在 adjudicator(sir),本方不代裁。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (口径留档, 记录不阻断): 卡面 A5 字面锚点 2b39767 为 001 卡沿用的陈旧旧 master 位置(001 已 CLOSED 归档入 master 3b7abcc,其 9 文件已入 master)。本方裁定: 本卡 A5/A6 以实际基线 master ced90ed 为口径(红区零命中+触碰 6 文件⊆Owned files 均成立); 2b39767 双口径红区亦零输出,本裁定不改任何实测结论。按 append-only 纪律不改卡面字面,留档于本 verdict 与 REVIEW; 建议后续开卡默认写 master..HEAD 或注明『基线=开卡时 master』。",
+    "ADV-2 (housekeeping, 记录不阻断): dryrun/ 2.1MB(asar 解包+探针输出)未跟踪未提交不在触碰面; 本方裁定清理归 Jarvis 合并链路, 选项: (a) 合并时整体删除(复跑配方已在各报告 §7 附录留存, 实验目录无留存必要性) 或 (b) 移仓外+处置日志一行; 不建议提交入库(体积+机器路径); 不阻断本卡 verdict。"
+  ],
+  "not_verified_disclosed": [
+    "未走真实模型回合取证(D2 §6.1 缺口, 已挂 C4): B 臂 deny 的现场证据(模型发起调用被拒)须在机制闭合轮/正式 run 前取得; 本方引擎层证据 + 结构化记录面为可得的最高层证据, 现场层留待 C4。",
+    "子会话继承(D2 §6.4)为代码面阅读(rules.js:86-108 inheritSessionRestrictions), 未做端到端实测; 继承不绕过父级 deny 的结论在正式 run 前须实测确认。",
+    "D1 指纹为 2026-10-30 时点观测; 自动更新开启态下热更新可替换渲染层(F4 shell 指纹与 package.json 版本之外的面), 轮次期指纹固定依赖 C3(autoUpdate:false + 开/关轮 F2-F5 比对), 本方不预先验证未发生的轮次数据。",
+    "备选 B(B 臂裸 API 对照)与 C(推迟至 §13.2 修订后发令)为 sir/adjudicator 选择项, 本方未代择; 三备选与 C1-C4 的适用关系见卡内 dry-run 结论 §4。"
+  ],
+  "subcard_note": [
+    "无独立子卡。实现方(minimax code)自报两处未决(A5 锚点/dryrun 清理)均登记待裁未越权, 本方逐条裁定见 advisory_findings; 对抗性四问 + Jarvis 补充两视角(C7(a) 张力/C2 只读面)经本方独立复跑与复采坐实。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261030-002 @ 98400a5 by AgnesCode (fuxiang), 非卡作者/非实现方 minimax code/非 dp 参谋。Acceptance A1-A7 全部独立复跑通过(unittest Ran449 OK / census 30==30 / 红区双口径 diff 空 / 触碰 6 文件⊆Owned / lint 0 ERROR(1 WARN 瞬态) / 指纹含版本号+采集日期+4 不可锁声明 / 坑 12 四文件 ?{3,}=0)。对抗性四问全部坐实(D2 引擎层实测本方独立复跑复现 / D3 绕过面逐项标注+C3 失真独立复现 / D1 全字段独立复采一致含自动更新开启实测 / NO-GO 未粉饰属实)。verdict CONDITIONAL(NO-GO 条件性): 0 blockers, 4 conditions(C1 协议 §13.2 执行面封堵 / C2 B 臂权限预置+只读面取舍 / C3 关自动更新 / C4 机制闭合轮取证), 1 项挂 adjudicator(sir)(C2 只读面, 本方建议 deny 到只读面), 2 advisory(A5 锚点口径裁定 / dryrun 清理归 Jarvis)。不建议当前开第四轮执行卡; C1-C4 闭合(建议走备选 A 机制闭合轮)后另开执行卡, 本卡四份报告作为执行卡与 §13.2 修订输入。未修改实现方任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。"
+}
