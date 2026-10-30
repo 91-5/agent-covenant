@@ -1,0 +1,53 @@
+{
+  "id": "XJ-20261030-001",
+  "artifact": [
+    "tools/eval/runlog.py",
+    "tools/eval/run.py",
+    "tools/eval/tasks.py",
+    "docs/eval-runner-protocol.md",
+    "tests/test_eval_harness.py",
+    "README.md",
+    "README.zh-CN.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261030-001-round4-executor-prep @ 623456c（基线 master @ 2b39767，未 push；改动 9 文件：.tasks/XJ-20261030-001.md 卡(IN_REVIEW) + tools/eval/runlog.py(新建,run-log v2 记录器 FORMAT_VERSION=2) + tools/eval/tasks.py(新建,30 任务 census/C6 断言) + tools/eval/run.py(--exec 执行 wrapper + --tasks census 增广) + docs/eval-runner-protocol.md(§13.1 产物密封目录 / §13.2 带工具执行者接入,零改既有条文) + tests/test_eval_harness.py(12 新单测,437→449) + README×2(sync 437→449) + artifacts.json(XJ-20261030-001 登记 8 文件);红区九文件 judge/extract/stats/blind/seal_run/study_runner/m3_probe/gate/lint_cards diff 零输出",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-10-30T02:30:00+08:00",
+  "ts_note": "ts 取正本落盘时刻(+08 本地,非未来):全量 449 单测复跑(112s)、红区九文件 A5 精确 diff 空核验、A3 census 30==30 + 三分层 10/10/10、A4 runlog 独立驱动(v1 全字段/JSON 可序列化/FORMAT_VERSION=2/records_for 按臂 B=0)、A2 sync_test_count --check exit 0(in sync at 449)、A7 lint_cards LINT:PASS(0 ERROR/7 WARN)、tasks/ 目录实数 30、C6 锚 schema.TOTAL_TASKS 核对、judge 基线面 git show 2b39767 核对、坑 12 UTF-8 raw-? 扫描、术语纪律扫描,全部实跑于分支 worktree @ 623456c。",
+  "evidence": [
+    "范围纪律(A4/A5/A6)：本方独立 git diff --name-only 2b39767..HEAD = 9 文件(.tasks 卡 + 8 owned) ⊆ 卡面 Owned files；red-zone 九文件(judge/extract/stats/blind/seal_run/study_runner/m3_probe/gate/lint_cards) A5 精确命令 diff 零输出;seal_run.py 不在触碰面(D3 不碰属实)。",
+    "A1 全量单测:COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 tests OK, exit 0(112.096s);输出中 [ERROR]/[FAIL] 行全为负对照/空对照 fixture 自述形态(seal custody 拒重复/拒空 run-dir/tasks 分层漂移/ B 臂 run-log 非空协议违例),非真实失败。449 = 基线 437 + 12 新单测(RunLogV2Tests 7 + ExecWrapperCliTests 2 + TasksCensusTests 3),与 README×2 计数 449 一致(A2 sync exit 0)。",
+    "A3 census:python tools/eval/run.py --tasks -> tasks total: 30 (frozen C6 census: 30) + layer fact/code/process: 10/10/10/10 + census assertion: 30 == 30: ok, exit 0;原逐任务清单形态(T01..T30 行)保留。",
+    "A4 runlog 独立驱动(卡面『或等价单测』以 RunLogV2Tests + 本方 tools/eval 内驱动为准):record() 恒带 v1 全字段(V1_RECORD_FIELDS key/task_id/condition/kind/command/executed/exit_code/refused/error/utc)+ v2 cwd/stdout_summary/stderr_summary/*_truncated;json.dumps(ensure_ascii=False) 可序列化;FORMAT_VERSION==2;_summary 截断 500(SUMMARY_MAX_CHARS)且 None 保持缺失;execute 超时记录 executed=False 不抛;RunLog.load 对不可解析既有日志 raise ValueError 拒覆盖(审计文件不被记录器抹掉);RunLogV2Tests 7 全绿。",
+    "D2 30 任务口径(C6):dir /b tools\\eval\\tasks\\T*.json = 30;schematic LAYER_COUNTS={fact:10,code:10,process:10} 与 TOTAL_TASKS=30 frozen;tasks.py census 只读(不校验自身,schema drift 原样转述),census_errors 在 total!=TOTAL_TASKS 时追加错误 → run.py --tasks exit 1,漂移响亮报警。",
+    "D3 产物密封目录(§13.1):纯目录约定条文(products/<task-id>/),seal_run.py 递归全量封 SHA-256 既有能力,本条零改仪器;判定读产物以密封副本为准复述 §12.5 纪律 1;盲化包只搬 run-data 引用的产物 md,实现文件不进包 → E 级判定零改动(C7 b 不触碰)自洽。",
+    "D4 带工具执行者接入(§13.2):两臂同执行者同工具集(C7 污染边界 a)/ E2 判定不改(C7 b)/ run-log 由 wrapper 自动记录非手工 + v2 字段契约 + 拒绝清单 import judge.COMMAND_DENYLIST 不复制 + --exec 无 --runlog 拒(exit 2)+ 日志跨次追加拒覆盖不可解析既有文件;runner 侧 v1 run-log.json(study_runner 红区)本轮不动,两种记录并存须注明文件与版本。",
+    "术语纪律(EVO-20261024-001)：扫全卡 + 新文件 + 协议 §13 违禁词 显著/证明降低幻觉/证明有效 → 仅 3 处命中且全在合法位置(卡 L19 禁令自述、协议 L6 禁令自述、tests L964 护栏测试源码);全卡无违禁误用,'预注册条件下的对照证据'完整表述在 §13 与卡 Context 复述。",
+    "坑 12 UTF-8 完整性：runlog.py/tasks.py/run.py/docs/eval-runner-protocol.md 四文件 raw '?' 计数 = 0、连续 ?{3,} 命中 = 0(作者已扫 4 文件 ?{3,} 零命中,本方独立复核一致,且 JSON 校验通过不构成免责已额外确认 artifacts.json/30×T*.json 全 parse OK)。",
+    "A7 lint:COVENANT_BASH_HINT=… python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json -> LINT: PASS(7 warnings), 0 ERROR;7 WARN 全过渡/卡面形态(README×2 UNMAPPED_CLAIM_SURFACE 计数 449 刷新 mtime 本卡 PASS 后覆盖即消 / VERDICT_WITHOUT_REVIEW 本 verdict 落盘即消 / TASK_MISSING_SECTION×2+TASK_MISSING_REVIEW_QUESTIONS+OWNED_FILES_EMPTY 卡面交付结构未展开章节),非阻断。",
+    "INDEPENDENCE：本方非卡作者/非实现方 ZCode/非 council;全程独立复跑+diff 审计,未改作者任何文件;review/AGNES/XJ-20261030-001.review.md 正本 与 verdicts/XJ-20261030-001.verdict.json 机读本评审新增;artifacts.json 8 文件登记由作者完成(登记面=触碰面,本方未改)。"
+  ],
+  "review_q_rulings": [
+    "Q-adv-1 runlog 是否被 A 臂伪造执行痕迹钻空子: 通过(未抬成判定锚)。runlog 只产出记录、无字段被判定器消费,E 级判定仍按 §1.3 冻结表 + judge.py;run-log 的 A 全量/B 零记录是佐证形态(同第三轮 run-log-r3.json B0/A126 先例),非判定依据;§13.2 明写『摘要是审计上下文,不是 §1.1 证据语法』。无软判定锚。",
+    "Q-adv-2 records_for 跨臂混查: 通过(无混查)。源码纯等值过滤 [r for r in records if r.get(condition)==condition],不 sum/不合并多臂;B 臂零记录由调用方断言 records_for('B') 长度,本方独立驱动 A=1/B=0 坐实。",
+    "Q-adv-3 C6 ==30 是否写死不可演进: 通过(预注册锚非硬编码)。tasks.py 不写死 30,锚 schema.TOTAL_TASKS(frozen 常数,注释『frozen: 10/10/10』),预注册升版改 schema 一处即演进,run.py --tasks 断言行随之变;漂移走 census_errors→exit 1 响亮报警,无静默漂移形态。",
+    "Q-adv-4 runlog 对判定器/密封仪器隐式依赖: 通过(纯 stdlib 零红区)。runlog.py import 面仅 json/subprocess/datetime/pathlib/typing/__future__(全 stdlib),未 import 任何红区文件;唯一跨文件 judge 符号(command_refused/DEFAULT_TIMEOUT_SECONDS)在基线 2b39767 run.py 已存在(git show 证实),本卡 cmd_exec 仅复用既有接口、judge.py 本体零改动,无软触碰。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (known-form, 记录不阻断): 2 条 UNMAPPED_CLAIM_SURFACE(README.md/README.zh-CN.md)为 437→449 计数刷新 mtime 的预期过渡态,本卡 PASS verdict 签出后 mtime 被覆盖即消解,机制同 XJ-20261029-001 resign #18 先例;非卡缺陷。",
+    "ADV-2 (card-shape, 记录不阻断): 卡面 .tasks/XJ-20261030-001.md 未展开 constraints/status/Review questions 章节 → lint 报 TASK_MISSING_SECTION×2 + TASK_MISSING_REVIEW_QUESTIONS + OWNED_FILES_EMPTY(WARN);对抗性 brief 已由 Jarvis 在派发单 review/AGNES/XJ-REVIEW-REQUEST 内提供并本方逐问坐实,非内容缺陷。",
+    "ADV-3 (env, 记录不阻断): A4 字面导入 from tools.eval.runlog import record 受本机 site-packages 第三方 tools 常规包遮蔽(命名空间包被常规包压过,与本仓无关的环境事实);按卡面『或等价单测』以 RunLogV2Tests + tools/eval 目录内等价驱动为准,已验证通过;非交付缺陷。"
+  ],
+  "not_verified_disclosed": [
+    "未重跑第四轮真实执行(sir 发令前无 live 实验对象);本卡为第四轮前置执行者侧机制卡,本方验收项(单测/census/lint/sync/diff/runlog 驱动/坑12/术语/C6 锚/judge 基线面)全部本方实跑覆盖,未预先验证未产生数据。",
+    "run-log v2 在带工具执行者第四轮真跑中的实际佐证效果(A 全量/B 零记录)为未来轮次产物,本方仅核验记录器形态与向后兼容(v1 全字段超集/FORMAT_VERSION 自述/load 拒覆盖),第四轮数据产生后须按 §13.2 字段契约与 §3.3 B 臂零记录先例交叉核对。"
+  ],
+  "subcard_note": [
+    "无独立子卡。本方核验的是最终交付(623456c,含 ZCode 实现 + Jarvis 开卡/交接),对抗性四问经本方独立驱动与基线核对坐实,与作者预置视角一致但结论由本方独立复跑得出。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261030-001 @ 623456c by AgnesCode (fuxiang), 非卡作者/非实现方 ZCode/非 council。Acceptance A1-A7 全部独立复跑通过(unittest Ran449 OK / census 30==30+10/10/10 / red-zone 9 文件 diff 空 / 触碰⊆Owned / lint LINT:PASS 0 ERROR / seal_run 不在触碰面 / C6 锚 schema.TOTAL_TASKS / 术语违禁词零误用 / 坑12 UTF-8 raw-?=0 / A2 sync in-sync at 449)。对抗性四问全部坐实(runlog 非判定锚 / records_for 纯等值不过 / C6 预注册锚非写死 / runlog 纯 stdlib 零红区)。0 condition;3 advisory(全 known-form/env/card-shape,记录不阻断)。未修改作者任何文件;本 REVIEW 正本 + verdict.json 为本评审新增正本。verdict PASS,第四轮执行者侧机制解锁。"
+}
