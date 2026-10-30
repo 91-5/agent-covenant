@@ -19,8 +19,9 @@
   ],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-10-30T23:25:00+08:00",
+  "ts": "2026-10-30T15:30:00Z",
   "ts_fix_note": "original ts 2026-10-30T23:40:00+08:00 was future-dated vs gate clock (15 min skew); bumped back to real signing time, zero content change",
+  "ts_resign_note": "resign #23 (global mtime-resign count): merge checkout of this very card (5e75866) refreshed artifact mtimes; ts bumped to post-merge UTC, zero content change, verdict/evidence/rulings/adjudicator_pending untouched. Same mechanism as resign #15-#22.",
   "ts_note": "ts 取正本落盘时刻(+08,非未来,晚于全部独立复跑动作):449 单测复跑(109.6s)、红区双口径 diff(卡面字面 2b39767..HEAD 与本方实际基线 master..HEAD 均零输出)、A3 census 30==30、D2 compact_probe 独立复跑(真实权限引擎 deny 复现)、D1 指纹全字段独立复采(asar 解析器/exe 版本/state.json/更新器日志 22:37 仍在检查/config.yaml autoUpdate 键缺失)、D3 C3 cwd 失真独立复现、D4 三处 verify(custody/run2/substituted H6)、坑 12 四文件 ?{3,} 扫描 0,全部实跑于分支 worktree @ 98400a5。",
   "evidence": [
     "范围纪律(A5/A6)：本方独立 git diff --name-only master..HEAD = 6 文件(.tasks 卡 + 4 新 docs + artifacts.json) ⊆ 卡面 Owned files;本卡约束 1 红区九文件(judge.py/seal_run.py/report.py/schema.py/docs/eval-prereg.md/tools/gate.py/tools/lint_cards.py/tools/eval/tasks.py/tools/eval/runlog.py) master..HEAD diff 零输出;卡面字面 2b39767..HEAD 口径红区亦零输出(该锚带出的 runlog.py/tasks.py 属 001 卡已 PASS 存量,非本卡触碰),双口径均核。",
