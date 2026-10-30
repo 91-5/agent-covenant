@@ -115,7 +115,7 @@ python dryrun/d4/seal_addendum_probe.py       # exit 0
 ```
 
 → 一个**内容不同但自洽**的目录可以干净通过封签校验。与 `seal_run.py` 文件头
-「tamper-evident, not tamper-proof」的自述一致：清单证明的是**内容不变**，
+「tamper-evident, not tamper-proof」的自述一致：清单反映的是**内容不变**，
 不是**来源同一**；绑定 run 与产物的链条是 custody 规程，不是哈希。
 
 ### 2.6 追加实测：run-log 与 junction
@@ -169,7 +169,7 @@ python dryrun/d4/seal_addendum_probe.py       # exit 0
 | H1 | **run-dir 之外的任何文件**（执行者工作区 `%TEMP%`、app 缓存、`~/.minimax` 会话库与 sqlite、`%APPDATA%\MiniMax` 日志） | 实测：`workspace/stray.py`、`%TEMP%\dryrun-d4-temp-artifact.txt` 均不在清单 | **高**：执行者若把实现写在 run-dir 外，该实现**没有任何封签**，判定读不到它 | 协议 §13.1 的目录约定即为此而设；执行卡须写明「一切实现文件必须落在 `products/<task-id>/`」并做落位检查 |
 | H2 | **空目录** | 实测：`products/T20/empty_dir` 不在清单 | 低：无内容即无证据 | 无需处置（登记即可） |
 | H3 | **目录形态本身**（目录树结构、空目录的存在/消失） | 实测：清单只记文件路径 | 低 | 无需处置 |
-| H4 | **文件元数据**（mtime、ACL、属主、备用数据流 ADS） | 实测：清单只记 `sha256` + `bytes` | 低—中：无法证明「文件未被改权限」 | 登记为已知边界 |
+| H4 | **文件元数据**（mtime、ACL、属主、备用数据流 ADS） | 实测：清单只记 `sha256` + `bytes` | 低—中：无法核实「文件未被改权限」 | 登记为已知边界 |
 | H5 | **junction / 符号链接的真实落点** | 实测：内容按链接路径入清单，外部真身不在清单；改指同内容文件不可检出 | 中 | 执行卡禁止在 run-dir 内使用 junction/符号链接 |
 | H6 | **整体替换目录**（自洽清单） | 实测：替换目录 `--verify` 通过（exit 0） | **高**：封签不绑定「来源同一」 | 必须执行 custody 规程：`seal.json` 与 custody 副本分开保管，seal 由不在执行者可写路径上的主体持有（工具文件头已自述此为程序性而非密码学缓解） |
 | H7 | **密封时刻之后新增的文件** | 实测：`ADDED` 可检出——但**前提是有人再跑一次 `--verify`** | 中：若不跑 verify，新增不可见 | 执行卡须写明「密封后必须立即 verify 一次并留档」 |

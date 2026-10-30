@@ -197,7 +197,7 @@ logEnforcement(input, request, fields, level = 'info') {
 
 ## 5. 与 D3（run-log 覆盖）的联动
 
-本报告证明「B 臂的**执行面可以被硬关掉**」；D3 证明「run-log 只覆盖经 wrapper
+本报告实测「B 臂的**执行面可以被硬关掉**」；D3 实测「run-log 只覆盖经 wrapper
 路由的命令」。两者合起来才成立的一条推论（本卡据此提出，**需协议确认**）：
 
 > 若 B 臂不预置 deny 规则，则「B 臂 run-log 零执行记录」**不能**作为「B 臂未执行」
