@@ -379,5 +379,12 @@
                             "README.md",
                             "README.zh-CN.md",
                             "artifacts.json"
+                        ],
+  "XJ-20261030-002":  [
+                            "docs/executor-fingerprint-minimax.md",
+                            "docs/dryrun-b-arm-tool-deny.md",
+                            "docs/dryrun-runlog-coverage.md",
+                            "docs/dryrun-seal-capture.md",
+                            "artifacts.json"
                         ]
 }
