@@ -329,4 +329,26 @@ run 密封）。第四轮本身的执行仍等发令；本节只冻结机制，�
      下的延伸；第三轮先例 B 0 / A 126）。
    - runner 侧 `run-log.json`（§4.3，v1 格式）本轮不动（study_runner 属仪器
      红区）；两种记录并存期间，引用执行痕迹必须注明文件与格式版本。
+4. **执行面封堵：两臂差异收敛为权限门控单变量**（XJ-20261031-001 增补，
+   闭合 XJ-20261030-002 条件 C1/C2）：
+
+   - 两臂执行面的封堵必须以**权限层 deny** 落地（权限引擎实测拒绝，
+     `bypassPermissions` 模式免疫，非提示词层约束）——「请不要使用某工具」
+     不构成封堵。机制依据：`docs/dryrun-b-arm-tool-deny.md`（HARD_DENY_OK，
+     引擎入口 Step 1 拒绝检查先于 bypass 放行）。
+   - **B 臂 deny 范围 = 全部工具**，含只读工具 read/glob/grep——sir 2026-10-31
+     终裁（依据 002 verdict `adjudicator_pending`），以复现第三轮「执行者无任何
+     工具」语义，保住 B 臂零记录的佐证形态与第四轮分臂数对第三轮的对照锚；
+     规则文本、逐条验证命令与预期拒绝输出见 `docs/b-arm-permission-profile.md`
+     （配方文档：具体 deny 生效以执行卡启动时的实测为准）。
+   - **A 臂工具集 = 执行者默认全量**（不预置 deny 规则）；两臂身份面（同执行者、
+     同工具清单、同配置）一致，两臂差异收敛为权限门控这一个实验干预变量——
+     C7(a) 机制张力裁定见 002 verdict `review_q_rulings`（同第三轮 A 真执行/
+     B 零执行干预，只换执行形态；门控是实验干预，不是两臂污染）。
+   - 封堵状态须有 **`permission.enforcement` 结构化记录面**留痕（含 session_id /
+     turn_id / tool_call_id / tool_name / policy_behavior / gate_result 字段），
+     执行卡验收时核验：B 臂该记录非空（工具被拒有据），A 臂命令执行仍按本节
+     第 3 点经 wrapper 落 run-log；机制预演的触发序列与 PASS 判据见
+     `docs/mechanism-closure-round.md`（闭合轮零数据，产物落 `dryrun/` 或仓外
+     临时目录，不进 run-data 与 artifacts newest 位）。
 
