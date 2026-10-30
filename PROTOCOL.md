@@ -425,6 +425,17 @@ into an unsearchable attic that agents re-read instead of thinking.
   defect, not the archive's. Corrected in v0.1.17 (CHANGELOG.md) without a tool
   change, because the tool was already the correct side of the disagreement.
 
+- **Card-face annotations are append-only pointer notes.** When a card's
+  condition is discharged by a later verdict (ADR-0002 D1), the original card
+  may gain a dated annotation block that *points at* the discharge verdict —
+  its path, `unblocks` value, and machine-check status — and nothing else. The
+  annotation must state that it is a later-added pointer, not evidence that the
+  card was closed at its original time; `Status`, conditions, and historical
+  verdicts stay byte-for-byte (D2). This exists because discoverability runs
+  backwards under D1, and an unmarked open card reads as a zombie to anyone
+  without the history. Substantive changes still go through a new card + new
+  verdict, never through editing a card face.
+
 ---
 
 ## 9. Conformance levels
