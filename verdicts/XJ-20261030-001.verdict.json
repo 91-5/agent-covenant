@@ -16,8 +16,8 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-10-30T15:30:00Z",
-  "ts_resign_note": "resign #22 (global mtime-resign count): merge checkout of XJ-20261030-002 (5e75866) refreshed artifact mtimes; ts bumped to post-merge time, zero content change. Same mechanism as resign #15-#21.",
+  "ts": "2026-10-30T15:36:00Z",
+  "ts_resign_note": "resign #21 (global mtime-resign count): post-merge artifact updates (002 close-out 5e75866 + pending_conditionals split of artifacts.json) touched artifacts.json after signing; ts bumped, zero content change. Same mechanism as resign #15-#20.",
   "ts_note": "ts 取正本落盘时刻(+08 本地,非未来):全量 449 单测复跑(112s)、红区九文件 A5 精确 diff 空核验、A3 census 30==30 + 三分层 10/10/10、A4 runlog 独立驱动(v1 全字段/JSON 可序列化/FORMAT_VERSION=2/records_for 按臂 B=0)、A2 sync_test_count --check exit 0(in sync at 449)、A7 lint_cards LINT:PASS(0 ERROR/7 WARN)、tasks/ 目录实数 30、C6 锚 schema.TOTAL_TASKS 核对、judge 基线面 git show 2b39767 核对、坑 12 UTF-8 raw-? 扫描、术语纪律扫描,全部实跑于分支 worktree @ 623456c。",
   "evidence": [
     "范围纪律(A4/A5/A6)：本方独立 git diff --name-only 2b39767..HEAD = 9 文件(.tasks 卡 + 8 owned) ⊆ 卡面 Owned files；red-zone 九文件(judge/extract/stats/blind/seal_run/study_runner/m3_probe/gate/lint_cards) A5 精确命令 diff 零输出;seal_run.py 不在触碰面(D3 不碰属实)。",

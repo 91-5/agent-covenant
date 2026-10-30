@@ -380,11 +380,18 @@
                             "README.zh-CN.md",
                             "artifacts.json"
                         ],
-  "XJ-20261030-002":  [
-                            "docs/executor-fingerprint-minimax.md",
-                            "docs/dryrun-b-arm-tool-deny.md",
-                            "docs/dryrun-runlog-coverage.md",
-                            "docs/dryrun-seal-capture.md",
-                            "artifacts.json"
-                        ]
+  "_pending_conditionals": {
+    "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化：artifacts.json 只登记已放行/已出货 round）。002 待 C1-C4 闭合后以执行卡 PASS 新 round 登记回来。",
+    "XJ-20261030-002": {
+      "status": "CONDITIONAL/NO-GO-conditional",
+      "verdict": "verdicts/XJ-20261030-002.verdict.json",
+      "conditions": ["C1 协议§13.2 执行面封堵", "C2 B臂权限预置(只读面取舍挂 sir)", "C3 关自动更新", "C4 机制闭合轮"],
+      "artifacts": [
+        "docs/executor-fingerprint-minimax.md",
+        "docs/dryrun-b-arm-tool-deny.md",
+        "docs/dryrun-runlog-coverage.md",
+        "docs/dryrun-seal-capture.md"
+      ]
+    }
+  }
 }
