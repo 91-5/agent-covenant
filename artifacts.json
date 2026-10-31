@@ -380,6 +380,10 @@
     "README.zh-CN.md",
     "artifacts.json"
   ],
+  "XJ-20261031-002": [
+    "docs/b-arm-permission-profile.md",
+    "artifacts.json"
+  ],
   "_pending_conditionals": {
     "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化：artifacts.json 只登记已放行/已出货 round）。002 待 C1-C4 闭合后以执行卡 PASS 新 round 登记回来。",
     "XJ-20261030-002": {
@@ -399,10 +403,10 @@
       ]
     },
     "XJ-20261031-001": {
-      "status": "CONDITIONAL/C1-C3-C4-discharged-C2-open",
+      "status": "CONDITIONAL/C1-C4-discharged-C2-closed-2026-10-31",
       "verdict": "verdicts/XJ-20261031-001.verdict.json",
       "conditions": [
-        "C2-补清单(deny 清单漏 10 类本地原生工具, 执行卡注入前补全+复跑探针)"
+        "C2 已闭合（见 b-arm-permission-profile.md §3 对照表；2026-10-31 XJ-20261031-002 补全 deny 清单 R1-R47 并复跑探针 47x2 全 deny exit 0；摘牌确认待该卡评审）"
       ],
       "discharged": [
         "C1 via unblocks",

@@ -16,11 +16,20 @@
 
 ## 0. 结论性口径
 
-B 臂 profile = **整工具 deny 全量清单**（含只读工具 read/glob/grep）+ **MCP
-服务器级 `mcp__<server>` deny**，以 configV1 规则形态注入 `permission.json`；
-随 B 轮启动注入、轮后移除，**不落盘到执行者共用配置文件**（避免污染 A 臂环境）。
-deny 在权限引擎归约入口生效（`permission-core.js` 整工具规则先于 bypass 放行
-快路径），拒绝落 `permission.enforcement` 结构化日志。
+B 臂 profile = **整工具 deny 全量清单**（含只读工具 read/glob/grep），覆盖**当轮
+运行时工具注册表全集**（本机 3.1.7 asar 实测枚举：本地工具注册表 28 名 + 本地原生
+浏览器族 14 名 + 扩展注册 builtin 3 名 = **45 个工具名**）+ **builtin MCP 服务器级
+`mcp__<server>` deny**（`browser`、`matrix` 两服），共 **47 条规则**（R1–R47），
+以 configV1 规则形态注入 `permission.json`；随 B 轮启动注入、轮后移除，**不落盘
+到执行者共用配置文件**（避免污染 A 臂环境）。deny 在权限引擎归约入口生效
+（`permission-core.js` 整工具规则先于 bypass 放行快路径），拒绝落
+`permission.enforcement` 结构化日志。
+
+**清单演进纪律（XJ-20261031-002 起）**：deny 清单**纯增不减**——001 卡的 R1–R12
+原样保留；补全规则自 R13 续号；任何拟从清单移除（放行）原生工具的动作必须停手
+回 sir 裁定。清单基础是 §2.0 的注册表枚举配方：执行卡启动时重跑枚举（3.1.7 热更新
+开启态下注册表可能漂移——C3 冻结成立是枚举前置），枚举结果与 §1 清单差集为空
+方可注入。
 
 ---
 
@@ -33,10 +42,23 @@ deny 在权限引擎归约入口生效（`permission-core.js` 整工具规则先
 不含括号的规则串即**整工具规则**（`matcher.kind = 'tool'`）。
 
 ```json
-{"allow": [], "ask": [], "deny": ["bash", "write", "edit", "read", "glob", "grep",
-                                  "task", "todowrite", "web_fetch", "web_search",
-                                  "miniapp", "mcp__browser"]}
+{"allow": [], "ask": [], "deny": [
+  "bash", "write", "edit", "read", "glob", "grep", "task", "todowrite",
+  "web_fetch", "web_search", "miniapp", "mcp__browser",
+  "skill", "memory", "code_review", "mavis", "session_create",
+  "self_reminder", "cron_create", "cron_read", "cron_update", "cron_delete",
+  "ask_user", "request_feature_enable", "task_append", "task_query",
+  "task_output", "task_stop", "website_deploy", "workspace_semantic_search",
+  "browser", "browser_inspect", "browser_navigate", "browser_click",
+  "browser_type", "browser_press_key", "browser_scroll", "browser_hover",
+  "browser_wait_for", "browser_get_dom", "browser_screenshot", "browser_paste",
+  "browser_verify_text", "browser_inspect_editable_targets",
+  "EnterPlanMode", "ExitPlanMode", "mcp__matrix"
+]}
 ```
+
+（47 条 = R1–R12 原清单未动 + R13–R47 补全 35 条；条目与规则号逐一对应见 §1.1，
+枚举出处见 §3 第二轮对照表。）
 
 ### 1.1 规则逐条口径
 
@@ -54,6 +76,41 @@ deny 在权限引擎归约入口生效（`permission-core.js` 整工具规则先
 | R10 | `web_search` | 网络搜索 | 002 D2 deny 清单收录 |
 | R11 | `miniapp` | 小程序面 | 002 D2 deny 清单收录 |
 | R12 | `mcp__<server>` | MCP **服务器级**整服 deny（本机已知 server：`browser`） | 002 报告 §6.2 实测：裸 `mcp_browser` **无效**；`mcp__browser` 使 `mcp__browser__navigate` deny（reason=`rule:mcp__browser`） |
+| R13 | `skill` | 本地技能读取/执行 | 002 卡漏列；本卡枚举（§2.0）+ 探针复测 deny（§3 第二轮） |
+| R14 | `memory` | 本地记忆读写 | 同上 |
+| R15 | `code_review` | 本地代码评审 | 同上（001 评审 ADV-1：此前靠引擎工具组映射附带命中，不可审计；本卡显式入清单） |
+| R16 | `mavis` | mavis 代理面 | 同上 |
+| R17 | `session_create` | 任务会话创建（mavis 能力族） | 同上 |
+| R18 | `self_reminder` | 定时自提醒（cron 族） | 同上 |
+| R19 | `cron_create` | 定时任务创建 | 同上 |
+| R20 | `cron_read` | 定时任务读取 | 同上 |
+| R21 | `cron_update` | 定时任务更新 | 同上 |
+| R22 | `cron_delete` | 定时任务删除 | 同上 |
+| R23 | `ask_user` | 向本地用户提问 | 同上 |
+| R24 | `request_feature_enable` | 请求开启功能面 | 同上 |
+| R25 | `task_append` | 子任务追加（task 派生面） | 同上（`task` 整工具 deny 命中不了 `task_append`/`task_query` 等独立名——001 评审实测） |
+| R26 | `task_query` | 子任务查询 | 同上 |
+| R27 | `task_output` | 子任务输出读取 | 同上 |
+| R28 | `task_stop` | 子任务停止 | 同上 |
+| R29 | `website_deploy` | 网站部署 | 同上（`buildLocalNativeRuntimeTools` 无条件构造该适配器） |
+| R30 | `workspace_semantic_search` | 工作区语义检索 | 同上 |
+| R31 | `browser` | 本地原生浏览器复合工具 | 同上（本地 `browser_*` 命名空间，R12 的 `mcp__browser` 只命中 MCP 路径——001 评审实测） |
+| R32 | `browser_inspect` | 浏览器检查 | 同上 |
+| R33 | `browser_navigate` | 浏览器导航 | 同上 |
+| R34 | `browser_click` | 浏览器点击 | 同上 |
+| R35 | `browser_type` | 浏览器输入 | 同上 |
+| R36 | `browser_press_key` | 浏览器按键 | 同上 |
+| R37 | `browser_scroll` | 浏览器滚动 | 同上 |
+| R38 | `browser_hover` | 浏览器悬停 | 同上 |
+| R39 | `browser_wait_for` | 浏览器等待 | 同上 |
+| R40 | `browser_get_dom` | 浏览器 DOM 读取 | 同上 |
+| R41 | `browser_screenshot` | 浏览器截图 | 同上 |
+| R42 | `browser_paste` | 浏览器粘贴 | 同上 |
+| R43 | `browser_verify_text` | 浏览器文本校验 | 同上 |
+| R44 | `browser_inspect_editable_targets` | 浏览器可编辑目标检查 | 同上 |
+| R45 | `EnterPlanMode` | 计划模式进入（扩展注册） | 同上（agent-extension plan-mode 条件注册，运行时精确名含大写） |
+| R46 | `ExitPlanMode` | 计划模式退出（扩展注册） | 同上 |
+| R47 | `mcp__matrix` | builtin MCP 服务器级整服 deny（`matrix`） | 同上（`BUILTIN_MATRIX_SERVER_NAME='matrix'`，matrix 工具以 `mcp__matrix__<tool>` 原生名投影，服务器级规则整服覆盖） |
 
 两条纪律（002 报告 §6.2 口径）：
 
@@ -67,6 +124,130 @@ deny 在权限引擎归约入口生效（`permission-core.js` 整工具规则先
 ---
 
 ## 2. 验证配方（每条规则的可复跑验证命令与预期输出）
+
+### 2.0 注册表枚举（XJ-20261031-002 新增：deny 清单的机械出处）
+
+deny 清单不是手抄名单，是**枚举脚本的机械输出**。枚举器 `enumerate-registry.mjs`
+静态扫描解包树（§2.1）中所有能定义桌面可达工具的面，按出处分类输出：
+
+```javascript
+// enumerate-registry.mjs —— 用法：node enumerate-registry.mjs <asar-extract-root>
+// 退出码 0 = 枚举完成且 agent-core 层 defs 无桌面注册表之外的孤儿名；否则 exit 1
+import fs from 'node:fs';
+import path from 'node:path';
+
+const ROOT = path.resolve(process.argv[2] ?? 'asar');
+const rel = (...p) => path.join(ROOT, 'node_modules', '@mavis', ...p);
+const read = (p) => fs.readFileSync(rel(p), 'utf8');
+
+// 1) static ToolDef exports (builtin-defs re-exports browser defs; read both directly)
+const toolDefRe = /export const Local\w*ToolDef = \{\s*name: '([^']+)'/g;
+const staticDefs = {};
+for (const f of ['agent-tools/dist/desktop/builtin-defs.js',
+                 'agent-tools/dist/desktop/builtin-browser-defs.js']) {
+  staticDefs[f] = [...read(f).matchAll(toolDefRe)].map((m) => m[1]);
+}
+
+// 2) registry-builder implementation files: inline def names (session_create,
+//    website_deploy, workspace_semantic_search, web_search impl, mavis impl, cron impl)
+const builderFiles = [
+  'agent-tools/dist/desktop/local-session-create-tool.js',
+  'agent-tools/dist/desktop/local-website-deploy.js',
+  'agent-tools/dist/desktop/local-workspace-semantic-search.js',
+  'agent-tools/dist/desktop/local-web-search.js',
+  'agent-tools/dist/desktop/local-mavis.js',
+  'agent-tools/dist/desktop/local-cron-tools.js',
+  'agent-tools/dist/shared/web-search.js', // WebSearchToolDef：本地 web_search 实现与 matrix builtin 共用
+];
+const inlineNameRe = /(?:def\s*[:=]\s*\{|name)\s*:\s*'([a-z_][a-z0-9_]*)'/g;
+const inlineNames = {};
+for (const f of builderFiles) {
+  inlineNames[f] = [...read(f).matchAll(inlineNameRe)].map((m) => m[1])
+    .filter((n) => !['id', 'mode', 'value'].includes(n));
+}
+
+// 3) cron/self_reminder canonical name lists
+const cronSrc = read('agent-tools/dist/cron/tool-defs.js');
+const cronList = cronSrc.match(/CRON_TOOL_NAMES = \[([^\]]+)\]/s)?.[1]
+  .match(/'([a-z_]+)'/g).map((s) => s.slice(1, -1));
+const mavisCapList = cronSrc.match(/MAVIS_CAPABILITY_TOOL_NAMES = \[([^\]]+)\]/s)?.[1]
+  .match(/'([A-Za-z_]+)'/g).map((s) => s.slice(1, -1));
+
+// 4) extension-registered builtin tools
+const miniappNames = [...read('agent-extension/dist/miniapp.js').matchAll(/name: '([a-z_]+)'/g)].map((m) => m[1]);
+const planNames = [...read('agent-extension/dist/plan-mode.js').matchAll(/lifecycleTool\('([A-Za-z]+)'/g)].map((m) => m[1]);
+
+// 5) builtin MCP servers (server-level deny rules)
+const matrixServer = read('local-runtime-v2/dist/service/mcp/runtime/builtin-matrix.js')
+  .match(/BUILTIN_MATRIX_SERVER_NAME = '([^']+)'/)?.[1];
+const browserServer = 'browser'; // 002 D2 实测：mcp__browser__navigate 命中服务器规则 mcp__browser
+
+// 6) agent-core layer defs (cross-check: must be subset of the desktop namespace)
+const coreDefs = [...read('agent-core/dist/tools/builtin-defs.js').matchAll(toolDefRe)].map((m) => m[1])
+  .concat([...read('agent-core/dist/tools/builtin-defs.js').matchAll(/name: '([a-z_]+)'/g)].map((m) => m[1]));
+
+const registry = [
+  ...new Set([...staticDefs['agent-tools/dist/desktop/builtin-defs.js'],
+              ...staticDefs['agent-tools/dist/desktop/builtin-browser-defs.js'],
+              ...Object.values(inlineNames).flat(),
+              ...(cronList ?? []),
+              ...miniappNames,
+              ...planNames])].sort();
+
+const coreOnly = coreDefs.filter((n) => !registry.includes(n));
+
+console.log('### A. builtin-defs.js static ToolDefs:',
+  staticDefs['agent-tools/dist/desktop/builtin-defs.js'].length);
+console.log(JSON.stringify(staticDefs['agent-tools/dist/desktop/builtin-defs.js']));
+console.log('### B. builtin-browser-defs.js browser family:',
+  staticDefs['agent-tools/dist/desktop/builtin-browser-defs.js'].length);
+console.log(JSON.stringify(staticDefs['agent-tools/dist/desktop/builtin-browser-defs.js']));
+console.log('### C. registry-builder inline names:');
+for (const [f, names] of Object.entries(inlineNames))
+  console.log(`  ${path.basename(f)}: ${JSON.stringify([...new Set(names)])}`);
+console.log('### D. CRON_TOOL_NAMES:', JSON.stringify(cronList));
+console.log('### E. MAVIS_CAPABILITY_TOOL_NAMES:', JSON.stringify(mavisCapList));
+console.log('### F. extension-registered: miniapp', JSON.stringify([...new Set(miniappNames)]),
+  '| plan-mode lifecycle', JSON.stringify(planNames));
+console.log('### G. builtin MCP servers:', JSON.stringify([browserServer, matrixServer]));
+console.log('### H. agent-core defs NOT in desktop registry (must be []):', JSON.stringify([...new Set(coreOnly)]));
+console.log(`### TOTAL distinct desktop tool names: ${registry.length}`);
+console.log(JSON.stringify(registry));
+process.exit(coreOnly.length ? 1 : 0);
+```
+
+```
+node enumerate-registry.mjs asar
+# -> ### A..H 分类输出 + TOTAL distinct desktop tool names: N + 全名 JSON
+# -> exit 0（H 段为空 = agent-core 层 defs 全部被桌面注册表包含）
+# 本机 3.1.7 实测：N=45；原文留档见 §3 第二轮
+```
+
+**枚举口径**（两路枚举纪律，回应 001 评审 ADV-2）：
+
+1. **本地工具注册表一路**：`buildLocalToolRegistry`（`agent-tools/dist/desktop/index.js`）
+   的静态 def 面（§A）+ 注册器内联构建名（§C：session_create / website_deploy /
+   workspace_semantic_search / self_reminder / web_search）+ cron 族规范名
+   （§D：`CRON_TOOL_NAMES`）+ 扩展条件注册（§F：miniapp / EnterPlanMode /
+   ExitPlanMode）；
+2. **MCP server 一路**：builtin server 名（§G：`browser`、`matrix`）+ 轮时按 §4
+   步骤 0 枚举第三方面。
+
+**静态枚举的已知逃逸面与处置**（回应卡面评审问 Q2）：
+
+- **MCP 原生名投影**：MCP 工具以 `mcp__<server>__<tool>` 原生名进目录
+  （`native-tool-projection.js` `buildNativeToolName`）——不被本地名枚举覆盖，
+  由**服务器级规则**整服 deny（R12/R47），轮时枚举 server 清单即可；
+- **条件注册**：本地注册表多数工具按 deps 条件注册（对照表「注册条件」列）——
+  deny 规则按**名**匹配，未注册名的规则惰性无害，清单取「可定义全集」口径；
+- **第三方插件动态注册**（`agent-runtime` registry/factories 机制）：静态不可知，
+  归 §4 步骤 0 轮时「当轮工具目录核对」纪律；
+- **不在桌面目录的面**（本卡核对后排除，非遗漏）：`agent-tools/dist/cloud/*`
+  云产品 defs（含 `memory_search`——该名在桌面注册表不存在，桌面记忆/检索面是
+  `memory` 与 `workspace_semantic_search`，均已 deny）；`threadGoalTools`
+  （goal-agent 评估者/子代理线程面，`goal-agent-product.js`，非执行者主线程目录）；
+  `mcp_browser` 为目录选择别名（`local-turn-tool-catalog.js` `selectorAlias`），
+  非可调用工具名，可调用名 `browser` 由 R31 覆盖。
 
 ### 2.1 前置：从随包 `app.asar` 解出真实权限引擎（只读解析，不改安装）
 
@@ -120,12 +301,14 @@ node extract-asar.mjs "D:/MiniMaxcode/MiniMax Code/resources/app.asar" asar node
 # -> exit 0
 ```
 
-### 2.2 探针：整工具 deny + bypass 免疫 + 只读面 + MCP 服务器级（一次跑完 12 规则）
+### 2.2 探针：整工具 deny + bypass 免疫 + 只读面 + MCP 服务器级（一次跑完全清单 47 规则）
 
 探针 `b_arm_deny_probe.mjs` 把 §1 的 deny 清单写入**临时 dataDir** 的
 `permission.json`（绝不指向真实 profile），送入真实权限引擎
 （`@mavis/permission/dist/engine.js` `PermissionEngine.checkPermission()`），
-对每个工具在 `bypassPermissions` 与 `default` 两种模式下各判一次：
+对**每条规则一个案例**（45 个注册表工具名 + 2 个服务器路径探针
+`mcp__browser__navigate` / `mcp__matrix__web_search`）在 `bypassPermissions` 与
+`default` 两种模式下各判一次——全清单 × 2 模式，不是抽测：
 
 ```javascript
 // b_arm_deny_probe.mjs —— 用法：node b_arm_deny_probe.mjs <extract-root> [dataDir]
@@ -147,10 +330,30 @@ const { BashToolPermissionChecker } = await mod('node_modules/@mavis/permission/
 const { FsToolPermissionChecker } = await mod('node_modules/@mavis/permission/dist/tools/fs-checker.js');
 const { configV1ToRules } = await mod('node_modules/@mavis/local-runtime/dist/permissions/rule-codec.js');
 
-// B 臂 deny 清单 = 全部工具（含只读面 read/glob/grep，sir 2026-10-31 终裁）
-// + MCP 服务器级 mcp__<server>。运行时精确名；裸 mcp_browser 无效（002 报告 §6.2）。
-const DENY = ['bash', 'write', 'edit', 'read', 'glob', 'grep', 'task', 'todowrite',
-              'web_fetch', 'web_search', 'miniapp', 'mcp__browser'];
+// R1-R12（001 卡原清单，未动）+ R13-R47（002 卡注册表补全，出处 §2.0 枚举）。
+// 纯增口径：12 规则清单零删改。
+const DENY = [
+  // R1-R11 本地工具（001 卡原清单，未动）
+  'bash', 'write', 'edit', 'read', 'glob', 'grep', 'task', 'todowrite',
+  'web_fetch', 'web_search', 'miniapp',
+  // R12 builtin MCP server（001 卡原清单，未动）
+  'mcp__browser',
+  // R13-R30 本地注册表补全（枚举脚本 §2.0 输出）
+  'skill', 'memory', 'code_review', 'mavis', 'session_create',
+  'self_reminder', 'cron_create', 'cron_read', 'cron_update', 'cron_delete',
+  'ask_user', 'request_feature_enable',
+  'task_append', 'task_query', 'task_output', 'task_stop',
+  'website_deploy', 'workspace_semantic_search',
+  // R31-R44 本地原生浏览器族（14 项全列）
+  'browser', 'browser_inspect', 'browser_navigate', 'browser_click', 'browser_type',
+  'browser_press_key', 'browser_scroll', 'browser_hover', 'browser_wait_for',
+  'browser_get_dom', 'browser_screenshot', 'browser_paste', 'browser_verify_text',
+  'browser_inspect_editable_targets',
+  // R45-R46 扩展注册（plan-mode lifecycle）
+  'EnterPlanMode', 'ExitPlanMode',
+  // R47 builtin MCP server（matrix）
+  'mcp__matrix',
+];
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const RULE_FILE = path.join(DATA_DIR, 'permission.json');
@@ -169,12 +372,48 @@ const CASES = [
   ['read', { file_path: 'C:/temp/probe.txt' }],
   ['glob', { pattern: '*.py', path: 'C:/temp' }],
   ['grep', { pattern: 'x', path: 'C:/temp' }],
-  ['web_fetch', { url: 'https://example.com' }],
-  ['web_search', { query: 'probe' }],
   ['task', { prompt: 'x' }],
   ['todowrite', { todos: [] }],
+  ['web_fetch', { url: 'https://example.com' }],
+  ['web_search', { query: 'probe' }],
   ['miniapp', {}],
+  ['skill', { name: 'probe' }],
+  ['memory', { action: 'search', query: 'probe' }],
+  ['code_review', {}],
+  ['mavis', { query: 'probe' }],
+  ['session_create', { agent_name: 'probe' }],
+  ['self_reminder', { message: 'probe' }],
+  ['cron_create', { name: 'probe', schedule: 'daily', prompt: 'x' }],
+  ['cron_read', {}],
+  ['cron_update', { id: 'x' }],
+  ['cron_delete', { id: 'x' }],
+  ['ask_user', { question: 'probe' }],
+  ['request_feature_enable', { feature: 'probe' }],
+  ['task_append', { task_id: 'x', prompt: 'x' }],
+  ['task_query', { task_id: 'x' }],
+  ['task_output', { task_id: 'x' }],
+  ['task_stop', { task_id: 'x' }],
+  ['website_deploy', {}],
+  ['workspace_semantic_search', { query: 'probe' }],
+  ['browser', { action: 'navigate', url: 'https://example.com' }],
+  ['browser_inspect', {}],
+  ['browser_navigate', { url: 'https://example.com' }],
+  ['browser_click', { ref: 'r1' }],
+  ['browser_type', { ref: 'r1', text: 'x' }],
+  ['browser_press_key', { key: 'Enter' }],
+  ['browser_scroll', { direction: 'down' }],
+  ['browser_hover', { ref: 'r1' }],
+  ['browser_wait_for', { text: 'x' }],
+  ['browser_get_dom', {}],
+  ['browser_screenshot', {}],
+  ['browser_paste', { text: 'x' }],
+  ['browser_verify_text', { texts: ['x'] }],
+  ['browser_inspect_editable_targets', {}],
+  ['EnterPlanMode', {}],
+  ['ExitPlanMode', {}],
+  // 服务器级规则探针：每个 builtin server 取一条 mcp__<server>__<tool> 路径名
   ['mcp__browser__navigate', { url: 'https://example.com' }],
+  ['mcp__matrix__web_search', { query: 'probe' }],
 ];
 
 let fail = 0;
@@ -201,22 +440,16 @@ node b_arm_deny_probe.mjs asar dataDir
 ```
 
 **每条规则的预期拒绝输出**（两模式同形；`reason` 一律为
-`{"type":"rule","rule":{"source":"global","ruleBehavior":"deny","ruleValue":{"toolName":"<规则串>","matcher":{"kind":"tool"}},"destination":"global"}}`）：
+`{"type":"rule","rule":{"source":"global","ruleBehavior":"deny","ruleValue":{"toolName":"<规则串>","matcher":{"kind":"tool"}},"destination":"global"}}`，
+其中 `<规则串>` = 该案例命中的 deny 规则串（名规则 = 工具名本身，服务器级规则 =
+`mcp__<server>`））：
 
-| 探针行 | 预期 | 对应规则 |
-|---|---|---|
-| `bash -> deny` | reason ruleValue.toolName=`bash` | R1 |
-| `write -> deny` | toolName=`write` | R2 |
-| `edit -> deny` | toolName=`edit` | R3 |
-| `read -> deny` | toolName=`read` | R4 |
-| `glob -> deny` | toolName=`glob` | R5 |
-| `grep -> deny` | toolName=`grep` | R6 |
-| `web_fetch -> deny` | toolName=`web_fetch` | R9 |
-| `web_search -> deny` | toolName=`web_search` | R10 |
-| `task -> deny` | toolName=`task` | R7 |
-| `todowrite -> deny` | toolName=`todowrite` | R8 |
-| `miniapp -> deny` | toolName=`miniapp` | R11 |
-| `mcp__browser__navigate -> deny` | toolName=`mcp__browser`（服务器级规则命中） | R12 |
+- **名规则（R1–R11、R13–R46，共 45 条）**：探针行 `<工具名> -> deny`，reason
+  `toolName` = 同名规则串；
+- **服务器级规则（R12、R47）**：探针行 `mcp__browser__navigate -> deny`（toolName=
+  `mcp__browser`）与 `mcp__matrix__web_search -> deny`（toolName=`mcp__matrix`）；
+- **逐条对照**：注册表枚举项 ↔ 规则号 ↔ 两模式探针实测结果，见 §3 第二轮对照表
+  （47 行，零遗漏）。
 
 **对照读数**（复用 002 报告 §3.2 的 CONTROL 场景，防「恒 deny」假象）：同一引擎在
 **无 deny 规则**时，`bypassPermissions` 下全部 `allow`、`default` 下安全命令与
@@ -225,9 +458,11 @@ node b_arm_deny_probe.mjs asar dataDir
 
 ---
 
-## 3. 配方复测记录（本卡，2026-10-31）
+## 3. 配方复测记录
 
-- **执行者**：ZCode（本卡）。**落点**：仓外临时目录（验证后整体删除，不在仓内
+### 3.1 第一轮（XJ-20261031-001，12 规则）
+
+- **执行者**：ZCode（001 卡执行者）。**落点**：仓外临时目录（验证后整体删除，不在仓内
   留任何实验产物；不给 `dryrun/` 添量——002 ADV-2 先例）。
 - **命令序列**：`node extract-asar.mjs "D:/MiniMaxcode/MiniMax Code/resources/app.asar" asar node_modules/@mavis`
   → `extracted 3901 files (skipped 0 non-regular) ... exit 0`；
@@ -257,6 +492,108 @@ node b_arm_deny_probe.mjs asar dataDir
 - **边界**：本复测是**引擎层**（与 002 D2 同层），不是真实模型回合的现场取证；
   现场层证据由闭合轮取（§5）。本轮 `dataDir` 指向临时目录，未触碰本机真实
   profile 的 `permission.json`。
+
+### 3.2 第二轮（XJ-20261031-002，47 规则全清单）
+
+- **执行者**：ZCode（002 卡执行者）。**落点**：仓外临时目录（`extract-asar.mjs` →
+  `extracted 3901 files (skipped 0 non-regular) ... exit 0`，与第一轮同配方；验证后
+  整体删除）。**独立性**（约束 4）：本轮枚举与探针由本卡执行者独立实跑，非照抄
+  001 评审 verdict 文本——两份独立采集构成交叉验证。
+- **枚举命令与输出原文**（`node enumerate-registry.mjs asar`，**exit 0**）：
+
+```
+### A. builtin-defs.js static ToolDefs: 19
+["read","write","edit","bash","grep","glob","todowrite","skill","code_review","memory","ask_user","request_feature_enable","web_fetch","task","task_append","task_query","task_output","task_stop","mavis"]
+### B. builtin-browser-defs.js browser family: 14
+["browser","browser_inspect","browser_navigate","browser_click","browser_type","browser_press_key","browser_scroll","browser_hover","browser_wait_for","browser_get_dom","browser_screenshot","browser_paste","browser_verify_text","browser_inspect_editable_targets"]
+### C. registry-builder inline names:
+  local-session-create-tool.js: ["session_create"]
+  local-website-deploy.js: ["website_deploy"]
+  local-workspace-semantic-search.js: ["workspace_semantic_search"]
+  local-web-search.js: []
+  local-mavis.js: ["mavis"]
+  local-cron-tools.js: ["self_reminder"]
+  web-search.js: ["web_search"]
+### D. CRON_TOOL_NAMES: ["self_reminder","cron_create","cron_read","cron_update","cron_delete"]
+### E. MAVIS_CAPABILITY_TOOL_NAMES: ["mavis","session_create"]
+### F. extension-registered: miniapp ["miniapp"] | plan-mode lifecycle ["EnterPlanMode","ExitPlanMode"]
+### G. builtin MCP servers: ["browser","matrix"]
+### H. agent-core defs NOT in desktop registry (must be []): []
+### TOTAL distinct desktop tool names: 45
+["EnterPlanMode","ExitPlanMode","ask_user","bash","browser","browser_click","browser_get_dom","browser_hover","browser_inspect","browser_inspect_editable_targets","browser_navigate","browser_paste","browser_press_key","browser_screenshot","browser_scroll","browser_type","browser_verify_text","browser_wait_for","code_review","cron_create","cron_delete","cron_read","cron_update","edit","glob","grep","mavis","memory","miniapp","read","request_feature_enable","self_reminder","session_create","skill","task","task_append","task_output","task_query","task_stop","todowrite","web_fetch","web_search","website_deploy","workspace_semantic_search","write"]
+```
+
+- **探针实测**（`node b_arm_deny_probe.mjs asar dataDir`，全清单 47 规则 × 2 模式，
+  非抽测）：**exit 0**，末行 `### cases=47 x modes=2; failures=0`，**94/94 行
+  `deny`**；两模式逐行同形（reason 逐字段一致，形态同 §2.2 统一口径）。
+
+- **对照表（注册表枚举项 ↔ 规则号 ↔ 当轮注册条件 ↔ 探针实测；45 工具名 + 2 builtin
+  服务器 = 47 规则，零遗漏、零「未映射」残留）**：
+
+| # | 枚举项 | 来源段 | 当轮注册条件（代码面） | 规则号 | 探针（bypass/default） |
+|---|---|---|---|---|---|
+| 1 | read | §A | 常驻 | R4 | deny / deny |
+| 2 | write | §A | 常驻 | R2 | deny / deny |
+| 3 | edit | §A | 常驻 | R3 | deny / deny |
+| 4 | bash | §A | 常驻 | R1 | deny / deny |
+| 5 | grep | §A | 常驻 | R6 | deny / deny |
+| 6 | glob | §A | 常驻 | R5 | deny / deny |
+| 7 | todowrite | §A | 常驻（`enableTodoWriteTool` 可门控） | R8 | deny / deny |
+| 8 | skill | §A | skillReader（常驻传入） | R13 | deny / deny |
+| 9 | code_review | §A | codeReviewAdapter | R15 | deny / deny |
+| 10 | memory | §A | memoryFacade + 配置门（本机 `memory.enabled: false` → 当轮未注册，规则按名惰性无害） | R14 | deny / deny |
+| 11 | ask_user | §A | askUserAdapter（`buildLocalAskUserAdapter` 常驻传入） | R23 | deny / deny |
+| 12 | request_feature_enable | §A | askUserAdapter（同上） | R24 | deny / deny |
+| 13 | web_fetch | §A | 常驻（`LocalWebFetchClient` 无条件构造） | R9 | deny / deny |
+| 14 | task | §A | delegation 门（`enableTaskTool !== false && features.delegation`） | R7 | deny / deny |
+| 15 | task_append | §A | 同 task（同一委托入口门） | R25 | deny / deny |
+| 16 | task_query | §A | taskControlAdapter 门（`enableTaskControlTools`） | R26 | deny / deny |
+| 17 | task_output | §A | 同 task_query | R27 | deny / deny |
+| 18 | task_stop | §A | 同 task_query | R28 | deny / deny |
+| 19 | mavis | §A/§C | mavisAgentAdapter | R16 | deny / deny |
+| 20 | browser | §B | browser-use 服务（桌面宿主有 browser host；目录选择别名 `mcp_browser` 非可调用名） | R31 | deny / deny |
+| 21 | browser_inspect | §B | 同上 | R32 | deny / deny |
+| 22 | browser_navigate | §B | 同上 | R33 | deny / deny |
+| 23 | browser_click | §B | 同上 | R34 | deny / deny |
+| 24 | browser_type | §B | 同上 | R35 | deny / deny |
+| 25 | browser_press_key | §B | 同上 | R36 | deny / deny |
+| 26 | browser_scroll | §B | 同上 | R37 | deny / deny |
+| 27 | browser_hover | §B | 同上 | R38 | deny / deny |
+| 28 | browser_wait_for | §B | 同上 | R39 | deny / deny |
+| 29 | browser_get_dom | §B | 同上 | R40 | deny / deny |
+| 30 | browser_screenshot | §B | 同上 | R41 | deny / deny |
+| 31 | browser_paste | §B | 同上 | R42 | deny / deny |
+| 32 | browser_verify_text | §B | 同上 | R43 | deny / deny |
+| 33 | browser_inspect_editable_targets | §B | 同上 | R44 | deny / deny |
+| 34 | session_create | §C | mavisAgentAdapter + mavisSessionAdapter | R17 | deny / deny |
+| 35 | website_deploy | §C | 常驻（`LocalWebsiteDeployClient` 在 `buildLocalNativeRuntimeTools` 无条件构造） | R29 | deny / deny |
+| 36 | workspace_semantic_search | §C | workspaceSemanticSearchAdapter | R30 | deny / deny |
+| 37 | web_search | §C | native 面 `webSearchEnabled === true`；另经 matrix builtin（MCP 面） | R10 | deny / deny |
+| 38 | self_reminder | §C/§D | mavisCronAdapter | R18 | deny / deny |
+| 39 | cron_create | §D | mavisCronAdapter | R19 | deny / deny |
+| 40 | cron_read | §D | mavisCronAdapter | R20 | deny / deny |
+| 41 | cron_update | §D | mavisCronAdapter | R21 | deny / deny |
+| 42 | cron_delete | §D | mavisCronAdapter | R22 | deny / deny |
+| 43 | miniapp | §F | 扩展条件注册（`exposesMiniAppControl(context)`） | R11 | deny / deny |
+| 44 | EnterPlanMode | §F | 扩展条件注册（`!ctx.plan && agentEntryEnabled()`） | R45 | deny / deny |
+| 45 | ExitPlanMode | §F | 扩展条件注册（`ctx.plan` 时） | R46 | deny / deny |
+| 46 | —（builtin server） | §G | builtin MCP server `browser`（工具以 `mcp__browser__<tool>` 原生名进目录） | R12 | `mcp__browser__navigate` -> deny / deny |
+| 47 | —（builtin server） | §G | builtin MCP server `matrix`（`BUILTIN_MATRIX_SERVER_NAME`；工具以 `mcp__matrix__<tool>` 原生名投影，服务器级规则整服覆盖其全部工具） | R47 | `mcp__matrix__web_search` -> deny / deny |
+
+- **与 001 评审采集的交叉验证**（两份独立枚举的增量，非矛盾）：本卡机械枚举在
+  评审所列清单（静态 defs + 浏览器族）之外，另覆盖注册器内联构建名
+  （session_create / website_deploy / workspace_semantic_search / self_reminder）、
+  cron 族规范名（`CRON_TOOL_NAMES` 四项）、扩展注册（EnterPlanMode / ExitPlanMode）
+  与第二 builtin server（`mcp__matrix`）——共 12 项为 001 清单与 R1–R12 之外的
+  新增规则面。名称勘误：`memory_search` 在 3.1.7 桌面注册表**不存在**（该 def 在
+  `agent-tools/dist/cloud/cloud-memory.js` 云面）；桌面记忆/检索面是 `memory`
+  （R14）与 `workspace_semantic_search`（R30），均已 deny。R15（code_review）
+  显式入清单后不再依赖引擎工具组映射的附带命中（回应 001 评审 ADV-1）。
+
+- **边界**：本轮仍是**引擎层**实测（与第一轮同层），现场层证据留待闭合轮（§5）；
+  `dataDir` 指向临时目录，未触碰本机真实 profile；仓外 temp 目录验证后整体删除，
+  仓内无实验残留。清单为**纯增**：R1–R12 未删未改，新增 R13–R47（约束 5 红线
+  未触碰——无任何工具被放行）。
 
 ---
 
