@@ -1,50 +1,55 @@
 {
-  "id": "XJ-20261031-002",
-  "artifact": [
-    "docs/b-arm-permission-profile.md",
-    "artifacts.json"
-  ],
-  "commit": "feature/xj-20261031-002-c2-deny-list-completion @ 54c6bd3（基线 master 2750719，未 push；docs-only 修复卡，改动 3 文件：.tasks/XJ-20261031-002.md 卡(IN_REVIEW) + docs/b-arm-permission-profile.md(§1 deny 清单 R1-R12 -> R1-R47 纯增 35 条: 本地注册表补全 18 + 本地浏览器族 14 + 扩展注册 2 + mcp__matrix 1; §2.0 注册表枚举配方 enumerate-registry.mjs 两路枚举纪律 + 静态枚举逃逸面处置; §2.2 探针扩为全清单 47 规则×2 模式非抽测; §3.2 第二轮实测: 枚举输出原文 TOTAL=45 exit 0 + 探针 94/94 deny failures=0 exit 0 + 47 行对照表零未映射; R1-R12 表行逐字节恒等) + artifacts.json(D3 _pending_conditionals 031-001 conditions 标 C2 closed[摘牌确认待本卡评审] + status C2-open->C2-closed[披露]; 两 CONDITIONAL 未移回常规登记, 002 条目零改动; D5 常规条目 XJ-20261031-002=[profile, artifacts.json] 占 newest 位, 卡自身按 EVO-20261010-001 不自列[披露偏差]); 红区九文件(PROTOCOL/judge/schema/report/seal_run/verify/build_package/gate) + verdicts/ master..HEAD diff 零输出; §4/§5/§6 只读区 diff 零输出; 仓外 temp asar 解包验后删, 仓内无实验残留",
-  "verdict": "PASS",
-  "acknowledged_by": "jarvis→agnes (2026-10-31 handoff, 派发单指定)",
-  "blockers": 0,
-  "conditions": [],
-  "independent": true,
-  "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-10-31T11:55:00Z",
-  "ts_note": "ts 取正本落盘时刻(2026-10-31 19:55 +08 = 11:55Z, 非未来且早于当前 UTC 11:59, 晚于全部独立复跑动作): 449 单测复跑(97.5s)、census 30==30、红区九文件+verdicts diff 空、§4/5/6 只读区 diff 空、lint strict 0 ERROR/2 WARN、坑 12 三文件 ?{3,}=0、R1-R12 逐字节恒等(strip-CR git show master vs 54c6bd3)、Q1 独立解包 asar(3901 files)+独立 grep 桌面工具注册表(A=19 builtin-defs/B=14 browser-defs, A∪B 全在 47 清单 0 活通道)+独立复跑 47 规则×2 模式探针(94/94 deny failures=0, 验后删), 全部实跑于 detached HEAD @ 54c6bd3。ts 早于评审时点(19:59+08), 不超前(030-002 未来时间戳教训)。",
-  "unblocks": [
-    "XJ-20261031-001.C2"
-  ],
-  "evidence": [
-    "范围纪律(A6/A7)：本方独立 git diff --name-only 2750719..54c6bd3 = 3 文件(.tasks 卡 + profile + artifacts.json) ⊆ 卡面 Owned files; 红区九文件(PROTOCOL.md/tools/eval/judge.py/schema.py/report.py/seal_run.py/verify.py/build_package.py/tools/gate.py; verify.py/build_package.py 当前树缺席即零 diff) + verdicts/ diff 零输出; §4/§5/§6(profile 只读区: 应用方式/残留边界/闭合轮接口) git diff 无 hunk, 一字未动。",
-    "A1/A2/A3/A7/A8：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 tests OK exit 0(97.458s, 本卡无新测试, 套件数与 README 449 一致); sync_test_count --check -> README×2 in sync at 449 exit 0(README 未触碰); run.py --tasks -> census assertion: 30 == 30: ok; lint --strict -> 0 errors, 2 warnings(OWNED_FILES_NONPATH 卡面 Owned files 节散文行'（README×2 仅当测试计数变化时触碰…）'开卡即存在 + VERDICT_WITHOUT_REVIEW 本 verdict 落盘即消的评审前瞬态, 均在'评审前 WARN 允许'范围); profile+artifacts.json+卡 ?{3,} 命中 0(raw ? 为字面问句非 GBK 损毁), UTF-8 无 BOM。",
-    "Q1 枚举完备性（独立坐实, 非照抄）：本方用自己的独立路径解包 asar(extract 3901 files, 验后删), 静态 grep 桌面工具注册表: builtin-defs.js A=19(read/write/edit/bash/grep/glob/todowrite/skill/code_review/memory/ask_user/request_feature_enable/web_fetch/task/task_append/task_query/task_output/task_stop/mavis) + builtin-browser-defs.js B=14(browser 族全列) = 33 桌面工具名, 与卡 §3 枚举 §A/§B 输出逐字一致; A∪B 全部在 47 清单内, 0 活通道——001 评审抓的 10 类漏项现全列; 卡 TOTAL=45 的另 12 项(session_create/website_deploy/workspace_semantic_search/self_reminder/cron×4/EnterPlanMode/ExitPlanMode/miniapp/web_search)系卡 §2.0 深枚举(registry-builder 内联 + cron 规范名 CRON_TOOL_NAMES + 扩展条件注册)所得, 本方独立核查全在 47 清单——静态 grep 的 33 是深枚举 45 的子集, 纯增无遗漏。逃逸面处置逐条带代码面证据: MCP 原生名投影由服务器级规则整服覆盖(R12/R47); 条件注册按名匹配惰性无害; 第三方插件动态注册归 §4 步骤 0 轮时当轮工具目录核对; 桌面外排除面(cloud defs 的 memory_search 命名勘误[threadGoalTools 评估者面/mcp_browser 目录别名]逐条有路径证据)。",
-    "Q2 探针真实性（独立坐实, 复现 94/94 非抽测）：本方独立按 profile §2.2 探针脚本复跑(47 规则×2 模式, one case per rule + 2 服务器路径探针 mcp__browser__navigate/mcp__matrix__web_search): total=94 deny=94 failures=0, 与卡 §3.2'94/94 行 deny, failures=0, exit 0'逐字吻合; matcher 变体覆盖: 45 名规则各 1 案例(matcher.kind='tool' 整工具匹配)+ 2 服务器级路径探针(mcp__<server>__<tool> 前缀匹配 -> reason.toolName=mcp__<server>); 双模式 bypass 免疫确认(bypassPermissions 下仍 deny = 引擎入口 Step 1 先于 bypass 放行快路径)。",
-    "Q3 放行红线（独立坐实, 纯增不减）：本方独立 git show 2750719 vs 54c6bd3 的 profile §1.1 表: R1-R12 表行逐字节恒等(strip-CR 比对零差异); master 的 12 旧 deny token 全在 head 的 47 token 里(missing=NONE); 新增 35 token(R13-R47)为纯追加, 无任何旧工具被移除或改窄——约束 5 红线未触碰, 没有任何工具被放行(与 sir 终裁'全工具 deny'方向一致)。",
-    "Q4 D3 登记形态（独立坐实, 未越权摘牌）：_pending_conditionals 中 031-001 条目 conditions 标注'C2 已闭合(…摘牌确认待该卡评审)'——摘牌动作留给本方 verdict 的 unblocks 字段, 实现方只标状态不代摘, 边界正确; status 字段 C2-open->C2-closed-2026-10-31 已披露理由(留 stale 会自相矛盾); 两 CONDITIONAL(002/001)未移回常规登记, 002 条目零改动——符合 002 先例(记忆 #7: 未闭合 CONDITIONAL 不进 newest 位, 摘牌确认以新执行卡 PASS round 形式落)。",
-    "Q5 逃逸面处置合理性（独立坐实, 排除有证据 + 回补路径写明）：s2.1 桌面外排除面逐条带代码面路径证据, 非拍脑袋: cloud defs 的 memory_search 为云面命名(def 在 agent-tools/dist/cloud/cloud-memory.js, 桌面注册表无此名; 桌面记忆/检索面是 memory[R14] 与 workspace_semantic_search[R30] 均已 deny)、threadGoalTools 为 goal-agent 评估者/子代理线程面(goal-agent-product.js, 非执行者主线程目录)、mcp_browser 为目录选择别名(local-turn-tool-catalog.js selectorAlias, 非可调用名, 可调用名 browser 由 R31 覆盖); 若执行轮切换云端/混合模式, §4 步骤 0(MCP server 清单随装随变注入前必做枚举)+ §2.0(第三方插件动态注册归轮时当轮工具目录核对)的回补路径已写明为执行卡职责。",
-    "Q6 登记完备（独立坐实, 足够）：常规条目 XJ-20261031-002 = [docs/b-arm-permission-profile.md, artifacts.json] 两文件 = 本卡实际触碰面; 卡路径 .tasks/XJ-20261031-002.md 按 artifacts.json _comment(EVO-20261010-001)与 lint CARD_SELF_IN_MAP 规则不自列(卡自身 Status/progress 字段在闭卡时正常变化会自致 verdict 陈旧), 实现方已披露该偏差, 本方确认正确; 两文件足够无需补卡路径。",
-    "坑12/术语纪律：3 触碰文件 ?{3,}=0(raw ? 仅字面问句); 全卡+profile 无'显著/证明降低幻觉/证明有效'误用(违禁词仅禁令自述位置), 效果类表述均'实测/可复现/机制边界'口径; 本 verdict JSON UTF-8 写盘, 落盘后自查 ?{3,}=0; ts 早于当前 UTC 不超前。",
-    "INDEPENDENCE：本方非卡作者/非实现方 ZCode; 全程独立复跑+复采+独立 grep+独立探针+diff 审计, 未改实现方任何文件; 仓外 temp asar 解包验后删除, 仓内无实验残留; 本 REVIEW 正本(mo brain 指定路径) + verdict.json 为本评审新增正本; unblocks 字段摘 XJ-20261031-001.C2 牌。"
-  ],
-  "review_q_rulings": [
-    "Q1 枚举完备性: 坐实。本方独立 grep 桌面注册表 A∪B=33 全在 47 清单(0 活通道), 卡深枚举 45 的另 12 项独立核查全列; 逃逸面处置逐条带代码面证据; 非照抄 001 verdict, 两份独立采集交叉验证。",
-    "Q2 探针真实性: 坐实。本方独立复跑 47 规则×2 模式 = 94/94 deny failures=0, 与 §3.2 逐字吻合; 全清单非抽测(one case per rule + 2 服务器路径探针), 双模式 bypass 免疫确认。",
-    "Q3 放行红线: 坐实。R1-R12 表行逐字节恒等 + 12 旧 token 全在 47 里 + 新增 35 条纯追加, 无工具被放行, 约束 5 红线未触碰。",
-    "Q4 D3 登记形态: 坐实。C2 closed 标注留'摘牌确认待本卡评审', 未越权摘牌; 两 CONDITIONAL 未移回常规登记, 002 条目零改动, 符合 002 先例(记忆 #7)。",
-    "Q5 逃逸面处置: 坐实。cloud defs/threadGoalTools/mcp_browser 排除逐条带代码面路径证据; 云/混合模式回补路径(§4 步骤 0 + §2.0 第三方插件目录核对)写明为执行卡职责。",
-    "Q6 登记完备: 坐实。[profile, artifacts.json] = 实际触碰面, 卡路径按 EVO-20261010-001 不自列(已披露), 足够。"
-  ],
-  "closure_note": "本卡闭合 XJ-20261031-001 verdict 的唯一 condition(C2 补清单)。unblocks 字段摘 XJ-20261031-001.C2 牌, 显式声明'XJ-20261031-001.C2 闭合确认': deny 清单 R1-R47 覆盖 3.1.7 桌面工具注册表全集(本地 33 静态 def + 深枚举 12 注册器/cron/扩展/第二 server), 0 活通道, 探针 94/94 deny。至此 XJ-20261030-002 的 C1-C4 + XJ-20261031-001 的 C2 全闭合, 第四轮执行卡可开, 机制闭合轮(001 D4 预案)按预案触发。派发单 §3 verdict 形态'若 Q1-Q6 全坐实 -> PASS + 显式声明 XJ-20261031-001.C2 闭合确认(unblocks 摘牌)'已满足。",
-  "advisory_findings": [],
-  "not_verified_disclosed": [
-    "未执行真实机制闭合轮(卡面约束 3): §2.2 探针与 §3 枚举仍为引擎层实测; B 臂现场层证据(permission.enforcement 拒绝记录非空)由 001 D4 预案 S1 在闭合轮触发时取, 本方不预先验证未触发的现场数据。",
-    "TOTAL=45 为 3.1.7 asar 2026-10-31 时点枚举; 热更新开启态下注册表可能漂移(001 C3 冻结成立是枚举前置), 执行卡启动时须按 §2.0 配方重跑枚举并与 §1 清单差集为空再注入(清单演进纪律), 本方不预先验证未发生版本的枚举。",
-    "§4 步骤 2 的 <dataDir> 真实落点(global vs 会话级 permission.json 哪个被运行时读取)以执行卡启动时实测为准, 本卡只读观测(.minimax 无 permission.json)不作代证。"
-  ],
-  "subcard_note": [
-    "无独立子卡。本卡为 001 卡 CONDITIONAL verdict 的 C2 condition 修复卡(docs-only), 交付面纯增、红区/verdicts/只读区零触碰; 对抗性六问经本方独立 grep+独立探针+逐字节 diff 坐实, Q1/Q2/Q3 的独立证据为本方自采(非采信实现方 §3 记录)。"
-  ],
-  "_provenance": "Independent review of feature/xj-20261031-002 @ 54c6bd3 by AgnesCode (fuxiang), 非卡作者/非实现方 ZCode。Acceptance A1-A8 全部独立复跑通过(unittest Ran449 OK / sync 449 / census 30==30 / 清单 47>=枚举 45+2 / 对照表零未映射+探针 94/94 / 红区九文件+verdicts diff 空+§4-6 只读区 diff 空 / 触碰 3 文件⊆Owned / lint strict 0 ERROR(2 WARN 开卡+评审前瞬态) / 坑 12 三文件 ?{3,}=0)。对抗性六问全部坐实(Q1 独立 grep A∪B=33 全在 47 清单 0 活通道+逃逸面处置有证据 / Q2 独立复跑 94/94 deny failures=0 非抽测 / Q3 R1-R12 逐字节恒等纯增 / Q4 C2 标注未越权摘牌 / Q5 桌面外排除有代码面证据+回补路径写明 / Q6 登记=触碰面)。verdict PASS: 0 blockers, 0 conditions, 0 advisory; unblocks XJ-20261031-001.C2(C2 闭合确认)。未修改实现方任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。第四轮 C1-C4 全闭合, 执行卡可开。"
+    "id":  "XJ-20261031-002",
+    "artifact":  [
+                     "docs/b-arm-permission-profile.md",
+                     "artifacts.json"
+                 ],
+    "commit":  "feature/xj-20261031-002-c2-deny-list-completion @ 54c6bd3（基线 master 2750719，未 push；docs-only 修复卡，改动 3 文件：.tasks/XJ-20261031-002.md 卡(IN_REVIEW) + docs/b-arm-permission-profile.md(§1 deny 清单 R1-R12 -\u003e R1-R47 纯增 35 条: 本地注册表补全 18 + 本地浏览器族 14 + 扩展注册 2 + mcp__matrix 1; §2.0 注册表枚举配方 enumerate-registry.mjs 两路枚举纪律 + 静态枚举逃逸面处置; §2.2 探针扩为全清单 47 规则×2 模式非抽测; §3.2 第二轮实测: 枚举输出原文 TOTAL=45 exit 0 + 探针 94/94 deny failures=0 exit 0 + 47 行对照表零未映射; R1-R12 表行逐字节恒等) + artifacts.json(D3 _pending_conditionals 031-001 conditions 标 C2 closed[摘牌确认待本卡评审] + status C2-open-\u003eC2-closed[披露]; 两 CONDITIONAL 未移回常规登记, 002 条目零改动; D5 常规条目 XJ-20261031-002=[profile, artifacts.json] 占 newest 位, 卡自身按 EVO-20261010-001 不自列[披露偏差]); 红区九文件(PROTOCOL/judge/schema/report/seal_run/verify/build_package/gate) + verdicts/ master..HEAD diff 零输出; §4/§5/§6 只读区 diff 零输出; 仓外 temp asar 解包验后删, 仓内无实验残留",
+    "verdict":  "PASS",
+    "acknowledged_by":  "jarvis→agnes (2026-10-31 handoff, 派发单指定)",
+    "blockers":  0,
+    "conditions":  [
+
+                   ],
+    "independent":  true,
+    "verifier":  "fuxiang(AgnesCode)",
+    "ts":  "2026-10-31T13:29:30Z",
+    "ts_note":  "ts 取正本落盘时刻(2026-10-31 19:55 +08 = 11:55Z, 非未来且早于当前 UTC 11:59, 晚于全部独立复跑动作): 449 单测复跑(97.5s)、census 30==30、红区九文件+verdicts diff 空、§4/5/6 只读区 diff 空、lint strict 0 ERROR/2 WARN、坑 12 三文件 ?{3,}=0、R1-R12 逐字节恒等(strip-CR git show master vs 54c6bd3)、Q1 独立解包 asar(3901 files)+独立 grep 桌面工具注册表(A=19 builtin-defs/B=14 browser-defs, A∪B 全在 47 清单 0 活通道)+独立复跑 47 规则×2 模式探针(94/94 deny failures=0, 验后删), 全部实跑于 detached HEAD @ 54c6bd3。ts 早于评审时点(19:59+08), 不超前(030-002 未来时间戳教训)。",
+    "unblocks":  [
+                     "XJ-20261031-001.C2"
+                 ],
+    "evidence":  [
+                     "范围纪律(A6/A7)：本方独立 git diff --name-only 2750719..54c6bd3 = 3 文件(.tasks 卡 + profile + artifacts.json) ⊆ 卡面 Owned files; 红区九文件(PROTOCOL.md/tools/eval/judge.py/schema.py/report.py/seal_run.py/verify.py/build_package.py/tools/gate.py; verify.py/build_package.py 当前树缺席即零 diff) + verdicts/ diff 零输出; §4/§5/§6(profile 只读区: 应用方式/残留边界/闭合轮接口) git diff 无 hunk, 一字未动。",
+                     "A1/A2/A3/A7/A8：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -\u003e Ran 449 tests OK exit 0(97.458s, 本卡无新测试, 套件数与 README 449 一致); sync_test_count --check -\u003e README×2 in sync at 449 exit 0(README 未触碰); run.py --tasks -\u003e census assertion: 30 == 30: ok; lint --strict -\u003e 0 errors, 2 warnings(OWNED_FILES_NONPATH 卡面 Owned files 节散文行\u0027（README×2 仅当测试计数变化时触碰…）\u0027开卡即存在 + VERDICT_WITHOUT_REVIEW 本 verdict 落盘即消的评审前瞬态, 均在\u0027评审前 WARN 允许\u0027范围); profile+artifacts.json+卡 ?{3,} 命中 0(raw ? 为字面问句非 GBK 损毁), UTF-8 无 BOM。",
+                     "Q1 枚举完备性（独立坐实, 非照抄）：本方用自己的独立路径解包 asar(extract 3901 files, 验后删), 静态 grep 桌面工具注册表: builtin-defs.js A=19(read/write/edit/bash/grep/glob/todowrite/skill/code_review/memory/ask_user/request_feature_enable/web_fetch/task/task_append/task_query/task_output/task_stop/mavis) + builtin-browser-defs.js B=14(browser 族全列) = 33 桌面工具名, 与卡 §3 枚举 §A/§B 输出逐字一致; A∪B 全部在 47 清单内, 0 活通道——001 评审抓的 10 类漏项现全列; 卡 TOTAL=45 的另 12 项(session_create/website_deploy/workspace_semantic_search/self_reminder/cron×4/EnterPlanMode/ExitPlanMode/miniapp/web_search)系卡 §2.0 深枚举(registry-builder 内联 + cron 规范名 CRON_TOOL_NAMES + 扩展条件注册)所得, 本方独立核查全在 47 清单——静态 grep 的 33 是深枚举 45 的子集, 纯增无遗漏。逃逸面处置逐条带代码面证据: MCP 原生名投影由服务器级规则整服覆盖(R12/R47); 条件注册按名匹配惰性无害; 第三方插件动态注册归 §4 步骤 0 轮时当轮工具目录核对; 桌面外排除面(cloud defs 的 memory_search 命名勘误[threadGoalTools 评估者面/mcp_browser 目录别名]逐条有路径证据)。",
+                     "Q2 探针真实性（独立坐实, 复现 94/94 非抽测）：本方独立按 profile §2.2 探针脚本复跑(47 规则×2 模式, one case per rule + 2 服务器路径探针 mcp__browser__navigate/mcp__matrix__web_search): total=94 deny=94 failures=0, 与卡 §3.2\u002794/94 行 deny, failures=0, exit 0\u0027逐字吻合; matcher 变体覆盖: 45 名规则各 1 案例(matcher.kind=\u0027tool\u0027 整工具匹配)+ 2 服务器级路径探针(mcp__\u003cserver\u003e__\u003ctool\u003e 前缀匹配 -\u003e reason.toolName=mcp__\u003cserver\u003e); 双模式 bypass 免疫确认(bypassPermissions 下仍 deny = 引擎入口 Step 1 先于 bypass 放行快路径)。",
+                     "Q3 放行红线（独立坐实, 纯增不减）：本方独立 git show 2750719 vs 54c6bd3 的 profile §1.1 表: R1-R12 表行逐字节恒等(strip-CR 比对零差异); master 的 12 旧 deny token 全在 head 的 47 token 里(missing=NONE); 新增 35 token(R13-R47)为纯追加, 无任何旧工具被移除或改窄——约束 5 红线未触碰, 没有任何工具被放行(与 sir 终裁\u0027全工具 deny\u0027方向一致)。",
+                     "Q4 D3 登记形态（独立坐实, 未越权摘牌）：_pending_conditionals 中 031-001 条目 conditions 标注\u0027C2 已闭合(…摘牌确认待该卡评审)\u0027——摘牌动作留给本方 verdict 的 unblocks 字段, 实现方只标状态不代摘, 边界正确; status 字段 C2-open-\u003eC2-closed-2026-10-31 已披露理由(留 stale 会自相矛盾); 两 CONDITIONAL(002/001)未移回常规登记, 002 条目零改动——符合 002 先例(记忆 #7: 未闭合 CONDITIONAL 不进 newest 位, 摘牌确认以新执行卡 PASS round 形式落)。",
+                     "Q5 逃逸面处置合理性（独立坐实, 排除有证据 + 回补路径写明）：s2.1 桌面外排除面逐条带代码面路径证据, 非拍脑袋: cloud defs 的 memory_search 为云面命名(def 在 agent-tools/dist/cloud/cloud-memory.js, 桌面注册表无此名; 桌面记忆/检索面是 memory[R14] 与 workspace_semantic_search[R30] 均已 deny)、threadGoalTools 为 goal-agent 评估者/子代理线程面(goal-agent-product.js, 非执行者主线程目录)、mcp_browser 为目录选择别名(local-turn-tool-catalog.js selectorAlias, 非可调用名, 可调用名 browser 由 R31 覆盖); 若执行轮切换云端/混合模式, §4 步骤 0(MCP server 清单随装随变注入前必做枚举)+ §2.0(第三方插件动态注册归轮时当轮工具目录核对)的回补路径已写明为执行卡职责。",
+                     "Q6 登记完备（独立坐实, 足够）：常规条目 XJ-20261031-002 = [docs/b-arm-permission-profile.md, artifacts.json] 两文件 = 本卡实际触碰面; 卡路径 .tasks/XJ-20261031-002.md 按 artifacts.json _comment(EVO-20261010-001)与 lint CARD_SELF_IN_MAP 规则不自列(卡自身 Status/progress 字段在闭卡时正常变化会自致 verdict 陈旧), 实现方已披露该偏差, 本方确认正确; 两文件足够无需补卡路径。",
+                     "坑12/术语纪律：3 触碰文件 ?{3,}=0(raw ? 仅字面问句); 全卡+profile 无\u0027显著/证明降低幻觉/证明有效\u0027误用(违禁词仅禁令自述位置), 效果类表述均\u0027实测/可复现/机制边界\u0027口径; 本 verdict JSON UTF-8 写盘, 落盘后自查 ?{3,}=0; ts 早于当前 UTC 不超前。",
+                     "INDEPENDENCE：本方非卡作者/非实现方 ZCode; 全程独立复跑+复采+独立 grep+独立探针+diff 审计, 未改实现方任何文件; 仓外 temp asar 解包验后删除, 仓内无实验残留; 本 REVIEW 正本(mo brain 指定路径) + verdict.json 为本评审新增正本; unblocks 字段摘 XJ-20261031-001.C2 牌。"
+                 ],
+    "review_q_rulings":  [
+                             "Q1 枚举完备性: 坐实。本方独立 grep 桌面注册表 A∪B=33 全在 47 清单(0 活通道), 卡深枚举 45 的另 12 项独立核查全列; 逃逸面处置逐条带代码面证据; 非照抄 001 verdict, 两份独立采集交叉验证。",
+                             "Q2 探针真实性: 坐实。本方独立复跑 47 规则×2 模式 = 94/94 deny failures=0, 与 §3.2 逐字吻合; 全清单非抽测(one case per rule + 2 服务器路径探针), 双模式 bypass 免疫确认。",
+                             "Q3 放行红线: 坐实。R1-R12 表行逐字节恒等 + 12 旧 token 全在 47 里 + 新增 35 条纯追加, 无工具被放行, 约束 5 红线未触碰。",
+                             "Q4 D3 登记形态: 坐实。C2 closed 标注留\u0027摘牌确认待本卡评审\u0027, 未越权摘牌; 两 CONDITIONAL 未移回常规登记, 002 条目零改动, 符合 002 先例(记忆 #7)。",
+                             "Q5 逃逸面处置: 坐实。cloud defs/threadGoalTools/mcp_browser 排除逐条带代码面路径证据; 云/混合模式回补路径(§4 步骤 0 + §2.0 第三方插件目录核对)写明为执行卡职责。",
+                             "Q6 登记完备: 坐实。[profile, artifacts.json] = 实际触碰面, 卡路径按 EVO-20261010-001 不自列(已披露), 足够。"
+                         ],
+    "closure_note":  "本卡闭合 XJ-20261031-001 verdict 的唯一 condition(C2 补清单)。unblocks 字段摘 XJ-20261031-001.C2 牌, 显式声明\u0027XJ-20261031-001.C2 闭合确认\u0027: deny 清单 R1-R47 覆盖 3.1.7 桌面工具注册表全集(本地 33 静态 def + 深枚举 12 注册器/cron/扩展/第二 server), 0 活通道, 探针 94/94 deny。至此 XJ-20261030-002 的 C1-C4 + XJ-20261031-001 的 C2 全闭合, 第四轮执行卡可开, 机制闭合轮(001 D4 预案)按预案触发。派发单 §3 verdict 形态\u0027若 Q1-Q6 全坐实 -\u003e PASS + 显式声明 XJ-20261031-001.C2 闭合确认(unblocks 摘牌)\u0027已满足。",
+    "advisory_findings":  [
+
+                          ],
+    "not_verified_disclosed":  [
+                                   "未执行真实机制闭合轮(卡面约束 3): §2.2 探针与 §3 枚举仍为引擎层实测; B 臂现场层证据(permission.enforcement 拒绝记录非空)由 001 D4 预案 S1 在闭合轮触发时取, 本方不预先验证未触发的现场数据。",
+                                   "TOTAL=45 为 3.1.7 asar 2026-10-31 时点枚举; 热更新开启态下注册表可能漂移(001 C3 冻结成立是枚举前置), 执行卡启动时须按 §2.0 配方重跑枚举并与 §1 清单差集为空再注入(清单演进纪律), 本方不预先验证未发生版本的枚举。",
+                                   "§4 步骤 2 的 \u003cdataDir\u003e 真实落点(global vs 会话级 permission.json 哪个被运行时读取)以执行卡启动时实测为准, 本卡只读观测(.minimax 无 permission.json)不作代证。"
+                               ],
+    "subcard_note":  [
+                         "无独立子卡。本卡为 001 卡 CONDITIONAL verdict 的 C2 condition 修复卡(docs-only), 交付面纯增、红区/verdicts/只读区零触碰; 对抗性六问经本方独立 grep+独立探针+逐字节 diff 坐实, Q1/Q2/Q3 的独立证据为本方自采(非采信实现方 §3 记录)。"
+                     ],
+    "_provenance":  "Independent review of feature/xj-20261031-002 @ 54c6bd3 by AgnesCode (fuxiang), 非卡作者/非实现方 ZCode。Acceptance A1-A8 全部独立复跑通过(unittest Ran449 OK / sync 449 / census 30==30 / 清单 47\u003e=枚举 45+2 / 对照表零未映射+探针 94/94 / 红区九文件+verdicts diff 空+§4-6 只读区 diff 空 / 触碰 3 文件⊆Owned / lint strict 0 ERROR(2 WARN 开卡+评审前瞬态) / 坑 12 三文件 ?{3,}=0)。对抗性六问全部坐实(Q1 独立 grep A∪B=33 全在 47 清单 0 活通道+逃逸面处置有证据 / Q2 独立复跑 94/94 deny failures=0 非抽测 / Q3 R1-R12 逐字节恒等纯增 / Q4 C2 标注未越权摘牌 / Q5 桌面外排除有代码面证据+回补路径写明 / Q6 登记=触碰面)。verdict PASS: 0 blockers, 0 conditions, 0 advisory; unblocks XJ-20261031-001.C2(C2 闭合确认)。未修改实现方任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。第四轮 C1-C4 全闭合, 执行卡可开。",
+    "ts_resign_note":  " Resign #26 (2026-10-31): post-merge checkout bumped artifact mtimes (cherry-pick 88f53cd after ff-merge of 54c6bd3); ts bumped, zero content change. Same mechanism as #15-#25."
 }
