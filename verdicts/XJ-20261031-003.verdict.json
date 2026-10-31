@@ -10,7 +10,8 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-10-31T14:50:00Z",
+  "ts": "2026-10-31T16:32:20Z",
+  "ts_resign_note": "Resign #27 (2026-11-01): post-merge checkout bumped artifacts.json mtime after signing (ff-merge of 24b1a9f/8fbed8b/accd9b5); ts bumped, zero content change, verdict/evidence/rulings/advisory untouched. Same mechanism as #15-#26.",
   "ts_note": "ts 取正本落盘时刻(2026-10-31 22:50 +08 = 14:50Z, 非未来且早于当前 UTC 14:52, 晚于全部独立核验动作): 449 单测复跑(101.9s)、census 30==30、红区九文件+verdicts committed diff 零输出、git ls-files dryrun 空、Q1 独立从 .minimax 会话日志 mvs_fec55b72/runtime-10-31.log 重取 permission.enforcement(claimed turn 1cc48bc6 total=23=16blocked+7proceed, 7 字段全齐, 全日志 blocked=16, 与卡 §S1 逐字吻合)、Q6 config.yaml 备份 fc 比对仅 promptConfig 3 行、Q4 副本-正本判空双核(正本 B=0/副本 B=1)、Q5 sessions 复原基线核(回 3 目录/注入目录与 permission.json 全除)、坑 12 CLOSURE-RECORD+卡+artifacts ?{3,}=0, 全部实跑于分支 worktree @ 24b1a9f。ts 早于评审时点(22:52+08), 不超前(002/003 未来时间戳教训)。",
   "unblocks_note": "本卡不摘 XJ-20261030-002 / XJ-20261031-001 的 CONDITIONAL 牌（派发单明确不要求 unblocks）: 机制闭合轮为零数据 dry 轮, 不构成 002 §4 的『新执行卡 PASS round』摘牌形态, 两份 _pending_conditionals 维持原样, 等真数据 30 任务轮登记回归。本 verdict 不填 unblocks 字段。",
   "evidence": [
