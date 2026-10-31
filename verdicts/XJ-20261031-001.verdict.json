@@ -1,0 +1,63 @@
+{
+  "id": "XJ-20261031-001",
+  "artifact": [
+    "docs/eval-runner-protocol.md",
+    "docs/b-arm-permission-profile.md",
+    "docs/executor-update-freeze.md",
+    "docs/mechanism-closure-round.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261031-001-close-conditions-c1-c4 @ 2ba4f6b（基线 master 28cc669，未 push；docs-only 卡，改动 6 文件：.tasks/XJ-20261031-001.md 卡(IN_REVIEW) + docs/eval-runner-protocol.md(§13.2 追加第 4 点『执行面封堵』, 0 删除/21 新增, 1-3 点字节级未动) + docs/b-arm-permission-profile.md(R1-R12 全工具 deny 含 read/glob/grep + MCP 服务器级 mcp__browser, 逐条验证命令+预期拒绝输出, 仓外 temp 引擎层复测 exit 0 验后删) + docs/executor-update-freeze.md(autoUpdate:false 4 步 SOP + V1/V2/V3 三验证带退出码, 未执行) + docs/mechanism-closure-round.md(S0-S6 触发序列 + P1-P9 PASS 判据, 未执行) + artifacts.json(XJ-20261031-001 条目 4 文件占 newest 位; _pending_conditionals 块含 002 四条件零改动); 红区 13 文件超集口径(卡面 9 + report/schema/runlog/tasks/prereg) master..HEAD diff 零输出",
+  "verdict": "CONDITIONAL",
+  "acknowledged_by": "jarvis→agnes (2026-10-31 handoff, 派发单指定)",
+  "blockers": 0,
+  "conditions": [
+    "C2-补清单（本方唯一 condition, 002 C2 的剩余闭合面）: B 臂 deny 清单须覆盖当轮运行时工具注册表全集——agent-tools 本地 builtin-defs.js 全集（read/write/edit/bash/grep/glob/todowrite/skill/code_review/memory/ask_user/request_feature_enable/web_fetch/task/task_append/task_query/task_output/task_stop/mavis）+ builtin-browser-defs.js 本地原生浏览器族 14 项（browser/browser_navigate/.../browser_screenshot）+ MCP 服务器级 mcp__<server> 枚举。本方 Q2 独立复测坐实 profile §1 的 12 项清单漏 10 类本地原生工具: 仓外 temp 重建 profile §2 配方(extract-asar 3901 files exit 0) 后 12 规则探针 24/24 双模式全 deny(D2 引擎层读数复现属实), 但 B 组未列工具(browser/browser_navigate/browser_screenshot/skill/memory_search/ask_user/request_feature_enable/mavis/task_query/task_output) 在 deny12 下两模式 20 组 tool×mode 均 allow——R12 mcp__browser 只命中 MCP 路径, 命中不了本地 browser_* 命名空间; task 整工具 deny 亦命中不了 task_query/task_output。B 臂活通道(浏览器面/记忆检索/子任务查询/本地命令面)未堵死, 与 sir 2026-10-31 终裁『deny 到只读面=执行者无任何工具』的实质意图不符, 002 C2 仅部分闭合。执行卡注入前: 按当轮运行时注册表枚举补清单(profile §4 步骤 0 同款纪律, 本地工具注册表 + MCP server 两路枚举) + 复跑 profile §2.2 探针(补后清单) exit 0 + 枚举命令与输出对照表留档(ADV-1)。补清单在 sir 终裁同一方向(全工具 deny)内, 无需重新挂 adjudicator; 若执行卡拟部分放行任一原生只读工具, 须回 sir 裁定。责任方 执行卡。"
+  ],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-10-30T17:05:00Z",
+  "ts_note": "ts 取正本落盘时刻(2026-10-31 01:05 +08 = 2026-10-30T17:05Z, 非未来, 晚于全部独立复跑动作): 449 单测复跑(103.5s)、census 30==30、协议 diff 行级核验(0 删/21 增)、红区 13 文件超集 diff 空、lint strict 0 ERROR/1 WARN、坑 12 四文件 ?{3,}=0、artifacts.json 形态核对(_pending_conditionals 零改动)、Q2 仓外 temp 引擎层独立复测(extract-asar 3901 + 12 规则探针 24/24 + B 组 10 类未列工具 20 组实测, 验后删)、Q6 边界核验(config.yaml promptConfig 键缺失=D3 未执行 / .minimax 无 permission.json=D2 未触碰 profile), 全部实跑于分支 worktree @ 2ba4f6b。派发单要求 ts 勿超前: 本 ts 早于评审时点(01:07+08), 不超前。",
+  "evidence": [
+    "范围纪律(A5/A6)：本方独立 git diff --name-only master..HEAD = 6 文件(.tasks 卡 + 4 新 docs + artifacts.json) ⊆ 卡面 Owned files; 红区 13 文件超集口径(卡面约束 1 的 9 文件 + 001/002 同口径顺延的 report.py/schema.py/runlog.py/tasks.py + docs/eval-prereg.md) master..HEAD diff 零输出; git status 干净(无残留实验产物, 002 ADV-2 的 dryrun/ 已被 031 卡验后清理, 仓内无未跟踪实验目录)。",
+    "A1/A2/A7/A8：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 tests OK exit 0(103.508s, 本卡无新测试, 套件数与 README 449 一致); run.py --tasks -> census assertion: 30 == 30: ok(D1 协议改动未触任务清单与 census); lint --strict -> 0 errors, 1 warning(VERDICT_WITHOUT_REVIEW 开卡瞬态, 本 verdict 落盘即消; strict exit 1 由 warnings>0 驱动, 002 同形先例); 三份新 docs + 协议 ?{3,} 命中 0(raw ? 为字面问句, 非 GBK 损毁签名), UTF-8 无 BOM。",
+    "Q1 append-only 合规（独立坐实）：git diff master..HEAD -- docs/eval-runner-protocol.md 行级核验: @@ -329,4 +329,26 @@, 0 删除行/21 新增行, 全部为 §13.2 尾部第 4 点追加; 既有 1-3 点(C7 污染边界/E2 判定不改/run-log 自动记录)字节级未动; 第 4 点未架空 1-3——它是执行面封堵的独立机制层, 并显式回指第 3 点(A 臂命令执行仍按第 3 点经 wrapper 落 run-log), 语义补强非稀释。",
+    "Q2 只读面覆盖完整性（独立复测, 未坐实——本卡唯一 condition）：本方在仓外 temp 重建 profile §2 配方(extract-asar.mjs 解包 3901 files exit 0 -> 12 规则探针, 验后删): (a) 12/12 规则引擎层 deny 复现(bypassPermissions/default 双模式 24/24, reason=rule:<tool>, bypass 免疫属实, D2 读数可信); (b) 但 asar 内 agent-tools/dist/desktop/builtin-defs.js 本地工具 registry 全集(18 工具)与 builtin-browser-defs.js 浏览器族 14 工具 对照 R1-R12: 漏 browser/browser_navigate/browser_screenshot(browser 族其余 11 项同机制) + skill + memory_search + ask_user + request_feature_enable + mavis + task_query/task_output/task_stop 共 10 类; 探针 B 组实测 deny12 下 20 组 tool×mode 均 allow(2 live channel 类型: bypass 模式 allow-by-mode / default 模式 allow-by-safetyCheck); 附带正面读数 code_review 未列清单却 deny(引擎工具组映射), 但附带命中不可审计 != 清单完备。判: C2 部分闭合, B 臂活通道未堵死, 挂 condition。",
+    "Q3 D3 可执行性（独立坐实）：4 步关闭 SOP(config.yaml 顶层 promptConfig.autoUpdate:false, 键位路径以执行卡实测为准)+ V1(配置回读 exit 0/1)/V2(更新器日志静默检查停止, 重启后满 1h 才有判别力)/V3(state.json lastCheckTime 代理读数 75min 间隔采样, 诚实声明代理口径非开关键值直接反映) 各带命令与退出码; 未伪造执行——本方独立核验 config.yaml 现无 promptConfig 键(=SOP 未执行, 自动更新仍为 002 D1 实测开启态), 文档 §5 边界声明与实测一致; FAIL 回退路径(登记阻塞项, 不得开跑, 备选升级挂执行卡/sir)明示。",
+    "Q4 D4 判据充分性（独立坐实, 带 1 保留）：P1(B 臂 permission.enforcement 记录非空, gate_result=blocked 现场层证据, 补 002 §6.1 缺口)+ P4(判空不误报: 合法 B 零记录 exit 0 + 副本注入伪造 B 记录翻红 exit 1, 检查活着)+ P8(环境复原 permission.json 回 P0-4 基线)+ P9(零数据边界: 无 E 级判定/产物只在 $W/artifacts newest 无闭合轮条目/无 verdict) 四判据把『封堵->记录->密封->解封->判定』链的机械闭合判齐; P6 对 H6(整体替换自洽清单) 明示不验收, 以 custody 规程(seal 与副本分置)为既定缓解, 与 002 D4 裁定口径一致。保留: P3『B 臂零记录=零执行』的证据力前提是权限门控封堵全部执行通道——Q2 清单缺口正是削弱该前提, C2 补清单闭合后 P3 才真正成立, 判据设计充分性依赖 condition。",
+    "Q5 C7(a) 一致性（独立坐实）：§13.2 第 4 点措辞与 002 verdict review_q_rulings 裁定逐字级一致(两臂身份面同执行者/同工具清单/同配置, 差异收敛为权限门控单一实验干预变量, 同第三轮 A 真执行/B 零执行干预只换执行形态), 裁定来源写足(sir 2026-10-31 终裁 + 002 adjudicator_pending 字段); 协议层已冻结该裁定形态, 无需另开 prereg 补丁; prereg §9 变更记录口径属 C1 责任方(sir/adjudicator)后续动作, 本卡条文落地本身即 C1 的文档侧交付。",
+    "Q6 越界检查（独立坐实, 未越界）：本方独立核验 D3 未执行(config.yaml 无 promptConfig 键, autoUpdate 仍默认 true); D2 未触碰真实 profile(C:\\Users\\15812\\.minimax\\ 无 permission.json, %APPDATA%\\MiniMax\\ 同步核); git status 干净无新 run 数据(closure 预案 §0 硬边界 1-4: 不触 E 级判定器/不写 run-data/不进 artifacts newest/不产 verdict); 红区 13 文件超集 diff 零输出; _pending_conditionals 块零改动(闭合登记归执行卡链路, 符合 dp 参谋 2026-10-30 规则化)。配方验证按 002 D2 同款在仓外临时目录做引擎层复测, 无 E 级数据无 run 目录写入, 临时目录验后删除(002 ADV-2 先例, 未给 dryrun/ 添量)。",
+    "artifacts.json 形态（独立核对）：XJ-20261031-001 条目 = 4 产物文件(协议/profile/冻结 SOP/闭合预案), 占 newest 位; _pending_conditionals 块完整保留 002 的四条件 C1-C4 + artifacts 列表 + dp 参谋规则化 _comment, 零改动——本 verdict 的 unblocks 字段显式摘 C1/C3/C4 牌, C2 待补清单闭合后由执行卡登记链路摘牌。",
+    "坑12/术语纪律：4 份 docs ?{3,}=0(raw ? 仅字面问句); 全卡+三文档无『显著/证明降低幻觉/证明有效』误用, 效果类表述均『实测/可复现/机制边界』口径, 『预注册条件下的对照证据』纪律未破; 本 verdict JSON UTF-8 写盘, 落盘后自查 ?{3,}=0。",
+    "INDEPENDENCE：本方非卡作者/非实现方 ZCode; 全程独立复跑+复采+仓外引擎层复测+diff 审计, 未改实现方任何文件; 仓外 temp 实验物(asar 解包+探针)验后删除, 仓内无残留; 本 REVIEW 正本(mo brain 指定路径) + verdict.json 为本评审新增正本。"
+  ],
+  "review_q_rulings": [
+    "Q1 append-only 合规: 坐实。协议 diff 0 删除/21 新增纯追加第 4 点, 1-3 点字节级未动, 第 4 点补强非架空(显式回指第 3 点)。",
+    "Q2 只读面覆盖: 未坐实(实质缺口, 本卡唯一 condition)。12 规则引擎层 24/24 deny 复现属实, 但清单漏 10 类本地原生工具(browser 族/skill/memory_search/ask_user/request_feature_enable/mavis/task_query/task_output/task_stop), deny12 下 20 组 tool×mode 均 allow, B 臂活通道未堵死; 执行卡注入前按当轮运行时注册表枚举补清单 + 探针 exit 0 + 对照表留档。补清单在 sir 终裁同方向内无需重挂 adjudicator。",
+    "Q3 D3 可执行性: 坐实。V1/V2/V3 各带命令+退出码+『满 1h 判别力』诚实声明, 未伪造执行(独立核验 promptConfig 键缺失), FAIL 回退路径明示。",
+    "Q4 D4 判据充分性: 坐实(带保留)。P1 非空 + P4 不误报/不失灵 + P8 复原 + P9 零数据边界判据设计齐备, H6 明示不验收走 custody 规程; 保留: P3 证据力依赖 Q2 清单闭合。",
+    "Q5 C7(a) 一致性: 坐实。条文措辞与 002 机制张力裁定逐字级一致, 差异收敛为门控单变量, 无需另开 prereg 补丁。",
+    "Q6 越界检查: 坐实(未越界)。未动 executor 配置(config.yaml 键缺失)、无 run 数据(git status 干净)、未触红区(13 文件超集 diff 空)、未碰 _pending_conditionals。"
+  ],
+  "unblocks": [
+    "XJ-20261030-002.C1",
+    "XJ-20261030-002.C3",
+    "XJ-20261030-002.C4"
+  ],
+  "closure_note": "XJ-20261030-002 的 C1 由本卡 D1(协议 §13.2 第 4 点 append-only)闭合, C3 由 D3(autoUpdate 冻结 SOP, 执行卡轮次前引用并核验 V1-V3)闭合, C4 由 D4(机制闭合轮 S0-S6+P1-P9, 执行卡触发零数据轮并逐判据留痕)闭合——本 verdict unblocks 字段显式摘此三牌。C2 部分闭合: D2 交付 12 规则 deny profile 引擎层属实, 但清单未覆盖 minimax 3.1.7 本地原生工具注册表(Q2), 不摘 002.C2 牌; 002 的 _pending_conditionals 块维持原样, C2 补清单闭合后归执行卡登记链路摘牌。派发单 §4『若四问全坐实, verdict 显式声明 C1-C4 由此闭合』不适用——Q2 未坐实, 本方不挂全闭合声明。",
+  "advisory_findings": [
+    "ADV-1 (审计性, 记录不阻断): code_review 未列于 R1-R12 清单却因引擎工具组映射而 deny(本方探针 B 组实测)——『附带命中』不可审计。执行卡注入文档须附枚举命令+输出对照表(builtin-defs/builtin-browser-defs 工具全集 × 探针结果), 让『哪些工具被哪些规则命中』逐条可复核, 不依赖引擎恰好命中。",
+    "ADV-2 (措辞精度, 记录不阻断): profile §4 步骤 0 『本机已知 server: browser』口径正确但不完备——本地原生 browser_* 工具族(14 项, 非 MCP 通道)不随 MCP server 枚举走, 须按 Q2 condition 的工具注册表枚举纪律一并覆盖; 执行卡启动时两路枚举(MCP server + 本地工具注册表)后合并注入。",
+    "ADV-3 (环境事实, 记录不阻断): A7 的 TEST_COUNT_UNVERIFIED 假红仅在不带 COVENANT_BASH_HINT 时出现(卡面约束 5 自述形态, 本方带 hint 复跑确认), 已登记为环境事实非交付缺陷。"
+  ],
+  "not_verified_disclosed": [
+    "未执行真实闭合轮(卡面约束 3): D4 预案的 P1-P9 判据设计经本方逐条核对, 但现场层证据(B 臂 permission.enforcement 拒绝记录非空)须由执行卡触发零数据轮取得; 本方引擎层探针为最高可得证据, 现场层留待闭合轮。",
+    "C2 补清单后的探针 exit 0 未预先验证(补后清单由执行卡按当轮注册表枚举生成, 版本 3.1.7 热更新开启态下注册表本身可能漂移——C3 冻结成立是枚举前置); 本方不预先验证未生成清单。",
+    "D2 profile §4 步骤 2 的 <dataDir> 真实落点(global vs 会话级 permission.json 哪个被运行时读取)以执行卡启动时实测为准, 本卡只读观测(.minimax 无 permission.json)不作代证。",
+    "002 C4 的『机制闭合轮』本身(零数据 dry 轮 1-2 任务)属执行卡触发物, 本卡仅交付预案; 第四轮 30 任务真跑为未来轮次产物, 本方不预先验证未产生数据。"
+  ],
+  "subcard_note": [
+    "无独立子卡。卡面『若四问全坐实建议 verdict 显式声明 C1-C4 由此闭合』的措辞触发条件未满足(Q2 未坐实), 本 verdict 按 closure_note 的拆牌口径处理: C1/C3/C4 摘牌(模板 unblocks 字段), C2 挂本方 condition; _pending_conditionals 块由执行卡登记链路处置, 本评审不改。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261031-001 @ 2ba4f6b by AgnesCode (fuxiang), 非卡作者/非实现方 ZCode。Acceptance A1-A8 全部独立复跑通过(unittest Ran449 OK / census 30==30 / 协议 0 删 21 增 append-only / 红区 13 文件超集 diff 空 / 触碰 6 文件⊆Owned / lint strict 0 ERROR(1 WARN 瞬态) / 坑 12 四文件 ?{3,}=0 / artifacts.json 形态含 _pending_conditionals 零改动)。对抗性六问裁定: Q1/Q3/Q5/Q6 坐实, Q2 未坐实(本方仓外 temp 独立复测 extract-asar 3901 + 12 规则探针 24/24 复现 D2 引擎层读数 + B 组 10 类未列本地原生工具 20 组 tool×mode 实测均 allow, 坐实 deny 清单与 minimax 3.1.7 本地工具注册表不对齐, B 臂活通道未堵死), Q4 坐实带保留(P3 证据力依赖 Q2 闭合)。verdict CONDITIONAL: 0 blockers, 1 condition(C2 补清单, 在 sir 终裁同方向内无需重挂 adjudicator), 3 advisory; unblocks XJ-20261030-002.C1/.C3/.C4, C2 待补清单闭合后摘牌。未修改实现方任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。"
+}
