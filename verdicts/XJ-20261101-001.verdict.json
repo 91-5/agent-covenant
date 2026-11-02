@@ -1,0 +1,52 @@
+{
+  "id": "XJ-20261101-001",
+  "artifact": [
+    "docs/closure-round-record-20261031-reemitted.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261101-001-closure-record-reemit @ e2c2949（基线 master b7530a8，未 push；审计补救卡，仓内触碰 4 文件：.tasks/XJ-20261101-001.md 新卡(IN_REVIEW) + docs/closure-round-record-20261031-reemitted.md 重发件 212 行(已入 git 跟踪, 二次丢失防护) + .tasks/legacy/XJ-20261031-003.md 003 归档卡纯追加 Record loss disclosure 20 行(0 内容删除行) + artifacts.json(常规条目 XJ-20261101-001=[reemitted, artifacts.json], 卡按 EVO-20261010-001 不自列); 红区九文件 + verdicts/ b7530a8..e2c2949 committed diff 零输出; dryrun/ 全程未 git add; 背景责任: 003 现场证据 dryrun/closure/ 因 Jarvis PS5.1 Move-Item 无 -Recurse 归档失败 + 同命令 Remove-Item -Recurse 照常执行而丢失, 非 ZCode 交付缺陷; P1 一手证据 .minimax observability 日志 85720 字节完好",
+  "verdict": "PASS",
+  "acknowledged_by": "jarvis→agnes (2026-11-01 handoff, 派发单指定)",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-02T02:30:00Z",
+  "ts_note": "ts 取正本落盘时刻(2026-11-02 10:30 +08 = 02:30Z, 非未来且早于当前 UTC 02:32, 晚于全部独立核验动作): 449 单测复跑(115.7s)、census 30==30、红区九文件+verdicts committed diff 零、003 归档卡 b7530a8..e2c2949 纯追加 20 行 0 内容删除、二次丢失防护 git ls-files(reemitted 命中/dryrun 空)、Q1 挑三条核三级标注与证据匹配(P1 一手重统计独立重跑 23=16+7 与卡/003 三方一致 + S1 记忆项带[会话记忆重述]标注未写实测口吻 + §4.1 代码面独立核 updater.ipc.js:313-314)、Q2 独立扫更新器日志坐实 V2 FAIL(静默检查 22:20/23:20/00:20/13:23/14:23 未停>24h + setAutoUpdateEnabled:false 自 10-28 00:06 起反复出现远早于 003 的 10-31 22:20 落键=证 003 强阳性解读被更正), 全部实跑于分支 worktree @ e2c2949。ts 早于评审时点(10:32+08), 不超前(002/003 未来时间戳教训)。",
+  "unblocks": [
+    "XJ-20261031-003.advisory-③(V2/V3 收口): 本审计卡独立坐实 V2=FAIL(更新器静默检查>24h 未停, 3.1.9 下 promptConfig.autoUpdate 键不辖更新器, 003 的『22:20 强阳性』解读更正为本方独立坐实的误读)+ V3=代理有限(lastCheckTime 对 not-available 静默检查不敏感, 混合 provenance), 003 advisory-③ 由『待办收口项』转为『真数据 30 任务执行卡开跑前置阻塞项』; 本 verdict 为对 003 verdict 的补充说明而非改写(003 verdict 不可变, 其 PASS 判据 P1-P9 本不含 V2/V3, 当轮如实记 pending)"
+  ],
+  "evidence": [
+    "范围纪律(A5/A6)：本方独立 git diff --name-only b7530a8..e2c2949 = 4 文件(.tasks 新卡 + reemitted 重发件 + 003 归档卡追加 + artifacts.json) ⊆ 卡面 Owned files; 红区九文件(PROTOCOL.md/tools/eval/{judge,schema,report,seal_run,verify,build_package}.py/tools/gate.py) + verdicts/ committed diff 零输出; 003 归档卡 .tasks/legacy/XJ-20261031-003.md diff 纯追加 20 行/0 内容删除行(Record loss disclosure append-only, 引 PROTOCOL 卡面追加注释规则); 二次丢失防护: git ls-files docs/closure-round-record-20261031-reemitted.md 命中(入 git 跟踪), git ls-files dryrun 空(dryrun 仍不跟踪)。",
+    "A1/A2/A7/A8：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 tests OK exit 0(115.731s, 本卡不改测试面); run.py --tasks -> census assertion: 30 == 30: ok; lint --strict -> 0 errors, 1 warning(VERDICT_WITHOUT_REVIEW 本 verdict 落盘即消的评审前瞬态); reemitted+新卡+artifacts.json+003 卡 ?{3,} 命中 0(本方核 reemitted raw ?=0 最干净), UTF-8 无 BOM。",
+    "Q1 重发件冒充原件?（本方独立挑三条核三级标注与证据匹配, 坐实不会误当原件）：重发件首部免责声明『本文件是事后重发物, 不是 2026-10-31 当轮原件, 不可作为当轮原件用于审计』+ provenance 四要素(丢失事实/原因与责任方/重发声明/来源等级标注约定); 本方独立核三条: (a) P1 §3 标『一手证据重统计』——本方独立重跑 §3 python 命令, claimed turn 1cc48bc6 total=23(blocked 16+proceed 7)与重发件输出逐字一致, 7 字段(session_id/turn_id/tool_call_id/tool_name/policy_behavior/gate_result/decision_source)全齐, runtime-10-31.log 85720 字节完好, 标注属实(非实测口吻); (b) S1 注入流程 §3.2 标『会话记忆重述』——会话 id base64 解码/47 规则注入/sir 发任务三步逐句带[会话记忆重述]标注并声明『不可作为审计原件依据, 仅作叙事补全』, 且注明『该流程结果由 §3 一手证据(16 blocked, decision_source:policy)支撑, S1 结论不依赖记忆』, 记忆项未被写成实测口吻; (c) §4.1 V2 根因标『重新实测(3.1.9 asar 现取)』——本方独立核 dist/main/ipc/updater.ipc.js:313-314 确为 setAutoUpdateEnabled(enabled===true) IPC 推送通道, 标注属实。",
+    "Q2 差异并列 + V2 FAIL（本方独立坐实）：(a) 27 vs 23 并列——本方独立重统计: 整份日志 27(blocked 16 + proceed 11), claimed turn 23(16+7), 另一 turn 46c2533a=4(全 proceed: glob×1+bash×3); 重发件 §3.1 三行表并列三口径并解释第二 turn 发生于 D6 复原(移除 deny)之后, allow 是该状态下正确行为非封堵泄漏(反而构成复原生效旁证), P1 判据 scoped 到 1cc48bc6 两读数不矛盾, 未静默对齐; (b) V2 从 pending 升级为 FAIL——本方独立扫更新器日志: 静默检查从未停(update-10-31.log 22:20:39/23:20:39 + update-11-01.log 00:20:39/13:23:34/14:23:34, 观察窗>24h), 且决定性证据: [Updater] setAutoUpdateEnabled:false 自 10-28 00:06:47 起反复出现(10-28/29/30/31 多次), 远早于 003 轮 10-31 22:20 的 V1 落键, 证确由 Apollo 推送驱动与本机 promptConfig.autoUpdate 键无关——本方独立坐实 003 的『22:20:40 强阳性』解读为误读(那是 Apollo 常规日志), 但 003 PASS 本身不依赖该解读(V2/V3 不在 P1-P9 判据内, 当轮如实记 pending), 故 003 结论站得住, V2 收口为 FAIL 处理得当; 代码面根因本方独立核 updater.ipc.js:313-314 + resolvePromptConfig 消费方为 session/runtime 面, 002 时代基于 3.1.7 的『autoUpdate:false 可关更新器』推断在 3.1.9 实测不成立。",
+    "Q3 003 结论未篡改（本方独立坐实）：重发件 §4/§7 明确『不改 003 的 PASS 结论』『003 的 PASS verdict 不可变, 本文件任何差异呈现均不构成对它的改写』; V2 pending->FAIL 是观察窗成熟后的收口(003 当轮从未主张 V2 PASS 仅记 pending)非翻案; 003 归档卡 .tasks/legacy/XJ-20261031-003.md 本方独立核纯追加 20 行/0 内容删除行, 卡本体判据/结论零改动。",
+    "Q4 V2 FAIL 处置边界（本方独立裁定, 挂执行卡不代裁升级路径）：重发件把 V2 FAIL 挂真数据 30 任务执行卡开跑前置, 升级路径(版本降级固定/网络隔离/通道切换/Apollo 侧处置)写明『属执行卡/sir 裁量, 本卡不代裁』; 本方裁定边界合适——V2 FAIL 是环境固定项(执行者更新器行为)非协议/判定器改动, 处置属 sir/执行卡职权; 现不升级 adjudicator, 因升级路径选择依赖当时版本/网络/Apollo 状态, 留执行卡时点裁量; 本方在 verdict 显式把 V2 FAIL 列为真数据轮开跑前置阻塞项(不阻断本审计补救卡 PASS)。",
+    "Q5 二次丢失防护 + 触碰面（本方独立坐实）：git ls-files reemitted 命中(入 git 跟踪, 再失手亦不可从未跟踪态丢失) + git ls-files dryrun 空(仍不跟踪) + 触碰 4 文件 ⊆ Owned files 无越界。",
+    "Q6 越界（本方独立坐实）：红区九文件 + verdicts/ committed diff 零; 003 归档卡 0 内容删除行; reemitted ?{3,}=0(raw ?=0 全卡最干净)。",
+    "背景责任核验：003 现场证据 dryrun/closure/(175 行 CLOSURE-RECORD + seal/custody/forged-check/探针脚本)因 Jarvis PS5.1 Move-Item 无 -Recurse(归档移动失败)+ 同命令 Remove-Item -Recurse -Force(照常执行)而丢失不可恢复; 重发件 provenance 明确『责任在处置环节, 不是 ZCode 交付缺陷』(003 交付时记录完好、按卡面约束 0 未跟踪留 dryrun/closure/); P1 一手证据(.minimax observability 日志 85720B)+ 003 卡『实现记录』节 + commit 24b1a9f 提交信息 + 003 verdict 均在 git/系统存续, 本方独立核 P1 日志完好。",
+    "坑12/术语纪律：reemitted+新卡+artifacts.json+003 卡 ?{3,}=0; 全重发件无『显著/证明降低幻觉/证明有效』误用(只证机制动作/来源标注, 不做效果表述), 003 的更正口径为『现场证据 + 机制边界 + 更正误读』非效果判断; 本 verdict JSON UTF-8 写盘, 落盘后自查 ?{3,}=0; ts 早于当前 UTC 不超前。",
+    "INDEPENDENCE：本方非卡作者/非重发执行方 ZCode; 全程独立复跑+重统计+比对+diff 审计, 未改任何文件; P1 一手日志与更新器日志均只读核; 本 REVIEW 正本(mo brain 指定路径) + verdict.json 为本评审新增正本; unblocks 字段为对 003 verdict 的补充说明(003 verdict 不可变)。"
+  ],
+  "review_q_rulings": [
+    "Q1 冒充原件?: 坐实不会。首部免责 + provenance 四要素 + 三级标注约定; 本方挑三条独立核标注与证据匹配(P1 标一手重统计且独立重跑一致 / S1 记忆项带标注未写实测口吻 / §4.1 代码面独立核属实), 后来者无法把重发件误当 2026-10-31 原件。",
+    "Q2 差异诚实 + V2 FAIL: 坐实。27 vs 23 三行表并列(含 D6 复原后 turn 46c2533a 全 proceed 的正确行为解释), 未静默对齐; V2 FAIL 本方独立扫更新器日志坐实(静默检查未停 + setAutoUpdateEnabled 自 10-28 早于 003 落键), 并独立更正 003 的强阳性误读(003 PASS 不受影响)。",
+    "Q3 003 未篡改: 坐实。重发件明写不改 003 PASS; V2 pending->FAIL 是观察窗成熟收口非翻案; 003 归档卡纯追加 20 行 0 删除。",
+    "Q4 V2 FAIL 处置: 坐实(挂执行卡不代裁升级路径, 边界合适; 不须现在升级 adjudicator, 升级路径选择留执行卡时点; 本方显式列为真数据轮开跑前置阻塞项)。",
+    "Q5 二次丢失防护: 坐实。reemitted 已入 git 跟踪(git ls-files 命中), 触碰 4 文件 ⊆ Owned。",
+    "Q6 越界: 坐实。红区九文件 + verdicts/ committed diff 零, 003 卡 0 内容删除, reemitted ?{3,}=0。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (真数据轮前置阻塞项, 记录不阻断本审计卡 PASS): V2=FAIL(更新器静默检查>24h 未停, 3.1.9 下 promptConfig.autoUpdate 键不辖更新器, 由 Apollo 服务端 agentConfig 推送驱动) + 003 ADV-1(3.1.9 指纹重采) + 003 ADV-2(deny 清单补 tool_search/mcp_invoke/mcp_browser 纯增 + 全量重枚举 + 探针复跑) + V3 观察窗收口——四项合并为真数据 30 任务执行卡的开跑前置; V2 FAIL 为其中最重(直接决定『执行者指纹冻结』是否可能, 升级路径[版本降级/网络隔离/通道切换/Apollo 侧处置]归执行卡/sir 裁量)。"
+  ],
+  "not_verified_disclosed": [
+    "V2 FAIL 的升级路径未在本卡裁量(版本降级/网络隔离/通道切换/Apollo 侧处置): 属执行卡/sir 职权, 本方不代裁; 本方仅坐实 V2 FAIL 判定成立 + 将其列为真数据轮开跑前置阻塞项。",
+    "§4.1 代码面根因(updater.ipc.js Apollo 推送 vs promptConfig 键分链)本方独立核到 updater.ipc.js:313-314 的 IPC 推送形态 + 独立扫日志佐证, 但『渲染进程从 Apollo agentConfig 推送』的完整服务端链未独立复现(Apollo 侧无仓内证据), 以 3.1.9 asar 现取代码面 + 日志时序为可得证据, 现场层留真数据轮。",
+    "003 现场证据 dryrun/closure/ 已不可恢复(175 行 CLOSURE-RECORD + seal/custody 产物 + forged-check 副本 + 探针脚本), 本方核验的是重发件 + 存续一手证据(日志/git/003 卡), 不预先恢复已丢失物。"
+  ],
+  "subcard_note": [
+    "无独立子卡。本卡为 003 卡现场证据丢失(Jarvis 处置失误)的审计补救卡: 重发件入 git 跟踪 + 三级来源标注 + 可重测项当轮重跑 + P1 一手证据重统计 + 差异并列呈现; 对抗性六问经本方独立重统计/扫日志/核代码面/diff 审计坐实, Q1 三级标注与 Q2 V2 FAIL 的独立证据为本方自采(非采信重发件记录); 本 verdict 的 unblocks 字段为对 003 verdict(不可变)的补充说明。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261101-001 @ e2c2949 by AgnesCode (fuxiang), 非卡作者/非重发执行方 ZCode。Acceptance A1-A8 全部独立复跑/复核通过(unittest Ran449 OK / census 30==30 / 重发件 P1 一手证据本方独立重跑 23=16+7 与卡/003 三方一致 / 003 归档卡纯追加 20 行 0 删除 / 红区九文件+verdicts committed diff 空 / 二次丢失防护 git ls-files(reemitted 跟踪/dryrun 未跟踪)+触碰 4 文件⊆Owned / lint 0 ERROR(1 WARN 瞬态)+坑12 reemitted ?{3,}=0)。对抗性六问全部坐实(Q1 重发件不会冒充原件: 免责+provenance+三级标注, 本方挑三条独立核标注与证据匹配 / Q2 27 vs 23 并列未静默对齐 + V2 FAIL 本方独立扫更新器日志坐实[静默检查未停>24h + setAutoUpdateEnabled 自 10-28 早于 003 落键]并独立更正 003 强阳性误读[003 PASS 不受影响] / Q3 003 结论未篡改 / Q4 V2 FAIL 挂执行卡不代裁升级路径边界合适 / Q5 二次丢失防护 reemitted 入 git 跟踪 / Q6 红区+verdicts 零 diff+003 卡 0 删除)。verdict PASS: 0 blockers, 0 conditions, 1 advisory(V2 FAIL + 003 ADV-1/ADV-2 + V3 合并为真数据轮开跑前置阻塞项, V2 为最重); unblocks 显式声明 XJ-20261031-003.advisory-③(V2/V3 收口)就此收口为 V2=FAIL/V3=代理有限, 转为真数据轮阻塞项(对 003 verdict 的补充说明而非改写, 003 verdict 不可变)。未修改任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。"
+}
