@@ -17,19 +17,22 @@
 ## 0. 结论性口径
 
 B 臂 profile = **整工具 deny 全量清单**（含只读工具 read/glob/grep），覆盖**当轮
-运行时工具注册表全集**（本机 3.1.7 asar 实测枚举：本地工具注册表 28 名 + 本地原生
-浏览器族 14 名 + 扩展注册 builtin 3 名 = **45 个工具名**）+ **builtin MCP 服务器级
-`mcp__<server>` deny**（`browser`、`matrix` 两服），共 **47 条规则**（R1–R47），
-以 configV1 规则形态注入 `permission.json`；随 B 轮启动注入、轮后移除，**不落盘
-到执行者共用配置文件**（避免污染 A 臂环境）。deny 在权限引擎归约入口生效
-（`permission-core.js` 整工具规则先于 bypass 放行快路径），拒绝落
-`permission.enforcement` 结构化日志。
+运行时工具注册表全集**（本机 asar 实测枚举：本地工具注册表 28 名 + 本地原生
+浏览器族 14 名 + 扩展注册 builtin 3 名 + MCP 披露延迟注册面 2 名
+（`tool_search`/`mcp_invoke`）+ 别名转正 1 名（`mcp_browser`）= **48 个工具名**）+
+**builtin MCP 服务器级 `mcp__<server>` deny**（`browser`、`matrix` 两服），共
+**50 条规则**（R1–R50），以 configV1 规则形态注入 `permission.json`；随 B 轮启动
+注入、轮后移除，**不落盘到执行者共用配置文件**（避免污染 A 臂环境）。deny 在
+权限引擎归约入口生效（`permission-core.js` 整工具规则先于 bypass 放行快路径），
+拒绝落 `permission.enforcement` 结构化日志。
 
-**清单演进纪律（XJ-20261031-002 起）**：deny 清单**纯增不减**——001 卡的 R1–R12
-原样保留；补全规则自 R13 续号；任何拟从清单移除（放行）原生工具的动作必须停手
-回 sir 裁定。清单基础是 §2.0 的注册表枚举配方：执行卡启动时重跑枚举（3.1.7 热更新
-开启态下注册表可能漂移——C3 冻结成立是枚举前置），枚举结果与 §1 清单差集为空
-方可注入。
+**清单演进纪律（XJ-20261031-002 起）**：deny 清单**纯增不减**——001 卡的 R1–R12、
+002 卡的 R13–R47 原样保留；补全规则自 R13 起连续续号（R48–R50 = 002 卡之后
+3.1.9/3.1.10 新注册面）；任何拟从清单移除（放行）原生工具的动作必须停手回 sir
+裁定。清单基础是 §2.0 的注册表枚举配方：执行卡启动时重跑枚举（执行者已实测两度
+自升级：3.1.7→3.1.9 发生于 003 轮冻结落键前、3.1.9→3.1.10 发生于 002 卡重测
+与 003 卡之间——注册表随版本漂移是常态，C3 冻结与版本重采是枚举前置），枚举
+结果与 §1 清单差集为空方可注入。
 
 ---
 
@@ -53,7 +56,8 @@ B 臂 profile = **整工具 deny 全量清单**（含只读工具 read/glob/grep
   "browser_type", "browser_press_key", "browser_scroll", "browser_hover",
   "browser_wait_for", "browser_get_dom", "browser_screenshot", "browser_paste",
   "browser_verify_text", "browser_inspect_editable_targets",
-  "EnterPlanMode", "ExitPlanMode", "mcp__matrix"
+  "EnterPlanMode", "ExitPlanMode", "mcp__matrix",
+  "tool_search", "mcp_invoke", "mcp_browser"
 ]}
 ```
 
@@ -111,6 +115,9 @@ B 臂 profile = **整工具 deny 全量清单**（含只读工具 read/glob/grep
 | R45 | `EnterPlanMode` | 计划模式进入（扩展注册） | 同上（agent-extension plan-mode 条件注册，运行时精确名含大写） |
 | R46 | `ExitPlanMode` | 计划模式退出（扩展注册） | 同上 |
 | R47 | `mcp__matrix` | builtin MCP 服务器级整服 deny（`matrix`） | 同上（`BUILTIN_MATRIX_SERVER_NAME='matrix'`，matrix 工具以 `mcp__matrix__<tool>` 原生名投影，服务器级规则整服覆盖） |
+| R48 | `tool_search` | MCP 披露面延迟注册：有界工具搜索（3.1.9+ 新注册面） | 003 轮现场 proceed×6（enforcement 记录 `gate_result:"proceed"`）；本卡 3.1.10 asar 实测定位 `agent-tools/dist/mcp-disclosure/bounded-tool-search.js:34` `name: 'tool_search'`；本卡探针 deny（§2.2） |
+| R49 | `mcp_invoke` | MCP 披露面延迟注册：延迟加载调用网关（与 R48 同族） | 003 轮同族定位（未在该现场回合出现）；本卡 3.1.10 asar 实测 `agent-tools/dist/mcp-disclosure/loading.js:8` `tool.def.name === 'mcp_invoke'`；本卡探针 deny |
+| R50 | `mcp_browser` | 本地 browser 复合工具的**别名转正定义**（3.1.9 起可按此名调用） | 003 轮现场 proceed×1；`local-turn-tool-catalog.js:254-260`（"same compact one renamed"，002 卡「别名不可调用」结论在 3.1.9+ 失效）；本卡 3.1.10 asar 实测同一结构（catalog:52）；本卡探针 deny |
 
 两条纪律（002 报告 §6.2 口径）：
 
@@ -158,6 +165,7 @@ const builderFiles = [
   'agent-tools/dist/desktop/local-mavis.js',
   'agent-tools/dist/desktop/local-cron-tools.js',
   'agent-tools/dist/shared/web-search.js', // WebSearchToolDef：本地 web_search 实现与 matrix builtin 共用
+  'agent-tools/dist/mcp-disclosure/bounded-tool-search.js', // tool_search：MCP 披露延迟注册面（3.1.9+，XJ-20261102-001 补源）
 ];
 const inlineNameRe = /(?:def\s*[:=]\s*\{|name)\s*:\s*'([a-z_][a-z0-9_]*)'/g;
 const inlineNames = {};
@@ -177,6 +185,11 @@ const mavisCapList = cronSrc.match(/MAVIS_CAPABILITY_TOOL_NAMES = \[([^\]]+)\]/s
 const miniappNames = [...read('agent-extension/dist/miniapp.js').matchAll(/name: '([a-z_]+)'/g)].map((m) => m[1]);
 const planNames = [...read('agent-extension/dist/plan-mode.js').matchAll(/lifecycleTool\('([A-Za-z]+)'/g)].map((m) => m[1]);
 
+// 4.5) MCP 披露延迟注册面（3.1.9+）与别名转正定义（XJ-20261102-001 补源）
+const mcpInvoke = [...read('agent-tools/dist/mcp-disclosure/loading.js').matchAll(/def\.name === '([a-z_]+)'/g)].map((m) => m[1]);
+const catalogSrc = read('local-runtime-v2/dist/service/turn-system/agent-host/assembly/local-turn-tool-catalog.js');
+const aliasNames = [...catalogSrc.matchAll(/selectorAlias: '([A-Za-z_]+)'/g)].map((m) => m[1]);
+
 // 5) builtin MCP servers (server-level deny rules)
 const matrixServer = read('local-runtime-v2/dist/service/mcp/runtime/builtin-matrix.js')
   .match(/BUILTIN_MATRIX_SERVER_NAME = '([^']+)'/)?.[1];
@@ -192,7 +205,9 @@ const registry = [
               ...Object.values(inlineNames).flat(),
               ...(cronList ?? []),
               ...miniappNames,
-              ...planNames])].sort();
+              ...planNames,
+              ...mcpInvoke,
+              ...aliasNames])].sort();
 
 const coreOnly = coreDefs.filter((n) => !registry.includes(n));
 
@@ -209,6 +224,8 @@ console.log('### D. CRON_TOOL_NAMES:', JSON.stringify(cronList));
 console.log('### E. MAVIS_CAPABILITY_TOOL_NAMES:', JSON.stringify(mavisCapList));
 console.log('### F. extension-registered: miniapp', JSON.stringify([...new Set(miniappNames)]),
   '| plan-mode lifecycle', JSON.stringify(planNames));
+console.log('### F2. mcp-disclosure deferred (3.1.9+):', JSON.stringify([...new Set(mcpInvoke)]),
+  '| alias-promoted callables:', JSON.stringify([...new Set(aliasNames)]));
 console.log('### G. builtin MCP servers:', JSON.stringify([browserServer, matrixServer]));
 console.log('### H. agent-core defs NOT in desktop registry (must be []):', JSON.stringify([...new Set(coreOnly)]));
 console.log(`### TOTAL distinct desktop tool names: ${registry.length}`);
@@ -220,34 +237,42 @@ process.exit(coreOnly.length ? 1 : 0);
 node enumerate-registry.mjs asar
 # -> ### A..H 分类输出 + TOTAL distinct desktop tool names: N + 全名 JSON
 # -> exit 0（H 段为空 = agent-core 层 defs 全部被桌面注册表包含）
-# 本机 3.1.7 实测：N=45；原文留档见 §3 第二轮
+# 本机 3.1.10 实测（2026-11-02，asar 4020+19 files，XJ-20261102-001）：N=48
+# 历史轮（3.1.7，2026-10-31，XJ-20261031-002）：N=45，原文留档见 §3 第二轮
+# （3.1.9 帧不可回采：更新器于 002 重测后覆盖安装 3.1.9→3.1.10，见指纹文档 §2.8）
 ```
 
-**枚举口径**（两路枚举纪律，回应 001 评审 ADV-2）：
+**枚举口径**（两路枚举纪律，回应 001 评审 ADV-2；XJ-20261102-001 扩源）：
 
 1. **本地工具注册表一路**：`buildLocalToolRegistry`（`agent-tools/dist/desktop/index.js`）
    的静态 def 面（§A）+ 注册器内联构建名（§C：session_create / website_deploy /
    workspace_semantic_search / self_reminder / web_search）+ cron 族规范名
    （§D：`CRON_TOOL_NAMES`）+ 扩展条件注册（§F：miniapp / EnterPlanMode /
-   ExitPlanMode）；
+   ExitPlanMode）+ **MCP 披露延迟注册面（§F2：`tool_search` / `mcp_invoke`，
+   3.1.9+ 新增，XJ-20261102-001 补源）+ 别名转正定义（§F2：`mcp_browser`，
+   3.1.9 起可按别名调用）**；
 2. **MCP server 一路**：builtin server 名（§G：`browser`、`matrix`）+ 轮时按 §4
    步骤 0 枚举第三方面。
 
-**静态枚举的已知逃逸面与处置**（回应卡面评审问 Q2）：
+**静态枚举的已知逃逸面与处置**（回应卡面评审问 Q2；XJ-20261102-001 更新）：
 
 - **MCP 原生名投影**：MCP 工具以 `mcp__<server>__<tool>` 原生名进目录
   （`native-tool-projection.js` `buildNativeToolName`）——不被本地名枚举覆盖，
   由**服务器级规则**整服 deny（R12/R47），轮时枚举 server 清单即可；
+- **MCP 披露延迟注册面**：`tool_search`/`mcp_invoke`（`mcp-disclosure/`，按需
+  延迟加载 MCP 工具的门面工具）——003 轮现场坐实 `tool_search` proceed 后，本卡
+  已把该面**纳入枚举器一级来源**（§F2），不再属于逃逸面；
+- **别名转正**：`mcp_browser` 在 3.1.9+ 是 browser 复合工具按别名暴露的**可调用
+  定义**（catalog `selectorAlias` + "same compact one renamed"），003 轮现场
+  proceed×1 坐实——002 卡「别名不可调用」的旧结论作废，R50 按可调用名 deny；
 - **条件注册**：本地注册表多数工具按 deps 条件注册（对照表「注册条件」列）——
   deny 规则按**名**匹配，未注册名的规则惰性无害，清单取「可定义全集」口径；
 - **第三方插件动态注册**（`agent-runtime` registry/factories 机制）：静态不可知，
   归 §4 步骤 0 轮时「当轮工具目录核对」纪律；
-- **不在桌面目录的面**（本卡核对后排除，非遗漏）：`agent-tools/dist/cloud/*`
-  云产品 defs（含 `memory_search`——该名在桌面注册表不存在，桌面记忆/检索面是
-  `memory` 与 `workspace_semantic_search`，均已 deny）；`threadGoalTools`
-  （goal-agent 评估者/子代理线程面，`goal-agent-product.js`，非执行者主线程目录）；
-  `mcp_browser` 为目录选择别名（`local-turn-tool-catalog.js` `selectorAlias`），
-  非可调用工具名，可调用名 `browser` 由 R31 覆盖。
+- **不在桌面目录的面**（002 卡核对后排除，非遗漏；3.1.10 复核仍成立）：
+  `agent-tools/dist/cloud/*` 云产品 defs（含 `memory_search`——该名在桌面注册表
+  不存在，桌面记忆/检索面是 `memory` 与 `workspace_semantic_search`，均已 deny）；
+  `threadGoalTools`（goal-agent 评估者/子代理线程面，非执行者主线程目录）。
 
 ### 2.1 前置：从随包 `app.asar` 解出真实权限引擎（只读解析，不改安装）
 
@@ -301,12 +326,12 @@ node extract-asar.mjs "D:/MiniMaxcode/MiniMax Code/resources/app.asar" asar node
 # -> exit 0
 ```
 
-### 2.2 探针：整工具 deny + bypass 免疫 + 只读面 + MCP 服务器级（一次跑完全清单 47 规则）
+### 2.2 探针：整工具 deny + bypass 免疫 + 只读面 + MCP 服务器级（一次跑完全清单 50 规则）
 
 探针 `b_arm_deny_probe.mjs` 把 §1 的 deny 清单写入**临时 dataDir** 的
 `permission.json`（绝不指向真实 profile），送入真实权限引擎
 （`@mavis/permission/dist/engine.js` `PermissionEngine.checkPermission()`），
-对**每条规则一个案例**（45 个注册表工具名 + 2 个服务器路径探针
+对**每条规则一个案例**（48 个注册表工具名 + 2 个服务器路径探针
 `mcp__browser__navigate` / `mcp__matrix__web_search`）在 `bypassPermissions` 与
 `default` 两种模式下各判一次——全清单 × 2 模式，不是抽测：
 
@@ -353,6 +378,8 @@ const DENY = [
   'EnterPlanMode', 'ExitPlanMode',
   // R47 builtin MCP server（matrix）
   'mcp__matrix',
+  // R48-R50 3.1.9+ 版本续篇（XJ-20261102-001：MCP 披露延迟注册面 + 别名转正）
+  'tool_search', 'mcp_invoke', 'mcp_browser',
 ];
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -414,6 +441,9 @@ const CASES = [
   // 服务器级规则探针：每个 builtin server 取一条 mcp__<server>__<tool> 路径名
   ['mcp__browser__navigate', { url: 'https://example.com' }],
   ['mcp__matrix__web_search', { query: 'probe' }],
+  ['tool_search', { query: 'probe' }],
+  ['mcp_invoke', { tool_name: 'probe' }],
+  ['mcp_browser', { action: 'navigate', url: 'https://example.com' }],
 ];
 
 let fail = 0;
@@ -444,8 +474,8 @@ node b_arm_deny_probe.mjs asar dataDir
 其中 `<规则串>` = 该案例命中的 deny 规则串（名规则 = 工具名本身，服务器级规则 =
 `mcp__<server>`））：
 
-- **名规则（R1–R11、R13–R46，共 45 条）**：探针行 `<工具名> -> deny`，reason
-  `toolName` = 同名规则串；
+- **名规则（R1–R11、R13–R46、R48–R50，共 48 条）**：探针行 `<工具名> -> deny`，
+  reason `toolName` = 同名规则串；
 - **服务器级规则（R12、R47）**：探针行 `mcp__browser__navigate -> deny`（toolName=
   `mcp__browser`）与 `mcp__matrix__web_search -> deny`（toolName=`mcp__matrix`）；
 - **逐条对照**：注册表枚举项 ↔ 规则号 ↔ 两模式探针实测结果，见 §3 第二轮对照表

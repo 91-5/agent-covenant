@@ -2,7 +2,11 @@
 
 - **卡**：XJ-20261030-002 / D1
 - **采集日期**：2026-10-30（UTC+8）
-- **采集者**：minimax code（本卡实现者）
+- **重采**：**2026-11-02**（UTC+8）by ZCode（XJ-20261102-001）——执行者已实测两度
+  自升级：3.1.7 → 3.1.9（2026-10-31，003 轮实测，冻结落键前）→ **3.1.10**（002 卡
+  重测与本卡执行窗口之间）；F2/F3/F4/F5/F12/F13 按 §2.8 重采为现值，3.1.7/3.1.9
+  历史读数以「历史轮」标注保留于各行，**原文未删**
+- **采集者**：minimax code（本卡实现者，2026-10-30）；重采者 ZCode（2026-11-02）
 - **采集主机**：Windows 11 / x64，`python 3.14.4`，`node v24.18.0`
 - **采集范围**：本机 MiniMax Code 桌面端安装（region `cn`，appId `com.minimax.agent.cn`）
 
@@ -23,18 +27,18 @@
 | # | 字段 | 观测值 | 采集命令 | 退出码 | 状态 |
 |---|---|---|---|---|---|
 | F1 | 产品名 | `MiniMax Code`（CompanyName `MiniMax`） | 见 §2.1 | 0 | 已验证 |
-| F2 | 桌面端版本号（安装包语义） | `3.1.7` | 见 §2.2 | 0 | 已验证 |
-| F3 | 可执行文件版本号 | `3.1.7.195` | 见 §2.1 | 0 | 已验证 |
-| F4 | 构建哈希（shell fingerprint） | `11c2328d0e7ec036f12fd025a1e06d75f987c164a37ae4a9b76ebcc85b737f72` | 见 §2.2 | 0 | 已验证 |
-| F5 | 热更新状态 | `enabled: true`，`channel: prod`，`appVersion: 3.1.7`，`active: null`，`pending: null`，`lastUpdateTime: 0` | 见 §2.3 | 0 | 已验证 |
+| F2 | 桌面端版本号（安装包语义） | **`3.1.10`**（重采 2026-11-02）；历史轮（3.1.7）：`3.1.7`；历史轮（3.1.9）：`3.1.9`（003 轮实测，其 asar 已被覆盖安装不可回采） | 见 §2.2 / §2.8 | 0 | 已验证 |
+| F3 | 可执行文件版本号 | **`3.1.10.203`**（重采 2026-11-02）；历史轮（3.1.7）：`3.1.7.195`；历史轮（3.1.9）：`3.1.9.199` | 见 §2.1 / §2.8 | 0 | 已验证 |
+| F4 | 构建哈希（shell fingerprint） | **`be87e0961c158791aa0161211a29a609d4d5297575370cc458cfc789e3f89019`**（重采 2026-11-02）；历史轮（3.1.7）：`11c2328d0e7ec036f12fd025a1e06d75f987c164a37ae4a9b76ebcc85b737f72`；历史轮（3.1.9）：`b162d1a0eda5e5956fab6a02523245278ff1cab90becf7d8b9cb4bc4f6c06db0` | 见 §2.2 / §2.8 | 0 | 已验证 |
+| F5 | 热更新状态 | **重采 2026-11-02**：`enabled: true`，`channel: prod`，`appVersion: "3.1.9"`（**陈旧元数据**，滞后于 exe/asar 实测 3.1.10），`shellFingerprint` 字段仍为 3.1.9 值（`b162d1a0…`），`lastUpdateTime: 0`，`lastCheckTime: 1793510644436`；更新器活跃证据：`cachedVersion: 3.1.10`（status: downloaded）每小时检查持续（最近 2026-11-01 23:23:53）；历史轮（3.1.7）：`appVersion: 3.1.7`、`lastUpdateTime: 0`、`lastCheckTime: 1793275630444` | 见 §2.3 / §2.8 | 0 | 已验证 |
 | F6 | 模型快照（目录 id） | `MiniMax-M3.1-Flash`（`defaultModel: minimax/MiniMax-M3.1-Flash`） | 见 §2.4 | 0 | 已验证 |
 | F7 | 思考变体 / 思考强度 | `defaultModelVariant: thinking`；`defaultModelThinking.effort: high` | 见 §2.4 | 0 | 已验证 |
 | F8 | 上下文窗口设定 | `defaultModelContextWindow: 1000000`；模型目录 `limit.context: 512000`，`limit.output: 128000` | 见 §2.4 | 0 | 已验证 |
 | F9 | API endpoint | `https://agent.minimax.cn/mavis/api/v1/llm/v1` | 见 §2.4 | 0 | 已验证 |
 | F10 | 凭据 | 配置内为占位 `apiKey: sk-xxx`；真实凭据在 auth 存储内，本卡**不读取、不落盘** | 见 §2.4 | 0 | 已验证（占位形态） |
 | F11 | 运行模式 | `permissionMode: bypassPermissions`；`appModePreference: coding`；`workingDirectory: D:\15812\Documents` | 见 §2.4 / §2.5 | 0 | 已验证 |
-| F12 | 运行时包版本 | `@mavis/local-runtime-v2 0.1.0`（private）；`@mavis/local-runtime`（权限规则存储）；`mcode-tools` CLI `0.0.6` | 见 §2.6 | 0 | 已验证 |
-| F13 | 自动更新 | **开启**（稳定通道每小时静默检查）；仅预览通道关闭（`earlyAccessUpdateEnabled: false`） | 见 §2.7 | 0 | 已验证 |
+| F12 | 运行时包版本 | **不可采（3.1.10 打包变化）**：`@mavis/local-runtime-v2` / `@mavis/local-runtime` 的 package.json 已不在 3.1.10 asar 内（头索引解析 ABSENT，2026-11-02 实测）；可采面：`@mavis/permission 0.2.1`、`@mavis/config 0.2.1`（public）；历史轮（3.1.7）：`@mavis/local-runtime-v2 0.1.0`（private） | 见 §2.6 / §2.8 | 0 | 已验证（3.1.7）/ 不可采（3.1.10 该项） |
+| F13 | 自动更新 | **开启**（每小时静默检查持续，3.1.10 已下载待装；重采 2026-11-02）；**3.1.9+ 机制更正**：`promptConfig.autoUpdate` 键与更新器不在一条链（更新器标志由渲染进程从 Apollo agentConfig 推送，`updater.ipc.js:311-314`），002 时代关闭方式推断在 3.1.9+ 实测不成立（XJ-20261101-001 V2 收口 FAIL）；历史轮（3.1.7）：开启（每小时静默检查，当时关闭方式推断见 §2.7） | 见 §2.7 / §2.8 | 0 | 已验证 |
 | F14 | 采样参数（temperature / top_p / max_tokens） | **不可锁**（详见 §3） | 见 §3 | 0 | 不可锁 |
 | F15 | 服务端模型快照（权重/快照日期） | **不可锁**（客户端不暴露） | 见 §3 | — | 不可锁 |
 
@@ -235,8 +239,73 @@ export function resolvePromptConfig(obj) {
 → 关闭方式：`config.yaml` 中设置 `promptConfig.autoUpdate: false`（显式布尔值优先于
 默认值）。**当前 `config.yaml` 未设该键**，故取默认 `true`。
 
+> **3.1.9+ 更正（XJ-20261102-001 加注，上行 3.1.7 原文保留）**：上行的关闭方式
+> 推断基于 3.1.7 代码面（`resolvePromptConfig` 显式布尔优先——该函数 3.1.10 仍在，
+> V1 配置面成立），但 3.1.9/3.1.10 实测**更新器的每小时静默检查不受该键控制**：
+> 更新器自动安装标志由渲染进程从 Apollo agentConfig 推送
+> （`dist/main/ipc/updater.ipc.js:311-314`，注释原文「由渲染进程从 Apollo
+> agentConfig 推送」），与本机键不在一条链——XJ-20261101-001 V2 收口 FAIL
+> （观察窗 >24h，整点静默检查持续），且执行者两度自升级（3.1.7→3.1.9→3.1.10）。
+> 详见 §2.8。
+
 **（c）预览通道已关**（F13 补充）：桌面端设置 `earlyAccessUpdateEnabled: false`。
 这只关掉 early-access 灰度，**不是**稳定通道的自动更新开关。
+
+### 2.8 3.1.9 → 3.1.10 重采（XJ-20261102-001，2026-11-02）
+
+**版本漂移链**（均为实测口径）：003 轮实测执行者已自升 3.1.7 → 3.1.9（冻结落键
+前）；002 卡重测与本卡执行窗口之间再次自升 **3.1.9 → 3.1.10**——3.1.9 的 asar 已
+被覆盖安装、不可回采，故本卡 F2/F3/F4/F5/F12/F13 以 **3.1.10 现值**如实呈现
+（卡面「3.1.9」字样按实际版本理解），3.1.7/3.1.9 读数以「历史轮」标注保留于
+§1 表各行。
+
+**(a) F2（asar package.json）/ F4（shellFingerprint）**——§2.2 同款解析器
+（exit 0）：
+
+```
+F2 package.json version: 3.1.10
+F4 shellFingerprint: be87e0961c158791aa0161211a29a609d4d5297575370cc458cfc789e3f89019
+```
+
+**(b) F3（exe 版本）**——§2.1 同款命令（exit 0）：`FileVersion 3.1.10.203` /
+`ProductVersion 3.1.10.203` / `ProductName MiniMax Code` / `CompanyName MiniMax`。
+
+**(c) F5（hot-update state.json，§2.3 同款命令，exit 0）**：`schemaVersion: 2`、
+`enabled: true`、`channel: "prod"`、`locale: "zh"`、`appVersion: "3.1.9"`
+（**陈旧元数据**，滞后于 exe/asar 实测 3.1.10）、`shellFingerprint` 仍为 3.1.9
+值（`b162d1a0…`）、`latestManifestVersion: null`、`active: null`、`pending: null`、
+`lastKnownGood: null`、`bootAttempts: 0`、`resetToBundled: false`、
+`lastCheckTime: 1793510644436`、`lastUpdateTime: 0`。
+
+**(d) F5 更新器活跃证据**（`%APPDATA%\MiniMax\logs\update-11-01.log`）：
+
+```
+[2026-11-01 20:23:53.599] [info] [Updater] 收到检查更新请求 (userTriggered: false, status: downloaded, cachedVersion: 3.1.10)
+[2026-11-01 21:23:53.544] [info] [Updater] 收到检查更新请求 (userTriggered: false, status: downloaded, cachedVersion: 3.1.10)
+[2026-11-01 22:23:53.529] [info] [Updater] 收到检查更新请求 (userTriggered: false, status: downloaded, cachedVersion: 3.1.10)
+[2026-11-01 23:23:53.532] [info] [Updater] 收到检查更新请求 (userTriggered: false, status: downloaded, cachedVersion: 3.1.10)
+```
+
+→ 每小时检查**持续**、3.1.10 已下载（`status: downloaded`）。F13 维持**开启**，
+且 §2.7 的关闭方式推断在 3.1.9+ 不成立（见下方机制更正与本节 (f)）。
+
+**(e) F12（运行时包版本）**：3.1.10 打包变化——`@mavis/local-runtime-v2` 与
+`@mavis/local-runtime` 的 `package.json` **不在 asar 内**（头索引逐段解析确认
+ABSENT）；可采面：`@mavis/permission 0.2.1`、`@mavis/config 0.2.1`（public）。
+3.1.7 时代读数保留于 §1 表历史标注。
+
+**(f) F13 机制更正**（3.1.9/3.1.10 实测 + 代码面）：
+
+- `dist/main/ipc/updater.ipc.js:311-314`（注释原文）：「设置是否自动安装更新
+  （由渲染进程从 **Apollo agentConfig** 推送）」——更新器自动安装标志来自服务端
+  推送，**不读本机 `promptConfig.autoUpdate`**；
+- `[Updater] setAutoUpdateEnabled: false` 在 003 轮 freeze 落键**之前**已多次
+  出现（2026-10-31 13:09:06、19:49:26），系 Apollo 推送日志，与 freeze 键无关
+  （003 轮 22:41 曾把同名行误读为「freeze 生效强阳性信号」，XJ-20261101-001
+  重发件 §4.1 已更正）；
+- XJ-20261101-001 V2 收口 **FAIL**（观察窗 >24h：2026-10-31 23:20:39 与
+  2026-11-01 00:20:39 两条整点静默检查）——两度版本自升级（3.1.9、3.1.10）即
+  该 FAIL 的直接后果实例。
 
 ---
 
@@ -286,9 +355,9 @@ export function resolvePromptConfig(obj) {
 
 | # | 动作 | 目的 | 状态 |
 |---|---|---|---|
-| P1 | 在 `config.yaml` 设 `promptConfig.autoUpdate: false`，重启应用后复测更新器日志（不再出现每小时静默检查） | 消除轮次中途自动升级导致的指纹漂移 | **未执行**（本卡只读，未改用户配置） |
-| P2 | 预置 B 臂权限规则（`permission.json` 整工具 deny，含 MCP server 级） | 见 `docs/dryrun-b-arm-tool-deny.md` | **未执行**（需在正式 run 前按 D2 结论预置） |
-| P3 | 每轮开始与结束各采集一次 F2/F3/F4/F5 并比对 | 检测轮次中途的热更新/升级 | 协议待写入 runbook |
+| P1 | 在 `config.yaml` 设 `promptConfig.autoUpdate: false`，重启应用后复测更新器日志（不再出现每小时静默检查） | 消除轮次中途自动升级导致的指纹漂移 | **已执行（2026-10-31，003 轮）**：V1 exit 0 且键经重启存活；**但 V2 收口 FAIL**（3.1.9+ 更新器不受该键控制，§2.8(f)）——漂移仍发生（3.1.9→3.1.10），升级路径挂执行卡/sir（freeze doc §4 回退条款） |
+| P2 | 预置 B 臂权限规则（`permission.json` 整工具 deny，含 MCP server 级） | 见 `docs/dryrun-b-arm-tool-deny.md` | **已预置（XJ-20261102-001）**：清单 R1–R50（3.1.10 引擎实测 100/100 deny exit 0）；003 轮已实测会话级注入与 `permission.enforcement` 现场记录（16 条 blocked） |
+| P3 | 每轮开始与结束各采集一次 F2/F3/F4/F5 并比对 | 检测轮次中途的热更新/升级 | **已入卡链**：003 轮 F2-F5 比对执行；本卡重采 3.1.10（四件同表同日期）；prereg v1.4（XJ-20261102-002）以 manifest/canary 指纹护栏替代版本锁 |
 
 ---
 

@@ -391,6 +391,10 @@
     "docs/closure-round-record-20261031-reemitted.md",
     "artifacts.json"
   ],
+  "XJ-20261102-001": [
+    "docs/b-arm-permission-profile.md",
+    "docs/executor-fingerprint-minimax.md"
+  ],
   "_pending_conditionals": {
     "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化：artifacts.json 只登记已放行/已出货 round）。002 待 C1-C4 闭合后以执行卡 PASS 新 round 登记回来。",
     "XJ-20261030-002": {
