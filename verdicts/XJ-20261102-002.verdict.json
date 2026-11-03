@@ -1,0 +1,49 @@
+{
+  "id": "XJ-20261102-002",
+  "artifact": [
+    "docs/eval-prereg.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261102-002-prereg-v14-freeze @ dd622f3（基线 master 9e70378，未 push；仓内触碰 3 文件：.tasks/XJ-20261102-002.md 卡(IN_REVIEW, +51 实现记录+验收实测表+Status) + docs/eval-prereg.md(+39 纯追加：v1.4 版本行叠放于 v1.3 之上 + §6 日志 1.4 行 + §10 新变更记录节，v1.3 冻结文本 0 删除 0 改写) + artifacts.json(XJ-20261102-002 条目纯增 4 行，_pending_conditionals 未动)；红区九文件 + verdicts/ master..dd622f3 diff 零输出；无 run 数据 / 无 verdict 产物；节号裁量已披露：卡面 D1 字面「§9 新增」实现为新建 §10 节(v1.3 冻结表逐字节不动，按每版本变迁独立成节 §7/§8/§9 惯例)",
+  "verdict": "PASS",
+  "acknowledged_by": "jarvis→agnes（2026-11-03 派发单，002 handoff，派发单指定）",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-03T16:49:32Z",
+  "ts_note": "ts 取正本落盘时刻（本方 UTC 读取 2026-11-03T16:49:32Z，非未来、不超前当前 UTC）；早于落盘且晚于全部独立核验动作：449 单测复跑 / census 30==30 / lint 0 ERROR(1 WARN 评审瞬态 VERDICT_WITHOUT_REVIEW×002) / 红区九文件 + verdicts 独立 diff 零 / 坑12 三触碰文件 ?{3,}=0 / append-only 独立 diff 0 删除行 + v1.3 §9 逐字节未动 / §10 术语自查 0 证明|显著。全部实跑于分支 worktree @ dd622f3。ts 不超前。",
+  "evidence": [
+    "A1：python -m unittest discover -s tests → Ran 449 tests in 105.068s, OK, exit 0（本卡纯文档不改测试面；449 与 sync 锚一致）。",
+    "A2：python tools/sync_test_count.py --check → README.md / README.zh-CN.md in sync at 449, exit 0。",
+    "A3：python tools/eval/run.py --tasks → tasks total: 30 (frozen C6 census: 30) / census assertion: 30 == 30: ok / layer fact·code·process 各 10/10, exit 0。",
+    "A4（本方独立 diff，非 grep 计数）：git diff master dd622f3 -- docs/eval-prereg.md 非 diff 头删除行 = 0（仅 3 纯追加 hunk：版本行 @@1,5、§6 日志 @@164,6、§10 @@311,3）；§9 v1.3 冻结表 + C6/C7/3b144b4 锚点逐字节未动（diff 无 §9 区 - 行，锚点 grep 4 处在位）→ append-only 坐实。",
+    "A5：v1.4 版本行 / §6 日志 1.4 行 / §10 的 C8·C9·C9 补充·执行约束 6、manifest·canary·3.1.10 grep 在位；§10 范围(行 317–352) 证明|显著 命中 0，有效 2 处 = L340(C9 轮次有效性前提)/L348(未变更项继续有效) 均 v1.3 同款冻结句式沿用，非效果宣称。",
+    "A6：git diff master dd622f3 --stat 仅 3 文件(+94/−0)；红区九文件(PROTOCOL.md + tools/eval/{judge,schema,report,seal_run,verify,build_package,gate}.py + tools/lint_cards.py) + verdicts/ 独立 diff = 零输出；触碰面 ⊆ Owned(files)（卡不自列，artifacts.json 为所有权卡）。",
+    "A7：python tools/lint_cards.py --dir .tasks --strict → 0 errors, 1 WARN(VERDICT_WITHOUT_REVIEW ×XJ-20261102-002，本 verdict 落盘即消的评审瞬态)；lint exit 1 仅因该 WARN，符合卡面「评审瞬态 WARN 允许」口径。",
+    "坑12/UTF-8：docs/eval-prereg.md / artifacts.json / .tasks/XJ-20261102-002.md 三文件 ?{3,} 命中 0；本 verdict JSON / review.md UTF-8 无 BOM，落盘后自查 ?{3,}=0。",
+    "前置坐实：XJ-20261102-001 = CLOSED，浮香 verdict PASS(0 blockers/0 conditions/2 advisory)；其 ADV-1(manifest 漂移锚点 = F4 shellFingerprint be87e096，非 state.json appVersion——实测滞后一个版本) + ADV-2(开跑前置确认 3.1.10 active 或护栏固定) 均已并入本卡 C9 补充 + 执行约束 6；R48–R50 纯增 + 全清单 100/100 deny + 3.1.10 指纹重采三面现值一致(F2 asar=3.1.10 / F3 exe=3.1.10.203 / F4=be87e096)。"
+  ],
+  "review_q_rulings": [
+    "Q1 C8 性质 + 次版本 +1：C8 是「预注册后变更」而非勘误。§6 版本语义 + §0.1 口径：改变执行者边界条款（C7 v1.3 已立为可版本化层；重基线 3.1.7→3.1.10 + deny 清单基线续篇 R1–R50）属设计层变更，非错字/链接勘误 → 次版本 +1（1.3→1.4，非 1.3.1）正确；标「预注册后变更」+ 影响主结论=是（执行者版本与 deny 基线变，判定规则与指标零改动）+ 保留原文不改删，§0.1 (a)(b)(c)(d) 四条全满足。裁定：坐实，次版本 +1 正确。",
+    "Q2 manifest 四类漂移覆盖：足以覆盖 dp 参谋四类——二进制面=F4 构建哈希 shellFingerprint(+F2/F3 版本)；能力面=tool_registry 清单哈希；策略面=deny 清单哈希；状态面=F5 热更新状态(观测) + 执行约束 6/ADV-2(开跑前 active 确认)。pending-install 无需独立字段：它本就是 F5 热更新状态枚举(active/pending/latestManifestVersion)的一部分，且其「落地」必然触发 F4/F2/F3 变化，被下一轮 manifest 复采(轮前/每5/轮后)捕获；配合开跑前置约束 6(3.1.10 active 或护栏固定)无盲区。裁定：字段清单足够；唯一需坐实处 = 状态面判定锚依赖 F4 复合(非 F5 单锚)，与 ADV-1 一致(见 advisory ADV-A 口径调和)。",
+    "Q3 canary 每5任务可否被执行者预测/规避：不可。canary 由 harness(观察侧)注入，探测的是权限引擎的 deny 强制面（受禁工具调用是否被拒），不是执行者行为——执行者看不到哪一任务带 canary，且「canary 通过(未被拒)=停轮 invalid」探的是环境漂移(策略面)，非执行者认知；固定 5 任务节奏对执行者不可利用(注入位由 harness 选)。残余漂移窗口 = 最多 4 任务落在漂移后版本，系 dp 参谋设计取舍(复采开销)，已披露；若要收窄 = 每2任务/随机化注入位，属设计层变更需 sir 再裁(卡约束4：节奏照抄 D1 不得擅改)。裁定：节奏可接受、不可被规避；收窄需再裁。",
+    "Q4 append-only 是否守住(独立 diff)：坐实。本方独立 git diff master dd622f3 -- docs/eval-prereg.md：非头删除行=0，仅 3 纯追加 hunk；§9 v1.3 冻结表 + C6/C7/3b144b4 锚点逐字节未动；红区九文件 + verdicts/ 零 diff；触碰面 ⊆ Owned。v1.3 冻结文本零删除零改写。裁定：append-only 守住（以独立 diff 坐实，非 grep 计数）。",
+    "Q5 C8 与 C7(a)「两臂同执行者」自洽性：自洽。C7(a) 不变式是关系式（A 臂执行者 == B 臂执行者 + 同工具集），非把执行者钉死在某版本；C8 把两臂对称重基线到同一 3.1.10，关系式保持；C9 指纹守卫(任一 manifest 漂移即停轮)反而强化 C7(a)——两臂不可能轮中各漂到不同版本。裁定：C8 不破坏 C7(a)，且经 C9 加固；两臂同执行者不变式自洽。",
+    "Q6 前置约束 6 可机械核验 / gate 化：可 gate 化。分两段：(a)「001 交付(R48–R50 全 deny + 3.1.10 指纹重采)」= 静态可核(现在即可)——断言 001 verdict=PASS 且 executor-fingerprint-minimax.md 含 F2=3.1.10/F4=be87e096 且 b-arm-permission-profile.md 含 R48–R50；(b)「首次 manifest 采集入封签」= 开跑时点 runtime 前置门——断言 seal.json 含轮前 manifest 采样且 F4=be87e096 pin。裁定：约束 6 机械可核、可 gate 化；建议编码为可执行断言(见 ADV-B)，执行属第四轮执行卡而非本 v1.4 文档卡。"
+  ],
+  "advisory_findings": [
+    "ADV-A (Q2/Q3 C9 口径调和，记录不阻断)：C9(a) 字面「任一字段与轮前 pin 不一致→停轮」 vs C9 补充「F5 仅观测不作判定锚」存在轻微文本张力。正确读法：判定锚 = F4 shellFingerprint(+F2/F3/registry/deny 佐证)，F5 入 manifest 留痕但不独立停轮。第四轮执行卡的停轮触发规则须显式写明「F5 非判定锚、F4 复合判定」，避免执行侧按 C9(a) 字面把 F5 当停轮触发。",
+    "ADV-B (Q6 gate 化落地，记录不阻断)：约束 6 建议编码为可执行断言(001 verdict=PASS AND 轮前 manifest ∈ seal.json AND F4==be87e096)，置于 gate.py/run.py 开跑前机械 gate，使「无前置不开跑」非纯文本条款；执行工具属第四轮执行卡，本 v1.4 文档卡不改工具面(红区九文件零 diff)。",
+    "ADV-C (Q3 残余窗口，记录不阻断)：每5任务节奏的残余漂移窗口(最多4任务落在漂移后版本)为 dp 参谋设计取舍；若要收窄(每2任务/随机注入位)属设计层变更，需 sir 再裁(卡约束4：节奏照抄 D1 不得擅改)——本方不代裁。"
+  ],
+  "not_verified_disclosed": [
+    "canary 注入实现：本方核到 C9(b) 条款(每5任务注入受禁工具调用探测、期望被拒、未被拒同停轮)，但 canary 的具体注入代码(哪处 harness 注入、注入位选择算法)不在本 v1.4 文档卡面，属第四轮执行卡实现面，本方未独立复现；以 C9(b) 文本 + dp 参谋设计为可得证据。",
+    "manifest 各哈希生成算法：tool_registry 清单哈希 / deny 清单哈希 / F4 shellFingerprint(be87e096) 的具体哈希函数与采法未独立复算(001 verdict P8 亦以文档解析器 + 002 重基线为可得证据，本方沿用)；以 001 三面现值一致 + 文档解析器 exit 0 为可得证据。",
+    "gate 化约束6的落点代码：ADV-B 建议的 gate.py/run.py 断言尚未实现(属第四轮执行卡)，本 v1.4 文档卡仅冻结条款，本方不预先验证未发生的执行侧实现。"
+  ],
+  "unblocks_note": "本卡为纯文档卡(预注册 v1.4 append-only 落地，route A)，派发单明示无 unblocks 字段预期(无 _pending_conditionals 形式的条件牌可摘)；PASS 不摘 030-002 / 031-001 的牌(artifacts.json _pending_conditionals 维持 XJ-20261030-002 / XJ-20261031-001 原样，本卡 diff 未动该键)；真数据 30 任务轮 PASS round 才登记回归。本卡 PASS 后即成 artifacts.json newest 位(常规位登记)，gate 不要求额外摘牌。",
+  "subcard_note": "无独立子卡。本卡为预注册 v1.4 文档卡(执行者重基线 3.1.10 + 指纹守卫替代版本锁，sir 路线 A 终裁 2026-11-02)。其前置 XJ-20261102-001 已 CLOSED/PASS(浮香 verdict)；001 的 ADV-1(manifest 锚点=F4 shellFingerprint，非 state.json appVersion——实测滞后一个版本) 与 ADV-2(开跑前确认 3.1.10 active 或护栏固定) 已并入本卡 C9 补充 + 执行约束 6。本方裁定 v1.4 以 3.1.10 为冻结基线成立(与 001「不回滚」裁定一致：三面现值 F2/F3/F4 一致，F5 appVersion=3.1.9 系陈旧元数据非矛盾)。",
+  "_provenance": "Independent review of feature/xj-20261102-002 @ dd622f3 by AgnesCode (fuxiang)，非卡作者/非执行方 ZCode。Acceptance A1–A8 全部独立复跑/复核通过(unittest Ran 449 OK / sync in sync 449 / census 30==30 / lint 0 ERROR(1 WARN 评审瞬态 VERDICT_WITHOUT_REVIEW×002) / 红区九文件 + verdicts diff 零 / 坑12 三触碰文件 ?{3,}=0 / append-only 独立 diff 0 删除行 + v1.3 §9 逐字节未动 / §10 术语自查 0 证明|显著、有效×2 冻结句式沿用)。六个评审问 + §10 节号裁量全部独立裁定(review_q_rulings Q1–Q6：C8=预注册后变更+次版本+1 正确 / manifest 四类漂移覆盖足够 / canary 每5不可被执行者规避 / append-only 独立 diff 坐实 / C8 与 C7(a) 自洽 / 约束6 可 gate 化)。verdict PASS：0 blockers，0 conditions，3 advisory(ADV-A C9「任一字段」vs F5 观测口径调和；ADV-B 约束6 编码为可执行断言；ADV-C canary 残余窗口收窄需再裁)，均记录不阻断；同意 v1.4 锚 3.1.10(与 001 不回滚一致)。未修改执行方任何文件；本 REVIEW 正本 + verdict.json 为本评审新增正本。",
+  "ts_resign_notes": ""
+}
