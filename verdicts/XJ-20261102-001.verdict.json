@@ -1,0 +1,59 @@
+{
+  "id": "XJ-20261102-001",
+  "artifact": [
+    "docs/b-arm-permission-profile.md",
+    "docs/executor-fingerprint-minimax.md"
+  ],
+  "commit": "feature/xj-20261102-001-v319-deny-fingerprint @ dfd4903（基线 master 5d327db，未 push；仓内触碰 4 文件：.tasks/XJ-20261102-001.md 卡(IN_REVIEW) + docs/b-arm-permission-profile.md(R48-R50 纯增 + 探针/枚举面更新, §3-onward 10778 字节 base/HEAD 一致) + docs/executor-fingerprint-minimax.md(§2.8 重采 3.1.10 + F2-F13 历史轮标注保留 + §4 P1/P2/P3 状态更新, 3.1.7 原文未删) + artifacts.json(XJ-20261102-001 条目纯增 4 行, D4 协调面, 单所有权归 002 按 5d327db); 红区九文件 + verdicts/ 5d327db..dfd4903 diff 零输出; dryrun/ 探针环境未 git add; 首要披露: 执行窗口内执行者自升级 3.1.9 -> 3.1.10(asar 覆盖不可回采), 全部读数改在 3.1.10, 3.1.7/3.1.9 历史轮标注保留",
+  "verdict": "PASS",
+  "acknowledged_by": "jarvis→agnes (2026-11-02 handoff, 派发单指定)",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-03T04:42:12Z",
+  "ts_note": "ts 取正本落盘时刻(2026-11-03 00:05 +08 = 2026-11-02 16:05Z, 非未来, 早于当前 UTC 时点且晚于全部独立核验动作): 449 单测复跑(104.3s) / census 30==30 / lint 0 ERROR(2 WARN 评审前瞬态 VERDICT_WITHOUT_REVIEW×001/×002) / 红区九文件+verdicts diff 零 / 坑12 四触碰文件 ?{3,}=0 / P2-P8 全部 asar 独立解析(详见 evidence) / 探针独立重跑 100/100 exit 0, 全部实跑于分支 worktree @ dfd4903。ts 不超前。",
+  "evidence": [
+    "A1/A2/A3/A7：COVENANT_BASH_HINT=D:\\AI\\Git\\bin\\bash.exe python -m unittest discover -s tests -> Ran 449 tests OK exit 0(104.321s, 本卡不改测试面); tools/sync_test_count.py --check -> README×2 in sync at 449 exit 0; tools/eval/run.py --tasks -> census assertion: 30 == 30: ok exit 0; lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --strict -> 0 errors, 2 warnings(VERDICT_WITHOUT_REVIEW XJ-20261102-001/×002, 本 verdict 落盘即消的评审前瞬态)。",
+    "坑12/UTF-8：docs/b-arm-permission-profile.md / docs/executor-fingerprint-minimax.md / artifacts.json / .tasks/XJ-20261102-001.md 四文件 \\?{3,} 命中 0, UTF-8 无 BOM; 本 verdict JSON UTF-8 写盘, 落盘后自查 ?{3,}=0。",
+    "范围纪律(A5/A6)：git diff --name-only 5d327db..dfd4903 对红区九文件(PROTOCOL.md/tools/eval/{judge,schema,report,seal_run,verify,build_package,gate}.py/tools/lint_cards.py) + verdicts/ -> 零输出; 触碰 4 文件 = .tasks 卡 + 两 docs + artifacts.json(D4 协调面, 002 单所有权, 5d327db 已把 artifacts.json 移出本卡 Owned files), ⊆ Owned + 协调面; git status 仅 ?? dryrun/ (探针环境未跟踪), 无 run 数据 / 无 verdict 产物; artifacts.json diff 纯增 4 行(本卡条目) removed=none。",
+    "P4 纯增红线(本方独立 strip-CR diff, 口径含行尾 CR 处理): base 5d327db vs HEAD dfd4903 的 §1.1 对照表 R1-R47 全 47 行逐字节一致(strip-CR mismatch=NONE); R48-R50 仅 HEAD; §3-onward 后缀 10778 字节 base/HEAD 完全字节一致(§3-§6 一字不动); §1 JSON 纯增仅 tool_search/mcp_invoke/mcp_browser 三名 removed=none。与本方 strip-CR 口径一致, 纯增不减守住。",
+    "P2 R50 翻转(本方独立解析 asar, 最重): local-turn-tool-catalog.js L52 'hasBrowserHostAlias && tool.def.name === \"browser\" ? { selectorAlias: \"mcp_browser\" } : {}' + L254 '* `mcp_browser`, whose definition is the same compact one renamed) is the' + L260 '* data shape stay builtin; the spread keeps the Host Binding of `mcp_browser`.' -> 3.1.9+/3.1.10 mcp_browser 确为 browser 复合工具别名转正可调用定义, 002 时代「别名不可调用」结论失效有据; browser 本体仍由 R31 覆盖, R50 补 alias 名为纯增。",
+    "P3 R48/R49 延迟注册面(本方独立解析 asar): agent-tools/dist/mcp-disclosure/bounded-tool-search.js L34 \"name: 'tool_search',\"(L36 description + L40 'call `mcp_invoke` with the chosen tool_name'); agent-tools/dist/mcp-disclosure/loading.js L8 \"const gateways = tools.filter((tool) => tool.def.name === 'mcp_invoke');\" -> 两处定义确在 3.1.10 asar, 行号与文档引用一致。",
+    "P5 探针 100/100(本方独立重跑, 自带 fuxiang_dataDir_1102 不复用 /tmp): node b_arm_deny_probe.mjs <dryrun asar> <自己的 dataDir> -> exit 0; 50 规则 × 2 模式(bypassPermissions + default)=100 行全 '-> deny', allow 计数 0, UNEXPECTED 标记 0, 末行 'mcp_browser -> deny {rule ... toolName:mcp_browser}'; 全清单 ×2 模式非抽测; 文档配方重建自洽(执行方 D2 已复跑同结果)。",
+    "P6 F5 陈旧元数据(本方独立读 %APPDATA%\\MiniMax\\hot-update\\state.json): appVersion=\"3.1.9\" + shellFingerprint=\"b162d1a0eda5...\"(均 3.1.9 陈旧值), 滞后 exe/asar 实测 3.1.10; 文档 F5 行如实标注「陈旧元数据, 滞后于 exe/asar 实测 3.1.10」非冒充一致; lastCheckTime 1793510644436 本方换算 = 2026-11-01 13:24 +08, 与文档 13:24 一致。",
+    "P7 F12 不可采(本方独立 asar 头索引 28568 文件全量): @mavis/local-runtime-v2/package.json ABSENT + @mavis/local-runtime/package.json ABSENT(打包变化); 可采面 @mavis/permission 0.2.1 + @mavis/config 0.2.1 PRESENT; 文档 §2.8(e) 标注 ABSENT 非漏采, 有头索引解析证据。",
+    "P8 F13 机制更正(本方独立解析 asar): dist/main/ipc/updater.ipc.js L311 注释原文「设置是否自动安装更新（由渲染进程从 Apollo agentConfig 推送）」+ L313 setAutoUpdateEnabled 日志 + L314 setAutoUpdateEnabled(enabled===true) -> 更新器自动安装标志由渲染进程从 Apollo agentConfig 推送, 与本机 promptConfig.autoUpdate 键不在一条链; 文档 §2.7 保留 3.1.7 原文 + §2.8(f) 标注 002 时代关闭方式推断在 3.1.9+ 不成立(XJ-20261101-001 V2 收口 FAIL), 历史推断原文保留 + 失效标注正确。",
+    "P1 漂移披露(本方独立核验): §2.8 版本漂移链 3.1.7->3.1.9(003 轮实测, 冻结落键前)->3.1.10(002 卡重测与本卡窗口之间) 全实测口径; F2-F13 每行「历史轮(3.1.7)/历史轮(3.1.9)」标注保留原文未删; 哪些读数 3.1.9 语义(F5 shellFingerprint=b162d1a0 等旧值)vs 3.1.10 现值(F2/F3/F4=3.1.10/3.1.10.203/be87e096)交代清楚; 3.1.7/3.1.9 历史标注完整保留未静默改写。",
+    "枚举独立重跑(补全面完整性): node enumerate-registry.mjs <dryrun asar> -> '### F2. mcp-disclosure deferred: [\"mcp_invoke\",\"tool_search\"] | alias-promoted: [\"mcp_browser\"]' + '### TOTAL distinct desktop tool names: 48' + '### H. agent-core defs NOT in desktop registry: []'(无第四漏网); 48 工具名 + 2 builtin 服务器(browser/matrix) = 50 规则 R1-R50, 与文档 §0(48 名 + 2 服务器 = 50 条规则)一致; no-fourth-leak 残差 = schema 字段名 + cloud/matrix 面(R47 整服覆盖, 云面不在桌面注册表)。",
+    "INDEPENDENCE：本方非卡作者/非执行方 ZCode; 全程独立复跑+asar 解析+strip-CR diff+探针重跑+枚举+读 state.json/更新器日志/exe VersionInfo, 未改执行方任何文件; P2-P8 关键证据行均本方自采(非采信文档记录); 本 REVIEW 正本(mo brain 指定路径) + verdict.json 为本评审新增正本。"
+  ],
+  "review_q_rulings": [
+    "P1 漂移披露充分性: 坐实。§2.8 全实测口径 + F2-F13 历史轮标注保留原文 + R1-R47 演进纪律段明写原样保留; 3.1.9 语义值 vs 3.1.10 现值分列清楚, 未静默改写 3.1.7/3.1.9 历史读数。",
+    "P2 R50 翻转正当性: 坐实有据。本方独立 asar 验 catalog L52 selectorAlias + L254 'same compact one renamed' + L260 Host Binding, mcp_browser 3.1.9+ 确为别名转正可调用, 翻转非主观; browser 本体 R31 仍覆盖, 纯增不遗漏。",
+    "P3 R48/R49 延迟注册面: 坐实。本方独立 asar 验 bounded-tool-search.js:34 name:tool_search + loading.js:8 def.name===mcp_invoke 均存在于 3.1.10, 行号与文档一致。",
+    "P4 纯增红线: 坐实。本方 strip-CR diff: R1-R47 全 47 行逐字节一致 + R48-50 仅 HEAD + §3-onward 10778 字节 base/HEAD 一致 + §1 JSON 纯增 removed=none; 口径与派发单 strip-CR 一致。",
+    "P5 探针 100/100: 坐实非抽测。本方自带 dataDir 独立重跑 exit 0 / 100 行全 deny / 0 allow / 0 UNEXPECTED / 末行 mcp_browser->deny。",
+    "P6 F5 陈旧元数据: 坐实。本方独立读 state.json appVersion=3.1.9(shellFingerprint=b162d1a0 3.1.9 值) vs exe/asar=3.1.10, 文档如实标注陈旧非冒充一致。",
+    "P7 F12 不可采: 坐实非漏采。本方独立 asar 头索引 local-runtime-v2/ABSENT + local-runtime/ABSENT, permission 0.2.1 + config 0.2.1 PRESENT, 有头索引证据。",
+    "P8 F13 机制更正: 坐实。本方独立 asar updater.ipc.js:311 Apollo 推送注释 + 313-314 setAutoUpdateEnabled, §2.7 保留 3.1.7 原文 + §2.8(f) 标注失效。",
+    "v1.4 基线裁定: 读数足以支撑 3.1.10 冻结基线, 不回滚。三面现值一致(F2 asar=3.1.10 / F3 exe=3.1.10.203 / F4=be87e096), F5 appVersion=3.1.9 为陈旧元数据非矛盾(真实版本以三面现值为准); v1.4 manifest/canary 护栏方向正确, 文本不必为 001 而改。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (给 002 manifest/canary 护栏, 记录不阻断本卡 PASS, 非 unblocks): 指纹护栏锚点应取 F4 shellFingerprint=be87e096...(三面现值、随版本漂移), 不要取 state.json appVersion(本卡实测证实为陈旧面, 滞后一个版本 appVersion=3.1.9 vs 现值 3.1.10)。002 卡重基线 00fd578 以 3.1.10 为基线方向正确, 本方支持不回滚; 若 002 已在 v1.4 用 appVersion 作护栏锚, 建议改为 F4 shellFingerprint 或 exe FileVersion, 避免被陈旧元数据误导。",
+    "ADV-2 (真数据轮前置观察项, 记录不阻断): 本卡窗口内执行者已发生 3.1.9->3.1.10 自升级(更新器 status:downloaded 每小时检查持续, F13 维持开启); 真数据 30 任务轮开跑前须确认 3.1.10 已 active 或被 002 manifest/canary 护栏固定, 否则轮次中途可能再自升级(本卡已实证一次)。此项与 XJ-20261101-001 ADV-1(V2 FAIL 更新器不受本机键控制, 升级路径归执行卡/sir)合并为真数据轮开跑前置, 属执行卡/sir 职权, 本方不代裁升级路径。"
+  ],
+  "not_verified_disclosed": [
+    "Apollo 服务端推送链: 本方独立核到 updater.ipc.js:311 注释原文('由渲染进程从 Apollo agentConfig 推送') + 更新器日志时序(11-01 每小时 20:23-23:23 cachedVersion:3.1.10 status:downloaded), 但 Apollo agentConfig 服务端如何推送的完整链路无仓内证据, 未独立复现; 以 asar 代码面注释 + 日志时序为可得证据。",
+    "3.1.10 是否已 active 安装: 本卡读数为 F2/F3/F4=3.1.10(已生效) + 更新器 cachedVersion:3.1.10 status:downloaded(已下载); 真数据轮开跑前需确认 3.1.10 active 或被护栏固定, 本方不预先验证未发生的 active 安装态。",
+    "P6/P7/P8 的 F4 shellFingerprint 具体生成算法(构建哈希如何算出 be87e096): 本方核到文档 §2.2 同款解析器 exit 0 + 三面(§2.2 输出 F2/F4)一致, 但 shellFingerprint 的源码生成函数未独立复算, 以文档解析器 + 002 重基线 00fd578 的 F4 验证为可得证据。"
+  ],
+  "unblocks_note": "本卡无前置条件卡(派发单明示: 本卡理论无 unblocks 需求)。XJ-20261031-003 advisory-①(3.1.9 指纹重采) 与 advisory-②(deny 清单补 tool_search/mcp_invoke/mcp_browser + 全量重枚举 + 探针复跑) 由本卡交付实质收口(R48-R50 纯增 + 全清单 100/100 + 3.1.10 指纹重采), 但因漂移 3.1.9->3.1.10, 003 ADV-①/② 的 3.1.9 目标已由 3.1.10 现值替代, 且 002 卡 v1.4 已把重基线 3.1.9->3.1.10; 本方以 evidence + advisory 形式声明收口事实, 不填 unblocks 字段(ADR-0002 形状: 本卡无 <NS>-YYYYMMDD-NNN.<condition> 形式的条件摘牌需求)。若 002 需摘其 001 前置, 由 002 卡 verdict 自行声明。",
+  "subcard_note": [
+    "无独立子卡。本卡为 3.1.x deny 清单补全 + 执行者指纹重采卡, 触发 = XJ-20261101-001 verdict ADV-1/ADV-2(真数据轮前置阻塞项, sir 拍板立即开卡)。执行窗口内发生第三次静默自升级(3.1.7->3.1.9->3.1.10), 直接印证同日 002 卡(prereg v1.4 route A + manifest/canary 指纹护栏替代版本锁)的必要性; 本方裁定 3.1.10 作为冻结基线成立, v1.4 不回滚。"
+  ],
+  "_provenance": "Independent review of feature/xj-20261102-001 @ dfd4903 by AgnesCode (fuxiang), 非卡作者/非执行方 ZCode。Acceptance A1-A8 全部独立复跑/复核通过(unittest Ran449 OK / sync in sync 449 / census 30==30 / lint 0 ERROR(2 WARN 瞬态) / 红区九文件+verdicts diff 零 / 坑12 四触碰文件 ?{3,}=0 / F2-F5 四件同表同日期 2026-11-02)。八个重点裁定点全部独立 asar/diff/探针重跑坐实(P2 R50 翻转独立验 catalog L52/L254/L260 'same compact one renamed' / P3 R48-R49 独立验 bounded-tool-search.js:34 + loading.js:8 / P4 独立 strip-CR diff R1-R47 全 47 行逐字节一致+§3-onward 10778 字节一致+§1 JSON 纯增 removed=none / P5 独立探针自带 dataDir 100/100 deny exit 0 / P6 独立读 state.json 坐实 appVersion=3.1.9 陈旧非矛盾 / P7 独立 asar 头索引坐实 local-runtime* ABSENT + permission/config 0.2.1 PRESENT 非漏采 / P8 独立验 updater.ipc.js:311 Apollo 推送注释+313-314 setAutoUpdateEnabled, §2.7 保留 3.1.7 原文)。枚举独立重跑 TOTAL=48(+2 服务器=50 规则), 残差 H=[] 无第四漏网。verdict PASS: 0 blockers, 0 conditions, 2 advisory(002 指纹护栏锚点应取 F4 shellFingerprint 非 appVersion; 真数据轮前置确认 3.1.10 active/护栏固定), 均记录不阻断; 支持 v1.4 以 3.1.10 为冻结基线不回滚(F5 为陈旧元数据非矛盾)。未修改执行方任何文件; 本 REVIEW 正本 + verdict.json 为本评审新增正本。",
+  "ts_resign_notes": [
+    "#29 2026-11-03: re-signed after merge checkout refreshed artifact mtimes (profile/fingerprint docs); content unchanged, zero semantic edits; mechanism identical to resigns #15-#28."
+  ]
+}
