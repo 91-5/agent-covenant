@@ -11,7 +11,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-03T16:49:32Z",
+  "ts": "2026-11-03T16:58:00Z",
   "ts_note": "ts 取正本落盘时刻（本方 UTC 读取 2026-11-03T16:49:32Z，非未来、不超前当前 UTC）；早于落盘且晚于全部独立核验动作：449 单测复跑 / census 30==30 / lint 0 ERROR(1 WARN 评审瞬态 VERDICT_WITHOUT_REVIEW×002) / 红区九文件 + verdicts 独立 diff 零 / 坑12 三触碰文件 ?{3,}=0 / append-only 独立 diff 0 删除行 + v1.3 §9 逐字节未动 / §10 术语自查 0 证明|显著。全部实跑于分支 worktree @ dd622f3。ts 不超前。",
   "evidence": [
     "A1：python -m unittest discover -s tests → Ran 449 tests in 105.068s, OK, exit 0（本卡纯文档不改测试面；449 与 sync 锚一致）。",
@@ -45,5 +45,6 @@
   "unblocks_note": "本卡为纯文档卡(预注册 v1.4 append-only 落地，route A)，派发单明示无 unblocks 字段预期(无 _pending_conditionals 形式的条件牌可摘)；PASS 不摘 030-002 / 031-001 的牌(artifacts.json _pending_conditionals 维持 XJ-20261030-002 / XJ-20261031-001 原样，本卡 diff 未动该键)；真数据 30 任务轮 PASS round 才登记回归。本卡 PASS 后即成 artifacts.json newest 位(常规位登记)，gate 不要求额外摘牌。",
   "subcard_note": "无独立子卡。本卡为预注册 v1.4 文档卡(执行者重基线 3.1.10 + 指纹守卫替代版本锁，sir 路线 A 终裁 2026-11-02)。其前置 XJ-20261102-001 已 CLOSED/PASS(浮香 verdict)；001 的 ADV-1(manifest 锚点=F4 shellFingerprint，非 state.json appVersion——实测滞后一个版本) 与 ADV-2(开跑前确认 3.1.10 active 或护栏固定) 已并入本卡 C9 补充 + 执行约束 6。本方裁定 v1.4 以 3.1.10 为冻结基线成立(与 001「不回滚」裁定一致：三面现值 F2/F3/F4 一致，F5 appVersion=3.1.9 系陈旧元数据非矛盾)。",
   "_provenance": "Independent review of feature/xj-20261102-002 @ dd622f3 by AgnesCode (fuxiang)，非卡作者/非执行方 ZCode。Acceptance A1–A8 全部独立复跑/复核通过(unittest Ran 449 OK / sync in sync 449 / census 30==30 / lint 0 ERROR(1 WARN 评审瞬态 VERDICT_WITHOUT_REVIEW×002) / 红区九文件 + verdicts diff 零 / 坑12 三触碰文件 ?{3,}=0 / append-only 独立 diff 0 删除行 + v1.3 §9 逐字节未动 / §10 术语自查 0 证明|显著、有效×2 冻结句式沿用)。六个评审问 + §10 节号裁量全部独立裁定(review_q_rulings Q1–Q6：C8=预注册后变更+次版本+1 正确 / manifest 四类漂移覆盖足够 / canary 每5不可被执行者规避 / append-only 独立 diff 坐实 / C8 与 C7(a) 自洽 / 约束6 可 gate 化)。verdict PASS：0 blockers，0 conditions，3 advisory(ADV-A C9「任一字段」vs F5 观测口径调和；ADV-B 约束6 编码为可执行断言；ADV-C canary 残余窗口收窄需再裁)，均记录不阻断；同意 v1.4 锚 3.1.10(与 001 不回滚一致)。未修改执行方任何文件；本 REVIEW 正本 + verdict.json 为本评审新增正本。",
-  "ts_resign_notes": ""
+  "ts_resign_notes": "",
+  "notes": "\n\n2026-11-03 (resign #30): ts refreshed post-merge-checkout; artifact mtimes moved by branch switch, zero content change (mtime resign per repo precedent)."
 }
