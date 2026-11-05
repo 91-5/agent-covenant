@@ -399,18 +399,47 @@
     "docs/eval-prereg.md",
     "artifacts.json"
   ],
-  "_pending_conditionals": [
-    {
-      "id": "XJ-20261030-002",
-      "discharged": "2026-11-05T13:54:17Z",
-      "discharged_by": "XJ-20261104-001 PASS round (round4 real-data executed + sealed + reported; C1-C4 closed via 031-001/1104 execution)"
+  "_pending_conditionals": {
+    "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化）。030-002/031-001 已于 2026-11-05 随 XJ-20261104-001 第四轮 PASS round 登记回归并摘牌（C1-C4 闭合 + C2 经 031-002 补清单 R48-R53 闭合）；条目保留作审计，discharged 标记摘牌时刻。",
+    "XJ-20261030-002": {
+      "status": "CONDITIONAL/NO-GO-conditional -> DISCHARGED 2026-11-05",
+      "verdict": "verdicts/XJ-20261030-002.verdict.json",
+      "conditions": [
+        "C1 协议§13.2 执行面封堵",
+        "C2 B臂权限预置(只读面取舍挂 sir)",
+        "C3 关自动更新",
+        "C4 机制闭合轮"
+      ],
+      "artifacts": [
+        "docs/executor-fingerprint-minimax.md",
+        "docs/dryrun-b-arm-tool-deny.md",
+        "docs/dryrun-runlog-coverage.md",
+        "docs/dryrun-seal-capture.md"
+      ],
+      "discharged": "2026-11-05T14:00:15Z",
+      "discharged_by": "XJ-20261104-001 PASS round: C1 via 031-001 D1; C2 via 031-002 (R48-R53) + round4 B-arm enforcement; C3 via 031-001 D3 + v1.4 C9 guard; C4 via 1104 D0 closure gates"
     },
-    {
-      "id": "XJ-20261031-001",
-      "discharged": "2026-11-05T13:54:17Z",
-      "discharged_by": "XJ-20261104-001 PASS round (C2 closed via 031-002 deny R48-R53 + round4 execution)"
+    "XJ-20261031-001": {
+      "status": "CONDITIONAL/C1-C3-C4-discharged-C2-open -> DISCHARGED 2026-11-05",
+      "verdict": "verdicts/XJ-20261031-001.verdict.json",
+      "conditions": [
+        "C2-补清单(deny 清单漏 10 类本地原生工具, 执行卡注入前补全+复跑探针)"
+      ],
+      "discharged_prev": [
+        "C1 via unblocks",
+        "C3 via unblocks",
+        "C4 via unblocks"
+      ],
+      "artifacts": [
+        "docs/eval-runner-protocol.md",
+        "docs/b-arm-permission-profile.md",
+        "docs/executor-update-freeze.md",
+        "docs/mechanism-closure-round.md"
+      ],
+      "discharged": "2026-11-05T14:00:15Z",
+      "discharged_by": "C2 closed via XJ-20261102-001 (R48-R50, probe 100/100) + 1104 R51-R53 (goal face, probe 106/106); round4 executed under full deny"
     }
-  ],
+  },
   "XJ-20261104-001": [
     "docs/b-arm-permission-profile.md",
     "artifacts.json"

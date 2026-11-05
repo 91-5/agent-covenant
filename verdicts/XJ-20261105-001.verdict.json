@@ -11,7 +11,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-05T13:54:22Z",
+  "ts": "2026-11-05T14:00:20Z",
   "ts_note": "ts = UTC at R1 closure moment (not ahead of current UTC). Fast-path scope: verified only that COND-1 and COND-2 are closed on commit 65b768c - section-3 subcounts now line-for-line equal to my independent dual-source recompute (120 cmd-bearing E1 / 114 PS = 95.0% / 48-30-6-24-6 + git 6 / E2 cmd-bearing 0 / old 84-family zero-hits); card A5 revised to the grep-excludes-L7-self-statement basis (my option a), L7 prose unchanged; diff limited to .tasks card (1 line) + report (7 lines); red-zone + verdicts + study_runner + pre-reg still zero-diff. All six adversarial questions were already independently re-adjudicated at first pass and are NOT re-opened at R1.",
   "evidence": [
     "Q1 (number fidelity) - HEADLINE ALL TRACEABLE: M1 paired diff -8.2% / CI [-14.7%, -3.1%] / M2 0.0% [0.0%,0.0%] / paired tasks 30 (M1) & 30 (M2) / excluded 0-0 / E0=0 E1=120 E2=606 E3=36 E4=138 (900 claims) / mixed M1 82.3% M2 13.3% / 8 negative-delta tasks T01 -0.500, T24 -0.667, T28 -0.333, T30 -0.333, T16 -0.125, T26 -0.167, T27 -0.167, T29 -0.167 (22/30 = +0.000) / coverage A 18/30 B 18/30 / M3 not run. Every one maps verbatim to r4_unblind.txt L24-L86 (paired table + per-task + coverage) and r4_blind_report.txt L194-L201 (aggregate). No drift on headline numbers.",
@@ -46,7 +46,8 @@
   "_provenance": "Independent review of feature/xj-20261105-001-round4-report @ 157736f by AgnesCode (fuxiang), non-card-author, non-implementer (Jarvis). All key numbers independently recomputed from sealed + reference files, NOT adopted from the report text: headline numbers all traced verbatim (M1 -8.2% / CI / E2=606 / E1=120 / E4=138 / 8 negative-delta / coverage 18/30); section-3 sub-counts '84' re-examined against BOTH r4_blind_report.txt and a live `run.py --report --allow-drift` regeneration -> both give 120 E1-cmd lines / 114 PS (95.0%) / 48-30-6-24-6+git6, so the 84-family is a non-faithful sub-count (COND-1); 95%-E1 + zero-PS-E2 dual-source confirmed; five limitations 5/5 verbatim; red-zone + verdicts + study_runner + pre-reg zero-diff; live --report --allow-drift dual-head 979-line regeneration OK. Six adversarial questions independently re-adjudicated. verdict CONDITIONAL (0 blockers / 2 conditions / 3 advisory ADV-1..ADV-3, all record-not-block; COND-1/COND-2 are text/self-test fixes, no data or instrument change). No implementer file modified by this review; this review .md + verdict.json are the new review-side artifacts. R1 (fast-path, 2026-11-05): independently re-verified the two conditions on commit 65b768c - section-3 now carries the dual-source-consistent E1 census (120 cmd-bearing / 114 PS=95.0% / git 6 / E2 cmd-bearing 0), old 84-family fully removed, self-contradiction gone; card A5 revised to the grep-excludes-L7 basis. No six-question re-open. verdict upgraded CONDITIONAL -> PASS.",
   "ts_resign_notes": "",
   "notes": [
-    "resign #32 (2026-11-05): artifacts.json registration + card archival postdate verdict ts; mechanical re-sign, zero content change, per memory #1 merge-checkout mtime loop."
+    "resign #32 (2026-11-05): artifacts.json registration + card archival postdate verdict ts; mechanical re-sign, zero content change, per memory #1 merge-checkout mtime loop.",
+    "resign #33 (2026-11-05): _pending_conditionals block-shape restore postdates ts; mechanical, zero content change."
   ],
   "conditions_closures": [
     {
