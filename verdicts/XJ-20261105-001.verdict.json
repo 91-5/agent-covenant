@@ -11,7 +11,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-05T14:00:20Z",
+  "ts": "2026-11-05T14:13:24Z",
   "ts_note": "ts = UTC at R1 closure moment (not ahead of current UTC). Fast-path scope: verified only that COND-1 and COND-2 are closed on commit 65b768c - section-3 subcounts now line-for-line equal to my independent dual-source recompute (120 cmd-bearing E1 / 114 PS = 95.0% / 48-30-6-24-6 + git 6 / E2 cmd-bearing 0 / old 84-family zero-hits); card A5 revised to the grep-excludes-L7-self-statement basis (my option a), L7 prose unchanged; diff limited to .tasks card (1 line) + report (7 lines); red-zone + verdicts + study_runner + pre-reg still zero-diff. All six adversarial questions were already independently re-adjudicated at first pass and are NOT re-opened at R1.",
   "evidence": [
     "Q1 (number fidelity) - HEADLINE ALL TRACEABLE: M1 paired diff -8.2% / CI [-14.7%, -3.1%] / M2 0.0% [0.0%,0.0%] / paired tasks 30 (M1) & 30 (M2) / excluded 0-0 / E0=0 E1=120 E2=606 E3=36 E4=138 (900 claims) / mixed M1 82.3% M2 13.3% / 8 negative-delta tasks T01 -0.500, T24 -0.667, T28 -0.333, T30 -0.333, T16 -0.125, T26 -0.167, T27 -0.167, T29 -0.167 (22/30 = +0.000) / coverage A 18/30 B 18/30 / M3 not run. Every one maps verbatim to r4_unblind.txt L24-L86 (paired table + per-task + coverage) and r4_blind_report.txt L194-L201 (aggregate). No drift on headline numbers.",
@@ -60,5 +60,6 @@
       "status": "CLOSED@R1(65b768c)",
       "closure_evidence": "R1: card A5 revised so the grep \"the only allowed hit is the L7 prohibition self-statement line; must be empty after excluding it\" - this is my verdict option (a) (tighten the grep basis, do not change the L7 prose). L7 prose untouched; independently re-verified: raw grep hits = [L7] only, excluding L7 = empty."
     }
-  ]
+  ],
+  "ts_resign_note": "resign #34: CI green requires artifact mtimes (their last-touch commit times on the runner) to precede verdict ts. Prior resigns (#32/#33) were committed BEFORE the artifacts registration/archival commits, so artifacts stayed 3-79s newer than ts -> STALE_VERDICT x3 (runs 42040118620/42041094693). This resign postdates every artifact-touching commit; mechanical ts bump, zero content change."
 }
