@@ -493,5 +493,13 @@
         ]
       }
     }
+  },
+  "XJ-20261106-001": {
+    "card": "XJ-20261106-001",
+    "owned_products": [
+      "docs/eval-prereg.md"
+    ],
+    "registered": "2026-11-06",
+    "note": "b-ring prereg v1.5 instrument-fix card; owned_products excludes the card itself (EVO-20261010-001 self-listing ban); implementation of V1/V2 code deferred to round-5 prep card"
   }
 }
