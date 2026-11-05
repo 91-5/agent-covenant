@@ -1,0 +1,61 @@
+{
+  "id": "XJ-20261105-001",
+  "artifact": [
+    "docs/eval-report-v4.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261105-001-round4-report @ 157736f (baseline master a46912e; 3 commits dc1b36f open + da94970 report + 157736f lint-fix; +199 pure-add). Report authored by Jarvis; all numbers sourced from two sealed artifacts (blind report 982-line r4_blind_report.txt + unblind appendix r4_unblind.txt); sealed pkg .eval-sealed/pkg-round4. + R1 fix commit 65b768c (COND-1 section-3 dual-source subcount rewrite + COND-2 A5 grep-basis revision; diff touches only .tasks/XJ-20261105-001.md 1 line + docs/eval-report-v4.md 7 lines; red-zone/verdicts/pre-reg untouched)",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261105-001 dispatch to fuxiang (independent review, non-card-author, non-implementer); jarvis implemented the report + XJ-REVIEW-REQUEST-AGNES-20261105-001-R1 fast-path closure (reviewer re-verified the two conditions, no six-question re-open)",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-05T13:37:35Z",
+  "ts_note": "ts = UTC at R1 closure moment (not ahead of current UTC). Fast-path scope: verified only that COND-1 and COND-2 are closed on commit 65b768c - section-3 subcounts now line-for-line equal to my independent dual-source recompute (120 cmd-bearing E1 / 114 PS = 95.0% / 48-30-6-24-6 + git 6 / E2 cmd-bearing 0 / old 84-family zero-hits); card A5 revised to the grep-excludes-L7-self-statement basis (my option a), L7 prose unchanged; diff limited to .tasks card (1 line) + report (7 lines); red-zone + verdicts + study_runner + pre-reg still zero-diff. All six adversarial questions were already independently re-adjudicated at first pass and are NOT re-opened at R1.",
+  "evidence": [
+    "Q1 (number fidelity) - HEADLINE ALL TRACEABLE: M1 paired diff -8.2% / CI [-14.7%, -3.1%] / M2 0.0% [0.0%,0.0%] / paired tasks 30 (M1) & 30 (M2) / excluded 0-0 / E0=0 E1=120 E2=606 E3=36 E4=138 (900 claims) / mixed M1 82.3% M2 13.3% / 8 negative-delta tasks T01 -0.500, T24 -0.667, T28 -0.333, T30 -0.333, T16 -0.125, T26 -0.167, T27 -0.167, T29 -0.167 (22/30 = +0.000) / coverage A 18/30 B 18/30 / M3 not run. Every one maps verbatim to r4_unblind.txt L24-L86 (paired table + per-task + coverage) and r4_blind_report.txt L194-L201 (aggregate). No drift on headline numbers.",
+    "Q1/Q2 (number fidelity) - SECTION-3 SUB-COUNTS NOT REPRODUCIBLE (drives COND-1): report says '84 records carry cmd, all PowerShell (TP37/SS20/GCI17/GC6/paren4), all in E1 (114/120, 95%)'. Independent recompute of BOTH r4_blind_report.txt and a live `run.py --report --allow-drift` regeneration: E1 appendix = 120 lines ALL carry cmd (not 84); PS-flavored 114/120 = 95.0%; git 6; verb dist TP48/GCI30/(GCI)6/SS24/GC6/git6; only 6 distinct cmd strings. '84' and '37/20/17/6/4' = zero hits in both files; internally contradicts the same paragraph's '114/95%'.",
+    "Q2 (ADV-6 ruling) - DIRECTION HOLDS: independent recompute confirms E2 (606) = exit_mismatch 420 + ref_missing 156 + other 30, and E2 carries ZERO cmd fragments (E2 failures are Python-product re-run/missing-file, unrelated to shell flavor). All PowerShell-flavored records sit in E1 (114/120). So 'shell mismatch pollutes E1 layer, not E2 main cause' is CORRECT; only the supporting sub-count numbers need correction (covered by COND-1).",
+    "Q3 (wording discipline): the word 证明 appears ONLY at line 7 (the EVO prohibition self-statement) and never as an actual claim; 显著 = 0 hits; M1 correctly phrased '在预注册条件下未检出达到最小效应的差异' (L56). BUT card A5's literal grep will match L7's self-statement, so A5 as worded cannot pass -> COND-2. Prose itself is compliant.",
+    "Q4 (five limitations verbatim): byte-normalized comparison of r4_blind_report.txt L972-L977 (five limitation sentences) vs report section-6 items 1-5 -> 5/5 verbatim, no dilution. Item 6 correctly marked '(本轮新增)' = 'new this round' and cites XJ-20261104-001 ADV-2 (logical-layer write-isolation, already adjudicated in that card).",
+    "Q5 (three-round cross-check): report section-5 third-round numbers -50.0% [-67.5%,-32.5%] (reached min effect) / A-arm M1 7.1% (9/126) / B-arm M1 52.4% (66/126) map verbatim to docs/eval-report-v3.md section-0/1/2. No new recomputation smuggled in.",
+    "Q6 (no scope drift): git diff (branch vs master) of PROTOCOL.md + tools/eval/{judge,schema,report,seal_run,verify,build_package,gate}.py + tools/eval/study_runner.py + verdicts/ + docs/eval-prereg.md -> ZERO bytes (independent re-verify). Judgement snapshot honestly stated as a46912e; `--report` regeneration carries --allow-drift and cites both heads (live re-run 979 lines shows DRIFT header a46912e->157736f + the 'cite both commits' rule, which the report obeys). Single-point 8-task numbers are explicitly non-conclusive, per presentation boundary.",
+    "Gate/acceptance context: A1 unittest 449 OK (exit path shows OK + VERIFY:OK 3 files) ; A2 census '30 == 30: ok'; A8 lint_cards --strict = 0 errors, 1 WARN (VERDICT_WITHOUT_REVIEW on the card itself - the expected transient that this verdict file resolves). gate MISSING_VERDICT disclosed in card as pre-review expected transient."
+  ],
+  "rulings": [
+    "Q1 headline numbers: TRACEABLE (M1/CI/E-levels/8 negative-delta/coverage all verbatim to the two sealed files). Q1 section-3 sub-counts: NOT traceable (84-family) -> COND-1.",
+    "Q2 ADV-6 ruling 'pollutes E1 not E2': HOLDS (dual-source confirmed); supporting sub-counts -> COND-1.",
+    "Q3 wording: prose compliant (证明 only in L7 self-statement, 显著 0, M1 phrased correctly); A5 self-test grep conflicts with L7 -> COND-2.",
+    "Q4 five limitations: 5/5 verbatim + item 6 honestly marked new.",
+    "Q5 third-round numbers: consistent with v3.",
+    "Q6 scope: red-zone + verdicts + study_runner + pre-reg zero-diff; presentation-only, no new adjudication; gate transient as disclosed."
+  ],
+  "advisory_findings": [
+    "ADV-1: the COND-1 corrected values are consistent across BOTH the authoritative 982-line file and the live 979-line regeneration, so the correction is unambiguous - implementer only needs to re-read blind aggregate L194-201 + E1 failure-sample region; no instrument re-run required.",
+    "ADV-2: card's 'known-form note' already discloses gate MISSING_VERDICT as a pre-review expected transient; not blocking; confirmed per card basis.",
+    "ADV-3 (basis note, non-blocking): section-3 phrases E1 as 'evidence line present but fields incomplete' consistent with v3 'E1=missing field', but does not add a causal line that the 95% PS flavor of E1 is triggered BY the field-judgement wording rather than being independent execution failures; a one-line clarification is suggested for the blind-judging phase to prevent misreading the 95% as execution failures. Recorded, does not affect this card."
+  ],
+  "not_verified_disclosed": [
+    "`--unblind` not independently re-run (key is in sir custody; unblinding was sir-authorized 2026-11-05; the appendix reference copy r4_unblind.txt is the available evidence). Headline paired numbers cross-checked against that appendix + report section-4, both sources.",
+    "probe / enumerator / seal-hash algorithms not independently reproduced (same basis as the 1104 card: sealed artifacts + the two produced files as evidence).",
+    "red-zone diff stated as branch-vs-master delivery-surface zero; per-file comparison of each intermediate commit not performed."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 open conditions / 3 advisory; both first-pass conditions closed at R1 commit 65b768c). The _pending_conditionals plate-stripping remains a Jarvis closure action executed after this PASS verdict - this verdict does not process it (same boundary as the 1104 card). No red-zone/pre-reg/data change was required; both closures were report-text / self-test edits only.",
+  "subcard_note": "Presentation card (report of round-4 sealed + unblinded data). Executor chain = XJ-20261104-001 (PASS, sealed 236 files). Report authored by Jarvis per card; adjudicator = AgnesCode. Known-form note discloses: report based on packaged-head a46912e; current worktree head advanced (dc1b36f/157736f card-open commits), so any --report regeneration must carry --allow-drift and cite both heads (XJ-20261029-001 D2 mechanism); judgement snapshot states a46912e; gate MISSING_VERDICT is the pre-review expected transient.",
+  "_provenance": "Independent review of feature/xj-20261105-001-round4-report @ 157736f by AgnesCode (fuxiang), non-card-author, non-implementer (Jarvis). All key numbers independently recomputed from sealed + reference files, NOT adopted from the report text: headline numbers all traced verbatim (M1 -8.2% / CI / E2=606 / E1=120 / E4=138 / 8 negative-delta / coverage 18/30); section-3 sub-counts '84' re-examined against BOTH r4_blind_report.txt and a live `run.py --report --allow-drift` regeneration -> both give 120 E1-cmd lines / 114 PS (95.0%) / 48-30-6-24-6+git6, so the 84-family is a non-faithful sub-count (COND-1); 95%-E1 + zero-PS-E2 dual-source confirmed; five limitations 5/5 verbatim; red-zone + verdicts + study_runner + pre-reg zero-diff; live --report --allow-drift dual-head 979-line regeneration OK. Six adversarial questions independently re-adjudicated. verdict CONDITIONAL (0 blockers / 2 conditions / 3 advisory ADV-1..ADV-3, all record-not-block; COND-1/COND-2 are text/self-test fixes, no data or instrument change). No implementer file modified by this review; this review .md + verdict.json are the new review-side artifacts. R1 (fast-path, 2026-11-05): independently re-verified the two conditions on commit 65b768c - section-3 now carries the dual-source-consistent E1 census (120 cmd-bearing / 114 PS=95.0% / git 6 / E2 cmd-bearing 0), old 84-family fully removed, self-contradiction gone; card A5 revised to the grep-excludes-L7 basis. No six-question re-open. verdict upgraded CONDITIONAL -> PASS.",
+  "ts_resign_notes": "",
+  "notes": "",
+  "conditions_closures": [
+    {
+      "id": "COND-1",
+      "status": "CLOSED@R1(65b768c)",
+      "closure_evidence": "R1: 65b768c report section-3 now reads exactly the dual-source-consistent numbers - E1 appendix 120 lines ALL carry a cmd fragment; PowerShell-flavored 114/120 = 95.0% (Test-Path 48 / Get-ChildItem 30 + paren-form 6 / Select-String 24 / Get-Content 6); git 6; bash/python 0; E2 cmd-bearing = 0. Old 84 / 37-20-17-6-4 have ZERO hits; the same-paragraph self-contradiction is removed; the core ruling sentence (pollutes E1 not E2) is untouched. Line-for-line equal to my independent dual-source recompute."
+    },
+    {
+      "id": "COND-2",
+      "status": "CLOSED@R1(65b768c)",
+      "closure_evidence": "R1: card A5 revised so the grep \"the only allowed hit is the L7 prohibition self-statement line; must be empty after excluding it\" - this is my verdict option (a) (tighten the grep basis, do not change the L7 prose). L7 prose untouched; independently re-verified: raw grep hits = [L7] only, excluding L7 = empty."
+    }
+  ]
+}
