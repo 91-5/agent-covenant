@@ -404,6 +404,11 @@
     "docs/b-arm-permission-profile.md",
     "artifacts.json"
   ],
+  "XJ-20261105-001": [
+    ".tasks/XJ-20261105-001.md",
+    "docs/eval-report-v4.md",
+    "artifacts.json"
+  ],
   "_pending_conditionals_resolved": {
     "resolved_utc": "2026-11-05",
     "resolved_by": "round-4 PASS round XJ-20261104-001 (sealed run registered)",
