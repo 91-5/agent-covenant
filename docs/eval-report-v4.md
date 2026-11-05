@@ -34,11 +34,10 @@
 
 **抽查方法**（零裁量统计，非新判定）：对盲态报告失败样本附录逐条归类 cmd 片段。
 
-**结果**：
+**结果**（行级读数，已按评审 COND-1 以双源一致口径更正）：
 
-- 带 `cmd=` 片段的 84 条**全部为 PowerShell 命令**（Test-Path 37 / Select-String 20 / Get-ChildItem 17 / Get-Content 6 / 括号形式 4），bash/python 形态 0。
-- 这 84 条**全部落在 E1**（120 条中占 114，95%）；E1 判语为「证据行存在但字段不完整」，非执行失败。
-- **E2（606 条）bullet 零 PowerShell 形态**；其构成：退出码不符 420（证据声称 exit=0、复跑 exit=1/2）+ ref 不存在 156 + 其他 30。失败实例主力为 Python 产物（roman.py / fizzbuzz.py / sumcsv.py 等）复跑失败——与 shell 风味无关。
+- E1 附录 120 条**全部携带 `cmd=` 证据片段**；其中 **PowerShell 风味 114/120 = 95.0%**（Test-Path 48 / Get-ChildItem 30 + 括号形式 6 / Select-String 24 / Get-Content 6），其余 6 条为 git 命令；bash/python 风味 0。E1 判语为「证据行存在但字段不完整」，非执行失败。
+- **E2（606 条）bullet 零 PowerShell 形态**（携带 cmd 片段的 E2 行为 0）；其构成：退出码不符 420（证据声称 exit=0、复跑 exit=1/2）+ ref 不存在 156 + 其他 30。失败实例主力为 Python 产物（roman.py / fizzbuzz.py / sumcsv.py 等）复跑失败——与 shell 风味无关。
 
 **裁定**：shell 错位真实存在但**污染的是 E1 层（13.3%），不是 E2 主因**。E2 是 A 臂真实执行产物在判定器复跑时不可复现。shell 统一列为下轮预注册修订第一候选。
 
