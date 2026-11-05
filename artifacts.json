@@ -399,41 +399,53 @@
     "docs/eval-prereg.md",
     "artifacts.json"
   ],
-  "_pending_conditionals": {
-    "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化：artifacts.json 只登记已放行/已出货 round）。002 待 C1-C4 闭合后以执行卡 PASS 新 round 登记回来。",
-    "XJ-20261030-002": {
-      "status": "CONDITIONAL/NO-GO-conditional",
-      "verdict": "verdicts/XJ-20261030-002.verdict.json",
-      "conditions": [
-        "C1 协议§13.2 执行面封堵",
-        "C2 B臂权限预置(只读面取舍挂 sir)",
-        "C3 关自动更新",
-        "C4 机制闭合轮"
-      ],
-      "artifacts": [
-        "docs/executor-fingerprint-minimax.md",
-        "docs/dryrun-b-arm-tool-deny.md",
-        "docs/dryrun-runlog-coverage.md",
-        "docs/dryrun-seal-capture.md"
-      ]
-    },
-    "XJ-20261031-001": {
-      "status": "CONDITIONAL/C1-C4-discharged-C2-closed-2026-10-31",
-      "verdict": "verdicts/XJ-20261031-001.verdict.json",
-      "conditions": [
-        "C2 已闭合（见 b-arm-permission-profile.md §3 对照表；2026-10-31 XJ-20261031-002 补全 deny 清单 R1-R47 并复跑探针 47x2 全 deny exit 0；摘牌确认待该卡评审）"
-      ],
-      "discharged": [
-        "C1 via unblocks",
-        "C3 via unblocks",
-        "C4 via unblocks"
-      ],
-      "artifacts": [
-        "docs/eval-runner-protocol.md",
-        "docs/b-arm-permission-profile.md",
-        "docs/executor-update-freeze.md",
-        "docs/mechanism-closure-round.md"
-      ]
+  "_pending_conditionals": [],
+  "XJ-20261104-001": {
+    "card": ".tasks/legacy/XJ-20261104-001.md",
+    "verdict": "verdicts/XJ-20261104-001.verdict.json",
+    "verdict_result": "PASS",
+    "run_dir": "sealed (custody D:/15812/projects/round4-custody/run-dir, 236 files VERIFY OK)",
+    "note": "round-4 real-data 30-task two-arm round; data in custody, blind-judge report next"
+  },
+  "_pending_conditionals_resolved": {
+    "resolved_utc": "2026-11-05",
+    "resolved_by": "round-4 PASS round XJ-20261104-001 (sealed run registered)",
+    "entries": {
+      "_comment": "未闭合 CONDITIONAL round 不进 newest 位（dp 参谋 2026-10-30 规则化：artifacts.json 只登记已放行/已出货 round）。002 待 C1-C4 闭合后以执行卡 PASS 新 round 登记回来。",
+      "XJ-20261030-002": {
+        "status": "CONDITIONAL/NO-GO-conditional",
+        "verdict": "verdicts/XJ-20261030-002.verdict.json",
+        "conditions": [
+          "C1 协议§13.2 执行面封堵",
+          "C2 B臂权限预置(只读面取舍挂 sir)",
+          "C3 关自动更新",
+          "C4 机制闭合轮"
+        ],
+        "artifacts": [
+          "docs/executor-fingerprint-minimax.md",
+          "docs/dryrun-b-arm-tool-deny.md",
+          "docs/dryrun-runlog-coverage.md",
+          "docs/dryrun-seal-capture.md"
+        ]
+      },
+      "XJ-20261031-001": {
+        "status": "CONDITIONAL/C1-C4-discharged-C2-closed-2026-10-31",
+        "verdict": "verdicts/XJ-20261031-001.verdict.json",
+        "conditions": [
+          "C2 已闭合（见 b-arm-permission-profile.md §3 对照表；2026-10-31 XJ-20261031-002 补全 deny 清单 R1-R47 并复跑探针 47x2 全 deny exit 0；摘牌确认待该卡评审）"
+        ],
+        "discharged": [
+          "C1 via unblocks",
+          "C3 via unblocks",
+          "C4 via unblocks"
+        ],
+        "artifacts": [
+          "docs/eval-runner-protocol.md",
+          "docs/b-arm-permission-profile.md",
+          "docs/executor-update-freeze.md",
+          "docs/mechanism-closure-round.md"
+        ]
+      }
     }
   }
 }
