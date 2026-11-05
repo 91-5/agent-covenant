@@ -400,13 +400,10 @@
     "artifacts.json"
   ],
   "_pending_conditionals": [],
-  "XJ-20261104-001": {
-    "card": ".tasks/legacy/XJ-20261104-001.md",
-    "verdict": "verdicts/XJ-20261104-001.verdict.json",
-    "verdict_result": "PASS",
-    "run_dir": "sealed (custody D:/15812/projects/round4-custody/run-dir, 236 files VERIFY OK)",
-    "note": "round-4 real-data 30-task two-arm round; data in custody, blind-judge report next"
-  },
+  "XJ-20261104-001": [
+    "docs/b-arm-permission-profile.md",
+    "artifacts.json"
+  ],
   "_pending_conditionals_resolved": {
     "resolved_utc": "2026-11-05",
     "resolved_by": "round-4 PASS round XJ-20261104-001 (sealed run registered)",
