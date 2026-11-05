@@ -12,7 +12,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-05T04:55:47Z",
+  "ts": "2026-11-05T04:56:38Z",
   "ts_note": "ts = UTC at moment of writing (not a future time, not ahead of current UTC); all independent verification actions completed before this ts (seal re-verify / 225-condition regroup / session-log 8-field re-extract / 12 dual-placement re-hash / 30 draft re-hash / checkpoint field re-check / summary symmetry / A4 re-derive / red-zone+verdicts+study_runner diff 0).",
   "evidence": [
     "Q1 (heaviest, B-arm structural zero): independently regrouped custody run-log.json by condition -> all 225 records condition=A, B=0; kind dist evidence=195/acceptance=30. The mcp_invoke gate-invisible blind spot (attempt-1 finding, R49 path unobservable) lives in the permission.enforcement record face, NOT in the runner subprocess-record face (run-log note: 'a condition-B run must hold zero records') - two independent record faces, so the blind spot does not pierce the run-log B=0 assertion. B-arm no-subprocess is a structural double-insurance (runner guarantee + profile guarantee, card Constraint 5). Ruling: blind spot does not affect run-log B=0; already registered as a known boundary in profile s2.0.",
