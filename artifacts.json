@@ -399,7 +399,18 @@
     "docs/eval-prereg.md",
     "artifacts.json"
   ],
-  "_pending_conditionals": [],
+  "_pending_conditionals": [
+    {
+      "id": "XJ-20261030-002",
+      "discharged": "2026-11-05T13:54:17Z",
+      "discharged_by": "XJ-20261104-001 PASS round (round4 real-data executed + sealed + reported; C1-C4 closed via 031-001/1104 execution)"
+    },
+    {
+      "id": "XJ-20261031-001",
+      "discharged": "2026-11-05T13:54:17Z",
+      "discharged_by": "XJ-20261104-001 PASS round (C2 closed via 031-002 deny R48-R53 + round4 execution)"
+    }
+  ],
   "XJ-20261104-001": [
     "docs/b-arm-permission-profile.md",
     "artifacts.json"
