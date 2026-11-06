@@ -497,5 +497,12 @@
   "XJ-20261106-001": [
     "docs/eval-prereg.md",
     "artifacts.json"
+  ],
+  "XJ-20261106-002": [
+    ".tasks/XJ-20261106-002.md",
+    "tools/eval/blind.py",
+    "tools/eval/judge.py",
+    "tools/eval/schema.py",
+    "artifacts.json"
   ]
 }
