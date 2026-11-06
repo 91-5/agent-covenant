@@ -68,6 +68,10 @@ class ReproResult:
     observation: str = ""
     detail: str = ""
     refused: bool = False
+    #: v1.5 C11 track flags (pwsh_exit_level_only / pwsh_unavailable /
+    #: command_too_long) and C10 ref flags (ref_missing_both). Empty on the
+    #: legacy single-root path, so pre-v1.5 behaviour carries zero new flags.
+    track_flags: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -85,6 +89,126 @@ def command_refused(command: str) -> Optional[str]:
         if pattern in lowered:
             return pattern
     return None
+
+
+#: v1.5 C11 frozen PowerShell-flavor lexicon — copied verbatim from
+#: docs/eval-prereg.md §11 (C11, frozen at a1b5ec2); no token may be added or
+#: removed here without a prereg revision. Matched case-insensitively as
+#: substrings of the command line.
+POWERSHELL_FLAVOR_TOKENS = (
+    "get-content", "test-path", "select-string", "get-childitem", "get-item",
+    "get-date", "measure-object", "set-content", "copy-item", "write-output",
+    "out-string", "format-table", "get-random", "get-process", "sort-object",
+)
+
+#: pwsh track refuses to execute absurdly long commands (the -EncodedCommand
+#: wrapper inflates UTF-16LE by ~2.7x; 8000 raw chars stays far below every
+#: Windows command-line limit). Over-limit commands are flagged, not run —
+#: the flag keeps the refusal auditable instead of silently biased.
+MAX_PWSH_COMMAND_CHARS = 8000
+
+_PWSH_PROBE_CACHE: Optional[Dict[str, object]] = None
+
+
+def is_powershell_flavor(command: str) -> bool:
+    """C11 flavor dispatch: True only when a frozen lexicon token appears."""
+    lowered = (command or "").lower()
+    return any(token in lowered for token in POWERSHELL_FLAVOR_TOKENS)
+
+
+def lexicon_sha256() -> str:
+    """Stable hash of the frozen lexicon; recorded into packaging metadata so
+    any drift between judge.py and v1.5 §11 is detectable."""
+    import hashlib
+
+    payload = "\n".join(POWERSHELL_FLAVOR_TOKENS)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def powershell_track_info() -> Dict[str, object]:
+    """Probe Windows PowerShell once and cache the result: availability,
+    version, execution policy. Recorded into packaging metadata (C11 blind-spot
+    seal); a missing powershell.exe is an explicit fact, never a silent
+    fallback to cmd."""
+    global _PWSH_PROBE_CACHE
+    if _PWSH_PROBE_CACHE is not None:
+        return dict(_PWSH_PROBE_CACHE)
+    probe = ("powershell -NoProfile -NonInteractive -Command "
+             "\"[Console]::Out.Write('v=' + $PSVersionTable.PSVersion.ToString() "
+             "+ ';ep=' + (Get-ExecutionPolicy))\"")
+    exit_code, output, _error = run_command(probe, Path.cwd(), 30)
+    info: Dict[str, object] = {"available": False, "version": None,
+                               "execution_policy": None,
+                               "engine": "powershell.exe (Windows PowerShell)"}
+    if exit_code == 0 and "v=" in output and ";ep=" in output:
+        body = output.strip()
+        try:
+            kv = body.split("v=", 1)[1].split(";", 1)
+            info["version"] = kv[0].strip() or None
+            ep = body.split(";ep=", 1)[1].strip()
+            info["execution_policy"] = ep or None
+            info["available"] = True
+        except (IndexError, ValueError):
+            info["available"] = False
+    _PWSH_PROBE_CACHE = dict(info)
+    return dict(_PWSH_PROBE_CACHE)
+
+
+def _pwsh_wrapper(command: str) -> str:
+    """C11 pwsh track invocation — same encoding as the round-4 attribution
+    instrument: UTF-16LE base64 via -EncodedCommand (no quoting ambiguity)."""
+    import base64
+
+    encoded = base64.b64encode(command.encode("utf-16-le")).decode("ascii")
+    return f"powershell -NoProfile -NonInteractive -EncodedCommand {encoded}"
+
+
+def _reproduce_pwsh(evidence: EvidenceLine, cwd: Path,
+                    timeout: int) -> ReproResult:
+    """C11 pwsh track. Reproduction = exit match AND claimed out= hit (the
+    ADV-1 output-semantic check: PowerShell cmdlets return exit 0 on logical
+    no-match, so exit alone never counts as reproduction)."""
+    if len(evidence.command) > MAX_PWSH_COMMAND_CHARS:
+        return ReproResult(
+            reproduced=False,
+            detail=(f"命令超长（{len(evidence.command)} > {MAX_PWSH_COMMAND_CHARS}），"
+                    f"pwsh 轨不予执行: {evidence.command}"),
+            track_flags=["command_too_long"],
+        )
+    track = powershell_track_info()
+    if not track["available"]:
+        return ReproResult(
+            reproduced=False,
+            detail=f"命令无法完成观察: powershell 不可用，pwsh 轨拒绝执行: {evidence.command}",
+            track_flags=["pwsh_unavailable"],
+        )
+    exit_code, output, error = run_command(
+        _pwsh_wrapper(evidence.command), cwd, timeout)
+    if error:
+        return ReproResult(
+            reproduced=False,
+            detail=f"命令无法完成观察: {evidence.command} ({error})")
+    if evidence.exit_code is not None and exit_code != evidence.exit_code:
+        return ReproResult(
+            reproduced=False,
+            observation=output,
+            detail=f"退出码不符: 证据声称 exit={evidence.exit_code}, 实际 exit={exit_code}")
+    if evidence.out is not None and evidence.out not in output:
+        return ReproResult(
+            reproduced=False,
+            observation=output,
+            detail=f"声称输出未复现: out={evidence.out!r} 不在实际输出中")
+    detail_bits = [f"pwsh 轨已复现: {evidence.command}", f"exit={exit_code}"]
+    flags: List[str] = []
+    if evidence.out is not None:
+        detail_bits.append(f"out={evidence.out!r} 已命中")
+    else:
+        # ADV-1: exit-only match on the pwsh track is exit-level reproduction,
+        # never semantic reproduction — carried as an explicit flag.
+        detail_bits.append("证据无 out=，仅 exit 级复现")
+        flags.append("pwsh_exit_level_only")
+    return ReproResult(reproduced=True, observation=output,
+                       detail="; ".join(detail_bits), track_flags=flags)
 
 
 def run_command(command: str, cwd: Path, timeout: int) -> Tuple[Optional[int], str, str]:
@@ -111,28 +235,44 @@ def run_command(command: str, cwd: Path, timeout: int) -> Tuple[Optional[int], s
     return completed.returncode, output + ("\n" + errout if errout else ""), ""
 
 
-def reproduce(evidence: EvidenceLine, root: Path, timeout: int) -> ReproResult:
+def reproduce(evidence: EvidenceLine, root: Path, timeout: int,
+              workspace: Optional[Path] = None) -> ReproResult:
     """Attempt to reproduce one evidence line's claimed observation.
 
     Ref-form: the observation is the referenced file's text, prefixed with the
     ref path itself (so a claim anchoring its own ref path is legitimately
     satisfiable -- frozen in §1.4). Cmd-form: the command runs in ``root``.
+
+    v1.5 C10/C11 (round-5 instrument, card XJ-20261106-002): when ``workspace``
+    is given (packaging-time judging against a rebuilt execution workspace),
+    command evidence reruns with cwd=workspace and ref evidence resolves
+    workspace first, then root (``ref_missing_both`` flag when neither has the
+    file). PowerShell-flavor commands dispatch to the C11 pwsh track. Without
+    ``workspace`` every path behaves exactly as before the v1.5 revision --
+    legacy callers (run.py --judge, --dry-run, selftest bank) are pinned to
+    byte-identical behaviour by tests.
     """
     if evidence.has_ref_form:
-        ref_path = root / evidence.ref
-        if not ref_path.is_file():
-            return ReproResult(
-                reproduced=False,
-                detail=f"ref 不存在: {evidence.ref}",
-            )
-        try:
-            text = ref_path.read_text(encoding="utf-8", errors="replace")
-        except OSError as exc:
-            return ReproResult(reproduced=False, detail=f"ref 不可读: {exc}")
+        surfaces: List[Tuple[str, Path]] = []
+        if workspace is not None:
+            surfaces.append(("workspace", workspace / evidence.ref))
+        surfaces.append(("root", root / evidence.ref))
+        for _surface_name, ref_path in surfaces:
+            if ref_path.is_file():
+                try:
+                    text = ref_path.read_text(encoding="utf-8", errors="replace")
+                except OSError as exc:
+                    return ReproResult(reproduced=False, detail=f"ref 不可读: {exc}")
+                return ReproResult(
+                    reproduced=True,
+                    observation=f"ref={evidence.ref}\n{text[:20000]}",
+                    detail=f"ref 存在且可读: {evidence.ref}",
+                )
+        missing_flags = ["ref_missing_both"] if workspace is not None else []
         return ReproResult(
-            reproduced=True,
-            observation=f"ref={evidence.ref}\n{text[:20000]}",
-            detail=f"ref 存在且可读: {evidence.ref}",
+            reproduced=False,
+            detail=f"ref 不存在: {evidence.ref}",
+            track_flags=missing_flags,
         )
 
     # Command form.
@@ -144,7 +284,10 @@ def reproduce(evidence: EvidenceLine, root: Path, timeout: int) -> ReproResult:
             refused=True,
             detail=f"命令命中拒绝清单({matched!r})，不予执行: {evidence.command}",
         )
-    exit_code, output, error = run_command(evidence.command, root, timeout)
+    cwd = workspace if workspace is not None else root
+    if is_powershell_flavor(evidence.command):
+        return _reproduce_pwsh(evidence, cwd, timeout)
+    exit_code, output, error = run_command(evidence.command, cwd, timeout)
     if error:
         return ReproResult(
             reproduced=False,
@@ -172,7 +315,8 @@ def _all_anchors_present(claim: Claim, observation: str) -> bool:
     return all(anchor in observation for anchor in claim.anchors)
 
 
-def judge_claim(claim: Claim, root: Path, timeout: int = DEFAULT_TIMEOUT_SECONDS) -> ClaimJudgement:
+def judge_claim(claim: Claim, root: Path, timeout: int = DEFAULT_TIMEOUT_SECONDS,
+                workspace: Optional[Path] = None) -> ClaimJudgement:
     """Judge one claim. See module docstring for the frozen decision order."""
     if claim.evidence is None:
         return ClaimJudgement(
@@ -198,9 +342,10 @@ def judge_claim(claim: Claim, root: Path, timeout: int = DEFAULT_TIMEOUT_SECONDS
     if claim.unanchored:
         flags.append("unanchored")
 
-    result = reproduce(claim.evidence, root, timeout)
+    result = reproduce(claim.evidence, root, timeout, workspace=workspace)
     if result.refused:
         flags.append("refused_exec")
+    flags.extend(result.track_flags)
     if not result.reproduced:
         return ClaimJudgement(
             claim=claim,
@@ -244,11 +389,16 @@ def judge_markdown(
     root: Path,
     product: str = "<memory>",
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    workspace: Optional[Path] = None,
 ) -> List[ClaimJudgement]:
-    """Extract then judge every claim in one product. The harness's front door."""
+    """Extract then judge every claim in one product. The harness's front door.
+
+    ``workspace`` (v1.5 C10): the rebuilt execution workspace for packaging-time
+    judging; None keeps the legacy single-root behaviour."""
     judgements: List[ClaimJudgement] = []
     for claim in extract_claims(markdown_text, product=product):
-        judgements.append(judge_claim(claim, root, timeout=timeout))
+        judgements.append(judge_claim(claim, root, timeout=timeout,
+                                      workspace=workspace))
     return judgements
 
 

@@ -502,6 +502,9 @@
     "tools/eval/blind.py",
     "tools/eval/judge.py",
     "tools/eval/schema.py",
+    "tests/test_round5_instrument.py",
+    "README.md",
+    "README.zh-CN.md",
     "artifacts.json"
   ]
 }

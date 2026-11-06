@@ -295,3 +295,53 @@ LEVEL_NAMES = {
     "E3": "不支持",
     "E4": "支持",
 }
+
+
+# ---------------------------------------------------------------------------
+# v1.5 C10/C11 packaging metadata (card XJ-20261106-002)
+# ---------------------------------------------------------------------------
+
+#: Keys build_package adds to a package manifest when it seals judgements
+#: against a rebuilt execution workspace. Older manifests (pre-v1.5) lack
+#: both keys; readers must tolerate their absence, never raise over it.
+PACKAGING_METADATA_KEYS = ("workspace_rebuild", "shell_track")
+
+
+def packaging_metadata(manifest: Dict[str, Any]) -> Dict[str, Any]:
+    """Backward-compatible read of the C10/C11 metadata block.
+
+    Returns only the keys actually present, so a pre-v1.5 manifest yields
+    ``{}`` and every caller can feature-test instead of version-guessing."""
+    return {key: manifest[key] for key in PACKAGING_METADATA_KEYS if key in manifest}
+
+
+def validate_packaging_metadata(meta: Dict[str, Any]) -> List[str]:
+    """Structural checks on the metadata block (drift findings, never raises).
+
+    An absent block is valid (pre-v1.5 package). A present block must carry
+    the fields downstream surfaces read: workspace_rebuild.registry_missing /
+    .files / .manifest_sha256 and shell_track.available / .lexicon_sha256."""
+    findings: List[str] = []
+    if not meta:
+        return findings
+    rebuild = meta.get("workspace_rebuild")
+    if rebuild is not None:
+        if not isinstance(rebuild, dict):
+            findings.append("workspace_rebuild: expected object")
+        else:
+            if not isinstance(rebuild.get("registry_missing"), bool):
+                findings.append("workspace_rebuild.registry_missing: expected bool")
+            if not isinstance(rebuild.get("files"), list):
+                findings.append("workspace_rebuild.files: expected list")
+            if not isinstance(rebuild.get("manifest_sha256"), str):
+                findings.append("workspace_rebuild.manifest_sha256: expected string")
+    track = meta.get("shell_track")
+    if track is not None:
+        if not isinstance(track, dict):
+            findings.append("shell_track: expected object")
+        else:
+            if not isinstance(track.get("available"), bool):
+                findings.append("shell_track.available: expected bool")
+            if not isinstance(track.get("lexicon_sha256"), str):
+                findings.append("shell_track.lexicon_sha256: expected string")
+    return findings

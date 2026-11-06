@@ -39,6 +39,15 @@ JUDGEMENTS_FILE = "judgements-blind.json"
 #: The repository state the sealed judgements were formed against.
 ROOT_STATE_FILE = "root-state.json"
 
+#: v1.5 C10 (card XJ-20261106-002): the rebuilt execution workspace the judge
+#: reruns against, packaged alongside the products it was rebuilt from.
+WORKSPACE_DIR_NAME = "workspace"
+
+#: v1.5 C10 dual-placement registry (sir ruling s13.1): the run-side record of
+#: which implementation files were dual-placed (working copy + canonical) and
+#: their declared SHA-256. Absence is an explicit metadata flag, never silent.
+DUAL_PLACEMENT_FILE = "impl-dual-placement.json"
+
 
 def file_sha256(path: Path) -> str:
     """Streaming SHA-256 of one file (never reads the whole thing into memory)."""
@@ -89,6 +98,117 @@ def generate_seed() -> str:
     """Cryptographically random seed; this is the only place randomness is
     allowed in the harness, and its output is sealed, never logged."""
     return secrets.token_hex(32)
+
+
+def rebuild_workspace(run_dir: Path, package_dir: Path) -> Dict[str, object]:
+    """v1.5 C10 (card XJ-20261106-002): rebuild the execution workspace the
+    judge reruns commands against.
+
+    Seeding source is the union of
+      * the dual-placement registry's declared files (canonical
+        ``products/T##/<file>`` first, run-dir working copy second -- either
+        source must hash-match the declared SHA-256, else packaging fails),
+      * every file in the canonical ``products/T##/`` tree (hash recorded as
+        observed; ``verified`` false unless the registry declares it).
+
+    The union answers ADV-1 question 1: a file the executor placed but the
+    registry missed still lands in the workspace (flagged unverified) -- no
+    silent omission is possible while the canonical tree exists. A registry
+    entry with no source at both locations is a hard packaging failure (the
+    run is malformed; refusing beats guessing). A missing or unreadable
+    registry file sets ``registry_missing`` in the returned metadata (explicit
+    flag, no silent fallback).
+
+    Returns the metadata block written into the package manifest. Raises
+    ``ValueError`` (caught by ``run.py --package`` -> non-zero exit + clear
+    error line) on any hash mismatch or unresolvable registry entry.
+    """
+    import shutil  # noqa: local import: only the C10 path needs it
+
+    workspace_dir = package_dir / WORKSPACE_DIR_NAME
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    registry_path = run_dir / DUAL_PLACEMENT_FILE
+    declared: Dict[Tuple[str, str], str] = {}
+    registry_present = False
+    if registry_path.is_file():
+        try:
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise ValueError(
+                f"C10 rebuild refused: {DUAL_PLACEMENT_FILE} is not valid JSON: {exc}")
+        registry_present = True
+        for entry in registry.get("files", []):
+            declared[(str(entry["task"]), str(entry["file"]))] = str(entry["sha256"])
+
+    files: List[Dict[str, object]] = []
+    seeded: set = set()
+    canonical_root = run_dir / "products"
+    task_dirs = sorted(p for p in canonical_root.glob("T*") if p.is_dir()) \
+        if canonical_root.is_dir() else []
+    for task_dir in task_dirs:
+        for source in sorted(task_dir.iterdir()):
+            if not source.is_file():
+                continue
+            key = (task_dir.name, source.name)
+            seeded.add(key)
+            dest = workspace_dir / source.name
+            shutil.copy2(source, dest)
+            actual = file_sha256(dest)
+            declared_sha = declared.get(key)
+            files.append({
+                "task": task_dir.name,
+                "file": source.name,
+                "source": str(source),
+                "sha256": actual,
+                "declared_sha256": declared_sha,
+                "verified": declared_sha == actual,
+            })
+            if declared_sha is not None and declared_sha != actual:
+                raise ValueError(
+                    f"C10 rebuild failed: {task_dir.name}/{source.name} "
+                    f"sha256 {actual} != declared {declared_sha}")
+
+    # Registry entries with no canonical copy: fall back to the declared
+    # working copy at run-dir root (same hash contract), else hard fail.
+    for (task, name), declared_sha in declared.items():
+        if (task, name) in seeded:
+            continue
+        working_copy = run_dir / name
+        if working_copy.is_file() and file_sha256(working_copy) == declared_sha:
+            dest = workspace_dir / name
+            shutil.copy2(working_copy, dest)
+            seeded.add((task, name))
+            files.append({
+                "task": task,
+                "file": name,
+                "source": str(working_copy),
+                "sha256": declared_sha,
+                "declared_sha256": declared_sha,
+                "verified": True,
+            })
+            continue
+        raise ValueError(
+            f"C10 rebuild failed: registry declares {task}/{name} but neither "
+            f"products/{task}/{name} nor the run-dir working copy matches "
+            f"(declared sha256 {declared_sha})")
+
+    files.sort(key=lambda row: (str(row["task"]), str(row["file"])))
+    import hashlib  # noqa: local import
+
+    manifest_payload = "\n".join(
+        f"{row['task']}/{row['file']}:{row['sha256']}" for row in files)
+    manifest_sha256 = hashlib.sha256(manifest_payload.encode("utf-8")).hexdigest()
+    return {
+        "workspace_dir": WORKSPACE_DIR_NAME,
+        "registry_present": registry_present,
+        "registry_missing": not registry_present,
+        "file_count": len(files),
+        "files": files,
+        "manifest_sha256": manifest_sha256,
+        "note": "C10 rebuilt execution workspace; verified = hash matches the "
+                "dual-placement registry, unverified = canonical-only file",
+    }
 
 
 def derive_shuffle(seed: str, items: List[str]) -> List[str]:
@@ -220,7 +340,8 @@ def build_package(run_dir: Path, out_dir: Path, seed: str,
 
     # --- sealed judgements + root snapshot (XJ-20261027-001) -------------------
     if root is not None:
-        from judge import DEFAULT_TIMEOUT_SECONDS, judge_markdown  # lazy, as above
+        from judge import (DEFAULT_TIMEOUT_SECONDS, judge_markdown,  # lazy, as above
+                           lexicon_sha256, powershell_track_info)
 
         # Product seal (XJ-20261027-002, A1): sealed judgements describe exactly
         # these bytes, so readers must be able to prove the bytes did not change.
@@ -230,18 +351,37 @@ def build_package(run_dir: Path, out_dir: Path, seed: str,
         (out_dir / "manifest.json").write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
+        # v1.5 C10 (card XJ-20261106-002): rebuild the execution workspace and
+        # rerun every command there; ref evidence resolves workspace -> root.
+        # Hash mismatch or an unresolvable registry entry raises before any
+        # judgement is written (fail-closed packaging).
+        rebuild = rebuild_workspace(run_dir, out_dir)
+        workspace_dir = out_dir / WORKSPACE_DIR_NAME
+
         sealed: Dict[str, List[Dict[str, object]]] = {}
         for code in sorted(manifest_files):
             text = (package_products / manifest_files[code]).read_text(
                 encoding="utf-8", errors="replace")
             judgements = judge_markdown(text, Path(root), product=code,
-                                        timeout=timeout or DEFAULT_TIMEOUT_SECONDS)
+                                        timeout=timeout or DEFAULT_TIMEOUT_SECONDS,
+                                        workspace=workspace_dir)
             sealed[code] = [judgement.to_dict() for judgement in judgements]
         (out_dir / JUDGEMENTS_FILE).write_text(
             json.dumps(sealed, ensure_ascii=False, indent=2), encoding="utf-8")
         (out_dir / ROOT_STATE_FILE).write_text(
             json.dumps(root_state(Path(root)), ensure_ascii=False, indent=2),
             encoding="utf-8")
+
+        # v1.5 C10/C11 packaging metadata (schema.packaging_metadata reads it
+        # backward-compatibly; older manifests simply lack these keys).
+        manifest["workspace_rebuild"] = rebuild
+        manifest["shell_track"] = {
+            **powershell_track_info(),
+            "lexicon_sha256": lexicon_sha256(),
+            "lexicon_source": "docs/eval-prereg.md §11 C11 (frozen a1b5ec2)",
+        }
+        (out_dir / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     key_path = out_dir.parent / f"key-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
     key_payload = {
