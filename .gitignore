@@ -41,5 +41,7 @@ Thumbs.db
 tools/eval/tasks/controls-sealed/
 .eval-sealed/
 
-run-dir/  # execution products stay out of git (round-4 leak via git add -A)
-dryrun/  # dry-run probes are session artifacts, never tracked
+# Execution products stay out of git (round-4 leak via git add -A)
+run-dir/
+# Dry-run probes are session artifacts, never tracked
+dryrun/
