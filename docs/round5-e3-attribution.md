@@ -1454,3 +1454,11 @@ $ grep -n "未分类" docs/round5-e3-attribution.md   # 运行时执行于 2026-
 ---
 
 *报告由 attribution-round5.py 生成 AUTO 段 + Jarvis（OpenCode）撰写于 2026-11-07（卡 XJ-20261107-002）。*
+## 7. 移交收口记录（接卡 agent ZCode，2026-11-07，XJ-20261107-002 交接单第 1–3 项）
+
+- **D3 收口**：AUTO:M1MECH span 数字与 `dryrun/round5-attr-blind-full.json` 逐字段核对一致（tri_split 180/69/9、v14_reclassified 243/94.2%、rerun_cache 30）；并按密封包原文独立复算 M1_mech 分母——`pkg-beecf4ed/judgements-blind.json` 计数 E2=246 / E4=276 / E3=258，(246+180)/(246+180+276) = 426/702 = **60.7%**，与 span 值一致。E3b 率 69/900 = 7.7%、E3c 率 9/900 = 1.0% 同核。
+- **D4 落地**：`judge.py` 仅新增 `out_encoding_miss` 旗标（`_encoding_boundary_miss`：精确子串未命中但 CRLF/空白归一化可命中时记旗，判级不变）；两处 out 未命中分支（bash 轨 + pwsh 轨）同款。**A3 判级不变性实测**：`pkg-beecf4ed` 24 个 P 码（每 7 个取 1，115 条判级，覆盖 E1/E2/E3/E4）D4 前后 judge 输出（level/flags/detail/observation）逐条 diff **零差异**（快照 `dryrun/round6-a3-pred4.json` / `round6-a3-postd4.json`）；旗标本轮零触发，与 §4 预置一致（防御性留痕）。快照属判级不变性验证，非重判——密封判级权威不变。
+- **ADV-3**：§4 结论维持（146 字符 max、零触发），本轮无行为变更。
+- **D5**：`docs/eval-prereg-v6-draft.md` 已建（字段表 / predicate 冻结时点 / LLM-as-compiler 影子试点 / M1_mech 转正门 / 生态效度取舍 / ADV-B、ADV-C 待决项登记）；`docs/eval-prereg.md` 零触碰。
+- **单 adjudicator 局限重申**：§0 已披露的 E3a/E3b 机械判据替代由执行者承担，评审抽查面见卡 Review handoff 第 7 问。
+
