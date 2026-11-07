@@ -1,0 +1,53 @@
+{
+  "id": "XJ-20261107-001",
+  "artifact": [
+    "docs/eval-report-v5.md",
+    "artifacts.json",
+    ".tasks/XJ-20261107-001.md"
+  ],
+  "commit": "feature/xj-20261107-001-round5-report @ 6136352, C1 closed @ 23b5971 (baseline merge-base/master tip bee2bf9; 6136352 = report, 23b5971 = single-file C1 fix touching docs/eval-report-v5.md only). Sealed source .eval-sealed/pkg-beecf4ed (180 products / 900 claims, git_head=bee2bf9, v1.5 seal; key-20261107T023933Z.json). NOTE: request/card face cited baseline hash 'd5ef5ac' that does not exist; true baseline bee2bf9 (ADV-1).",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261107-001 dispatch to fuxiang (independent review, non-card-author, non-implementer). Jarvis's 6-question precheck cross-checked but NOT adopted; every value independently recomputed from the sealed source / historical v3-v4 / frozen section 11.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-07T05:18:03Z",
+  "ts_note": "ts = UTC at moment of R1 in-place upgrade (13:04 +08:00 == 05:04 UTC), not ahead of system UTC. R1 fast-path: verified ONLY that C1 is closed on fix commit 23b5971 (did NOT re-open the six questions). All six adversarial questions were independently recomputed in the original CONDITIONAL review and remain valid.",
+  "evidence": [
+    "Q1-A E-level distribution HOLDS: independent parse of pkg-beecf4ed/judgements-blind.json -> 180 products / 900 claims / E0=0,E1=120,E2=246,E3=258,E4=276; matches report section 2 verbatim.",
+    "Q1-B M1/M2 HOLDS (dual source): authoritative 'run.py --unblind pkg-beecf4ed key-20261107T023933Z.json' -> M1 +5.3% [1.0%,11.0%] non-zero-crossing / M2 0.0% / 30 paired / 0 excluded; INDEPENDENT raw recompute from sealed judgements + custody key mapping (pool reps, M1=(E2+E3)/(E2+E3+E4), M2=(E0+E1)/all, seed=beecf4edb80bbfc20d..., B=10000) -> M1 mean 5.28%, CI [1.0%,11.0%]; M2 0.0%. Both agree with the report.",
+    "Q1 T30 MISMATCH (drives C1): report section 3 'T30 +0.333' vs authoritative unblind 'T30 +0.167' AND independent recompute 'T30 +0.167' (T30 A=0.8333 B=0.6667). +0.333 is T28's value (T28 A=0.8333 B=0.5000). Mean/CI/conclusion unaffected (mean over all 30 task diffs).",
+    "Q2 T24 sensitivity HOLDS: independent recompute dropping T24 -> 29 tasks, mean 3.16%, 95% CI [0.3%,6.6%] (narrower than full [1.0,11.0], still <10pp), consistent with report section 6.6.",
+    "Q3 E3 36->258 HOLDS as interpretation-layer: value is numerically correct; the 'E2->E3 rejudge' read is explicitly labelled 'mechanism reading (non-defect)' and 'net-signal reading (interpretation layer, no rejudge power - prereg C12)'. No causal claim smuggled. No per-P-code transfer table is required (C12: interpretation layer carries no rejudge power). Level semantics zero-change: red-zone committed diff 0; M1/M2 formulas match frozen stats.py.",
+    "Q4 three-round comparison HOLDS (verbatim, no recompute): R3 -50.0% [-67.5%,-32.5%] matches v3 report; R4 -8.2% [-14.7%,-3.1%] matches v4 report; R5 +5.3% [1.0%,11.0%] is this round. C12 no historical rejudge.",
+    "Q5 v1.5 seal-in-effect HOLDS: lexicon_sha256 independently recomputed = 9279611d4c210cc24cad47068177c5f1d5f158b3868b5cc857bee39023172bcc (15 tokens identical to v1.5 section 11 C11), matches manifest shell_track; workspace_rebuild 12/12 on-disk SHA-256 re-verified; seal time 2026-11-07T02:38:04Z postdates anchor commit a1b5ec2 (2026-11-06 02:12:15 +08:00) -> window constraint 3 satisfied (not a post-prereg change).",
+    "Q6 discipline/boundary HOLDS: red-zone 9 files + prereg + verdicts/ + study_runner.py zero committed diff (git diff bee2bf9 6136352 empty); 'prove/significant/effective' wording appears ONLY on the section-0.1 self-statement line; commit touched exactly the 3 owned files; no historical sealed data rejudged (C12)."
+  ],
+  "rulings": [
+    "Q1 E-dist + M1/M2: HOLDS (independent recompute + authoritative unblind, dual source).",
+    "Q1 section-3 T30 value: NOT-HOLDS verbatim -> contractual condition C1 (single-cell fidelity defect; mean/CI/conclusion unaffected).",
+    "Q2 T24 sensitivity: HOLDS (recompute reproduces +3.2% / CI [0.3%,6.6%]).",
+    "Q3 E3 rejudge reading: HOLDS as interpretation-layer, not a causal claim; no per-P transfer required (C12).",
+    "Q4 three-round: HOLDS verbatim (no recompute smuggled).",
+    "Q5 v1.5 seal: HOLDS (lexicon SHA + 12-file rebuild SHA + seal timestamp postdate a1b5ec2).",
+    "Q6 boundary/discipline: HOLDS (zero red-zone diff; wording self-statement only; touch surface = owned files)."
+  ],
+  "advisory_findings": [
+    "ADV-1 (mechanical, non-number-affecting): the request/card face cites baseline 'd5ef5ac' which does not exist in the git repo; the true baseline is the merge-base/master tip bee2bf9 (branch = master +1 commit). Also the card's Owned-files line self-references '.tasks/XJ-20261107-001-round5-report.md' but the actual committed card file is '.tasks/XJ-20261107-001.md'. Neither affects any reported number; flagged for cleanliness.",
+    "ADV-2 (Q3): the E3 jump 'E2->E3 rejudge' is correctly treated as interpretation-layer per C12; no per-P-code third/round transfer table is needed to support the mechanism reading. Ruled HOLDS; kept advisory so the boundary (interpretation carries no rejudge power) is on record.",
+    "ADV-3 (section 7 candidates): the E-level dimension extension ('assertion content is true') and the other round-6 pre-registration inputs are NOT delivered by this card; they await sir's final decision on design direction. No action required this round; disclosure only.",
+    "ADV-4 (R1, cosmetic): the R1 card's self-verification stated '+0.333 now appears only once (T28)', but the revision-trail line also quotes '+0.333' as the historical wrong value, so the file holds it twice - both legitimate (one live value T28, one audit reference). Non-blocking wording imprecision; the fix itself is correct."
+  ],
+  "not_verified_disclosed": [
+    "The --unblind M1/M2/CIs are reproduced from the authoritative run.py unblind AND from an independent raw-data recompute; the custody key (key-20261107T023933Z.json) was read from .eval-sealed to drive the independent recompute (sir custody acknowledged). No live re-execution of the 30 tasks was performed (C12 / sealed snapshot bee2bf9)."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). C1 closed in place on commit 23b5971 per 1105-001 / 1105-002 R1 precedent (fast-path, no six-question re-open). This PASS does NOT re-judge or alter any round-3/round-4 sealed data (C12). Round-5 收官 cleared: v1.5 instrument effect, blind E-distribution, unblind M1/M2, three-round comparison, and seal-integrity all independently verified.",
+  "subcard_note": "Round-5 closing-report card. C1 (section-3 T30 single-cell fidelity) closed via commit 23b5971; upgraded CONDITIONAL -> PASS in place. Report authored by Jarvis; card drafted by ZCode.",
+  "_provenance": "Independent review of feature/xj-20261107-001-round5-report @ 6136352 (report card + docs/eval-report-v5.md) by AgnesCode (fuxiang), non-card-author, non-implementer. All six adversarial questions adjudicated against the real sealed source (judgements-blind.json + custody key + authoritative --unblind), the historical v3/v4 reports, the frozen v1.5 section-11 lexicon + seal, and git diff on red-zone/prereg/verdicts/study_runner. One contractual condition (section-3 T30 single-cell fidelity) found; no blockers.",
+  "ts_resign_notes": "R1 in-place upgrade 2026-11-07T05:04:00Z (C1 closed @ 23b5971); content of ts_resign_notes intentionally empty on first signing.",
+  "notes": "PASS. Red-zone/prereg/verdicts/study_runner zero committed diff; 证明/显著/有效 only on the section-0.1 self-statement line; report touch surface = 3 owned files + the single-file C1 fix. T30 +0.333->+0.167 fidelity defect closed in R1.",
+  "conditions_closures": [
+    "C1 CLOSED @ 23b5971: docs/eval-report-v5.md section 3 'T30 +0.333' -> 'T30 +0.167' (matches both authoritative --unblind and independent raw recompute: T30 A=0.8333/B=0.6667), plus one revision-trail line. Single-cell fidelity fix, no spread: M1 mean +5.3%, CI [+1.0%,+11.0%], M2 0.0%, meets-minimal-effect=false all unchanged; red-zone/prereg/verdicts/study_runner zero diff vs new baseline."
+  ]
+}
