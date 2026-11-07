@@ -511,6 +511,14 @@
     "docs/eval-report-v5.md"
   ],
   "XJ-20261107-002": [
+    "docs/round5-e3-attribution.md",
+    "tools/eval/attribution-round5.py",
+    "tools/eval/judge.py",
+    "docs/eval-prereg-v6-draft.md",
+    "tests/test_round6_flags.py",
+    "README.md"
+  ],
+  "XJ-20261107-002": [
     "tools/eval/attribution-round5.py",
     "tools/eval/judge.py",
     "tests/test_round6_flags.py",

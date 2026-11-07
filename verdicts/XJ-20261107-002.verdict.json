@@ -15,7 +15,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-07T13:40:00Z",
+  "ts": "2026-11-07T14:40:00Z",
   "ts_note": "ts = UTC at moment of writing (21:40 +08:00 == 13:40 UTC), not ahead of current system UTC. All independent verification completed before this ts: six adversarial questions plus card-added Q7 (9355ec6 spot-check) each recomputed against the real commits, sealed source, A3 snapshots, lint/unittest reruns, and doc/code/docstring consistency reads.",
   "evidence": [
     "RED-ZONE: git diff 06ee600..fc258b9 across docs/eval-prereg.md, verdicts/, .eval-sealed/, report.py, stats.py, seal_run.py, study_runner.py, blind.py, gate.py = ZERO output; the only tools/eval change in range is judge.py +23/-1 (D4 flag delta).",
@@ -51,5 +51,6 @@
   "subcard_note": "Dual-segment card (author Jarvis D1/D2 @ 9355ec6, handoff agent ZCode D3/D4/D5 @ fc258b9) per sir's 2026-11-07 delegation instruction. Q7 was added by the handoff agent and answered by full spot-check. Implementer != harness maintainer != tested subject; all outputs labelled interpretation-layer.",
   "_provenance": "Independent review of feature/xj-20261107-002-round6-methodology @ fc258b9 by AgnesCode (fuxiang), non-card-author, non-implementer. Six adversarial questions plus card-added Q7 adjudicated against the real two commits, the sealed 5th-round source, A3 snapshots, rerun acceptance suites, and term/pit-12 byte checks. No blockers, no conditions.",
   "ts_resign_notes": "",
-  "notes": "PASS. Red-zone + gate zero diff; 证明/显著/有效 only on the attribution-doc L5 prohibition self-statement line; A3 = 24 codes / 115 judgements field-zero-diff; 258/258 tri-split coverage, H1 94.2%, M1_mech 60.7% all triple-audited; D1/D2 frozen surface untouched post-handoff."
+  "notes": "PASS. Red-zone + gate zero diff; 证明/显著/有效 only on the attribution-doc L5 prohibition self-statement line; A3 = 24 codes / 115 judgements field-zero-diff; 258/258 tri-split coverage, H1 94.2%, M1_mech 60.7% all triple-audited; D1/D2 frozen surface untouched post-handoff.",
+  "ts_resign_note": "2026-11-07T14:40Z 重签（先例 bebfb64 / 0f9027b / b2994b1 / 85aaf83）：浮香签字 13:40Z 后作者合并 master（5df4455，--no-ff merge），git checkout 把本卡登记产物（attribution-round5.py / judge.py / test_round6_flags.py / v6 draft / round5-e3-attribution.md）mtime 刷到 14:32Z，反超签字 ts → gate --artifact-map 报 STALE_VERDICT。重签覆盖；verdict 值不变（PASS / 0 blockers / 0 conditions / 4 advisory / independent=true）。"
 }
