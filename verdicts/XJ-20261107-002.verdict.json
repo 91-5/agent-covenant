@@ -1,0 +1,55 @@
+{
+  "id": "XJ-20261107-002",
+  "artifact": [
+    "tools/eval/attribution-round5.py",
+    "tools/eval/judge.py",
+    "tests/test_round6_flags.py",
+    "docs/round5-e3-attribution.md",
+    "docs/eval-prereg-v6-draft.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261107-002-round6-methodology @ fc258b9 (two-segment: author D1/D2 9355ec6 + handoff-agent D3/D4/D5 close-out fc258b9; baseline master 06ee600; data source .eval-sealed/pkg-beecf4ed, 5th-round sealed, zero re-judge).",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261107-002 dispatch to fuxiang (independent review, non-card-author, non-implementer). Jarvis/ZCode precheck cross-checked but not adopted; red-zone diff, A3 invariance snapshots, D2 three-way number audit, M1_mech independent recompute, 9355ec6 spot-check, P050/P051 manual counterfactual probe, and v1.6 draft encoding/term/freeze-point checks all re-performed on real artifacts.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-07T13:40:00Z",
+  "ts_note": "ts = UTC at moment of writing (21:40 +08:00 == 13:40 UTC), not ahead of current system UTC. All independent verification completed before this ts: six adversarial questions plus card-added Q7 (9355ec6 spot-check) each recomputed against the real commits, sealed source, A3 snapshots, lint/unittest reruns, and doc/code/docstring consistency reads.",
+  "evidence": [
+    "RED-ZONE: git diff 06ee600..fc258b9 across docs/eval-prereg.md, verdicts/, .eval-sealed/, report.py, stats.py, seal_run.py, study_runner.py, blind.py, gate.py = ZERO output; the only tools/eval change in range is judge.py +23/-1 (D4 flag delta).",
+    "judge.py D4: diff read in full — adds 'import re', _encoding_boundary_miss() (CRLF/whitespace-normalized hit detector), and out_encoding_miss into track_flags on BOTH bash and pwsh out-miss branches; level decision logic untouched; ReproResult value-domain unchanged (flags are additive).",
+    "A3 invariance: independently parsed dryrun/round6-a3-pred4.json / postd4.json — 24 codes / 115 judgements (E1=10,E2=77,E3=6,E4=22, 1/7 equidistant sample) with field-level diff (level/flags/detail/observation) = 0 between pre-D4 and post-D4; only note metadata differs; postd4 flag census shows out_encoding_miss = 0 triggers, matching the §4 preset.",
+    "D2 three-way audit: AUTO table rows in docs/round5-e3-attribution.md (258 regex-extracted) == dryrun/round5-attr-blind-full.json aggregate == sealed-source recompute: tri-split E3a=180(69.8%)/E3b=69(26.7%)/E3c=9(3.5%), H1 v1.4-counterfactual reclassified = 243/258 = 94.2%, H2 = 5.8%; decider-string self-consistency audit over all 258 rows = 0 contradictions.",
+    "D3 M1_mech: independent recompute (246 E2 + 180 E3a)/(246+180+276 E4) = 426/702 = 60.7%, E3b rate 69/900 = 7.7%, E3c rate 9/900 = 1.0% — AUTO:M1MECH span fields match the JSON aggregate field-by-field.",
+    "Q7 spot-check 9355ec6: classify_e3 implementation matches card D1 frozen rules (E3a>E3b>E3c priority, addresses_evidence mechanical test, five-face fact probe, 4 secondary labels); module docstring enforces zero E-level semantics (only run_command/command_refused imported, judge_claim never called); blind discipline intact (--key-for-unblind explicit gate); P050 placeholder-anchor case (E3c+sec-placeholder, ref-repro still-E3) and P051 (E3a, python bisect.py fails at repo root, exit=2 -> v1.4 E2) both consistent with the corrected counterfactual direction; MANUAL PROBE: 'python bisect.py' at repo root -> file lives in the sealed workspace not the root, exit=2, matching the AUTO row.",
+    "Acceptance reruns: unittest discover all green (exit 0) and sync_test_count --check = 479 in sync on both READMEs (474+5 new tests); lint_cards = 0 errors (5 pre-existing WARNs are the expected pre-review claim-surface staleness, self-disclosed in the card Status line).",
+    "D5 v1.6 draft: UTF-8 clean (no BOM, ?{3,}=0 — PowerShell console mojibake confirmed as GBK render artifact via byte re-read); docs/eval-prereg.md zero-touched in the whole range; draft header declares non-frozen status and freeze-before-pilot-data ordering; predicate-set freeze point pre-stated (frozen by sir in v1.6 text, before any DSL pilot data — answers adversarial Q5).",
+    "Term discipline: 证明/显著/有效 hit exactly once across all five new/changed files — the attribution doc L5 prohibition self-statement line; zero elsewhere. Pit-12 clean on both deliverables."
+  ],
+  "rulings": [
+    "Q1 E3b laundering guardrail: HOLDS (bounded) — E3b only reachable via grounded-but-not-addressed cross-surface; E3a priority pinned; per-row decider trail; single-adjudicator residual disclosed per constraint 4.",
+    "Q2 v1.4 counterfactual validity: HOLDS (bounded) — failure-side (94.2% H1) mechanically sound; success-side is a LOWER BOUND (seal-time workspace vs v1.4-era state drift + Windows version history unmodeled); disclosure present in instrument docstring and §2 note.",
+    "Q3 flag-wash risk: HOLDS for this round — out_encoding_miss is record-only, level path ignores it, zero triggers; NEXT-ROUND surface: executor visibility of the flag must enter the v1.6 pre-freeze checklist (advisory).",
+    "Q4 M1_mech metric shopping: HOLDS (not shopping) — interpretation-layer labelling + explicit promotion gate (v6 §4) + prereg M1 remains the headline.",
+    "Q5 predicate freeze: HOLDS — v6 draft pre-states freeze-by-sir, freeze-before-any-pilot-data, adapting-to-unfrozen-face prohibited.",
+    "Q6 post-unblind direction-conflict rule: GAP (advisory, not this card's defect) — no pre-set arbitration rule when unblinded E3a arm diff opposes the M1 paired diff; recommend one-line rule added at the v1.6 freeze text.",
+    "Q7 author-segment spot check: HOLDS — code/doc/docstring mutually consistent, counterfactual direction confirmed, 258-row decider audit clean, frozen surface untouched by fc258b9."
+  ],
+  "advisory_findings": [
+    "ADV-1 (Q6): no pre-set arbitration rule for the case where, after unblinding, the E3a arm-stratified direction contradicts the M1 paired-diff direction; the v1.6 freeze text should carry an explicit rule (e.g. prereg M1 headline priority, M1_mech as mechanism corroboration only). Not a defect of this card (arm analysis is sir's post-unblind step) but a pre-set gap worth closing before round-6 unblind.",
+    "ADV-2 (Q3): the out_encoding_miss flag, once it ever fires and lands in a runlog, becomes adaptive information if visible to the executor; add 'executor visibility of encoding-miss flags' to the v1.6 pre-freeze decision list.",
+    "ADV-3 (Q2): the v1.4-counterfactual success-side (H2 5.8% '仍-E3') is a lower bound, not equivalence — quote it as such in any downstream reading.",
+    "ADV-4: A3 snapshots sample 24 of 180 codes (1/7 equidistant, deterministic, not random); judgement-invariance is additionally pinned by the judge.py code diff + 5 new unit tests, so the sampling limit is a depth note, not a hole."
+  ],
+  "not_verified_disclosed": [
+    "Unblinded arm-stratified E3 distribution NOT executed (key in sir custody; card constraint 3); only the pre-set script + blind-layer tri-split were verified.",
+    "96-E2 U+FFFD zero-trigger preset from §4 accepted on the §7 closure record + A3 flag census (out_encoding_miss=0 across the 24-code sample); a full-900 assertion-level census was not independently re-run (no behaviour change expected or observed in the sampled strata)."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). Round-6 methodology lane cleared: E3 tri-split + v1.4 counterfactual (94.2% H1) + M1_mech sensitivity (60.7%) all independently re-verified; v1.5.1 flag byte-invariant; v1.6 DSL draft pristine and prereg body zero-touched. No historical sealed judgement re-judged (C12 held). Advisories ADV-1/ADV-2 belong to the v1.6 pre-freeze checklist; ADV-3/ADV-4 are reading-layer cautions.",
+  "subcard_note": "Dual-segment card (author Jarvis D1/D2 @ 9355ec6, handoff agent ZCode D3/D4/D5 @ fc258b9) per sir's 2026-11-07 delegation instruction. Q7 was added by the handoff agent and answered by full spot-check. Implementer != harness maintainer != tested subject; all outputs labelled interpretation-layer.",
+  "_provenance": "Independent review of feature/xj-20261107-002-round6-methodology @ fc258b9 by AgnesCode (fuxiang), non-card-author, non-implementer. Six adversarial questions plus card-added Q7 adjudicated against the real two commits, the sealed 5th-round source, A3 snapshots, rerun acceptance suites, and term/pit-12 byte checks. No blockers, no conditions.",
+  "ts_resign_notes": "",
+  "notes": "PASS. Red-zone + gate zero diff; 证明/显著/有效 only on the attribution-doc L5 prohibition self-statement line; A3 = 24 codes / 115 judgements field-zero-diff; 258/258 tri-split coverage, H1 94.2%, M1_mech 60.7% all triple-audited; D1/D2 frozen surface untouched post-handoff."
+}

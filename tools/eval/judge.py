@@ -36,6 +36,7 @@ limitations, not hidden.
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -163,6 +164,21 @@ def _pwsh_wrapper(command: str) -> str:
     return f"powershell -NoProfile -NonInteractive -EncodedCommand {encoded}"
 
 
+def _encoding_boundary_miss(claimed: str, output: str) -> bool:
+    """D4 / v1.5.1 ADV-1 (card XJ-20261107-002): True when the claimed ``out=``
+    fails the frozen exact-substring check ONLY because of line-ending or
+    whitespace-encoding boundaries (CRLF vs LF, tab/space runs) -- i.e. a
+    whitespace-normalized comparison would hit where the frozen check did not.
+
+    Diagnostics ONLY: the flag never changes the E-level (still not reproduced);
+    it leaves a trail so the next attribution round can separate true content
+    drift from encoding-boundary artifacts without re-litigating the caliber."""
+    def norm(text: str) -> str:
+        return re.sub(r"\s+", " ", text.replace("\r\n", "\n")).strip()
+
+    return norm(claimed) in norm(output)
+
+
 def _reproduce_pwsh(evidence: EvidenceLine, cwd: Path,
                     timeout: int) -> ReproResult:
     """C11 pwsh track. Reproduction = exit match AND claimed out= hit (the
@@ -194,10 +210,13 @@ def _reproduce_pwsh(evidence: EvidenceLine, cwd: Path,
             observation=output,
             detail=f"退出码不符: 证据声称 exit={evidence.exit_code}, 实际 exit={exit_code}")
     if evidence.out is not None and evidence.out not in output:
+        miss_flags = ["out_encoding_miss"] if _encoding_boundary_miss(
+            evidence.out, output) else []
         return ReproResult(
             reproduced=False,
             observation=output,
-            detail=f"声称输出未复现: out={evidence.out!r} 不在实际输出中")
+            detail=f"声称输出未复现: out={evidence.out!r} 不在实际输出中",
+            track_flags=miss_flags)
     detail_bits = [f"pwsh 轨已复现: {evidence.command}", f"exit={exit_code}"]
     flags: List[str] = []
     if evidence.out is not None:
@@ -300,11 +319,13 @@ def reproduce(evidence: EvidenceLine, root: Path, timeout: int,
             detail=f"退出码不符: 证据声称 exit={evidence.exit_code}, 实际 exit={exit_code}",
         )
     if evidence.out is not None and evidence.out not in output:
+        miss_flags = ["out_encoding_miss"] if _encoding_boundary_miss(
+            evidence.out, output) else []
         return ReproResult(
             reproduced=False,
             observation=output,
             detail=f"声称输出未复现: out={evidence.out!r} 不在实际输出中",
-        )
+            track_flags=miss_flags)
     detail_bits = [f"命令已复现: {evidence.command}", f"exit={exit_code}"]
     if evidence.out is not None:
         detail_bits.append(f"out={evidence.out!r} 已命中")
