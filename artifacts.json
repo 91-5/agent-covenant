@@ -516,7 +516,8 @@
     "tools/eval/judge.py",
     "docs/eval-prereg-v6-draft.md",
     "tests/test_round6_flags.py",
-    "README.md"
+    "README.md",
+    "README.zh-CN.md"
   ],
   "XJ-20261107-002": [
     "tools/eval/attribution-round5.py",
