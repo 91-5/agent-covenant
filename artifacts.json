@@ -506,5 +506,8 @@
     "README.md",
     "README.zh-CN.md",
     "artifacts.json"
+  ],
+  "XJ-20261107-001": [
+    "docs/eval-report-v5.md"
   ]
 }
