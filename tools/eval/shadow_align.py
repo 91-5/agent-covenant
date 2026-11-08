@@ -19,7 +19,7 @@ D2).
 
  ISOLATION GUARANTEES (card constraint: 影子轨隔离)
  --------------------------------------------------
- * The shadow track NEVER emits its own E0-E4 level sequence: the only
+ * The shadow track NEVER emits its own five-level sequence: the only
    per-pair output is a boolean (consistent / inconsistent) plus gap classes.
  * No endpoint numbers: nothing here feeds M1/M2/M3 or any report conclusion.
  * Read-only on sealed products; zero re-judging (C12) — the main-track levels
@@ -159,7 +159,7 @@ def _align_product(main_claims: List[dict], records: List[dict],
 def align(main_by_code: Dict[str, List[dict]],
           records_by_code: Dict[str, List[dict]],
           root: Path, timeout: int = 30) -> Dict[str, object]:
-    """Aggregate alignment over all products. The output carries no E0-E4
+    """Aggregate alignment over all products. The output carries no five-level
     sequence and no endpoint numbers — per-claim outputs are booleans and gap
     classes only (card D2 / §12 D4)."""
     per_product: Dict[str, Dict[str, object]] = {}
@@ -190,7 +190,7 @@ def align(main_by_code: Dict[str, List[dict]],
     agreement_rate = (round(totals["consistent_pairs"] / totals["comparable_pairs"], 4)
                       if totals["comparable_pairs"] else None)
     return {
-        "note": ("shadow-track alignment only; no E0-E4 sequence, no endpoint "
+        "note": ("shadow-track alignment only; no level-sequence, no endpoint "
                  "numbers, no rejudge (§12 D4 / C12)"),
         "totals": {**totals,
                    "alignment_rate": alignment_rate,
