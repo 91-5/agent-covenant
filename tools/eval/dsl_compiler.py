@@ -81,6 +81,9 @@ _EXACT_STRIP_RE = re.compile(r"[\r\n]+\Z")
 #: Recorded observation is capped to keep result JSON auditable.
 OBSERVED_CAP_CHARS = 2000
 
+#: §13 ⑨ frozen B-arm mechanical marker (fixed-prefix convention).
+B_ARM_PREFIX = "B-ARM-NOT-EXECUTED::"
+
 _EVALUATIVE_NO_PREDICATE = "evaluative record: no predicate to execute (构念外)"
 
 
@@ -107,8 +110,19 @@ def command_refused(command: str) -> Optional[str]:
 def run_verification_command(command: str, root: Path,
                              timeout: int = DEFAULT_TIMEOUT_SECONDS
                              ) -> Tuple[Optional[int], str, str]:
-    """Execute one verification command via the frozen judge executor."""
-    from judge import run_command as _run
+    """Execute one verification command via the frozen judge executor.
+
+    §13 ⑪ frozen caliber: judge.run_command + C11 flavor dispatch —
+    PowerShell-flavor commands rerun through pwsh -EncodedCommand exactly as
+    the main judge does, so the shadow measurement shares the main track's
+    execution semantics."""
+    from judge import is_powershell_flavor, run_command as _run
+    if is_powershell_flavor(command):
+        import base64
+
+        encoded = base64.b64encode(command.encode("utf-16-le")).decode("ascii")
+        wrapped = f"powershell -NoProfile -NonInteractive -EncodedCommand {encoded}"
+        return _run(wrapped, root, timeout)
     return _run(command, root, timeout)
 
 
@@ -195,6 +209,13 @@ def execute_record(record: Dict[str, object], root: Path,
     command = (record.get("verification_command") or "").strip()
     artifact = (record.get("artifact_path") or "").strip()
     flags: List[str] = []
+
+    # §13 ⑨ B-arm mechanical marker (fixed prefix, frozen): provenance only —
+    # the evaluator strips the prefix and executes the remainder at the same
+    # caliber as arm A; the flag keeps the provenance auditable.
+    if command and command.startswith(B_ARM_PREFIX):
+        command = command[len(B_ARM_PREFIX):].strip()
+        flags.append("b_arm_not_executed")
 
     refused = command_refused(command) if command else None
     if refused:
