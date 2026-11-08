@@ -378,6 +378,17 @@ DSL_PREDICATES = (
     "json_path_equals", "line_count_equals", "exit_equals", "exact_answer",
 )
 
+#: v1.7 additions (§14, card XJ-20261108-003): four command_output predicates.
+#: The frozen enum is 9 + 4 = 13 values from round 7 onward (closed-set
+#: revision per the §12 route: disclosure -> section append -> forward effect).
+DSL_PREDICATES_V17 = (
+    "command_exit_code",
+    "command_stdout_contains",
+    "command_stdout_regex",
+    "command_artifact_created",
+)
+DSL_PREDICATES = DSL_PREDICATES + DSL_PREDICATES_V17
+
 #: §12 D2: the evaluative face carries no predicate.
 DSL_EVALUATIVE_TYPE = "evaluative"
 
@@ -457,9 +468,13 @@ def validate_dsl_record(record: Dict[str, Any]) -> List[str]:
             and predicate not in DSL_EXISTENCE_PREDICATES):
         # existence predicates carry no expected value (the observation IS the
         # existence fact); every other predicate type-checks its expected
-        if predicate in ("line_count_equals", "exit_equals"):
+        if predicate in ("line_count_equals", "exit_equals", "command_exit_code"):
             if isinstance(expected, bool) or not isinstance(expected, int):
                 errors.append(f"expected: {predicate} requires an int")
+        elif predicate in ("command_stdout_contains", "command_stdout_regex",
+                           "command_artifact_created"):
+            if not isinstance(expected, str) or not str(expected).strip():
+                errors.append(f"expected: {predicate} requires a non-empty string")
         elif not isinstance(expected, str):
             errors.append(f"expected: {predicate} requires a string")
     return errors
