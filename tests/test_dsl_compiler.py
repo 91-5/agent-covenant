@@ -112,13 +112,14 @@ class PredicateExecutionTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
-        (self.root / "answer.txt").write_text("MIT\n", encoding="utf-8", newline="")
-        (self.root / "doc.md").write_text("# head\nbody line\n",
-                                          encoding="utf-8", newline="")
-        (self.root / "data.json").write_text('{"a": {"b": "yes"}}',
-                                             encoding="utf-8", newline="")
-        (self.root / "three.txt").write_text("1\n2\n3\n",
-                                             encoding="utf-8", newline="")
+        with open(self.root / "answer.txt", "w", encoding="utf-8", newline="") as fh:
+            fh.write("MIT\n")
+        with open(self.root / "doc.md", "w", encoding="utf-8", newline="") as fh:
+            fh.write("# head\nbody line\n")
+        with open(self.root / "data.json", "w", encoding="utf-8", newline="") as fh:
+            fh.write('{"a": {"b": "yes"}}')
+        with open(self.root / "three.txt", "w", encoding="utf-8", newline="") as fh:
+            fh.write("1\n2\n3\n")
 
     def tearDown(self):
         self._tmp.cleanup()

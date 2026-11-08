@@ -345,11 +345,16 @@ def _selftest() -> int:
 
     with tempfile.TemporaryDirectory() as raw:
         root = Path(raw)
-        (root / "answer.txt").write_text("MIT\n", encoding="utf-8", newline="")
-        (root / "doc.md").write_text("# head\nbody line\n", encoding="utf-8", newline="")
-        (root / "data.json").write_text('{"a": {"b": "yes"}}', encoding="utf-8", newline="")
-        (root / "three.txt").write_text("1\n2\n3\n", encoding="utf-8", newline="")
-        (root / "gone.txt").write_text("temp", encoding="utf-8", newline="")
+        with open(root / "answer.txt", "w", encoding="utf-8", newline="") as fh:
+            fh.write("MIT\n")
+        with open(root / "doc.md", "w", encoding="utf-8", newline="") as fh:
+            fh.write("# head\nbody line\n")
+        with open(root / "data.json", "w", encoding="utf-8", newline="") as fh:
+            fh.write('{"a": {"b": "yes"}}')
+        with open(root / "three.txt", "w", encoding="utf-8", newline="") as fh:
+            fh.write("1\n2\n3\n")
+        with open(root / "gone.txt", "w", encoding="utf-8", newline="") as fh:
+            fh.write("temp")
         (root / "gone.txt").unlink()
 
         def rec(cid, ctype, pred, expected, command=None, artifact=None):
