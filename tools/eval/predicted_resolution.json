@@ -1,0 +1,69 @@
+{
+  "note": "pre-registered predicted-resolution mapping (D1 freeze input); derived off-line from round-6 shadow records BEFORE round-7 data exists",
+  "per_arm": {
+    "A": {
+      "semantic_total": 123,
+      "predicted_resolved": {
+        "command_exit_code": 72,
+        "command_stdout_contains": 18,
+        "command_stdout_regex": 0,
+        "command_artifact_created": 0
+      },
+      "predicted_resolved_total": 90,
+      "no_command_in_mismatch": 33,
+      "fallback_null_predicate_records": 78,
+      "examples": [
+        {
+          "claim_id": "P001-c00",
+          "pred": "exists",
+          "has_cmd": true
+        },
+        {
+          "claim_id": "P001-c01",
+          "pred": "matches_regex",
+          "has_cmd": true
+        },
+        {
+          "claim_id": "P003-c00",
+          "pred": "exists",
+          "has_cmd": true
+        }
+      ]
+    },
+    "B": {
+      "semantic_total": 114,
+      "predicted_resolved": {
+        "command_exit_code": 75,
+        "command_stdout_contains": 12,
+        "command_stdout_regex": 0,
+        "command_artifact_created": 0
+      },
+      "predicted_resolved_total": 87,
+      "no_command_in_mismatch": 27,
+      "fallback_null_predicate_records": 57,
+      "examples": [
+        {
+          "claim_id": "P004-c00",
+          "pred": "matches_regex",
+          "has_cmd": true
+        },
+        {
+          "claim_id": "P007-c00",
+          "pred": "contains",
+          "has_cmd": true
+        },
+        {
+          "claim_id": "P007-c01",
+          "pred": "matches_regex",
+          "has_cmd": true
+        }
+      ]
+    }
+  },
+  "combined": {
+    "semantic_total": 237,
+    "predicted_resolved": 177,
+    "predicted_resolved_rate": 0.7468
+  },
+  "council_estimate": "semantic 70-85% (+86~105 pairs -> agreement 0.88-0.94)"
+}

@@ -105,6 +105,13 @@ def _align_product(main_claims: List[dict], records: List[dict],
     uncovered_main = [c for c in main_claims
                       if len(covered_by.get(id(c), [])) != 1]
 
+    # §14 D2 (v1.7): a non-evaluative record with no legal predicate is
+    # EXPLICITLY uncompilable — the fallback default-grading is gone; such
+    # records are counted (uncompilable_count) and excluded from the
+    # agreement denominator, never silently graded.
+    uncompilable = sorted({str(r.get("claim_id")) for r in records
+                           if r.get("claim_type") != DSL_EVALUATIVE_TYPE
+                           and not r.get("predicate")})
     syntax_gaps = sorted({str(r.get("claim_id")) for r in records
                           if "schema_invalid" in results.get(
                               str(r.get("claim_id")), {}).get("flags", [])})
@@ -153,6 +160,8 @@ def _align_product(main_claims: List[dict], records: List[dict],
         "consistent_flags": {cid: bool(v) for cid, v in sorted(comparable.items())},
         "anchor_gap_note": (f"record-side {len(anchor_gaps)}; "
                             f"main-side uncovered {len(uncovered_main)}"),
+        "uncompilable_count": len(uncompilable),
+        "uncompilable_ids": uncompilable,
     }
 
 

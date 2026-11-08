@@ -535,3 +535,63 @@ XJ-20261108-001 补齐实现半边（编译器 + 对齐器 + 合成试运行，A
 任务文件 T01–T30、C10/C11 及 v1.1–v1.6 全部既有约束——本节只冻结第六轮影子
 试点的**运行协议**（附卷/范围/度量/样本量/标记/双轨定位），不改变任何判定语义
 与指标口径。
+
+## §14 变更记录（v1.7 predicate 设计：轮七影子轨修订，2026-11-08，冻结于轮七任何数据产生之前）
+
+**冻结时机声明：** 本节在**轮七任何数据（含 off-line 回放产物）产生之前**冻结（2026-11-08，卡
+XJ-20261108-003，D1 交付 commit = `git log -- docs/eval-prereg.md` 中首个含本 §14 的 commit）。
+预注册纪律：predicate 设计先冻结（本节 + schema 文件 hash）→ off-line 回放 → 轮七真数据；
+顺序颠倒即过拟合，明文禁止。**§1–§13 零触碰（纯追加）；§12 封闭集合条款的修订以此节为据**
+（「披露 → 追记 → 向前生效」路径的兑现），向前生效于轮七影子轨，不改写轮六及更早数字（C12）。
+
+**PREREG_SCHEMA_HASH（acceptance V1）**：`2463363c30ef34a9b580165ed154c8b0b9913a1dc2e31c1d519012bd46a12ddf`
+（= `tools/eval/predicates_v17.py` 的 SHA-256；文件任何字节改动即本轮失效）。
+**PREREG_REPORT_HASH（acceptance V5）**：`56fa9ac9dd0a7e1d70749327c80decf0171e72492f31563a9caecd939b270f7b`
+（= `tools/eval/report_agreement.py` 的 SHA-256；报告脚本同冻结纪律）。
+
+**D1-A：新增 4 条 command_output predicate（frozen enum 9 → 13）**
+
+| predicate | 判级语义（伪代码见 `tools/eval/predicates_v17.py` 冻结 docstring） | expected 格式 | 面 |
+|---|---|---|---|
+| `command_exit_code` | `observed.exit_code == int(expected)` | 整数 | 命令面 |
+| `command_stdout_contains` | `expected in observed.output`（精确子串，尾随换行归一，无语义比对） | 非空字符串 | 命令面 |
+| `command_stdout_regex` | `re.search(expected, output)`（Python re，30s 超时罩内执行，超时=观察失败+`regex_timeout` 旗标） | 非空字符串（re 模式） | 命令面 |
+| `command_artifact_created` | 验证命令执行后 `(root/expected).is_file()`（越界路径拒绝+旗标） | 非空字符串（正本相对路径） | 命令面+产物面 |
+
+四者均要求命令面（`verification_command` 必须存在）；面耦合校验入 `validate_v17_command_record`。
+判级执行器 = 主判定同款（`judge.run_command` + C11 风味双轨，§13 ⑪ 口径延续）。
+
+**D1-B：编译规则（轮七编译器指令增量）**：command_output 类断言（evidence 行带 cmd）优先编译为 4 条
+`command_*` predicate 之一——exit 主张 → `command_exit_code`；输出子串主张 → `command_stdout_contains`；
+模式主张 → `command_stdout_regex`；落盘主张 → `command_artifact_created`；均不可表达时按 §12 枚举选旧谓词，
+仍不可表达 → 显式 `uncompilable`（见 D2），不得硬判。
+
+**D1-C：预期消解映射表（预注册；off-line 推导自轮六影子记录，先于轮七数据）**
+
+| 臂 | 判级不一致全集 | 预测可消解（command_* 可表达） | 消解率预测 | 无命令不可表达 |
+|---|---:|---:|---:|---:|
+| A | 123 | 90（exit_code 72 / stdout_contains 18） | 73.2% | 33 |
+| B | 114 | 87（exit_code 75 / stdout_contains 12） | 76.3% | 27 |
+| 合计 | 237 | 177 | 74.7% | 60 |
+
+council 估计区间 70–85% 内。**hit_rate 定义（acceptance V4）** = 实际消解数中可归因于预测路径的条数 /
+预测消解总数；**阈值 ≥ 0.80**（预测-验证闭环；低于阈值 = 预测失效，如实报告并回 D-00 待查）。
+
+**D1-D：锚分诊预测（预注册；off-line 回放自轮六记录，存在面 = 仓库根 ∪ C10 密封工作区）**
+
+| 臂 | 带 artifact_path 记录 | `exists_but_unlisted`（仪器缺口：工件在而锚清单漏收） | `truly_missing`（真实差异/造假信号） |
+|---|---:|---:|---:|
+| A | 246 | 225 | 21 |
+| B | 135 | 87 | 48 |
+| 合计 | 381 | 312 | 69 |
+
+轮七实际分诊与预测的偏差容差 **±20%**（相对值；超出即回 D-00 待查）。**不洗白红线**：`truly_missing`
+部分是执行者真实差异/造假信号，只计数、不通过修锚清单转为一致。
+
+**D1-E：D-00 口径（判级对分母 vs 失配原因标签分离）**：轮七报告的判级一致率分母 = 可比对数；
+失配原因标签（eval / anchor / semantic / uncompilable / not_applicable / other）作为**可重叠标注**分离登记，
+不相加、不冲抵一致率分母；轮六遗留的 51 条未归类项列为 D-00 待查（轮七数据不回溯轮六归因）。
+
+**未变更项（v1.0.0–v1.6 继续有效）：** E0–E4 判定顺序与语义（§1）、主轨判级 = v1.5（§11）零改动、
+影子轨零判级输出与隔离保证（§12 D4/§13 ④）、封闭集合纪律（修订经本节追记）、C12——本节只新增
+轮七影子轨 predicate 集与分诊/度量口径，主轨与历史轮次零影响。
