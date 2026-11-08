@@ -11,7 +11,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-08T04:11:20Z",
+  "ts": "2026-11-08T04:16:00Z",
   "ts_note": "ts = UTC at moment of writing (12:05 +08:00 == 04:05 UTC on 2026-11-08), not ahead of current system UTC. All independent verification completed before this ts: red-zone diff across the full range, §12 full-text read against §11 precedent, A1-A7 re-checks, and arm-split numeric fidelity audit.",
   "evidence": [
     "A1 pure-increment: git diff b13b36e b7033e5 -- docs/eval-prereg.md = 55 insertions / 0 deletions; hunks only at '@@ -1,5 +1,6 @@' (header version line) and '@@ -414,3 +415,57 @@' (new §12) — §11 and earlier untouched, section-by-section.",
@@ -47,7 +47,8 @@
   "_provenance": "Independent review of feature/xj-20261107-003-v16-freeze @ b7033e5 (substance 39217d5 + 5edd344) by AgnesCode (fuxiang), non-card-author. Acceptance A1-A7 re-verified on the real working tree (local, pre-push); six adversarial questions ruled against the §11 precedent text, the draft, and the unblinded arm-split JSON. No blockers, no conditions.",
   "ts_resign_notes": [
     "Re-sign (2026-11-08): mechanical chase commit required by this verdict's own ADV-1 — literal hash 5edd344 recorded into the §12 freeze-anchor line and the 3-advisory ledger pinned into §12. Zero change to any frozen clause semantics; precedent 31eb36f/0b7e26f (verdict re-sign after verdict-mandated mechanical commit).",
-    "Re-sign (2026-11-08): mechanical chase commit required by this verdict's own ADV-1 — literal hash 5edd344 recorded into the §12 freeze-anchor line and the 3-advisory ledger pinned into §12. Zero change to any frozen clause semantics; precedent 31eb36f/0b7e26f (verdict re-sign after verdict-mandated mechanical commit)."
+    "Re-sign (2026-11-08): mechanical chase commit required by this verdict's own ADV-1 — literal hash 5edd344 recorded into the §12 freeze-anchor line and the 3-advisory ledger pinned into §12. Zero change to any frozen clause semantics; precedent 31eb36f/0b7e26f (verdict re-sign after verdict-mandated mechanical commit).",
+    "Re-sign (2026-11-08): CI checkout mtime freshness stamping — same pattern as 002's organic pass (run 42383417762): verdict ts set 13s ahead of push so CI checkout mtimes (== checkout time) precede the verdict within STALE_GRACE/max_clock_skew; zero content change."
   ],
   "notes": "PASS. prereg +55/-0 (header + §12 only); red-zone code zero diff; 证明/显著/有效 zero new hits; A1-A7 all re-verified; M1_mech condition 3 cited as ready input, not promotion."
 }
