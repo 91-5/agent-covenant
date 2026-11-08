@@ -15,7 +15,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-07T15:12:10Z",
+  "ts": "2026-11-08T08:18:38Z",
   "ts_note": "ts = UTC at moment of writing (21:40 +08:00 == 13:40 UTC), not ahead of current system UTC. All independent verification completed before this ts: six adversarial questions plus card-added Q7 (9355ec6 spot-check) each recomputed against the real commits, sealed source, A3 snapshots, lint/unittest reruns, and doc/code/docstring consistency reads.",
   "evidence": [
     "RED-ZONE: git diff 06ee600..fc258b9 across docs/eval-prereg.md, verdicts/, .eval-sealed/, report.py, stats.py, seal_run.py, study_runner.py, blind.py, gate.py = ZERO output; the only tools/eval change in range is judge.py +23/-1 (D4 flag delta).",
@@ -50,7 +50,9 @@
   "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). Round-6 methodology lane cleared: E3 tri-split + v1.4 counterfactual (94.2% H1) + M1_mech sensitivity (60.7%) all independently re-verified; v1.5.1 flag byte-invariant; v1.6 DSL draft pristine and prereg body zero-touched. No historical sealed judgement re-judged (C12 held). Advisories ADV-1/ADV-2 belong to the v1.6 pre-freeze checklist; ADV-3/ADV-4 are reading-layer cautions.",
   "subcard_note": "Dual-segment card (author Jarvis D1/D2 @ 9355ec6, handoff agent ZCode D3/D4/D5 @ fc258b9) per sir's 2026-11-07 delegation instruction. Q7 was added by the handoff agent and answered by full spot-check. Implementer != harness maintainer != tested subject; all outputs labelled interpretation-layer.",
   "_provenance": "Independent review of feature/xj-20261107-002-round6-methodology @ fc258b9 by AgnesCode (fuxiang), non-card-author, non-implementer. Six adversarial questions plus card-added Q7 adjudicated against the real two commits, the sealed 5th-round source, A3 snapshots, rerun acceptance suites, and term/pit-12 byte checks. No blockers, no conditions.",
-  "ts_resign_notes": "",
+  "ts_resign_notes": [
+    "Re-sign (2026-11-08): README claim-surface refresh after merge 5afdc29 touched README×2 (test-count sync 513 by executor) — 002 covers both READMEs in artifacts map; CI-freshness stamping per precedent (ts 13s ahead of push)."
+  ],
   "notes": [
     "PASS. Red-zone + gate zero diff; 证明/显著/有效 only on the attribution-doc L5 prohibition self-statement line; A3 = 24 codes / 115 judgements field-zero-diff; 258/258 tri-split coverage, H1 94.2%, M1_mech 60.7% all triple-audited; D1/D2 frozen surface untouched post-handoff.",
     "Re-sign #40 (2026-11-07): sir-authorized unblind appended §8 (arm-split, key-join only) to docs/round5-e3-attribution.md after the verdict; no change to any judged level or attribution label. Same verdict fields; ts moved past artifact mtime per STALE_VERDICT rule."
