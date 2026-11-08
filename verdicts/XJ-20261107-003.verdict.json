@@ -1,0 +1,52 @@
+{
+  "id": "XJ-20261107-003",
+  "artifact": [
+    "docs/eval-prereg.md",
+    "docs/eval-prereg-v6-draft.md"
+  ],
+  "commit": "feature/xj-20261107-003-v16-freeze @ b7033e5 (baseline master b13b36e; substance = 39217d5 card open + 5edd344 v1.6 freeze text; 4 intermediate card-lint-shape commits non-substantive). Pure text freeze: docs/eval-prereg.md +55/-0, v6-draft header-only demotion, zero code. Red-zone (judge/report/stats/seal_run/study_runner/blind/gate/verdicts) zero diff across the range.",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261107-003 dispatch to fuxiang (independent review, non-card-author). Acceptance A1-A7 re-verified on real artifacts (git hunk anchoring, grep, lint, unittest regression); six adversarial questions independently ruled; unblind arm-split citations cross-checked value-by-value against dryrun/round6-armsplit.json.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-08T04:09:35Z",
+  "ts_note": "ts = UTC at moment of writing (12:05 +08:00 == 04:05 UTC on 2026-11-08), not ahead of current system UTC. All independent verification completed before this ts: red-zone diff across the full range, §12 full-text read against §11 precedent, A1-A7 re-checks, and arm-split numeric fidelity audit.",
+  "evidence": [
+    "A1 pure-increment: git diff b13b36e b7033e5 -- docs/eval-prereg.md = 55 insertions / 0 deletions; hunks only at '@@ -1,5 +1,6 @@' (header version line) and '@@ -414,3 +415,57 @@' (new §12) — §11 and earlier untouched, section-by-section.",
+    "A2/A3/A4: exact_answer present (2 hits); answer_equals appears exactly once, in §12 D3 as the rename-source identity only ('原草案名 answer_equals 改名而来，sir 拍板'), never as a frozen predicate value; the 语义等价 line carries 明文禁止 + 'any LLM-judged sameness path must not enter the judgement chain'; matches_regex carries 'Python re syntax; runs under the judge's 30s timeout collar, timeout recorded as observation-failure + flag'; all 5 claim_type enum values verbatim.",
+    "A5 regression: lint_cards --strict = 0 ERROR (single WARN = VERDICT_WITHOUT_REVIEW transient, consumed by this verdict); unittest discover all green exit 0.",
+    "A6: 证明|显著|有效 hits = 11, all pre-existing self-statement lines (§0.1 措辞铁律 + §11 frozen text); zero new hits introduced by §12.",
+    "A7 + Q4: v6-draft diff in 5edd344 is header-only (title + '已冻结 → 见 eval-prereg.md §12' pointer + status-declaration update 2026-11-07, body untouched); shadow-pilot incomplete state declared in THREE mutually-referencing places: §12 D4 inline implementation-status sentence, pre-freeze checklist item 3 marked 未完成, and the draft header demotion note.",
+    "Q1: §12 carries the §11 three-element format precedent — freeze-timing declaration ('frozen before any DSL pilot data', 2026-11-07, card XJ-20261107-003), implementation-commit anchor in the retroactive-recording form ('literal hash appended by a mechanical follow-up commit per §11 precedent'), and the window constraint ('any v1.6 instrument seal.json must postdate that commit, else post-prereg-change per §0.1') — plus trigger-fact table and non-retroactivity statement.",
+    "Q2: the 9 frozen predicates = draft §1 six-value set + line_count_equals + exit_equals + exact_answer (answer_equals rename); the semantic-equivalence backdoor is sealed by four layered mechanisms (exact-match semantics + explicit prohibition + closed set with revision-only gap path + shadow-track ≥95% double-agreement gate that never feeds the main judgement).",
+    "Q3: the evaluative-exclusion clause is explicitly 预注册后变更 + 向前生效 '自 v1.6 仪器数据产生起', '不改写任何历史轮次数字', with 预注册 M1 pinned first in any three-track presentation — structurally identical to C12 no-rejudge; historical rounds v1-v5 kept verbatim (header keeps the v1.5 line struck-through per version-chain precedent).",
+    "Q5: the pure-text freeze + post-verdict merge matches the a1b5ec2 precedent exactly (§11's own framing: paper revision, zero code, anchor commit recorded retroactively, window constraint checked ex-post via seal.json timestamps); the pre-push gate hold per §32 transient rule is the expected pre-verdict state and clears when this verdict lands.",
+    "Q6 numeric fidelity: dryrun/round6-armsplit.json (generated 2026-11-07T15:04:08Z, key-join grouping only, no re-judgement) gives arm_A H1 93.0% (120/129) / arm_B 95.3% (123/129), H2 arm_A 7.0% (9) / arm_B 4.7% (6) — verbatim matching the §12 trigger-fact row; both arms share direction (no directional conflict), so D5 condition 3's '第五轮已核：方向矛盾未触发，本条件在该轮为已满足态；后续轮次逐轮复检' correctly cites the unblinded split as READY INPUT DATA, not as a promotion event; §12 D5/D6 make promotion a later-point event requiring all four conditions + sir final ruling."
+  ],
+  "rulings": [
+    "Q1 §12 vs §11 format precedent: HOLDS (three elements complete, retroactive-recording anchor form exact).",
+    "Q2 predicate 9 values + rename backdoor: HOLDS (semantic-equivalence path explicitly sealed; closed set; residual gap path is itself the controlled §0.1 post-prereg-change procedure).",
+    "Q3 evaluative forward-only clause: HOLDS (C12-spirit aligned; historical rounds untouched by text).",
+    "Q4 shadow-pilot incomplete-state visibility: HOLDS (triple declaration: D4 inline + checklist item 3 + draft header).",
+    "Q5 text-freeze post-verdict merge vs a1b5ec2: HOLDS (identical precedent form; gate hold is the expected transient).",
+    "Q6 M1_mech condition-3 citation: HOLDS (arm-split data ready-as-input, value-faithful; promotion correctly deferred to its own decision point)."
+  ],
+  "advisory_findings": [
+    "ADV-1: the §12 implementation-commit anchor is in retroactive-recording form without the literal hash in-section (per the §11 31eb36f precedent). The window-constraint check therefore depends on a follow-up mechanical commit appending '5edd344' to §12 — flag for the round-6 instrument card's checklist so the anchor is never left unrecorded.",
+    "ADV-2: D6's '待解释项' (direction-conflict register) has no designated ledger location; suggest the v1.6 instrument card pin it (e.g. an AUTO span in the attribution doc or a dedicated round record) so arbitration is auditable at the point it fires.",
+    "ADV-3: the H2 arm counts are small (A 9 / B 6); when condition 3 is re-checked in later rounds, report the H2 arm-split absolute counts alongside percentages to guard against small-sample drift being masked by rounding."
+  ],
+  "not_verified_disclosed": [
+    "Post-verdict merge of the branch was not observed (pre-push gate hold per §32 is the expected pre-release state; the merge decision belongs to sir's flow). The window constraint is ex-post and unaffected by merge timing.",
+    "The compiler implementation and shadow pilot are explicitly out of scope for this card and unverified by design (pre-freeze checklist item 3, owned by the round-6 instrument card)."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 3 advisory). v1.6 design-text freeze cleared: predicate 9-value set (sir-final exact_answer), claim_type enum, judgement mapping, shadow-pilot gate, M1_mech promotion gate, and window constraints all frozen before any DSL pilot data, with the unblinded arm-split cited as ready input only. Zero E-level extension, zero code, §11-earlier untouched, red-zone clean. Gate's MISSING_VERDICT transient clears with this verdict; pre-push release may proceed per §32.",
+  "subcard_note": "Round-6 freeze card (single implementer Jarvis, no handoff). Inputs: XJ-20261107-002 attribution PASS + fuxiang Q5/Q6 rulings + sir 2026-11-07 two question rulings (predicate set + freeze-scope). The freeze anchors the v1.6 lane; compiler + shadow pilot remain deferred to the round-6 instrument card per the frozen pre-condition checklist.",
+  "_provenance": "Independent review of feature/xj-20261107-003-v16-freeze @ b7033e5 (substance 39217d5 + 5edd344) by AgnesCode (fuxiang), non-card-author. Acceptance A1-A7 re-verified on the real working tree (local, pre-push); six adversarial questions ruled against the §11 precedent text, the draft, and the unblinded arm-split JSON. No blockers, no conditions.",
+  "ts_resign_notes": [
+    "Re-sign (2026-11-08): mechanical chase commit required by this verdict's own ADV-1 — literal hash 5edd344 recorded into the §12 freeze-anchor line and the 3-advisory ledger pinned into §12. Zero change to any frozen clause semantics; precedent 31eb36f/0b7e26f (verdict re-sign after verdict-mandated mechanical commit)."
+  ],
+  "notes": "PASS. prereg +55/-0 (header + §12 only); red-zone code zero diff; 证明/显著/有效 zero new hits; A1-A7 all re-verified; M1_mech condition 3 cited as ready input, not promotion."
+}
