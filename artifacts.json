@@ -533,6 +533,7 @@
     "tests/test_dsl_compiler.py",
     "tests/test_shadow_align.py",
     "docs/eval-v16-shadow-pilot.md",
+    "verdicts/XJ-20261108-001.verdict.json",
     "artifacts.json"
   ]
 }
