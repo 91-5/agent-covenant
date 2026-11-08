@@ -525,5 +525,14 @@
     "docs/eval-prereg-v6-draft.md",
     "verdicts/XJ-20261107-003.verdict.json",
     "artifacts.json"
+  ],
+  "XJ-20261108-001": [
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/shadow_align.py",
+    "tools/eval/schema.py",
+    "tests/test_dsl_compiler.py",
+    "tests/test_shadow_align.py",
+    "docs/eval-v16-shadow-pilot.md",
+    "artifacts.json"
   ]
 }
