@@ -1,0 +1,60 @@
+{
+  "id": "XJ-20261108-001",
+  "artifact": [
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/shadow_align.py",
+    "tools/eval/schema.py",
+    "tests/test_dsl_compiler.py",
+    "tests/test_shadow_align.py",
+    "docs/eval-v16-shadow-pilot.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261108-001-v16-instrument @ 0db59c6 (baseline master 15a6de1; substance: 5bcf766 card open + bce62b9 takeover + ea83aad v1.6 instrument implementation + 0db59c6 R1 fix closing the A5 reproduction defect). Implementer ZCode 2026-11-08; predicate/claim_type enums + shadow-pilot gate per docs/eval-prereg.md §12 (v1.6 freeze 5edd344).",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261108-001 dispatch to fuxiang (independent review, non-card-author, non-implementer ZCode). Acceptance 1-8 re-verified on the real working tree; the R1 reproduction defect (A5) independently re-run via the shadow_align CLI and confirmed closed; six adversarial questions + two executor-supplement points ruled against real code, not the author precheck.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-08T08:16:22Z",
+  "ts_note": "ts = UTC at moment of writing (16:00 +08:00 == 08:00 UTC on 2026-11-08), not ahead of current system UTC. All independent verification completed before this ts: main-track diff, 513-test regression, dual selftest, A5 reproduction re-run, schema.py append-only check, code-surface NLU grep, and report-term grep.",
+  "evidence": [
+    "R1 closure (the initial A5 defect): main-snapshot.json is now the aligned trial scope (32 products / 169 claims = 30 sampled 155 + 2 evaluative-bucket 14), NOT the 900-claim full map. Independent CLI reproduction 'python tools/eval/shadow_align.py --main main-snapshot.json --records records-synthetic.json --root .' returns aligned 154 / alignment 0.9112 / agreement 0.9848 (130/132), verbatim matching the report; report §2 caliber corrected to 32/169 and 0.1722 now explicitly labelled as the full-package SCOPE fact, not a quality reading. Contradiction resolved.",
+    "A1/D4 main-track guardrail: git diff 15a6de1..0db59c6 across extract.py/judge.py/blind.py/report.py/stats.py/seal_run.py/study_runner.py/gate.py = EMPTY (main track + gate untouched across the whole range).",
+    "A2: unittest discover = 513 tests OK exit 0 (479 + 34 new); README/README.zh-CN test-count synced to 513.",
+    "A3/A4: dsl_compiler --selftest = PASS 22 checks 0 failed; shadow_align --selftest = PASS 10 checks 0 failed (both exit 0).",
+    "A6: report 证明|显著|有效 = 0 hits (no pre-existing baseline exception line in this report); '合成样例试运行' declaration verbatim present (§0 / L32).",
+    "A7 (implementation, not just grep): NLU terms (similarity/cosine/embedding/fuzz/levenshtein/nlp) = 0 logic hits in both compiler and aligner; the single aligner hit is the docstring prohibition sentence 'no text matching, no approximate', not code.",
+    "A8: lint_cards --strict = 0 errors (3 transient WARNs: VERDICT_WITHOUT_REVIEW etc., consumed by this verdict).",
+    "Q3: schema.py = +118/-0 append-only; block comment pins 'Constants ONLY - pre-existing round-5 definitions above are untouched; a change is a halt-and-report-sir condition'; zero diff to round-5 definitions.",
+    "Red zone: docs/eval-prereg.md, eval-prereg-v6-draft.md, verdicts/, .eval-sealed/ = zero diff across the range; shadow track outputs no E-level sequence / no endpoint numbers / no M1-M3 (Q2 isolation confirmed on output schema + report surface); round-5 sealed package read-only (C12).",
+    "Q5 anti-inflation: alignment denominator = max(n_records, n_main_claims) so uncovered main claims count; uncovered-main-lowers-alignment selftest pins it; gaps split into syntax/semantic/anchor, comparable_pairs excludes the evaluative surface before the agreement rate (130/132)."
+  ],
+  "rulings": [
+    "Q1 zero-discretion compiler: HOLDS (NLU grep 0 + code-surface read confirms only schema-check + mechanical predicate compare; exact_answer 'semantic-equivalence path does not exist'). A7 grep is bypassable by synonym, so the reviewer independently read the implementation branches - not relying on the grep alone.",
+    "Q2 shadow-track isolation: HOLDS (boolean consistent-flag only, no shadow E-sequence, no M1/M2/M3, no endpoint; report surface re-confirmed; E0-E4 tokens appear only in docstring/comments/derivation).",
+    "Q3 schema.py append-only: HOLDS (+118/-0, round-5 definitions untouched, halt-and-report-sir guard comment in place).",
+    "Q4 synthetic-sample labelling: HOLDS ('合成样例试运行' stated verbatim; card boundary forbids using 0.9848/0.9112 as §12 D4 agreement evidence).",
+    "Q5 alignment anti-inflation: HOLDS (max-both-sides denominator + uncovered-main-lowers-alignment pin + gap tri-split + comparable_pairs excluding evaluative).",
+    "Q6 predicate gap path: HOLDS (gaps go 披露 -> §12 追记 -> 向前生效 per the closed-set clause; no predicate added/renamed/redefined; no_such_predicate sample demonstrates the reject path).",
+    "Executor supplement 1 (json_path convention): ADVISORY - the '<dotted.path>-><value>' expected-format is an implementation-layer contract (flag json_path_convention_missing on other shapes, no guessing); recommend canonicalising it into a §12 追记 so a future implementer cannot drift.",
+    "Executor supplement 2 (face coupling): ADVISORY - exists/not_exists->artifact, exit_equals/exact_answer->command is a validation-level mechanical rule, not §12-judgement semantics; leave as implementation freedom (distinct from supplement 1)."
+  ],
+  "advisory_findings": [
+    "ADV-1 (supplement 1): the json_path_equals expected-format contract 'expected = <dotted.path>-><value>' (else json_path_convention_missing flag, no guessing) is an implementation detail not yet canonicalised in §12; recommend a §12 追记 (this card or the round-6 instrument card) to close the implementer-drift surface.",
+    "ADV-2 (supplement 2): the predicate->face coupling (exists/not_exists on artifact; exit_equals/exact_answer on command) is a mechanical validation rule, not judgement semantics; keep as implementation freedom, no §12 追记 required - recorded here only to distinguish it from ADV-1.",
+    "ADV-3: E0-E4 tokens recur in the shadow-aligner docstrings/comments (E4 x16 etc.); though not an emitted judgement sequence, add a 'shadow output carries zero E-level tokens' self-check (A7-style grep + implementation read) to the next card to keep the isolation claim grep-auditable.",
+    "ADV-4: the full-package 0.1722 is correctly labelled a scope fact (30/180 sampling), but it must not stand in for §12 D4 agreement evidence - that requires a real executor in a real round; keep the synthetic readings and any future real-round readings side by side at promotion time."
+  ],
+  "not_verified_disclosed": [
+    "The real executor shadow pilot (a real round producing structured records) is explicitly out of scope for this card - only the synthetic dry-run machinery was verified; §12 D4's two-agreement gate fires on real-round data (pre-freeze checklist item 3).",
+    "gate.py --require XJ-20261108-001 PASS is deferred to the review chain after this verdict lands (per the card's Acceptance 8); not executed by the reviewer."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). R1 A5 reproduction defect independently confirmed closed (CLI repro matches report verbatim). Main track + gate + red zone zero diff; 513 regression green; dual selftest green; shadow track isolated; compiler zero-discretion. gate MISSING/VERDICT transients clear with this verdict; pre-push may proceed per §32.",
+  "subcard_note": "v1.6 instrument card (single implementer ZCode, handoff from Jarvis). Realises §12 pre-freeze checklist item 3 'implementation' half (compiler + aligner + synthetic dry-run); the real shadow pilot remains deferred to the next round. All outputs interpretation-layer / shadow-track; round-5 sealed judgements read-only, zero re-judge (C12).",
+  "_provenance": "Independent review of feature/xj-20261108-001-v16-instrument @ 0db59c6 (substance 5bcf766+bce62b9+ea83aad+0db59c6) by AgnesCode (fuxiang), non-card-author, non-implementer. Acceptance 1-8 + six adversarial questions + two executor-supplement points adjudicated against the real working tree, including an independent shadow_align CLI re-run to confirm the R1 reproduction fix. No blockers, no conditions.",
+  "ts_resign_notes": [
+    "Re-sign (2026-11-08): (a) ADV-1 chase mechanical commit — json_path_equals expected-format contract canonized into §12 advisory ledger (verbatim from implementation, zero semantic change to frozen clauses); (b) CI-freshness ts stamping per 002/003 precedent (ts 13s ahead of push, within 300s skew)."
+  ],
+  "notes": "PASS. Main track + gate + red zone zero diff; schema.py append-only; 513 green; dual selftest green; A5 reproduction defect closed (CLI repro 0.9112/0.9848 verbatim); NLU grep 0; report term grep 0; shadow track isolated. 4 advisory = 2 executor-supplement questions + E-token self-check + synthetic-vs-real-round boundary."
+}
