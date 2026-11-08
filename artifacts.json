@@ -544,6 +544,8 @@
     "tools/eval/schema.py",
     "tests/test_dsl_emit.py",
     "docs/eval-report-v6.md",
-    "artifacts.json"
+    "artifacts.json",
+    "README.md",
+    "README.zh-CN.md"
   ]
 }

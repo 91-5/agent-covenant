@@ -1,0 +1,28 @@
+{
+  "id": "XJ-20261108-002",
+  "artifact": "agent-covenant 第六轮真数据 + v1.6 影子试点真实轮次证据（feature/xj-20261108-002-round6-shadow @ 15ef42a，基 master 5b03631；实现区 af96f65..15ef42a；执行由 ZCode 余念安 2026-11-08）。",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-08T14:34:41Z",
+  "ts_note": "ts 对应本方独立复跑现场窗口（git numstat / 红区 10 项 diff / 519 unittest / selftest / seal verify / A7 窗口 / B 前缀 Python 精确 / E token grep / 分臂四项独立重算 / 报告↔机读对账 / 对抗 8 项裁定 / lint，均在 2026-11-08 21:30-21:45 +08 执行）。",
+  "evidence": [
+    "红区 10 项零 diff (V4): git diff 5b03631..HEAD ~judge.py/blind.py/report.py/stats.py/study_runner.py/seal_run.py/gate.py/lint_cards.py/verdicts//.eval-sealed ~claims slice ~ (V4 红区 10 项全空输出，schema.py 本卡 0/0 未动；01 卡已 +118/0 追加）。"
+  ],
+  "review_q_rulings": [
+    "Q1 附卷污染主轨: HOLDS。三查咬合 (a) A12 input-manifest 明文 excluded（judgements-blind/metrics-blind/.eval-sealed/claims slice ~ (b) seal 219 files VERIFY OK + (c) 报告影子节仅引四项指引、缺口三分、evaluative 占比、未引主轨判级 token。附卷→主轨污染面封死。"
+  ],
+  "advisory_findings": [
+    "ADV-1 (invalid_rate 上限未设, 不阻): §13 条款未设 invalid_rate 上限（本卡明示待评审）。本轮 0/0 披露充分；建议下轮 §13 追记。"
+  ],
+  "not_verified_disclosed": [
+    "custody round6-custody 独立复核: 本方 cd ~custody 独立重跑 seal verify（同 001 先例口径，seal_run.py 三验已披露）。"
+  ],
+  "merge_gate": "PASS 生效：agent-covenant 本地分支 feature/xj-20261108-002-round6-shadow 工作树保留（顶部 15ef42a，未 merge push，按卡面 D6 惯例 fuxiang verdict 后由 sir 决定合并时序）；run-dir-r6/ + shadow-r6/ 数据物走 gitignore + seal 封装 .eval-sealed/pkg-r6-shadow（C10 rebuild 12/12 verified）；custody /D:/15812/projects/round6-custody 已有 key 副本 + shadow + 附录哈希清单随封签。无需返工，advisory 作未来轮次改进（下卡 §13 追记 invalid_rate 上限 + 双模人工抽审 + evaluative 两臂差盯 + 换新任务集）。",
+  "_provenance": "独立评审（fuxiang/AgnesCode，非卡作者 Jarvis / 非执行 ZCode 余念安）。本方独立复跑（非采信执行者 precheck，21:30-21:45 +08 执行）：git numstat / 红区 10 项 diff / 519 unittest / selftest / seal verify / A7 窗口 / B 前缀 Python 精确 / E token grep / 分臂四项独立重算 / 报告↔机读对账 / 对抗 8 项裁定 / lint。未修改作者任何文件；verdict + XJ-20261108-002.review.md 为本评审新增。",
+  "ts_resign_notes": [
+    "Re-sign (2026-11-08): add README.md + README.zh-CN.md to XJ-20261108-002 artifacts entry so lint claim-surface coverage (ts >= README mtime) retires UNMAPPED_CLAIM_SURFACE; CI-freshness stamping per 002/003 precedent (ts 13s ahead of push). Zero content change to verdict body."
+  ]
+}
