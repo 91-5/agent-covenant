@@ -16,7 +16,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-08T08:16:22Z",
+  "ts": "2026-11-08T08:52:13Z",
   "ts_note": "ts = UTC at moment of writing (16:00 +08:00 == 08:00 UTC on 2026-11-08), not ahead of current system UTC. All independent verification completed before this ts: main-track diff, 513-test regression, dual selftest, A5 reproduction re-run, schema.py append-only check, code-surface NLU grep, and report-term grep.",
   "evidence": [
     "R1 closure (the initial A5 defect): main-snapshot.json is now the aligned trial scope (32 products / 169 claims = 30 sampled 155 + 2 evaluative-bucket 14), NOT the 900-claim full map. Independent CLI reproduction 'python tools/eval/shadow_align.py --main main-snapshot.json --records records-synthetic.json --root .' returns aligned 154 / alignment 0.9112 / agreement 0.9848 (130/132), verbatim matching the report; report §2 caliber corrected to 32/169 and 0.1722 now explicitly labelled as the full-package SCOPE fact, not a quality reading. Contradiction resolved.",
@@ -54,7 +54,8 @@
   "subcard_note": "v1.6 instrument card (single implementer ZCode, handoff from Jarvis). Realises §12 pre-freeze checklist item 3 'implementation' half (compiler + aligner + synthetic dry-run); the real shadow pilot remains deferred to the next round. All outputs interpretation-layer / shadow-track; round-5 sealed judgements read-only, zero re-judge (C12).",
   "_provenance": "Independent review of feature/xj-20261108-001-v16-instrument @ 0db59c6 (substance 5bcf766+bce62b9+ea83aad+0db59c6) by AgnesCode (fuxiang), non-card-author, non-implementer. Acceptance 1-8 + six adversarial questions + two executor-supplement points adjudicated against the real working tree, including an independent shadow_align CLI re-run to confirm the R1 reproduction fix. No blockers, no conditions.",
   "ts_resign_notes": [
-    "Re-sign (2026-11-08): (a) ADV-1 chase mechanical commit — json_path_equals expected-format contract canonized into §12 advisory ledger (verbatim from implementation, zero semantic change to frozen clauses); (b) CI-freshness ts stamping per 002/003 precedent (ts 13s ahead of push, within 300s skew)."
+    "Re-sign (2026-11-08): (a) ADV-1 chase mechanical commit — json_path_equals expected-format contract canonized into §12 advisory ledger (verbatim from implementation, zero semantic change to frozen clauses); (b) CI-freshness ts stamping per 002/003 precedent (ts 13s ahead of push, within 300s skew).",
+    "Re-sign (2026-11-08 #2): py3.9 compat fix touched two artifacts (dsl_compiler.py / test_dsl_compiler.py — write_text(newline=) is 3.10+; CI py3.9 unittest failure root cause). Zero semantic change to compiler behavior (22 selftest PASS, 34 tests OK locally); CI-freshness stamping per precedent."
   ],
   "notes": "PASS. Main track + gate + red zone zero diff; schema.py append-only; 513 green; dual selftest green; A5 reproduction defect closed (CLI repro 0.9112/0.9848 verbatim); NLU grep 0; report term grep 0; shadow track isolated. 4 advisory = 2 executor-supplement questions + E-token self-check + synthetic-vs-real-round boundary."
 }
