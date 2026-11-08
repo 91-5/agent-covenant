@@ -520,14 +520,10 @@
     "README.md",
     "README.zh-CN.md"
   ],
-  "XJ-20261107-003": {
-    "card": ".tasks/XJ-20261107-003.md",
-    "artifacts": [
-      "docs/eval-prereg.md",
-      "docs/eval-prereg-v6-draft.md",
-      "verdicts/XJ-20261107-003.verdict.json"
-    ],
-    "status": "CLOSED",
-    "closed": "2026-11-08"
-  }
+  "XJ-20261107-003": [
+    "docs/eval-prereg.md",
+    "docs/eval-prereg-v6-draft.md",
+    "verdicts/XJ-20261107-003.verdict.json",
+    "artifacts.json"
+  ]
 }
