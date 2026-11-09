@@ -1,0 +1,23 @@
+{
+  "round": "round8",
+  "card": "XJ-20261109-001",
+  "status": "CLOSED, PUSHED, CI green (run 42632363284)",
+  "push": "master a721863 -> origin 4676a0c, pre-push lint/gate/link all passed",
+  "verdict": "Agnes PASS 0B/0C/4A independent (ADV-2 V6 baseline corrected to 7ff2a84)",
+  "core_conclusions": [
+    "159 条失配定性完成：84 仪器可修 / 75 结构性错位 / 0 执行者真实差异 / 0 未归类",
+    "51 口径纠正：跨量纲相减证伪（可比对数−记录数并集 ≠ 真实条目集合）",
+    "三档 instrument 修订全部落地：predicate 扩充、fallback 语义、锚清单",
+    "不洗白红线守住：truly_missing 24 条全在台账外保持执行者责任"
+  ],
+  "core_conclusions_round8": [
+    "159 条失配定性完成：84 仪器可修 / 75 结构性错位 / 0 执行者真实差异 / 0 未归类",
+    "51 口径纠正：跨量纲相减证伪（可比对数−记录数并集 ≠ 真实条目集合）",
+    "三档 instrument 修订全部落地：predicate 扩充、fallback 语义、锚清单",
+    "不洗白红线守住：truly_missing 24 条全在台账外保持执行者责任"
+  ],
+  "debt": [
+    "r56 系 verdict FAIL 基线（XJ-20260930 系 verdict FAIL 基线）",
+    "r56 系 verdict STALE 基线（XJ-20260929 系 verdict STALE 基线）"
+  ]
+}
