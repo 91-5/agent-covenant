@@ -15,8 +15,8 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-09T13:45:00Z",
-  "ts_note": "ts = UTC at moment of writing (21:45 +08:00 == 13:45 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: V1-V6 re-counts, mechanism census, 51-row destination split, 312-261 cross-universe check, records-graded vs consistent_flags identity, and red-zone 8-file attribution via merge-base ancestry.",
+  "ts": "2026-11-09T14:13:06Z",
+  "ts_note": "ts = UTC at moment of writing (21:45 +08:00 == 13:45 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: V1-V6 re-counts, mechanism census, 51-row destination split, 312-261 cross-universe check, records-graded vs consistent_flags identity, and red-zone 8-file attribution via merge-base ancestry. Orchestrator re-stamp: archive commit (e448cac) refreshed card/artifacts mtimes past original ts 13:45Z (STALE_VERDICT); re-stamped to 2026-11-09T14:13:06Z with zero semantic change (PASS 0B/0C/4A unchanged, Agnes independent review stands).",
   "evidence": [
     "RED-ZONE / read-only HOLDS: git diff 7ff2a84..a4fb00c = 7 files (.tasks card + artifacts.json + 5 docs), ZERO .py under tools/; red-zone diff on this-card baseline 7ff2a84 is EMPTY and the working tree is clean. The card's literal V6 command uses d75d3a6 (the round-7 baseline), so d75d3a6..HEAD shows 8 red-zone files - I independently traced all 8 to round-7 commits 4fcd097/fd5e8d7 (both merge-base ancestors of 7ff2a84, verified via merge-base --is-ancestor), so the card introduced 0 red-zone changes.",
     "V1/V1b: docs/d00-mismatch-ledger.json items = 159, arms A=132 / B=27 (= 309-177 + 48-21), independently recounted.",
