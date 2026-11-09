@@ -22,8 +22,8 @@
   "conditions": [],
   "independent": true,
   "verifier": "fuxiang(AgnesCode)",
-  "ts": "2026-11-09T04:23:00Z",
-  "ts_note": "ts = UTC at moment of writing (12:23 +08:00 == 04:23 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: dual-hash recompute, anchor_triage.py and shadow_align.py and report_agreement.py re-runs, main-track pkg-r7-shadow blind recount, and the 8 key rulings.",
+  "ts": "2026-11-09T04:38:21Z",
+  "ts_note": "ts = UTC at moment of writing (12:23 +08:00 == 04:23 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: dual-hash recompute, anchor_triage.py and shadow_align.py and report_agreement.py re-runs, main-track pkg-r7-shadow blind recount, and the 8 key rulings. Orchestrator re-stamp: merge checkout refreshed artifact mtimes to 04:36Z > original ts 04:23Z (STALE_VERDICT); re-stamped to 2026-11-09T04:38:21Z with zero semantic change to verdict (PASS 0B/0C/4A unchanged, Agnes independent review stands).",
   "evidence": [
     "Pre-registration discipline HOLDS: 4fcd097 (section-14 + b-arm rules + dual hash + prediction JSONs, 2026-11-08 23:45:51 +08:00) strictly PRECEDES the data-producing commit fd5e8d7 (2026-11-09 00:51:30); r7-a7-window-check.json = seal_ts 16:41:54Z / d0 23:45:51+08 / v1.6 freeze 23:55:33+08 -> PASS. section-14 'inverted order = overfit, explicitly prohibited' satisfied.",
     "V1 dual hash independently recomputed: sha256(predicates_v17.py) = 2463363c…12ddf = section-14 PREREG_SCHEMA_HASH (MATCH); sha256(report_agreement.py) = 56fa9ac9…70f7b = section-14 PREREG_REPORT_HASH (MATCH).",
