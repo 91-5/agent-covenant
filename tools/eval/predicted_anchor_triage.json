@@ -1,0 +1,21 @@
+{
+  "note": "pre-registered anchor-triage predictions (section-14 freeze input); derived off-line from round-6 records before round-7 data exists",
+  "per_arm": {
+    "A": {
+      "records_with_artifact_path": 246,
+      "exists_but_unlisted": 225,
+      "truly_missing": 21,
+      "out_of_bounds": 0
+    },
+    "B": {
+      "records_with_artifact_path": 135,
+      "exists_but_unlisted": 87,
+      "truly_missing": 48,
+      "out_of_bounds": 0
+    }
+  },
+  "combined": {
+    "exists_but_unlisted": 312,
+    "truly_missing": 69
+  }
+}

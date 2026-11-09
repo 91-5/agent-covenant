@@ -1,0 +1,66 @@
+{
+  "id": "XJ-20261108-003",
+  "artifact": [
+    "docs/eval-prereg.md",
+    "tools/eval/predicates_v17.py",
+    "tools/eval/predicted_resolution.json",
+    "tools/eval/predicted_anchor_triage.json",
+    "tools/eval/anchor_triage.py",
+    "tools/eval/report_agreement.py",
+    "tools/eval/shadow_align.py",
+    "tools/eval/schema.py",
+    "tools/eval/dsl_compiler.py",
+    "docs/b-arm-notapplicable-rules.md",
+    "docs/eval-report-v7.md",
+    "goldset/gold_claims.jsonl",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261108-003-round7-shadow @ ea1b23a (baseline master d75d3a6; substance: 1bd28ab/99c4b65 open + 5f7167d takeover + 4fcd097 D1/D6 freeze (BEFORE any round-7 data) + fd5e8d7 D2-D5 + ea1b23a realign). Pre-reg basis: section-13 (f791a87, in master chain) + section-14 v1.7 (4fcd097) + b-arm-notapplicable-rules.md (D6). Implementer ZCode 余念安 2026-11-09.",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261108-003 dispatch to fuxiang (independent review, non-card-author, non-implementer). V1-V8 + dual-hash + main-track tri-ple replication + shadow four + anchor triage + goldset calibration all independently recomputed / re-run on real artifacts; the six section-14 adversarial points + 8 key rulings adjudicated against the real custody data, not the author precheck.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-09T04:23:00Z",
+  "ts_note": "ts = UTC at moment of writing (12:23 +08:00 == 04:23 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: dual-hash recompute, anchor_triage.py and shadow_align.py and report_agreement.py re-runs, main-track pkg-r7-shadow blind recount, and the 8 key rulings.",
+  "evidence": [
+    "Pre-registration discipline HOLDS: 4fcd097 (section-14 + b-arm rules + dual hash + prediction JSONs, 2026-11-08 23:45:51 +08:00) strictly PRECEDES the data-producing commit fd5e8d7 (2026-11-09 00:51:30); r7-a7-window-check.json = seal_ts 16:41:54Z / d0 23:45:51+08 / v1.6 freeze 23:55:33+08 -> PASS. section-14 'inverted order = overfit, explicitly prohibited' satisfied.",
+    "V1 dual hash independently recomputed: sha256(predicates_v17.py) = 2463363c…12ddf = section-14 PREREG_SCHEMA_HASH (MATCH); sha256(report_agreement.py) = 56fa9ac9…70f7b = section-14 PREREG_REPORT_HASH (MATCH).",
+    "section-14 pure append: git diff d75d3a6..ea1b23a -- docs/eval-prereg.md = +60/-0, single hunk at section-14 tail, section-13 and earlier untouched.",
+    "V2 A-arm: independently recounted records-A.jsonl -> command_* = 303/303 all within the v1.7 enum (command_exit_code/stdout_contains/regex/artifact_created), fallback flags = 0, uncompilable = 0; 450/450 records pass validate_dsl_record per compile-report.",
+    "V3 anchor triage: independently re-ran tools/eval/anchor_triage.py over round7-custody -> exists_but_unlisted 438 / truly_missing 24 / resolved 0 / out_of_bounds 0 (no unresolved class); truly_missing 24 vs section-14 predicted 69 is outside the +/-% 20 tolerance -> registered to D-00 as a deviation, explicitly NOT read favorably.",
+    "V4 prediction loop: independently recomputed r7-offline-replay.json -> A 69/90 = 0.7667, B 51/87 = 0.5862, combined 120/177 = 0.678 < 0.80 threshold -> prediction FAILED per section-14 own clause -> D-00; predicted_resolution.json remains at frozen values (no re-fit, pre-registration discipline held).",
+    "V5 Wilson + bootstrap: independently re-ran report_agreement.py -> A agreement 0.5728 Wilson [0.5171,0.6267], B 0.4375 Wilson [0.307,0.5772], bootstrap (10000, fixed seed) both arms, per-predicate confusion matrix present; verbatim matching report.",
+    "V6 not_applicable: independently recounted records-B.jsonl -> execution_status=not_applicable = 123, exactly equal to the B-arm command_* predicate count 123 (no silent omission).",
+    "V7 goldset calibration: independently re-ran shadow_align.py --goldset -> 30 triples / 25 comparable / agreement 1.0 / gate met / 0 mismatch (mismatch_details empty); calibration exposed and fixed two real defects (v1.7 predicates not wired into the pipeline + regex trailing-newline normalization), proving the P0 value of the calibrator.",
+    "Main-track third replication: pkg-r7-shadow blind recount = 180 products / 900 claims / E0-E4 = 0/120/246/258/276 verbatim identical to rounds 5/6; unblind M1 5.3% [1.0%,10.8%] / M2 0.0% / coverage 18/30 (CI upper 10.8 vs prior 11.0 = bootstrap resampling noise, noted).",
+    "Red zone: judge/report/stats/seal_run/study_runner/blind/gate/extract + verdicts/ + .eval-sealed/ = zero diff across the range (report.py zero = the disclosed V8 adaptation, not a modification); shadow track emits no E-level sequence / no endpoint numbers (zero_e_token_check PASS both arms, C12).",
+    "A1 regression = 519 tests OK exit 0 (enum-size assertion corrected to 13 per section-14); A10 lint = 0 ERROR (1 transient WARN)."
+  ],
+  "rulings": [
+    "Key 1 semantic residual: HOLDS (to D-00) - the 33 no-command + 132 round-7 semantic mismatches are NOT declared resolved; the failed prediction loop points to 'compile-discretion vs main-track judgement-semantics structural misalignment', registered as D-00, no laundering.",
+    "Key 2 eval/anchor dedup + fallback-zero caliber: HOLDS - section-14 D1-E separates the judgement-pair denominator from the overlapping cause labels (123 = 78+60-15, not summed); V2 fallback=0 independently confirmed.",
+    "Key 3 anchor truly_missing 69->24 deviation: HOLDS (not read favorably) - outside the +-20% tolerance, registered to D-00; root-cause hypothesis (round-7 compiler points at repo-root real files) recorded but explicitly 'deviation registered honestly, no favorable read'; the prediction-method-defect vs assertion-surface-change question stays in D-00, not decided this round.",
+    "Key 4 post-FAIL next step boundary: HOLDS - section-14 own clause sends it to D-00; predicted JSONs untouched (no re-fit); boundary = round-7 data does not back-trace round-6 attribution.",
+    "Key 5 B-arm gate applicability after denominator shrink: HOLDS (sufficient) - b-arm rule L16 declares the >=95% gate 'conditionally applicable' to B arm; not_applicable 123 removed -> comparable 48 >= floor 30 -> point estimate reportable + Wilson parallel, no silent removal (L13), non-bypass (L17).",
+    "Key 6 goldset 1.0 vs real 0.57/0.44 gap: HOLDS + recommendation - the 1.0 proves compiler MECHANICAL correctness only; the real-agreement gap is COMPILATION quality, orthogonal to it; recommend section-15 pre-register a separate 'compilation quality' metric so goldset 1.0 is not misread as 'compilation achieved'.",
+    "Key 7 three-ple replication presentation: HOLDS (disclosed) - report section-0 labels it 'round-4 frozen set, third replay, same assertion face, non-independent sample'; main-track numbers used only as harness-determinism verification, not an independent effect.",
+    "Key 8 V8 red-zone adaptation: HOLDS (acceptable) - report.py is red-zone (cannot take --run-dir); main track via run.py --package/--unblind (red-zone safe), shadow four in the report; the reason the verbatim V8 command cannot run is disclosed; red zone independently confirmed zero-diff."
+  ],
+  "advisory_findings": [
+    "ADV-1 (Key 6): section-15 should pre-register an independent 'compilation quality' metric. The goldset 1.0 only certifies mechanical predicate execution; the real 0.57/0.44 agreement gap is the compilation-discretion-vs-judgement-semantics misalignment. Without a separate compilation-quality metric, a reader can misread 'goldset 1.0' as 'compilation achieved'.",
+    "ADV-2: the UNTRACKED custody machine artifact round7-custody/run-dir-r7/shadow-track.json gate.fact prose reads 'B comparable 48 < frozen floor 30 -> Wilson only, no eligibility conclusion' - arithmetically inverted (48 >= 30). The authoritative report section-2 states it correctly ('48 >= 30, point estimate reportable + Wilson parallel'), but a downstream reader who opens the machine artifact directly would misread the B-arm gate state. No reported number or gate decision is affected (all_four_met=false is unchanged); recommend correcting that untracked artifact's prose line before any merge/close.",
+    "ADV-3: main-track M1 CI upper bound 10.8% vs prior 11.0% is bootstrap resampling noise (seed fixed 10000), noted as 'within noise' - future rounds citing the three-ple M1 must state the CI upper bound is a noise band, not effect degradation.",
+    "ADV-4: shadow gate unmet two consecutive rounds (A 0.5728 / B 0.4375); the mismatch source is now pointed at structural misalignment. Recommend the D-00 investigation do a per-record mismatch-composition analysis of 'compile-discretion face vs main-track judgement-semantics face' FIRST, rather than expanding the predicate enum again."
+  ],
+  "not_verified_disclosed": [
+    "V8 defers gate.py --require XJ-20261108-001 PASS to the review chain after this verdict lands; the round-7 main-track M1/M2 endpoint numbers are produced by run.py --package/--unblind (red-zone-safe) and the shadow four are reported in docs/eval-report-v7.md; the round-7 measured machine outputs (alignment-split.json / shadow-track.json / records-*) live in the external round7-custody and gitignored dryrun, cited by reading not committed file bodies.",
+    "The 48-vs-30 B-arm floor determination relied on section-13 / b-arm rule L16 (floor = 30); the untracked shadow-track.json misstates it (ADV-2) but the authoritative report and b-arm rule text agree at 48 >= 30."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). All V1-V8 acceptance items independently reproduced (dual hash, A-arm enum, anchor triage, V4 FAIL per its own clause, Wilson+bootstrap, not_applicable exact equality, goldset 1.0); main-track third replication verbatim; shadow gate unmet two consecutive rounds honestly reported; no-laundering red line held; red zone + C12 clean. gate pre-push transients clear with this verdict; pre-push may proceed per section-32.",
+  "subcard_note": "Round-7 shadow-track instrument revision + true-data re-test card (single implementer ZCode 余念安). Delivers the section-14 D1 freeze (4 command_* predicates, 9->13 enum, dual hash, prediction tables) + D2-D5 (v1.7 wire-in, anchor triage, goldset calibration 1.0, round-7 true-data re-test) + D6 b-arm not_applicable rules. Prediction loop FAILED and anchor deviation both routed to D-00 without favorable reads (C12).",
+  "_provenance": "Independent review of feature/xj-20261108-003-round7-shadow @ ea1b23a by AgnesCode (fuxiang), non-card-author, non-implementer. V1-V8 + dual hash + main-track tri-ple replication + shadow four + anchor triage + goldset all recomputed / re-run against the real custody data (pkg-r7-shadow, round7-custody/shadow-r7, round7-custody/run-dir-r7); six section-14 points + 8 key rulings adjudicated. No blockers, no conditions; one untracked-artifact prose inversion (ADV-2) and a compilation-quality metric gap (ADV-1) flagged.",
+  "ts_resign_notes": "",
+  "notes": "PASS. Red zone + C12 clean; dual hash match; main track 0/120/246/258/276 (third replication); shadow gate unmet 2nd round (A 0.5728 / B 0.4375); prediction FAILED + anchor deviation -> D-00, no laundering. 4 advisory: section-15 compilation-quality metric, shadow-track.json prose inversion, M1 CI noise band, D-00 composition-first."
+}

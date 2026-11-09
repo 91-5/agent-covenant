@@ -105,16 +105,30 @@ def _align_product(main_claims: List[dict], records: List[dict],
     uncovered_main = [c for c in main_claims
                       if len(covered_by.get(id(c), [])) != 1]
 
+    # §14 D2 (v1.7): a non-evaluative record with no legal predicate is
+    # EXPLICITLY uncompilable — the fallback default-grading is gone; such
+    # records are counted (uncompilable_count) and excluded from the
+    # agreement denominator, never silently graded.
+    uncompilable = sorted({str(r.get("claim_id")) for r in records
+                           if r.get("claim_type") != DSL_EVALUATIVE_TYPE
+                           and not r.get("predicate")})
     syntax_gaps = sorted({str(r.get("claim_id")) for r in records
                           if "schema_invalid" in results.get(
                               str(r.get("claim_id")), {}).get("flags", [])})
     comparable: Dict[str, bool] = {}
     evaluative: List[str] = []
+    not_applicable: List[str] = []
     semantic_gaps: List[str] = []
     for cid, main in aligned.items():
         result = results.get(cid, {})
         rec = next(r for r in records if str(r.get("claim_id")) == cid)
         level = main.get("level") or main.get("_level")
+        if rec.get("execution_status") == "not_applicable":
+            # §14 / docs/b-arm-notapplicable-rules.md: B-arm command_* records
+            # are design-unexecutable — structural bucket, out of the agreement
+            # denominator, never silently dropped
+            not_applicable.append(cid)
+            continue
         if rec.get("claim_type") == DSL_EVALUATIVE_TYPE:
             evaluative.append(cid)
             continue
@@ -145,6 +159,8 @@ def _align_product(main_claims: List[dict], records: List[dict],
         "comparable_pairs": comparable_pairs,
         "agreement_rate": (round(agreement_rate, 4) if agreement_rate is not None else None),
         "evaluative_count": len(evaluative),
+        "not_applicable_count": len(not_applicable),
+        "not_applicable_ids": sorted(set(not_applicable)),
         "gaps": {
             "syntax": sorted(set(syntax_gaps)),
             "anchor": sorted(set(anchor_gaps)),
@@ -153,6 +169,8 @@ def _align_product(main_claims: List[dict], records: List[dict],
         "consistent_flags": {cid: bool(v) for cid, v in sorted(comparable.items())},
         "anchor_gap_note": (f"record-side {len(anchor_gaps)}; "
                             f"main-side uncovered {len(uncovered_main)}"),
+        "uncompilable_count": len(uncompilable),
+        "uncompilable_ids": uncompilable,
     }
 
 
@@ -197,6 +215,69 @@ def align(main_by_code: Dict[str, List[dict]],
                    "agreement_rate": agreement_rate,
                    "agreement_gate": AGREEMENT_GATE},
         "per_product": per_product,
+    }
+
+
+def run_goldset(gold_path: Path, root: Path, timeout: int = 30) -> Dict[str, object]:
+    """§14 gold-set calibration (acceptance V7): for each hand-designated
+    triple, compile the record, derive the aligner boolean, and compare with
+    the designated expectation. Each triple evaluates in a FRESH temp root
+    with its declared fixture files materialized (isolation: no cross-triple
+    interference). Evaluative/uncompilable/not_applicable triples carry
+    expect_consistent=null (own buckets, not in the agreement rate). No
+    level token is emitted (the gold "level" field is consumed here and
+    never echoed)."""
+    import shutil
+
+    rows = [json.loads(l) for l in gold_path.read_text(encoding="utf-8").splitlines()
+            if l.strip()]
+    meta = rows[0] if rows and "_meta" in rows[0] else {"_meta": {}}
+    triples = [r for r in rows if "_meta" not in r]
+    consistent = {}
+    uncompilable = []
+    not_applicable = []
+    mismatches = []
+    workdir = Path(tempfile.mkdtemp(prefix="goldset-"))
+    try:
+        for t in triples:
+            cid = t["record"]["claim_id"]
+            if t.get("expect_uncompilable"):
+                uncompilable.append(cid)
+                continue
+            if t.get("expect_not_applicable") or t.get("expect_consistent") is None:
+                not_applicable.append(cid)
+                continue
+            triple_root = workdir / cid
+            triple_root.mkdir(parents=True, exist_ok=True)
+            for name, content in (t.get("fixture", {}).get("files") or {}).items():
+                p = triple_root / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                with open(p, "w", encoding="utf-8", newline="") as fh:
+                    fh.write(content)
+            compiled = compile_records([t["record"]], triple_root, timeout)
+            res = compiled["results"][0]
+            ok = bool(res["predicate_ok"])
+            agrees = ok == t["expect_consistent"]
+            consistent[cid] = agrees
+            if not agrees:
+                mismatches.append({"claim_id": cid, "predicate_ok": ok,
+                                   "detail": res.get("detail", "")[:120]})
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+    n = len(consistent)
+    rate = (round(sum(1 for v in consistent.values() if v) / n, 4) if n else None)
+    return {
+        "note": ("gold-set calibration; designated outcomes are hand-authored "
+                 "independently of any judging run; no level token emitted"),
+        "gold_version": meta.get("_meta", {}).get("gold_version"),
+        "triples": len(triples),
+        "comparable": n,
+        "agreement_rate": rate,
+        "threshold": 0.95,
+        "gate": ("met" if rate is not None and rate >= 0.95 else "not met"),
+        "uncompilable_ids": uncompilable,
+        "not_applicable_ids": not_applicable,
+        "mismatch_details": mismatches,
     }
 
 
@@ -310,11 +391,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--root", default=".",
                     help="observation root for verification commands")
     ap.add_argument("--out", metavar="FILE", help="write machine-readable JSON")
+    ap.add_argument("--goldset", metavar="FILE",
+                    help="section-14 gold-set calibration (acceptance V7)")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args(argv)
 
     if args.selftest:
         return _selftest()
+    if args.goldset:
+        result = run_goldset(Path(args.goldset), Path(args.root or "."))
+        payload = json.dumps(result, ensure_ascii=False, indent=2)
+        if args.out:
+            with open(args.out, "w", encoding="utf-8", newline="") as fh:
+                fh.write(payload + "\n")
+        print(payload)
+        return 0
     if not args.main or not args.records:
         ap.print_help()
         return 2

@@ -63,6 +63,7 @@ from typing import Dict, List, Optional, Tuple
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from predicates_v17 import COMMAND_PREDICATES_V17  # noqa: E402
 from schema import (DSL_CLAIM_TYPES, DSL_EVALUATIVE_TYPE, DSL_EXISTENCE_PREDICATES,  # noqa: E402
                     DSL_EXIT_PREDICATES, DSL_FIELDS, DSL_PREDICATES,
                     validate_dsl_record)
@@ -324,6 +325,18 @@ def execute_record(record: Dict[str, object], root: Path,
         ok = str(extracted) == value
         detail = (f"json_path_equals: path={dotted!r} extracted={extracted!r} "
                   f"expected={value!r}; match={ok}")
+        return {**base, "observed": _cap(text), "predicate_ok": ok,
+                "detail": detail, "flags": flags}
+
+    if predicate in COMMAND_PREDICATES_V17:
+        # v1.7 (§14): mechanical grading via the frozen predicate module;
+        # stdout surfaces are trailing-newline-normalized (same caliber as
+        # equals/matches_regex — a CRLF tail must not sink anchored patterns)
+        from predicates_v17 import grade_command_predicate
+        ok = grade_command_predicate(predicate, expected, exit_code,
+                                     _strip_trailing_newlines(text),
+                                     root, flags)
+        detail = f"{predicate}: mechanical grade={ok} (v1.7)"
         return {**base, "observed": _cap(text), "predicate_ok": ok,
                 "detail": detail, "flags": flags}
 

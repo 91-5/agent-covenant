@@ -60,10 +60,13 @@ class SchemaValidationTests(unittest.TestCase):
         self.assertTrue(any("predicate not in frozen enum" in e for e in errors))
 
     def test_frozen_set_sizes(self):
-        # §12: exactly 8 fields / 5 claim types / 9 predicates
+        # §12: exactly 8 fields / 5 claim types; §14: 9+4 predicates
         self.assertEqual(len(schema.DSL_FIELDS), 8)
         self.assertEqual(len(schema.DSL_CLAIM_TYPES), 5)
-        self.assertEqual(len(schema.DSL_PREDICATES), 9)
+        self.assertEqual(len(schema.DSL_PREDICATES), 13)
+        self.assertEqual(len(schema.DSL_PREDICATES_V17), 4)
+        for pred in schema.DSL_PREDICATES_V17:
+            self.assertIn(pred, schema.DSL_PREDICATES)
 
     def test_evaluative_must_not_carry_predicate(self):
         errors = schema.validate_dsl_record(
