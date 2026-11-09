@@ -562,5 +562,12 @@
     "tools/eval/report_agreement.py",
     "tools/eval/predicted_resolution.json",
     "tools/eval/predicted_anchor_triage.json"
+  ],
+  "XJ-20261109-001": [
+    "docs/d00-mismatch-ledger.json",
+    "docs/d00-mismatch-ledger.md",
+    "docs/d00-mismatch-analysis.md",
+    "docs/d00-recommendation-memo.md",
+    "docs/prereg-s15-compilation-quality.md"
   ]
 }

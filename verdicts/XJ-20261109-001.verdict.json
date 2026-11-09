@@ -1,0 +1,57 @@
+{
+  "id": "XJ-20261109-001",
+  "artifact": [
+    "docs/d00-mismatch-ledger.json",
+    "docs/d00-mismatch-ledger.md",
+    "docs/d00-mismatch-analysis.md",
+    "docs/d00-recommendation-memo.md",
+    "docs/prereg-s15-compilation-quality.md",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261109-001-round8-d00 @ a4fb00c (baseline master 7ff2a84; b657119 open + a4fb00c D1-D4 + V1-V6; READ-ONLY analysis card, zero instrument/code touch). Upstream: round-7 card XJ-20261108-003 CLOSED (fuxiang PASS 0B/0C/4A, ADV-4 drove this card). Implementer MCode (MiniMax Code) 2026-11-09.",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261109-001 dispatch to fuxiang (independent review, non-card-author, non-implementer MCode). V1-V6 machine readings, 159-item ledger schema + per-item spot reads, the 51 cross-universe arithmetic, the records-graded mislabel, and red-zone attribution all independently recomputed against the real docs + custody data, not the author precheck.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-09T13:45:00Z",
+  "ts_note": "ts = UTC at moment of writing (21:45 +08:00 == 13:45 UTC on 2026-11-09), not ahead of current system UTC. All independent verification completed before this ts: V1-V6 re-counts, mechanism census, 51-row destination split, 312-261 cross-universe check, records-graded vs consistent_flags identity, and red-zone 8-file attribution via merge-base ancestry.",
+  "evidence": [
+    "RED-ZONE / read-only HOLDS: git diff 7ff2a84..a4fb00c = 7 files (.tasks card + artifacts.json + 5 docs), ZERO .py under tools/; red-zone diff on this-card baseline 7ff2a84 is EMPTY and the working tree is clean. The card's literal V6 command uses d75d3a6 (the round-7 baseline), so d75d3a6..HEAD shows 8 red-zone files - I independently traced all 8 to round-7 commits 4fcd097/fd5e8d7 (both merge-base ancestors of 7ff2a84, verified via merge-base --is-ancestor), so the card introduced 0 red-zone changes.",
+    "V1/V1b: docs/d00-mismatch-ledger.json items = 159, arms A=132 / B=27 (= 309-177 + 48-21), independently recounted.",
+    "V2/V2b: mismatch_class = structural_misalignment 75 / instrument_fixable 84 / unclassified 0, sum 159; mechanism census I1 12 + I2 48 + I3 24 = 84 (instrument), S1 30 + S2 42 + S3 3 = 75 (structural), exactly matching the card.",
+    "V3/V3b: the round-6 51-item destination table has 51 P-code rows; destination split = 27 structural / 24 instrument, sum 51, zero unresolved.",
+    "V4/V4b: recommendation memo R1-R5 each cite >=1 ledger claim_id; all 159 refs resolve in the ledger; no recommendation is evidence-free.",
+    "V5: prereg-s15-compilation-quality.md contains all four required elements (metric formula + numerator/denominator definitions + GS-15 goldset usage + pre-freeze-then-verify freeze ordering).",
+    "records-graded mislabel INDEPENDENTLY CONFIRMED: I re-read records-{A,B}-graded.jsonl - the predicate_ok column equals the alignment-split consistent_flags on EVERY comparable pair (A 309/309, B 48/48, 0 contradictions); i.e. it is a consistency flag, not the raw predicate result - so the ledger's switch to frozen-instrument recomputed values is correct.",
+    "51 cross-universe arithmetic VERIFIED: round-6 A comparable_pairs = 312 (re-read from round6-custody split); 312 - (123+78+60=261) = 51 is a cross-universe (comparable minus record-level-union) subtraction, so no real 51-item set exists in custody; the mechanical set is the 51 A-arm mismatches that have a command but no artifact_path.",
+    "No-laundering: ledger anchor_status truly_missing = 0; the 24 round-7 truly_missing records are all outside the 159; R4 states them as count-only / not-fixing.",
+    "Per-item real reads: spot-checked one item per mechanism (I1 P028-c03, I2 P010-c04, I3 P010-c05, S1 P007-c01, S2 P002-c03, S3 P097-c05) - every reason cites that item's own statement + main-grading-basis original text + shadow criterion result, not hash-style proportional attribution; schema 159/159 complete."
+  ],
+  "rulings": [
+    "Key 1 real per-item reads: HOLDS - reasons cite the item's own assertion text + main-track grading basis + shadow criterion result; no boilerplate/proportional attribution; mechanism counts match the card exactly.",
+    "Key 2 four-class boundary: HOLDS - instrument_fixable (surface/path divergence) vs structural_misalignment (proposition-level divergence) is mechanically decidable and mutually exclusive; S2's 42 items (main E4 by mechanical pass w/o semantic anchor vs shadow content-false) are correctly STRUCTURAL, not instrument-fixable (calling them instrument-fixable would launder the no-semantic-anchor mechanical pass).",
+    "Key 3 truly_missing not downgraded: HOLDS - 0 truly_missing in the ledger, 24 round-7 records outside it, R4 count-only.",
+    "Key 4 the 51 correction: HOLDS - 312-261=51 is a cross-universe subtraction (no real set); the mechanical 51 = A-arm 123 with command and no artifact_path (24 instrument / 27 structural, zero unresolved); the upstream '51' was a propagated artifact and the D2 4.2 substitute caliber is correct.",
+    "Key 5 D3 evidence + R2 reverse: HOLDS - R1-R5 all cite ledger ids; R2's 'do NOT relax the shadow criterion to please the main track' is acceptable (same direction as no-laundering).",
+    "Key 6 section-15 pre-freeze + decoupling: HOLDS at draft level - four elements present; CQ/PA/obs-surface decouple from judgement semantics via an independently hand-designed GS-15; final GS-15 adequacy is decided at the section-15 prereg card (this is a draft, not frozen text).",
+    "Key 7 V6 baseline: HOLDS - the literal d75d3a6 baseline is wrong for this card; 7ff2a84 is correct and gives empty red-zone diff; the 8 files are round-7's, not this card's. Registration only, non-blocking.",
+    "Key 8 records-graded contract defect: HOLDS - predicate_ok is misnamed (it is the consistent flag); renaming/revaluing is an instrument data-contract change that must go through a separate preregistered card and re-audit round-6/7 consumers; the card correctly stayed read-only and left it to R5."
+  ],
+  "advisory_findings": [
+    "ADV-1: I could not independently replay the frozen shadow_align.py to reproduce alignment-split.json this round (my records keying returned 0 comparable - it depends on the generator's context); the authority numbers are backed indirectly by the report_agreement.py re-run and the confirmed records-graded mislabel, but the per-item reproduction should be made a tracked, re-runnable script before the next card so it is re-auditable.",
+    "ADV-2: the card's literal V6 command baseline is d75d3a6 (round-7 baseline); it should read 7ff2a84 (this card's baseline). Correcting the card's V6 baseline (with a trace note) at close-out; not blocking (attribution already proven).",
+    "ADV-3: section-15 freeze-ordering 8-step structure is sufficient, but the GS-15 goldset size/provenance and its power to decide CQ/PA must be pinned when the section-15 prereg card freezes; this draft is a design-layer document, not frozen text.",
+    "ADV-4: the D2 4.2 table's '换观测面后是否成立' column uses two values (workspace / 否) whose mapping (workspace->instrument-fixable, 否->structural) is logically consistent but lacks a header legend; add a one-line legend to prevent misreading."
+  ],
+  "not_verified_disclosed": [
+    "The exact 'frozen shadow_align.py per-item reproduction of alignment-split.json' was NOT independently re-played this round (input keying dependency); the authority figures were instead cross-checked against report_agreement.py (re-run, matched) and the independently-confirmed records-graded mislabel. See ADV-1.",
+    "GS-15 goldset adequacy for CQ/PA is a design-level question deferred to the section-15 preregistration card (ADV-3); this card delivers the draft only."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). Read-only analysis card: red zone zero-touch on the correct baseline; 159-item ledger real-read and mechanically consistent; the 51 cross-universe correction verified; no-laundering held; D3 fully evidenced; section-15 four-element draft present. gate pre-push transients clear with this verdict; no instrument change is triggered (any change goes through a separate preregistered card).",
+  "subcard_note": "Round-8 D-00 per-record mismatch-composition card (read-only, no instrument touch; implementer MCode). Delivers the 159-item mismatch ledger + classification + a 5-item recommendation memo (R1-R5) + a section-15 compilation-quality metric draft (ADV-1 closure from the round-7 review). Conclusion: no mismatch is 'predicate cannot express the claim' - the gap is observation-surface + proposition-level misalignment, which is why the section-14 hit_rate=0; extending the enum is deliberately NOT recommended.",
+  "_provenance": "Independent review of feature/xj-20261109-001-round8-d00 @ a4fb00c by AgnesCode (fuxiang), non-card-author, non-implementer. V1-V6 + mechanism census + 51 cross-universe arithmetic + records-graded mislabel + red-zone attribution all recomputed on the real docs and custody data. No blockers, no conditions; 4 advisory (reproduction-script tracking, V6 baseline fix, GS-15 freeze-time adequacy, table legend).",
+  "ts_resign_notes": "",
+  "notes": "PASS. Read-only, red-zone zero-touch (8-file d75d3a6 listing = round-7's, 0 this-card). 159 = A132/B27; 84 instrument (I1 12/I2 48/I3 24) / 75 structural (S1 30/S2 42/S3 3); unclassified 0. 51 = cross-universe 312-261 (no real set). records-graded predicate_ok = consistency flag (A 309/309, B 48/48). No laundering (truly_missing 0 in ledger, 24 outside). 4 advisory."
+}
