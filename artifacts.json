@@ -549,13 +549,18 @@
     "README.zh-CN.md"
   ],
   "XJ-20261108-003": [
-    ".tasks/XJ-20261108-003.md",
     "docs/eval-prereg.md",
     "docs/eval-report-v7.md",
     "docs/b-arm-notapplicable-rules.md",
+    "goldset/gold_claims.jsonl",
+    "tests/test_dsl_compiler.py",
     "tools/eval/predicates_v17.py",
     "tools/eval/anchor_triage.py",
     "tools/eval/shadow_align.py",
-    "artifacts.json"
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/schema.py",
+    "tools/eval/report_agreement.py",
+    "tools/eval/predicted_resolution.json",
+    "tools/eval/predicted_anchor_triage.json"
   ]
 }
