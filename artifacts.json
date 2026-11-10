@@ -575,6 +575,9 @@
     "tools/eval/dsl_compiler.py",
     "tools/eval/shadow_align.py",
     "tools/eval/replay_r1.py",
+    "tests/test_r1_observation_surface.py",
+    "README.md",
+    "README.zh-CN.md",
     "docs/eval-report-v9.md",
     "artifacts.json"
   ]
