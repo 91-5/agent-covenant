@@ -569,5 +569,14 @@
     "docs/d00-mismatch-analysis.md",
     "docs/d00-recommendation-memo.md",
     "docs/prereg-s15-compilation-quality.md"
+  ],
+  "XJ-20261110-001": [
+    "docs/eval-prereg.md",
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/shadow_align.py",
+    "tools/eval/replay_r1.py",
+    "docs/eval-report-v9.md",
+    "artifacts.json",
+    ".tasks/XJ-20261110-001.md"
   ]
 }
