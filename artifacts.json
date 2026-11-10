@@ -576,7 +576,6 @@
     "tools/eval/shadow_align.py",
     "tools/eval/replay_r1.py",
     "docs/eval-report-v9.md",
-    "artifacts.json",
-    ".tasks/XJ-20261110-001.md"
+    "artifacts.json"
   ]
 }
