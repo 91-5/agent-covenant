@@ -1,0 +1,70 @@
+{
+  "id": "XJ-20261110-001",
+  "artifact": [
+    "docs/eval-report-v9.md",
+    "docs/eval-prereg.md",
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/replay_r1.py",
+    "tools/eval/shadow_align.py",
+    "tests/test_r1_observation_surface.py",
+    "tests/test_observation_failfast.py",
+    "run-dir-r9/seal.json",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261110-001-round9-r1 @ 45c570b (baseline master 9cf2d1e; D0-D3 = 123279b/50580de/ea2f456/759a366, D4 report cc26c04, D5 seal f7d6a1c, E1-E7 supplement 45c570b; dual cards XJ-20261110-001 + -002; UNTRACKED, not pushed/merged; red zone + verdicts + .eval-sealed zero-diff across the whole chain, red-zone blob hashes all match section-14 frozen constants).",
+  "verdict": "PASS",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261110-001 dispatch to fuxiang (independent review, non-card-author, non-implementer). V1-V8 gate, dual-version table, flip decomposition, E1 lost-102 attribution, E4/E6 ablation, E7 fail-fast, main-track 3-item drift, red-zone diff + blob-hash, and seal verify all independently recomputed against the real custody JSONs + git, not the author precheck.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-10T16:44:34Z",
+  "ts_note": "ts = UTC at moment of writing (23:50 +08:00 == 15:50 UTC on 2026-11-10), not ahead of current system UTC. All independent verification completed before this ts: custody JSON re-reads (alignment-split pre/post, dual-version, E1/E4/E6/E7), red-zone diff + blob-hash recompute, seal --verify, main-track drift diff, and the 15 rulings. Orchestrator re-stamp 2026-11-10T16:44:34Z: merge/archival commits (2132757 card CLOSED, 9f68efd archive to legacy) refreshed card/artifacts/README mtimes past original ts 2026-11-10T15:50:00Z (STALE_VERDICT); re-stamped with ZERO semantic change (PASS 0B/0C/5A unchanged, Agnes independent review stands, all 15 rulings and 12 evidence entries unchanged).",
+  "evidence": [
+    "RED-ZONE + disclosure-10 HOLDS: git diff 9cf2d1e..HEAD across the 12 protected paths + verdicts/ + .eval-sealed/ is EMPTY; worktree clean; blob-hash: predicates_v17.py HEAD blob 2463363c == section-14 PREREG_SCHEMA_HASH == LF-normalized worktree, report_agreement.py HEAD blob 56fa9ac9 == PREREG_REPORT_HASH, extract.py HEAD blob == 9cf2d1e blob - the two 'NO' flags were LF/CRLF comparison-criterion mismatch, not red-zone edits or stale constants.",
+    "V1/V1b freeze ordering: section-16 freeze commit 123279b = 2026-11-10 12:47:05 precedes all round-9 artifacts; both mtime calibers disclosed - LITERAL_CHAIN=False (run-data.json carries the round-7 mtime 11-09 00:02:44) vs THIS_ROUND_CHAIN=True (freeze 12:47:05 < replay 13:07:58 < re-exec 13:26:33 < align 13:31:12); section-16 text unchanged since freeze.",
+    "V3 replay: out/replay_r1-verify.json = 81/96 predicted-matches, 96/96 semantic fields identical, sole diff field = cwd_after (tempfile.mkdtemp random name), anchor mtime unchanged (ANCHOR_MTIME_UNCHANGED=True); independent re-run wrote to -verify.json without clobbering the frozen anchor.",
+    "V4/V5: both arms cwd == pkg-r9-shadow\\workspace (surface_mode=r1-workspace, cwd_is_workspace_and_not_root=True); dual-version-agreement.json same-table-header 4 rows - A full 180/309=0.5825 -> 129/309=0.4175 / excl-unanchored-E4 168/234=0.7179 -> 72/234=0.3077; B 21/48=0.4375 unchanged both calibers.",
+    "V6 seal: seal_run.py --verify on repo + custody copies = VERIFY: OK (208 files match the seal), sealed_at 2026-11-10T13:23:44Z later than D0, both VERIFY OK.",
+    "V7 regression: 546 tests OK (post-E7) / 533 at D5; sync_test_count in sync at 546; lint PASS (4 warnings). Without COVENANT_BASH_HINT = 514 tests FAILED(2f/3e); with the hint the suite is green - environment dependency honestly disclosed.",
+    "V8: report section-6 96 rows / 12 columns, 81 matched / 15 flagged, no batch-summary substitution; section-3 shadow-metrics zero E0-E4 tokens (independently scanned).",
+    "Flip decomposition: net -51 = 180-129; gained 51 (48 intersect section-16 + 3 out-of-set P046/P085/P090-c02 listed separately, not merged into 48); lost 102 (0 intersect section-16, all 'accidental-consistency'); lost main-levels E3 99 + E2 3, predicates 42/45/9/6.",
+    "E1 lost-102 attribution: clean primary = 102/102 silent_fallback_aligned, other=0, D3 cross-check 102/102; host control = 96 silent + 6 other (P039/P060/P150 x2, PYTHONPATH shim masks stdlib bisect -> ImportError -> silent False).",
+    "E4/E6 ablation: patched-baseline-workspace 129/309, head-root 180/309, baseline-root 180/309, clean-workspace 129/309, host-workspace 135/309, strict-workspace 108/288 - changing only the observation surface moves 180<->129, per-item diff 0 both arms; 9cf2d1e two files git-apply -p3 then LF-normalize == f7d6a1c blobs byte-identical.",
+    "E7 fail-fast: OBSERVATION_ERROR_CLASSES 5 frozen classes; frozen rule consistent=bool(predicate_ok)==(level==E4) literally unchanged (e3-checks CONSISTENCY_RULE_IDENTICAL=True); default fail_fast=True shifts 129/309 -> 108/288 with report-v9/sealed products NOT retro-rewritten (historical repro via --allow-silent-fallback).",
+    "Main-track 3-item drift: pkg-r7-shadow 120/246/258/276 -> pkg-r9-shadow 120/249/258/273, exactly P097/P136/P157-c04 (cmd.exe ForEach-Object error language zh->en, E4->E2); M1 5.8% [1.7,11.2], M2 0.0% = no min-effect difference detected."
+  ],
+  "rulings": [
+    "Q1 single-variable flip: HOLDS - E4 ablation + E6 clean repro pin 'change only the surface, per-item diff 0, blob-equivalent'; no other variable.",
+    "Q2 102 accidental-consistency: HOLDS - E1 lost-102 jsonl per-item pre/post cwd/exit/stdout + D3 cross-check; main E3 99 + E2 3, predicates 42/45/9/6 verified against report section-4 + appendix A.",
+    "Q3 15-item round-6 transcription: HOLDS (not masked) - registered as D-00 open items, D-00 / section-16 / section-17 not rewritten, no laundering.",
+    "Q4 pre-R1 0.5825 inflated by accidental consistency + dual-version same-table: HOLDS - mechanism confirmed, 4-row same-table parallel.",
+    "Q5 B-arm not_applicable 123 + invalid 192 caliber: HOLDS - matches round-7 caliber, denominator shrink reported not laundered, B 21/48 unchanged.",
+    "Q6 shadow section zero E-tokens: HOLDS - independent scan of report section-3 returns empty E0-E4.",
+    "Q7 V1b mtime calibers: RULE - accept the THIS_ROUND_CHAIN probe caliber; LITERAL_CHAIN False is a round-7 run-data mtime artifact, not a re-freeze need (section-16 text unchanged since freeze).",
+    "Q8 V7 env dependency: RULE - accept the COVENANT_BASH_HINT-equivalent rerun; the literal command not-green is a documented Windows-git-bash fact.",
+    "Q9 Owned files D5 boundary: RULE - acceptable (Status lifecycle fields + delivery notes, zero design-clause change); flag for explicit Owned-files listing at close-out.",
+    "Q10 section-14 hash NOs: HOLDS - independently recomputed as LF/CRLF criterion mismatch; red zone untouched (diff 0 + status 0 + blob-hash match).",
+    "R11 E1 dual caliber: RULE - clean is the primary 'original execution record' caliber (D3 sealed with no host injection, per-item cross-validated), host 6 items are an env-drift control; not self-adjudicated as mechanism-falsifying, reserved.",
+    "R12 E6 env dependency: RULE - post-R1 129/309 must carry an env-fixing clause (PYTHONPATH/sitecustomize isolation) before citation; clean repro confirms mechanism, host +6 honestly disclosed.",
+    "R13 E7 default behavior change: RULE - accept 'historical reading frozen + new evidence strict'; but the align() default-contract change needs a section-15/17 pre-registration entry (historical repro via --allow-silent-fallback, strict + 21-item ERROR exclusion traceable).",
+    "R14 E4/E6 ablation closes Q1/2/4: HOLDS - two-arm per-item diff 0 + blob-equivalent + clean repro close the accidental-consistency mechanism.",
+    "R15 E5 out-of-set 3 vs E7 strict 21: RULE - same two faces of the workspace-visibility flip mechanism; report v9 correctly lists the 3 separately; the E5/E7 caliber needs a section-15/17 trace note (this card did not write section-17, compliant)."
+  ],
+  "advisory_findings": [
+    "ADV-1 (E1/E6 env fixing): the post-R1 129/309 reading and the lost-102 clean primary caliber depend on Python startup module resolution (a PYTHONPATH shim pre-loads stdlib bisect, masking the workspace file; clean 102/102 silent_fallback vs host 96/102). Add an env-fixing clause (PYTHONPATH/sitecustomize isolation) to section-15/16 before citing these readings next round; otherwise the 129/309 has a reproducibility drift surface.",
+    "ADV-2 (E7 default contract): align() now defaults fail_fast_observation=True, shifting 129/309 -> 108/288; historical reads must use --allow-silent-fallback. Pre-register this default-contract change in section-15/17 and keep the 21 strict-ERROR exclusions (FILE_NOT_FOUND 3 / CWD_MISMATCH 18 / SILENT_FALLBACK 21) traceable; report-v9 and sealed products must not be retro-rewritten (C12 held).",
+    "ADV-3 (Owned files boundary): D5 treated the .tasks dual-card Status lifecycle fields + delivery notes as an exception (zero design-clause change) - acceptable; at close-out explicitly add .tasks/XJ-20261110-001.md and -002.md to the card's Owned files to remove the 'boundary-by-interpretation' caliber.",
+    "ADV-4 (E5 vs E7): the 3 out-of-set new false-positives (P046/P085/P090-c02, in-repo tool invisible in workspace -> another silent failure) and the 21 E7-strict ERROR exclusions are two faces of the same workspace-visibility flip; they need a section-15/17 trace note; report v9 does not retro-merge the 3 into +48 (correct) and no section-17 was written by this card (compliant).",
+    "ADV-5 (untracked OC verdict): the worktree carries untracked verdicts/OC-20261110-001.verdict.json (orchestrator-prefix card, NOT this XJ card); this XJ card's tracked verdicts/ diff is empty. Confirm that OC-verdict belongs to the OC card's gate flow and is not mixed into this card's gate/freshness caliber."
+  ],
+  "not_verified_disclosed": [
+    "The per-item frozen shadow_align.py replay of alignment-split.json was cross-checked via the ablation per-item-diff-0 + blob-equivalence + E6 clean repro rather than a single live align() call this round; the strict-21 ERROR exclusions are the E7 caliber, distinct from the sealed 129/309.",
+    "The 3-item main-track drift (cmd.exe error language zh->en) and the preregen-anomaly 84/900 variant are registered as uncontrollable env drift / a recorded-but-not-an-endpoint variant; round-9 keeps executor products verbatim."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 5 advisory). All V1-V8 gate items, the dual-version 4-row table, the +48/-102 flip decomposition, E1 lost-102 clean attribution, E4/E6 ablation (per-item diff 0, blob-equivalent), E7 fail-fast, and the 3-item main-track drift independently reproduced; red zone + verdicts + .eval-sealed zero-diff, section-14 blob hashes match, no-laundering + C12 held, section-16 frozen text unchanged. gate pre-push transients clear with this verdict; no push/merge/self-review by the implementer.",
+  "subcard_note": "Round-9 R1 shadow observation-surface alignment (dual cards XJ-20261110-001/002 + E1-E7 council supplement). Pre-R1 shadow agreement was inflated by accidental consistency (repo-root silent failures aligning with non-E4 main levels); R1 workspace alignment unmasks the true proposition-level misalignment (A 0.5825 -> 0.4175, B unchanged), the 102 lost items are 'accidental consistency' (0 intersect section-16), and the 3 out-of-set gained items are new false-positives - all listed, not laundered. E7 fail-fast isolates observation failures; historical readings stay frozen.",
+  "_provenance": "Independent review of feature/xj-20261110-001-round9-r1 @ 45c570b by AgnesCode (fuxiang), non-card-author, non-implementer. V1-V8 + dual-version table + flip decomposition + E1/E4/E6/E7 + main-track drift recomputed on the real round9-custody JSONs and git (red-zone diff, blob-hash, seal verify). 10 adversarial + 5 supplement rulings; no blockers, no conditions; 5 advisory (env-fixing clause, E7 default contract, Owned-files boundary, E5/E7 trace note, untracked OC-verdict gate scope).",
+  "ts_resign_notes": "",
+  "notes": "PASS. Red zone + verdicts + .eval-sealed zero-diff, section-14 blob hashes match, seal VERIFY OK (208 files). A 180/309=0.5825 -> 129/309=0.4175, B 21/48 unchanged; flip +48/-102 (gained 51 incl. 3 out-of-set, lost 102 all accidental-consistency); E1 lost-102 clean 102/102 silent_fallback; E4/E6 ablation per-item diff 0 + blob-equivalent; E7 fail-fast default-contract change (129/309 frozen vs 108/288 strict); main-track 3-item drift (cmd.exe error language). 5 advisory. No laundering, C12 held, section-16 frozen text unchanged."
+}
