@@ -595,3 +595,284 @@ council 估计区间 70–85% 内。**hit_rate 定义（acceptance V4）** = 实
 **未变更项（v1.0.0–v1.6 继续有效）：** E0–E4 判定顺序与语义（§1）、主轨判级 = v1.5（§11）零改动、
 影子轨零判级输出与隔离保证（§12 D4/§13 ④）、封闭集合纪律（修订经本节追记）、C12——本节只新增
 轮七影子轨 predicate 集与分诊/度量口径，主轨与历史轮次零影响。
+
+
+## §16 变更记录（v1.7 → v1.8：影子轨观测面对齐 R1，2026-11-10，冻结于轮九任何数据产生之前）
+
+**冻结时机声明：** 本节在**轮九任何数据产生之前**冻结（2026-11-10，卡
+XJ-20261110-001，D0 交付 commit = `git log -- docs/eval-prereg.md` 中首个含本 §16 的
+commit）。窗口约束沿用 §9/§10/§11/§12/§13/§14 口径：**轮九任何 run 目录与影子产物的
+`seal.json` 时间戳必须晚于该 commit 时间**，否则本轮视为「预注册后变更」处理（§0.1）。
+按 §0.1 本节不重算、不追溯、不影响任何已产生数据的轮次（C12 延续）。
+**§1–§14 零触碰（纯追加）。** 关于节号：§15（编译质量度量）仍是独立草案
+`docs/prereg-s15-compilation-quality.md`（轮八 D-04 产出，尚未落本文件），按卡面指定本
+节号为 §16，草案不占本文件节号。
+
+**预注册纪律（口径 → off-line 回放 → 真数据，顺序颠倒即过拟合，明文禁止）：**
+
+```
+§16 口径 + 96 条预期消解映射表冻结（commit）
+        ↓  （冻结 commit ts 必早于回放产物 ts）
+off-line 回放（tools/eval/replay_r1.py，tracked）——只估覆盖率
+        ↓  （回放 ts 必早于真数据产物 ts）
+轮九真数据影子附卷 pass
+```
+
+回放结果**不得回写本节**（D16-5 条款 3）。本节文本在其冻结 commit 之后**零改动**；
+回放实测与本节预测的偏差只可作为 §17（追记）的输入。
+
+**触发事实：** 轮八 D-00（卡 XJ-20261109-001，Agnes PASS）逐条分析坐实——159 条失配中
+84 条属「仪器可修」，根因是**两台仪器读的不是同一个面**：主轨 `judge.reproduce()` 以
+C10 重建工作区为 cwd 复现命令、`artifact_path` 按 workspace 优先 / root 兜底解析
+（`tools/eval/judge.py:274-289`、`:306`）；影子对齐器把命令交给 `dsl_compiler`，以**仓库根**
+为 cwd 执行、产物只按仓库根解析。Memo R1 据此建议「先冻结新口径 → off-line 回放 →
+真数据」，并钉入三条纪律：R1 与 R2 不合并、I1 另开卡、回放不得回写设计。
+
+**本节只改影子轨的观测面，不改任何判级语义**（归因纯净条款见 D16-6）。
+
+---
+
+### D16-1 影子判据命令的观测面：cwd = workspace（对齐主轨 C10）
+
+**主轨冻结语义（v1.5 C10，§11）：** 命令形式证据一律以 **cwd=workspace** 复现
+（`judge.py:306`：`cwd = workspace if workspace is not None else root`）；ref 形式按
+workspace → root 解析（`judge.py:274-289`）。无 workspace 参数时退回 root。
+
+**影子侧修订前语义：** `tools/eval/dsl_compiler.py::run_verification_command` 把命令交给
+`judge.run_command`，cwd = 调用方传入的 `root`（观察根 = 仓库根）→ 影子判据在仓库根上执行，
+而主轨在执行者工作区上执行，两台仪器读的不是同一个面。
+
+**本节冻结口径：**
+
+1. 影子判据命令的执行 cwd = **workspace**（C10 重建工作区）；未提供 workspace 时退回 root
+   （与主轨 `workspace=None` 语义逐字一致）。
+2. **零回落**：workspace 存在时**不得**再回落到 root 执行命令。主轨 C10 同样不回退；一旦
+   回落，影子就会再次读到与主轨不同的面，R1 的消解能力随之归零。
+3. 冻结项：**shadow 侧命令执行 cwd 必须显式留痕**于 compile-report（字段 `cwd`），供验收
+   V4 机械核验（「每条判据命令执行记录 `cwd` 字段 == workspace 路径（非仓库根）」）。
+4. shell 双轨不变：仍走 `judge.run_command` + C11 风味分流（PowerShell 风味经
+   `powershell -NoProfile -NonInteractive -EncodedCommand`），§13 ⑪ 口径延续。
+
+### D16-2 产物面（`artifact_path`）解析：workspace 优先 / root 兜底（对齐主轨 `judge.py:274-289`）
+
+**主轨冻结语义：** ref 形式按 **workspace → root** 顺序解析，**首次命中为准**，两处皆无 →
+`ref_missing_both` 旗标。
+
+**影子侧修订前语义：** `dsl_compiler.py::execute_record` 只按 root 解析（`path = root / rel`），
+产物只按仓库根解析 → 同一产物在两台仪器上位置不同。
+
+**本节冻结口径：**
+
+1. 影子判据 `artifact_path` 的解析顺序 = **workspace 优先、root 兜底**，首次命中为准。
+2. 两处皆无 → 观察失败（`artifact_exists = False`），按各谓词语义机械落 `不通过`，旗标留痕；
+   **不得**因「根下找不到」而直接判「产物不存在」并短路命令面观察。
+3. `command_artifact_created` 谓词的产物落点判定同样适用本条（其产物存在性按 workspace →
+   root 兜底解析），实现位于 `tools/eval/predicates_v17.py`。
+4. 越界路径拒绝规则（`..`）沿用现状不变；本条不扩大任何读写面。
+
+### D16-3 I1（ref 路径解析分歧）维持现状——范围裁剪声明
+
+D-00 Memo R1 的 I1 分项（ref 取值语义分歧，12 条）：主轨 `extract.py` 的兜底正则
+`ref\s*=\s*(\S+)` 把「（独立复核）」后缀一并吞进路径 → 查不到 → 判「ref 不存在」；影子
+编译器按其 compile-report 明文「ref 型记录把（独立复核）后缀剥离」处理 → 读到真文件。
+**同一行证据被两台仪器解析成两个不同路径。**
+
+**本节冻结口径：**
+
+1. I1 的根治会改变**主轨判级输入**（触及主轨 `extract.py`），属红区且触及判级语义
+   （C12）→ **不在本卡**，另开卡经预注册处理。
+2. 本卡**零触碰** `tools/eval/extract.py`（卡面红区显式列入）。
+3. I1 的 12 条**维持现状**：既不消解、也不转一致、不计入本卡任何收益数字。
+4. **本节映射表不含任何 I1 条目**（对抗问题 2 的机械口径：96 条 = I2 48 + I3 24 +
+   轮六-I2 24，与 I1 的 12 条零交集）。
+
+### D16-4 预期消解映射表（96 条逐条 → I2/I3 归属）
+
+**表的口径与推导规则（机械、可复核、无比例分摊）：**
+
+- **列定义**：`claim_id` / 臂 / 归属（I2 命令观测面 · I3 产物面 · 轮六-I2 命令观测面）/ 谓词 /
+  **观测面敏感性**（冻结命令或产物路径的 cwd 依赖性，由命令原文机械判定）/ 修正前影子判级
+  （仓库根观测面下影子判据的机械结果：通过 / 不通过）/ **修正后影子判级（预期）**（workspace
+  观测面下的**预注册预测**，非实测）/ 主轨判级 / **预期是否消解** / 主轨判级依据（原文摘要）。
+- **一致性判据（沿用 §12 D4，不新造）**：`consistent = bool(predicate_ok) == (level == 'E4')`
+  ——主轨支持 ↔ 影子通过；主轨不可复现 / 不支持 ↔ 影子不通过。
+- **预期列的推导**：分两种情形——(a) **cwd 敏感**（相对路径命令 / 相对路径产物）：换观测面
+  后观察改变，预期影子结果 = 主轨判级所要求的方向（主轨 E4 → 通过；主轨 E2/E3 → 不通过）；
+  (b) **cwd 无关**（绝对路径命令 / 仓库内可见的 git 命令）：换观测面后观察**不变**，预期影子
+  结果 = 仓库根下的原结果（即「修正后 = 修正前」）。两者之差即「预期消解 / 不消解」。
+  cwd 敏感性由冻结命令 / 产物路径原文机械判定（相对路径 vs 绝对路径 vs git），不引入任何
+  轮九数据。
+  **一致性约束**：影子所用的 workspace 必须**就是主轨判定所用的同一个 workspace**
+  （R1 的定义即「读同一个面」），故 git 命令在两面上的可见性一致（workspace 在仓内），
+  不存在「影子换到仓外」的自由度。
+- **来源**：轮七 I2 48 条 + I3 24 条取自 `docs/d00-mismatch-ledger.json`（卡 XJ-20261109-001
+  交付，D-00 逐条台账）；轮六-I2 24 条取自 `docs/d00-mismatch-analysis.md` §4.2「仪器可修」
+  逐条表（去向计数：结构性错位 27 / 仪器可修 24 / 真实差异 0 / 未归类 0）。两份来源均已入
+  仓可溯，**不引入仓外数据**。
+- **计数**：96 条 = I2 48 + I3 24 + 轮六-I2 24；全部为 **A 臂**；主轨判级分布 E4 72 / E2 15 /
+  E3 9；修正前影子判级 通过 24 / 不通过 72；**预期消解 72 条（75.0%）、预期不消解 24 条**。
+
+**口径注记（D-00 待查项，不改写 D-00 文件、不重判历史轮次）：** D-00 台账 159 条中，I2 族
+48 条的 `reason` 字段为**族级样板文字**（统一写「在主轨观测面复现成功、判 E4」），而其中
+**24 条的同条 `main_level` 字段实为 E2/E3**（绝对路径命令 18 条 + git 命令 6 条）——样板
+文字与逐条字段自相矛盾。本节**以逐条 `main_level` 字段与 `main_grading_basis` 原文为准**
+推导预期列（该依据字段逐条一致），并据此把上述 24 条登记为 **D-00 待查项**：它们的命令
+在换观测面后观察不变（cwd 无关），失配根因更接近命题层级错位（S 类）而非观测面分歧，
+本卡**不修、不洗白、不转一致**，如实登记为「预期不消解」（其「修正后影子判级」= 修正前 =
+通过，与主轨 E2/E3 仍不一致）。
+
+**96 条逐条对照表：**
+
+| claim_id | 臂 | 归属 | 谓词 | 观测面敏感性 | 修正前影子判级（仓库根） | 修正后影子判级（预期） | 主轨判级 | 预期消解 | 主轨判级依据（原文摘要） |
+|---|---|---|---|---|---|---|---|---|---|
+| `P010-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P010-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from revstr import is_palindrome; print([is_palindrome(x) for x in ['racecar','Rac |
+| `P025-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P025-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from revstr import is_palindrome; print([is_palindrome(x) for x in ['racecar','Rac |
+| `P027-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P027-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from revstr import is_palindrome; print([is_palindrome(x) for x in ['racecar','Rac |
+| `P039-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P052-c02` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['templates/verdict.json']）——证据与断言矛盾或无关 |
+| `P052-c05` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P053-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P060-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P063-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P063-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from balanced import is_balanced; print([is_balanced(x) for x in ['()[]{}','({[]}) |
+| `P065-c01` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='（verdicts 目录内容）' 不在实际输出中 |
+| `P065-c03` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['verdicts']）——证据与断言矛盾或无关 |
+| `P065-c04` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P065-c06` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=255, 实际 exit=0 |
+| `P067-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P067-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from balanced import is_balanced; print([is_balanced(x) for x in ['()[]{}','({[]}) |
+| `P069-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python is_leap.py; exit=0; out='is_leap OK' 已命中（无语义锚，仅机械复核通过） |
+| `P080-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P080-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from balanced import is_balanced; print([is_balanced(x) for x in ['()[]{}','({[]}) |
+| `P082-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python is_leap.py; exit=0; out='is_leap OK' 已命中（无语义锚，仅机械复核通过） |
+| `P095-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python is_leap.py; exit=0; out='is_leap OK' 已命中（无语义锚，仅机械复核通过） |
+| `P097-c01` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='bebfb64 chore:<提交描述>' 不在实际输出中 |
+| `P097-c04` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['<type>: <描述>']）——证据与断言矛盾或无关 |
+| `P104-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P110-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from roman import roman_to_int; print([roman_to_int(x) for x in ['I','IV','IX','XL |
+| `P122-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from roman import roman_to_int; print([roman_to_int(x) for x in ['I','IV','IX','XL |
+| `P126-c01` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='（verdicts 目录内容）' 不在实际输出中 |
+| `P126-c03` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['verdicts']）——证据与断言矛盾或无关 |
+| `P126-c04` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P126-c06` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=255, 实际 exit=0 |
+| `P135-c02` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['templates/verdict.json']）——证据与断言矛盾或无关 |
+| `P135-c05` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P136-c01` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='bebfb64 chore:<提交描述>' 不在实际输出中 |
+| `P136-c04` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['<type>: <描述>']）——证据与断言矛盾或无关 |
+| `P138-c07` | A | I2 命令观测面 | `command_stdout_contains` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python -c "from roman import roman_to_int; print([roman_to_int(x) for x in ['I','IV','IX','XL |
+| `P150-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P155-c01` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='（verdicts 目录内容）' 不在实际输出中 |
+| `P155-c03` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['verdicts']）——证据与断言矛盾或无关 |
+| `P155-c04` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P155-c06` | A | I2 命令观测面 | `exit_equals` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=255, 实际 exit=0 |
+| `P157-c01` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E2 | **不消解** | 声称输出未复现: out='bebfb64 chore:<提交描述>' 不在实际输出中 |
+| `P157-c04` | A | I2 命令观测面 | `command_stdout_regex` | git（仓库内可见，cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['<type>: <描述>']）——证据与断言矛盾或无关 |
+| `P162-c02` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E3 | **不消解** | 观察已复现但不支持断言（锚未命中: ['templates/verdict.json']）——证据与断言矛盾或无关 |
+| `P162-c05` | A | I2 命令观测面 | `command_stdout_contains` | 绝对路径（cwd 无关） | 通过 | **通过** | E2 | **不消解** | 退出码不符: 证据声称 exit=1, 实际 exit=0 |
+| `P164-c04` | A | I2 命令观测面 | `command_exit_code` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P010-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P025-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P027-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python revstr.py; exit=0; out='is_palindrome OK' 已命中（无语义锚，仅机械复核通过） |
+| `P035-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: wordcount.py（无语义锚，仅机械复核通过） |
+| `P037-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python fizzbuzz.py; exit=0; out='fizzbuzz OK' 已命中（无语义锚，仅机械复核通过） |
+| `P038-c06` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python sumcsv.py; exit=0; out='sum_col OK' 已命中（无语义锚，仅机械复核通过） |
+| `P038-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: sumcsv.py（无语义锚，仅机械复核通过） |
+| `P039-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P053-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P055-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: wordcount.py（无语义锚，仅机械复核通过） |
+| `P057-c06` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python sumcsv.py; exit=0; out='sum_col OK' 已命中（无语义锚，仅机械复核通过） |
+| `P057-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: sumcsv.py（无语义锚，仅机械复核通过） |
+| `P060-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P063-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P067-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P078-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python fizzbuzz.py; exit=0; out='fizzbuzz OK' 已命中（无语义锚，仅机械复核通过） |
+| `P080-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python balanced.py; exit=0; out='is_balanced OK' 已命中（无语义锚，仅机械复核通过） |
+| `P100-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python fizzbuzz.py; exit=0; out='fizzbuzz OK' 已命中（无语义锚，仅机械复核通过） |
+| `P104-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P148-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: wordcount.py（无语义锚，仅机械复核通过） |
+| `P150-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python bisect.py; exit=0; out='bsearch OK' 已命中（无语义锚，仅机械复核通过） |
+| `P164-c05` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python flatten.py; exit=0; out='flatten OK' 已命中（无语义锚，仅机械复核通过） |
+| `P176-c06` | A | I3 产物面 | `command_artifact_created` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | 命令已复现: python sumcsv.py; exit=0; out='sum_col OK' 已命中（无语义锚，仅机械复核通过） |
+| `P176-c08` | A | I3 产物面 | `contains` | 相对路径（产物面，cwd 敏感） | 不通过 | **通过** | E4 | 消解 | ref 存在且可读: sumcsv.py（无语义锚，仅机械复核通过） |
+| `P009-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P011-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P025-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P050-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P055-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P060-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P060-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P064-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P074-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P080-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P083-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P095-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P095-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P098-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P103-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P103-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P125-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P141-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P141-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P147-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P159-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P159-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P166-c03` | A | 轮六-I2 命令观测面 | `exit_equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+| `P166-c06` | A | 轮六-I2 命令观测面 | `equals` | 相对路径（cwd 敏感） | 不通过 | **通过** | E4 | 消解 | （轮六逐条判定见 docs/d00-mismatch-analysis.md §4.2） |
+
+**本表之外零条目**：I1 的 12 条、S1/S2/S3 结构性错位（轮七 75 条 + 轮六 27 条）、轮七 24 条
+`truly_missing` 均**不在**本表内，且不因本卡发生任何状态变化。
+
+### D16-5 冻结序条款（freeze → offline replay → data）与哈希锚点
+
+1. **顺序**：§16 冻结 commit（口径 + 96 条映射表）必须**早于**一切 `run-dir-r9/` /
+   `shadow-r9/` 产物时间戳，且**早于** off-line 回放产物（`out/replay_r1.json`）时间戳；
+   回放产物必须**早于**轮九真数据产物时间戳。三段时序机械可验（验收 V1 / V3）。
+2. **哈希锚点登记位**：`docs/eval-prereg.md` 全文 SHA-256、本 §16 小节文本 SHA-256、以及仪器
+   文件（`tools/eval/dsl_compiler.py` / `tools/eval/shadow_align.py` /
+   `tools/eval/replay_r1.py`）SHA-256 全部登记入卡 `.tasks/XJ-20261110-001.md`（D5 交付）。
+   §16 自身的字面 commit hash 按 §11/§12 先例由**后续机械 commit 追记**于本节（追记为
+   「预注册后变更」标注性质的机械登记，不改本节冻结文本）。
+3. **回放不得回写设计**：off-line 回放只产出**覆盖率报告**；其结果**不得**用于修改本节的
+   口径、映射表或预期列。回放实测与本节预测的偏差，一律如实报告并作为 §17 追记的输入。
+4. **回放与真数据分列**：报告中回放覆盖率与真数据一致率**分别列示**，回放数字**不得**充当
+   真数据证据（§14 V4 预测失效的教训：合成 / 回放读数 ≠ 资格证据，ADV-4）。
+5. **脚本 tracked**：`tools/eval/replay_r1.py` 必须**入仓 tracked**（关闭轮八 ADV-1：此前
+   冻结 `shadow_align` 逐条复现未独立重放成功，系脚本未 tracked）。换机可独立重放。
+6. **产出落点**：`run-dir-r9/`、`shadow-r9/` 为执行产物，走 custody **不入 repo**（卡面约束）。
+
+### D16-6 R1 / R2 分离的边界声明与归因纯净条款
+
+1. **R1 只解决「读同一个面」，不解决「测同一个命题」。** 命题层级对齐是 R2（另一轮）。
+   本卡上线后的一致率变化**不得**表述为「影子轨可替代主轨」，**不得**表述为「影子轨判级
+   语义已对齐」；两者必须分开计量、分开汇报（Memo R1 风险 2 / 风险 3）。
+2. **归因纯净**：本卡**不改任何 predicate、不改判级顺序、不改 E 级语义、不改指标口径**。
+   一致率的变化应**全部**来自 D16-1（命令 cwd）与 D16-2（产物根解析）两项观测面对齐。
+   报告须以「**同一数据、同一记录、仅换观测面**」的前后对照呈现该归因——两版之间除观测面
+   外**零变量**。
+3. **指标零改动**：M1/M2/M3 定义与 M1 分子口径、最小效应阈值（≥10pp 且 95% CI 不跨零）、
+   采样与留出、配对与 bootstrap、排除与重试、盲化与 custody（§3.6）全部延续。
+4. **不洗白**：`truly_missing`（工件三面皆不存在）只计数、**不得**借观测面对齐转成一致；
+   §16 映射表 96 条内 `truly_missing` = 0（轮七 24 条 truly_missing 全部落在 159 条之外，
+   见 `docs/d00-mismatch-analysis.md` §3.3），本卡对其零处理。
+
+### D16-7 红区与 C12
+
+- **红区零触碰**：`tools/eval/judge.py`、`tools/eval/blind.py`、`tools/eval/report.py`、
+  `tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、
+  `tools/gate.py`、`tools/lint_cards.py`、`verdicts/`、`.eval-sealed/`、
+  **`tools/eval/extract.py`（I1 范围裁剪，禁触）**——`git diff 9cf2d1e..HEAD -- <红区>`
+  必须为空（卡面 V2 口径）。
+- **C12**：不重判历史轮次；主轨判级输入零变更；轮八 D-00 台账与 Memo 原样保留，不被本卡
+  改写（D-00 待查项只登记，不就地修订）。
+
+**未变更项（v1.0.0–v1.7 继续有效）：** E0–E4 判定顺序与各级语义（§1）、主轨判级 = v1.5
+（§11 C10/C11）零改动、指标定义与 M1 分子口径、最小效应阈值（≥10pp 且 95% CI 不跨零）、
+采样与留出（§3）、配对与 bootstrap（§5）、排除与重试（§4）、盲化与 custody（§3.6）、
+局限性清单（附录 D）、任务文件 T01–T30、predicate 封闭集合（§12 D3 + §14 D1-A，13 值
+不变）、影子轨零判级输出与隔离保证（§12 D4 / §13 ④）、B 臂 `not_applicable` 规则
+（`docs/b-arm-notapplicable-rules.md`）、goldset 校准面（§14 D4）——本节只冻结**影子轨
+观测面**（命令 cwd + 产物根解析）、**范围裁剪声明**与**冻结序条款**；不改任何判定语义、
+指标口径与既有约束；主轨与历史轮次零影响。

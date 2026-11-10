@@ -49,11 +49,19 @@ D2).
  CLI
  ---
     python tools/eval/shadow_align.py --main FILE --records FILE [--root DIR]
+        [--workspace DIR] [--compile-report FILE] [--compiler-report FILE]
         [--out FILE] [--selftest]
 
  Both input files are JSON objects keyed by product code: ``{code: [...]}``
  (main = claim dicts as extract_claims().to_dict(); records = structured
  assertion records). Alignment runs per product, aggregated.
+
+ ``--workspace`` is the v1.8 R1 switch (card XJ-20261110-001, §16): the C10
+ rebuilt execution workspace the main track judged against. With it, criterion
+ commands run with cwd=workspace and artifact paths resolve workspace-first /
+ root-fallback, so both instruments read the same surface. Without it the
+ behaviour is byte-identical to the pre-R1 instrument (cwd=root) — which is
+ what the pre-R1 control run uses.
 
  Exit codes: 0 = ok; 1 = selftest failed or operational error; 2 = usage.
 """
@@ -61,6 +69,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -76,10 +85,128 @@ from schema import DSL_EVALUATIVE_TYPE  # noqa: E402
 #: never decides the gate itself (the gate is adjudicated in the pilot report).
 AGREEMENT_GATE = 0.95
 
+# E7 (council pre-merge supplement, cards XJ-20261110-001/002):
+# Pre-registered observation ERROR classes.  Before this patch a criterion
+# that failed because its artifact was invisible on the observation surface
+# (wrong cwd, missing file, timeout, parse failure) was silently downgraded to
+# ``predicate_ok=False`` -- i.e. "criterion not supported" -- and could enter
+# the agreement denominator as a spurious agreement.  That is the root cause
+# of the round-9 "coincidental agreement" (lost 102) and of the new false
+# positives (gained 3).  These five classes are frozen here; the aligner now
+# classifies such records explicitly and excludes them from comparable pairs
+# unless the caller explicitly asks for the legacy behaviour.
+OBSERVATION_ERROR_CLASSES = (
+    "FILE_NOT_FOUND",
+    "CWD_MISMATCH",
+    "PARSE_FAIL",
+    "TIMEOUT",
+    "SILENT_FALLBACK",
+)
+
+
+def _criterion_targets(rec: dict) -> List[str]:
+    """Cwd-sensitive files the criterion COMMAND depends on.
+
+    Deliberately excludes ``artifact_path`` and ``command_artifact_created``
+    expected values: those have a legal workspace-first / root-fallback
+    resolution (§16 D16-2) and must not be reported as an observation error
+    merely because they are absent from the command cwd."""
+    cmd = str(rec.get("verification_command") or "")
+    targets: List[str] = []
+    targets += re.findall(r"python\s+([A-Za-z0-9_./-]+\.py)", cmd)
+    targets += [m + ".py" for m in re.findall(
+        r"from\s+([A-Za-z_]\w*)\s+import", cmd)]
+    targets += re.findall(
+        r"(?<![\w/\\])([A-Za-z0-9_][\w./-]*\.(?:py|txt|csv|json|md|log|dat))\b",
+        cmd)
+    seen, out = set(), []
+    for t in targets:
+        t = t.lstrip("./")
+        if not t or t in seen or ".." in t.split("/"):
+            continue
+        seen.add(t)
+        out.append(t)
+    return out
+
+
+def classify_observation_errors(records: List[dict], compiled: Dict[str, object],
+                                root: Path,
+                                workspace: Optional[Path] = None
+                                ) -> Dict[str, dict]:
+    """Classify observation failures using pre-registered ERROR classes.
+
+    Scope is deliberately narrow: only records that would otherwise enter the
+    agreement denominator as a *silent* "criterion not supported".  Structural
+    buckets (not_applicable / evaluative / schema-invalid) already have their
+    own accounting and are skipped.  A criterion that PASSED is never an
+    observation error.  ``SILENT_FALLBACK`` marks the exact round-9 failure
+    mode: the executor returned normally (no ``observation_failed`` flag) yet
+    the criterion came back False because a command dependency was invisible.
+    """
+    results = {str(r.get("claim_id")): r
+               for r in compiled.get("results", [])}
+    surface = compiled.get("observation_surface", {}) or {}
+    cwd = Path(str(surface.get("command_cwd") or root))
+    faces: List[Path] = []
+    for f in (cwd, Path(root),
+              Path(workspace) if workspace is not None else None):
+        if f is not None and f not in faces:
+            faces.append(f)
+    out: Dict[str, dict] = {}
+    for rec in records:
+        cid = str(rec.get("claim_id"))
+        if rec.get("execution_status") == "not_applicable":
+            continue
+        if rec.get("claim_type") == DSL_EVALUATIVE_TYPE:
+            continue
+        res = results.get(cid, {}) or {}
+        flags = list(res.get("flags") or [])
+        detail = str(res.get("detail") or "")
+        if "schema_invalid" in flags:
+            continue  # already a syntax gap
+        classes: List[str] = []
+        if ("regex_timeout" in flags
+                or ("observation_failed" in flags
+                    and "timeout" in detail.lower())):
+            classes.append("TIMEOUT")
+        if ("parse_fail" in flags
+                or "could not parse" in detail.lower()
+                or "jsondecodeerror" in detail.lower()):
+            classes.append("PARSE_FAIL")
+        if res.get("predicate_ok") is False:
+            targets = _criterion_targets(rec)
+            visible_here = (any((cwd / t).is_file() for t in targets)
+                            if targets else True)
+            visible_elsewhere = (any((f / t).is_file()
+                                     for f in faces for t in targets)
+                                 if targets else False)
+            if targets and not visible_here:
+                classes.append("CWD_MISMATCH" if visible_elsewhere
+                               else "FILE_NOT_FOUND")
+                if "observation_failed" not in flags:
+                    classes.append("SILENT_FALLBACK")
+        if classes:
+            ordered = [c for c in OBSERVATION_ERROR_CLASSES if c in classes]
+            out[cid] = {"error_classes": ordered,
+                        "error_class": ordered[0],
+                        "command_cwd": str(cwd),
+                        "targets": _criterion_targets(rec),
+                        "detail": detail[:300],
+                        "flags": flags}
+    return out
+
 
 def _align_product(main_claims: List[dict], records: List[dict],
-                   compiled: Dict[str, object]) -> Dict[str, object]:
-    """One product's alignment accounting (no endpoint numbers)."""
+                   compiled: Dict[str, object],
+                   observation_errors: Optional[set] = None
+                   ) -> Dict[str, object]:
+    """One product's alignment accounting (no endpoint numbers).
+
+    E7: ``observation_errors`` is the set of claim ids classified as
+    observation failures.  Those pairs are reported explicitly and excluded
+    from the agreement denominator instead of being silently graded as
+    "criterion not supported".  ``None`` restores the pre-E7 behaviour and is
+    only used by the explicit legacy switch."""
     results = {str(r["claim_id"]): r for r in compiled["results"]}
 
     span_matches: Dict[str, List[dict]] = {}
@@ -119,6 +246,7 @@ def _align_product(main_claims: List[dict], records: List[dict],
     evaluative: List[str] = []
     not_applicable: List[str] = []
     semantic_gaps: List[str] = []
+    observation_error_ids: List[str] = []
     for cid, main in aligned.items():
         result = results.get(cid, {})
         rec = next(r for r in records if str(r.get("claim_id")) == cid)
@@ -128,6 +256,11 @@ def _align_product(main_claims: List[dict], records: List[dict],
             # are design-unexecutable — structural bucket, out of the agreement
             # denominator, never silently dropped
             not_applicable.append(cid)
+            continue
+        if observation_errors and cid in observation_errors:
+            # E7: an observation failure is NOT a "criterion not supported".
+            # It must never enter the agreement denominator.
+            observation_error_ids.append(cid)
             continue
         if rec.get("claim_type") == DSL_EVALUATIVE_TYPE:
             evaluative.append(cid)
@@ -167,6 +300,7 @@ def _align_product(main_claims: List[dict], records: List[dict],
             "semantic": sorted(set(semantic_gaps)),
         },
         "consistent_flags": {cid: bool(v) for cid, v in sorted(comparable.items())},
+        "observation_error_ids": sorted(set(observation_error_ids)),
         "anchor_gap_note": (f"record-side {len(anchor_gaps)}; "
                             f"main-side uncovered {len(uncovered_main)}"),
         "uncompilable_count": len(uncompilable),
@@ -176,11 +310,27 @@ def _align_product(main_claims: List[dict], records: List[dict],
 
 def align(main_by_code: Dict[str, List[dict]],
           records_by_code: Dict[str, List[dict]],
-          root: Path, timeout: int = 30) -> Dict[str, object]:
+          root: Path, timeout: int = 30,
+          workspace: Optional[Path] = None,
+          fail_fast_observation: bool = True) -> Dict[str, object]:
     """Aggregate alignment over all products. The output carries no five-level
     sequence and no endpoint numbers — per-claim outputs are booleans and gap
-    classes only (card D2 / §12 D4)."""
+    classes only (card D2 / §12 D4).
+
+    v1.8 R1 (§16, card XJ-20261110-001): ``workspace`` is the C10 rebuilt
+    execution workspace the main track judged against. With it, criterion
+    commands run with cwd=workspace and artifact paths resolve
+    workspace-first / root-fallback — the shadow track reads the same surface
+    as the main track. Without it the behaviour is unchanged (cwd=root),
+    which is what the pre-R1 control run uses.
+
+    E7: ``fail_fast_observation`` (default True) classifies observation
+    failures into the pre-registered OBSERVATION_ERROR_CLASSES and excludes
+    those pairs from the agreement denominator.  Set it to False ONLY to
+    reproduce historical sealed readings (--allow-silent-fallback); it does
+    not change the frozen consistency rule itself."""
     per_product: Dict[str, Dict[str, object]] = {}
+    all_errors: Dict[str, dict] = {}
     totals = {"record_count": 0, "main_claim_count": 0, "aligned_pairs": 0,
               "comparable_pairs": 0, "consistent_pairs": 0}
     codes = sorted(set(main_by_code) | set(records_by_code))
@@ -193,8 +343,14 @@ def align(main_by_code: Dict[str, List[dict]],
                                  "note": "no structured records for this product"}
             totals["main_claim_count"] += len(main_claims)
             continue
-        compiled = compile_records(records, root, timeout)
-        acc = _align_product(main_claims, records, compiled)
+        compiled = compile_records(records, root, timeout, workspace=workspace)
+        per_claim_errors = (classify_observation_errors(
+            records, compiled, root, workspace)
+            if fail_fast_observation else {})
+        all_errors.update(per_claim_errors)
+        acc = _align_product(main_claims, records, compiled,
+                             observation_errors=(set(per_claim_errors)
+                                                 if fail_fast_observation else None))
         per_product[code] = acc
         totals["record_count"] += acc["record_count"]
         totals["main_claim_count"] += acc["main_claim_count"]
@@ -210,12 +366,80 @@ def align(main_by_code: Dict[str, List[dict]],
     return {
         "note": ("shadow-track alignment only; no level-sequence, no endpoint "
                  "numbers, no rejudge (§12 D4 / C12)"),
+        "observation_surface": {
+            "root": str(root),
+            "workspace": str(workspace) if workspace is not None else None,
+            "command_cwd": (str(workspace) if workspace is not None else str(root)),
+            "artifact_resolution": "workspace-first, root-fallback",
+            "surface_mode": "r1-workspace" if workspace is not None else "pre-r1-root",
+        },
         "totals": {**totals,
                    "alignment_rate": alignment_rate,
                    "agreement_rate": agreement_rate,
                    "agreement_gate": AGREEMENT_GATE},
+        "observation_errors": {
+            "enabled": fail_fast_observation,
+            "pre_registered_classes": list(OBSERVATION_ERROR_CLASSES),
+            "total": len(all_errors),
+            "class_counts": {
+                c: sum(1 for e in all_errors.values()
+                       if c in e["error_classes"])
+                for c in OBSERVATION_ERROR_CLASSES},
+            "by_claim": {k: all_errors[k] for k in sorted(all_errors)},
+            "note": ("观测失败不再静默降级为判据不支持；被分类的 pair 从 comparable 分母剔除并显式报类。"
+                     "历史读数只在 --allow-silent-fallback 下复现，不用于新评审。"),
+        },
         "per_product": per_product,
     }
+
+
+def write_compile_report(path: Path, align_result: Dict[str, object],
+                         records: List[dict],
+                         base_report: Optional[Path] = None) -> Dict[str, object]:
+    """Write the shadow compile-report (card D1: the report must record the
+    observation ``cwd`` explicitly).
+
+    The compiler-side metadata (compiler model, compilation notes) is carried
+    over from ``base_report`` when given — the round-9 pass reuses the
+    round-7 frozen primary-track compiler output, so its compiler identity is
+    the round-7 one and must be disclosed, not re-invented. The observation
+    surface block is always this run's own."""
+    surface = align_result.get("observation_surface", {})
+    totals = align_result.get("totals", {})
+    payload: Dict[str, object] = {
+        "schema_version": "v1.8",
+        "record_count": len(records),
+        "invalid_count": 0,
+        "cwd": surface.get("command_cwd"),
+        "root": surface.get("root"),
+        "workspace": surface.get("workspace"),
+        "observation_surface": surface,
+        "notes": (
+            "R1 观测面对齐（§16 D16-1/D16-2）：判据命令 cwd = workspace（C10 重建工作区，"
+            "对齐主轨 judge.py:306），artifact_path workspace 优先 / root 兜底"
+            "（对齐主轨 judge.py:274-289）。本报告显式记录 cwd 字段供验收 V4 机械核验。"
+        ),
+    }
+    invalid = 0
+    for code, product in align_result.get("per_product", {}).items():
+        if isinstance(product, dict):
+            invalid += len(product.get("gaps", {}).get("syntax", []) or [])
+    payload["invalid_count"] = invalid
+    payload["comparable_pairs"] = totals.get("comparable_pairs")
+    payload["agreement_rate"] = totals.get("agreement_rate")
+    payload["alignment_rate"] = totals.get("alignment_rate")
+    obs = align_result.get("observation_errors", {}) or {}
+    payload["fail_fast_observation"] = obs.get("enabled", True)
+    payload["observation_error_total"] = obs.get("total", 0)
+    payload["error_class_counts"] = obs.get("class_counts", {})
+    if base_report is not None and base_report.is_file():
+        base = json.loads(base_report.read_text(encoding="utf-8"))
+        payload["compiler_model"] = base.get("compiler_model")
+        payload["compiler_notes"] = base.get("notes")
+        payload["compiler_report_source"] = str(base_report)
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return payload
 
 
 def run_goldset(gold_path: Path, root: Path, timeout: int = 30) -> Dict[str, object]:
@@ -390,6 +614,20 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="JSON {code: [structured records]} — shadow track")
     ap.add_argument("--root", default=".",
                     help="observation root for verification commands")
+    ap.add_argument("--workspace", metavar="DIR", default=None,
+                    help="v1.8 R1: C10 rebuilt execution workspace — criterion "
+                         "commands run with cwd=workspace and artifact paths "
+                         "resolve workspace-first / root-fallback (§16)")
+    ap.add_argument("--compile-report", metavar="FILE", default=None,
+                    help="write the shadow compile-report (records cwd)")
+    ap.add_argument("--compiler-report", metavar="FILE", default=None,
+                    help="compiler-side report whose metadata is carried over "
+                         "into --compile-report (compiler identity disclosure)")
+    ap.add_argument("--allow-silent-fallback", action="store_true",
+                    help="DEPRECATED / replay-only: disable E7 fail-fast and "
+                         "reproduce historical sealed readings that counted "
+                         "observation failures as 'criterion not supported'. "
+                         "Never use this for new evidence.")
     ap.add_argument("--out", metavar="FILE", help="write machine-readable JSON")
     ap.add_argument("--goldset", metavar="FILE",
                     help="section-14 gold-set calibration (acceptance V7)")
@@ -411,10 +649,21 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     main_by_code = json.loads(Path(args.main).read_text(encoding="utf-8"))
     records_by_code = json.loads(Path(args.records).read_text(encoding="utf-8"))
-    result = align(main_by_code, records_by_code, Path(args.root))
+    workspace = Path(args.workspace) if args.workspace else None
+    result = align(main_by_code, records_by_code, Path(args.root),
+                   workspace=workspace,
+                   fail_fast_observation=not args.allow_silent_fallback)
     payload = json.dumps(result, ensure_ascii=False, indent=2)
+    if args.compile_report:
+        flat = [rec for recs in records_by_code.values() for rec in recs]
+        report = write_compile_report(
+            Path(args.compile_report), result, flat,
+            Path(args.compiler_report) if args.compiler_report else None)
+        print(f"compile-report -> {args.compile_report} "
+              f"(cwd {report.get('cwd')})")
     if args.out:
-        Path(args.out).write_text(payload, encoding="utf-8")
+        with open(args.out, "w", encoding="utf-8", newline="") as fh:
+            fh.write(payload + "\n")
         t = result["totals"]
         print(f"aligned {t['aligned_pairs']} pairs "
               f"(alignment_rate {t['alignment_rate']}, "

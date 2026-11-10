@@ -569,5 +569,76 @@
     "docs/d00-mismatch-analysis.md",
     "docs/d00-recommendation-memo.md",
     "docs/prereg-s15-compilation-quality.md"
-  ]
+  ],
+  "XJ-20261110-001": [
+    "docs/eval-prereg.md",
+    "tools/eval/dsl_compiler.py",
+    "tools/eval/shadow_align.py",
+    "tools/eval/replay_r1.py",
+    "tests/test_r1_observation_surface.py",
+    "README.md",
+    "README.zh-CN.md",
+    "docs/eval-report-v9.md",
+    "artifacts.json",
+    "tests/test_observation_failfast.py"
+  ],
+  "_custody_supplements_XJ-20261110-002": {
+    "_comment": "2026-11-10 council 合并前补证（E1–E7）仓外证据台账。按卡面纪律这些文件全部落在 round9-custody/，不进 repo、不参与 gate freshness；在此登记供评审按图索骥。下划线前缀键与既有 _pending_conditionals 同例，不作为 judged artifact 列表。",
+    "root": "D:/15812/projects/round9-custody",
+    "E1": [
+      "lost102-attribution.jsonl",
+      "lost102-attribution.md",
+      "lost102-host-env-control.jsonl",
+      "e1-run.log",
+      "e1-env-diagnosis.log",
+      "e1_lost102_attribution.py"
+    ],
+    "E2": [
+      "s16-reconciliation.md",
+      "e25-run.log",
+      "e25_reconcile.py"
+    ],
+    "E3": [
+      "r1-diff-audit.md",
+      "e3-run.log",
+      "e3-checks.json",
+      "e3_diff_audit.py"
+    ],
+    "E4_E6": [
+      "ablation-report.md",
+      "e46_runner.py",
+      "e4-patched-baseline-workspace.json",
+      "e4-head-root.json",
+      "e4-baseline-root.json",
+      "e6-clean-env.log",
+      "e6-clean-workspace.json",
+      "e6-host-workspace.json"
+    ],
+    "E5": [
+      "gained3-audit.md",
+      "gained3-exec.json"
+    ],
+    "E7": [
+      "e7-failfast-report.md",
+      "e7-unit.log",
+      "e7-full.log",
+      "e7-strict-workspace.json",
+      "e7-strict-workspace.log",
+      "lint-after-e7.log"
+    ],
+    "verification": [
+      "gate-after-supplement.log",
+      "supplement_verify.py",
+      "supplement-verify.log",
+      "supplement-verify-console.log",
+      "verify-e4-arm1.json",
+      "verify-e4-arm2.json",
+      "verify-e4-baseline.json",
+      "verify-e6-clean.json",
+      "verify-e6-host.json",
+      "verify-e7-strict.json",
+      "supplement-verify-before/"
+    ],
+    "verification_note": "2026-11-10 统一复核：重放 E1/E2-E5/E3 与 6 组消融、13 项单测、546 项全量套件、sync/lint/gate，逐条机器捕获 returncode（见 supplement-verify.log 的 EXIT_TABLE）。封存产物先备份 sha256，重放后 IDENTICAL 8 / RESTORED 0；verify-*.json 为新路径，不覆盖原判级输出。本组同样仓外、不参与 gate freshness。"
+  }
 }

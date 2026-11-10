@@ -109,22 +109,57 @@ def command_refused(command: str) -> Optional[str]:
 
 
 def run_verification_command(command: str, root: Path,
-                             timeout: int = DEFAULT_TIMEOUT_SECONDS
+                             timeout: int = DEFAULT_TIMEOUT_SECONDS,
+                             workspace: Optional[Path] = None
                              ) -> Tuple[Optional[int], str, str]:
     """Execute one verification command via the frozen judge executor.
 
     §13 ⑪ frozen caliber: judge.run_command + C11 flavor dispatch —
     PowerShell-flavor commands rerun through pwsh -EncodedCommand exactly as
     the main judge does, so the shadow measurement shares the main track's
-    execution semantics."""
+    execution semantics.
+
+    v1.8 R1 (§16 D16-1, card XJ-20261110-001): the command runs with
+    ``cwd = workspace`` when a workspace is given — the main track's C10
+    rebuilt execution workspace (judge.py:306). There is deliberately **no
+    fallback to root**: the main track does not fall back either, and a
+    fallback would put the two instruments back on different surfaces.
+    Without a workspace the behaviour is byte-identical to the pre-R1
+    instrument (cwd = root)."""
     from judge import is_powershell_flavor, run_command as _run
+    cwd = workspace if workspace is not None else root
     if is_powershell_flavor(command):
         import base64
 
         encoded = base64.b64encode(command.encode("utf-16-le")).decode("ascii")
         wrapped = f"powershell -NoProfile -NonInteractive -EncodedCommand {encoded}"
-        return _run(wrapped, root, timeout)
-    return _run(command, root, timeout)
+        return _run(wrapped, cwd, timeout)
+    return _run(command, cwd, timeout)
+
+
+def resolve_artifact_base(rel: str, root: Path,
+                          workspace: Optional[Path] = None
+                          ) -> Tuple[Path, str]:
+    """Resolve an artifact path on the main track's surface (v1.8 R1).
+
+    §16 D16-2 (card XJ-20261110-001) freezes the shadow-side artifact
+    resolution to **workspace first, root as fallback**, first hit wins — the
+    same order the main track uses for ref-form evidence
+    (judge.py:274-289, "workspace → root, first hit").
+
+    Returns ``(base_dir, surface_name)`` where surface_name is "workspace",
+    "root" or "root" (the miss case: the predicate then reports the miss
+    itself, exactly as before). An out-of-bounds path is handed back on the
+    root base so the predicate applies its own bounds rule and flags it.
+    """
+    rel_norm = str(rel).replace("\\", "/")
+    if ".." in rel_norm.split("/"):
+        return Path(root), "root"
+    if workspace is not None:
+        candidate = Path(workspace) / rel_norm
+        if candidate.is_file():
+            return Path(workspace), "workspace"
+    return Path(root), "root"
 
 
 def regex_search_guarded(pattern: str, text: str,
@@ -188,14 +223,25 @@ def _json_path_get(doc: object, dotted: str) -> Tuple[bool, object]:
 
 
 def execute_record(record: Dict[str, object], root: Path,
-                   timeout: int = DEFAULT_TIMEOUT_SECONDS) -> Dict[str, object]:
+                   timeout: int = DEFAULT_TIMEOUT_SECONDS,
+                   workspace: Optional[Path] = None) -> Dict[str, object]:
     """Validate + execute one structured record. Never raises for a bad
-    record — every failure becomes evidence in the result (现行纪律)."""
+    record — every failure becomes evidence in the result (现行纪律).
+
+    v1.8 R1 (§16, card XJ-20261110-001): ``workspace`` is the C10 rebuilt
+    execution workspace. Criterion commands run with cwd=workspace and
+    artifact paths resolve workspace-first / root-fallback, so the shadow
+    track reads the same surface as the main track. Without a workspace the
+    behaviour is unchanged (cwd=root, root-only artifact resolution).
+    """
     claim_id = str(record.get("claim_id", "<no-claim-id>"))
     errors = validate_dsl_record(record)
+    command_cwd = Path(workspace) if workspace is not None else Path(root)
     base = {"claim_id": claim_id, "observed": None,
             "expected": _cap(str(record.get("expected"))) if record.get("expected") is not None else None,
-            "predicate_ok": False, "detail": "", "flags": []}
+            "predicate_ok": False, "detail": "", "flags": [],
+            "cwd": str(command_cwd) if workspace is not None else None,
+            "artifact_surface": None}
     if errors:
         return {**base, "detail": "schema invalid: " + "; ".join(errors),
                 "flags": ["schema_invalid"]}
@@ -227,17 +273,23 @@ def execute_record(record: Dict[str, object], root: Path,
     exit_code = None
     artifact_exists = None
     if command:
-        exit_code, output, error = run_verification_command(command, root, timeout)
+        exit_code, output, error = run_verification_command(command, root, timeout,
+                                                             workspace=workspace)
         if error:
             return {**base, "detail": f"命令无法完成观察: {command} ({error})",
                     "flags": ["observation_failed"]}
         observed_text = output
+    artifact_base = Path(root)
     if artifact:
         rel = artifact.replace("\\", "/")
         if ".." in rel.split("/"):
             return {**base, "detail": f"artifact_path 越界，不予读取: {artifact}",
                     "flags": ["artifact_path_out_of_bounds"]}
-        path = root / rel
+        # §16 D16-2: workspace first, root as fallback, first hit wins.
+        artifact_base, artifact_surface = resolve_artifact_base(artifact, root,
+                                                                 workspace)
+        base = {**base, "artifact_surface": artifact_surface}
+        path = artifact_base / rel
         artifact_exists = path.is_file()
         if artifact_exists:
             observed_text = path.read_text(encoding="utf-8", errors="replace")
@@ -333,9 +385,18 @@ def execute_record(record: Dict[str, object], root: Path,
         # stdout surfaces are trailing-newline-normalized (same caliber as
         # equals/matches_regex — a CRLF tail must not sink anchored patterns)
         from predicates_v17 import grade_command_predicate
+        grade_root = Path(root)
+        if predicate == "command_artifact_created":
+            # §16 D16-2: the artifact's landing site resolves workspace-first /
+            # root-fallback, exactly like every other artifact path. The
+            # predicate module itself is untouched (its §14 hash is frozen) —
+            # only the base directory handed to it changes.
+            grade_root, surface = resolve_artifact_base(str(expected), root,
+                                                        workspace)
+            base = {**base, "artifact_surface": surface}
         ok = grade_command_predicate(predicate, expected, exit_code,
                                      _strip_trailing_newlines(text),
-                                     root, flags)
+                                     grade_root, flags)
         detail = f"{predicate}: mechanical grade={ok} (v1.7)"
         return {**base, "observed": _cap(text), "predicate_ok": ok,
                 "detail": detail, "flags": flags}
@@ -354,16 +415,28 @@ def execute_record(record: Dict[str, object], root: Path,
 
 
 def compile_records(records: List[Dict[str, object]], root: Path,
-                    timeout: int = DEFAULT_TIMEOUT_SECONDS) -> Dict[str, object]:
+                    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+                    workspace: Optional[Path] = None) -> Dict[str, object]:
     """Compile a structured-records JSON block: validate + execute every
     record, keep every failure as evidence. Returns the machine-readable
-    result (no E0-E4 numbers anywhere — the shadow track stays isolated)."""
-    results = [execute_record(rec, root, timeout) for rec in records]
+    result (no E0-E4 numbers anywhere — the shadow track stays isolated).
+
+    v1.8 R1 (§16): ``workspace`` is the C10 rebuilt execution workspace —
+    criterion commands run with cwd=workspace and artifact paths resolve
+    workspace-first / root-fallback."""
+    results = [execute_record(rec, root, timeout, workspace=workspace)
+               for rec in records]
     invalid = sum(1 for r in results if "schema_invalid" in r["flags"])
     return {
         "record_count": len(records),
         "schema_invalid_count": invalid,
         "predicate_ok_count": sum(1 for r in results if r["predicate_ok"]),
+        "observation_surface": {
+            "root": str(root),
+            "workspace": str(workspace) if workspace is not None else None,
+            "command_cwd": (str(workspace) if workspace is not None else str(root)),
+            "artifact_resolution": "workspace-first, root-fallback",
+        },
         "results": results,
     }
 
@@ -488,6 +561,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--records", metavar="FILE",
                     help="JSON file: list of structured assertion records")
     ap.add_argument("--root", default=".", help="observation root (repo/canonical)")
+    ap.add_argument("--workspace", metavar="DIR", default=None,
+                    help="v1.8 R1: C10 rebuilt execution workspace — criterion "
+                         "commands run with cwd=workspace and artifact paths "
+                         "resolve workspace-first / root-fallback (§16 D16-1/D16-2)")
     ap.add_argument("--out", metavar="FILE", help="write machine-readable result JSON")
     ap.add_argument("--selftest", action="store_true",
                     help="embedded 9-predicate positive/negative self-check")
@@ -502,12 +579,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not isinstance(records, list):
         print("[ERROR] --records file must hold a JSON list", file=sys.stderr)
         return 2
-    result = compile_records(records, Path(args.root))
+    workspace = Path(args.workspace) if args.workspace else None
+    result = compile_records(records, Path(args.root), workspace=workspace)
     payload = json.dumps(result, ensure_ascii=False, indent=2)
     if args.out:
-        Path(args.out).write_text(payload, encoding="utf-8")
+        with open(args.out, "w", encoding="utf-8", newline="") as fh:
+            fh.write(payload)
         print(f"compiled {result['record_count']} records -> {args.out} "
-              f"(ok {result['predicate_ok_count']}, schema-invalid {result['schema_invalid_count']})")
+              f"(ok {result['predicate_ok_count']}, schema-invalid {result['schema_invalid_count']}, "
+              f"cwd {result['observation_surface']['command_cwd']})")
     else:
         print(payload)
     return 0
