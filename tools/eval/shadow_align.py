@@ -49,11 +49,19 @@ D2).
  CLI
  ---
     python tools/eval/shadow_align.py --main FILE --records FILE [--root DIR]
+        [--workspace DIR] [--compile-report FILE] [--compiler-report FILE]
         [--out FILE] [--selftest]
 
  Both input files are JSON objects keyed by product code: ``{code: [...]}``
  (main = claim dicts as extract_claims().to_dict(); records = structured
  assertion records). Alignment runs per product, aggregated.
+
+ ``--workspace`` is the v1.8 R1 switch (card XJ-20261110-001, §16): the C10
+ rebuilt execution workspace the main track judged against. With it, criterion
+ commands run with cwd=workspace and artifact paths resolve workspace-first /
+ root-fallback, so both instruments read the same surface. Without it the
+ behaviour is byte-identical to the pre-R1 instrument (cwd=root) — which is
+ what the pre-R1 control run uses.
 
  Exit codes: 0 = ok; 1 = selftest failed or operational error; 2 = usage.
 """
@@ -176,10 +184,18 @@ def _align_product(main_claims: List[dict], records: List[dict],
 
 def align(main_by_code: Dict[str, List[dict]],
           records_by_code: Dict[str, List[dict]],
-          root: Path, timeout: int = 30) -> Dict[str, object]:
+          root: Path, timeout: int = 30,
+          workspace: Optional[Path] = None) -> Dict[str, object]:
     """Aggregate alignment over all products. The output carries no five-level
     sequence and no endpoint numbers — per-claim outputs are booleans and gap
-    classes only (card D2 / §12 D4)."""
+    classes only (card D2 / §12 D4).
+
+    v1.8 R1 (§16, card XJ-20261110-001): ``workspace`` is the C10 rebuilt
+    execution workspace the main track judged against. With it, criterion
+    commands run with cwd=workspace and artifact paths resolve
+    workspace-first / root-fallback — the shadow track reads the same surface
+    as the main track. Without it the behaviour is unchanged (cwd=root),
+    which is what the pre-R1 control run uses."""
     per_product: Dict[str, Dict[str, object]] = {}
     totals = {"record_count": 0, "main_claim_count": 0, "aligned_pairs": 0,
               "comparable_pairs": 0, "consistent_pairs": 0}
@@ -193,7 +209,7 @@ def align(main_by_code: Dict[str, List[dict]],
                                  "note": "no structured records for this product"}
             totals["main_claim_count"] += len(main_claims)
             continue
-        compiled = compile_records(records, root, timeout)
+        compiled = compile_records(records, root, timeout, workspace=workspace)
         acc = _align_product(main_claims, records, compiled)
         per_product[code] = acc
         totals["record_count"] += acc["record_count"]
@@ -210,12 +226,64 @@ def align(main_by_code: Dict[str, List[dict]],
     return {
         "note": ("shadow-track alignment only; no level-sequence, no endpoint "
                  "numbers, no rejudge (§12 D4 / C12)"),
+        "observation_surface": {
+            "root": str(root),
+            "workspace": str(workspace) if workspace is not None else None,
+            "command_cwd": (str(workspace) if workspace is not None else str(root)),
+            "artifact_resolution": "workspace-first, root-fallback",
+            "surface_mode": "r1-workspace" if workspace is not None else "pre-r1-root",
+        },
         "totals": {**totals,
                    "alignment_rate": alignment_rate,
                    "agreement_rate": agreement_rate,
                    "agreement_gate": AGREEMENT_GATE},
         "per_product": per_product,
     }
+
+
+def write_compile_report(path: Path, align_result: Dict[str, object],
+                         records: List[dict],
+                         base_report: Optional[Path] = None) -> Dict[str, object]:
+    """Write the shadow compile-report (card D1: the report must record the
+    observation ``cwd`` explicitly).
+
+    The compiler-side metadata (compiler model, compilation notes) is carried
+    over from ``base_report`` when given — the round-9 pass reuses the
+    round-7 frozen primary-track compiler output, so its compiler identity is
+    the round-7 one and must be disclosed, not re-invented. The observation
+    surface block is always this run's own."""
+    surface = align_result.get("observation_surface", {})
+    totals = align_result.get("totals", {})
+    payload: Dict[str, object] = {
+        "schema_version": "v1.8",
+        "record_count": len(records),
+        "invalid_count": 0,
+        "cwd": surface.get("command_cwd"),
+        "root": surface.get("root"),
+        "workspace": surface.get("workspace"),
+        "observation_surface": surface,
+        "notes": (
+            "R1 观测面对齐（§16 D16-1/D16-2）：判据命令 cwd = workspace（C10 重建工作区，"
+            "对齐主轨 judge.py:306），artifact_path workspace 优先 / root 兜底"
+            "（对齐主轨 judge.py:274-289）。本报告显式记录 cwd 字段供验收 V4 机械核验。"
+        ),
+    }
+    invalid = 0
+    for code, product in align_result.get("per_product", {}).items():
+        if isinstance(product, dict):
+            invalid += len(product.get("gaps", {}).get("syntax", []) or [])
+    payload["invalid_count"] = invalid
+    payload["comparable_pairs"] = totals.get("comparable_pairs")
+    payload["agreement_rate"] = totals.get("agreement_rate")
+    payload["alignment_rate"] = totals.get("alignment_rate")
+    if base_report is not None and base_report.is_file():
+        base = json.loads(base_report.read_text(encoding="utf-8"))
+        payload["compiler_model"] = base.get("compiler_model")
+        payload["compiler_notes"] = base.get("notes")
+        payload["compiler_report_source"] = str(base_report)
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        fh.write(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    return payload
 
 
 def run_goldset(gold_path: Path, root: Path, timeout: int = 30) -> Dict[str, object]:
@@ -390,6 +458,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="JSON {code: [structured records]} — shadow track")
     ap.add_argument("--root", default=".",
                     help="observation root for verification commands")
+    ap.add_argument("--workspace", metavar="DIR", default=None,
+                    help="v1.8 R1: C10 rebuilt execution workspace — criterion "
+                         "commands run with cwd=workspace and artifact paths "
+                         "resolve workspace-first / root-fallback (§16)")
+    ap.add_argument("--compile-report", metavar="FILE", default=None,
+                    help="write the shadow compile-report (records cwd)")
+    ap.add_argument("--compiler-report", metavar="FILE", default=None,
+                    help="compiler-side report whose metadata is carried over "
+                         "into --compile-report (compiler identity disclosure)")
     ap.add_argument("--out", metavar="FILE", help="write machine-readable JSON")
     ap.add_argument("--goldset", metavar="FILE",
                     help="section-14 gold-set calibration (acceptance V7)")
@@ -411,10 +488,20 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     main_by_code = json.loads(Path(args.main).read_text(encoding="utf-8"))
     records_by_code = json.loads(Path(args.records).read_text(encoding="utf-8"))
-    result = align(main_by_code, records_by_code, Path(args.root))
+    workspace = Path(args.workspace) if args.workspace else None
+    result = align(main_by_code, records_by_code, Path(args.root),
+                   workspace=workspace)
     payload = json.dumps(result, ensure_ascii=False, indent=2)
+    if args.compile_report:
+        flat = [rec for recs in records_by_code.values() for rec in recs]
+        report = write_compile_report(
+            Path(args.compile_report), result, flat,
+            Path(args.compiler_report) if args.compiler_report else None)
+        print(f"compile-report -> {args.compile_report} "
+              f"(cwd {report.get('cwd')})")
     if args.out:
-        Path(args.out).write_text(payload, encoding="utf-8")
+        with open(args.out, "w", encoding="utf-8", newline="") as fh:
+            fh.write(payload + "\n")
         t = result["totals"]
         print(f"aligned {t['aligned_pairs']} pairs "
               f"(alignment_rate {t['alignment_rate']}, "
