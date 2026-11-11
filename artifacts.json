@@ -1057,6 +1057,30 @@
           "round11-custody/r11-v12-unittest-with-hint.log"
         ]
       }
+    },
+    "d6_report": {
+      "path": "docs/eval-report-v11.md",
+      "sha256": "230dc61d8406d0b2e76fb52aa79ded36f041478fabe399334136f0a16d7fbe45",
+      "five_layers": [
+        "Gate 0 R_main 重测（盲态，n=400）",
+        "双指标门 + 三元组 + 2x2 + exit_source 三态",
+        "金标准校准（50 条三角锚定）",
+        "四桶 triage（轮十 90 条失配，零新数据）",
+        "分层诊断"
+      ],
+      "conclusions": 28,
+      "pointers": 29,
+      "unique_paths": 19,
+      "pointer_coverage_pct": 100.0,
+      "bad_digest": 0,
+      "malformed": 0,
+      "verifier": "tools/eval/verify_artifact_pointers.py",
+      "v8_m_c_values_in_full_text": ["0.45"],
+      "v9_keys_present": ["pass_rate", "precision", "recall", "2×2", "R_main", "可判定率", "条件一致率"],
+      "void_095_disclosure": true,
+      "once_only_declaration": true,
+      "branch_lookup_only": true,
+      "direction_disclosure": "0.45 looser than voided 0.95; not_evaluable emits no gate conclusion"
     }
   }
 }
