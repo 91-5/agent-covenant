@@ -1,0 +1,55 @@
+{
+  "id": "XJ-20261110-002",
+  "artifact": [
+    "docs/eval-report-v9.md",
+    "artifacts.json",
+    "run-dir-r9/seal.json",
+    "tools/eval/shadow_align.py",
+    "tests/test_observation_failfast.py",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "commit": "feature/xj-20261110-001-round9-r1 @ 45c570b (continuation card of XJ-20261110-001: D4 report + D5 seal-transfer/IN_REVIEW/artifacts + E1-E7 council supplement; baseline master 9cf2d1e; dual cards both now CLOSED via 2132757). This verdict is the 002 machine-readable closure that the pre-push gate hard-requires (lint VERDICT_WITHOUT_REVIEW -> strict exit 1).",
+  "verdict": "PASS",
+  "acknowledged_by": "Dispatch XJ-REVIEW-REQUEST-AGNES-20261110-001 (second deliverable, the 002 continuation card). fuxiang (AgnesCode) independently re-verified the 002-specific scope against the real custody JSONs + git: 002 red-zone surface (10 instrument files + 2 red-zone-constant files + gate + lint_cards + .eval-sealed) = EMPTY after excluding the reviewer-side 001 verdict; V3 81/96 via the custody mirror; seal nested-root VERIFY OK (208 files); instrument hash anchors confirmed as CRLF-disk criterion; artifacts 10-path + off-repo ledger; report-v9 all seven required elements present. Core readings and red-zone already adjudicated in the parent XJ-20261110-001 PASS verdict (0B/0C/5A independent) and cross-referenced here, not re-opened.",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-10T16:53:00Z",
+  "ts_note": "ts = UTC at moment of writing (2026-11-11 00:53 +08:00 == 16:53 UTC on 2026-11-10), not ahead of current system UTC. Independent 002-scope verification completed before this ts: red-zone diff excluding verdicts/, V3 custody-mirror re-read, seal nested-root verify, instrument CRLF-disk hash confirmation, artifacts re-read, and report-v9 element scan.",
+  "evidence": [
+    "002 red-zone HOLDS: git diff 9cf2d1e..HEAD across the 002 V2 path list (judge/extract/blind/report/stats/study_runner/seal_run/run/predicates_v17/report_agreement/gate/lint_cards + .eval-sealed) is EMPTY once the reviewer-side verdicts/XJ-20261110-001.verdict.json is excluded - i.e. the 002 EXECUTOR touched zero instrument code and zero sealed data; the only tracked verdict-file delta in the range is the parent-card 001 verdict written by the review side (normal).",
+    "V3 (via custody mirror; out/ session dir was cleaned): round9-custody/replay_r1.json = mapped_rows_in_prereg 96, predicted_resolved_total 72, measured_resolved_total 57, prediction_matches_total 81, pre_r1_reproduction_verdict=reproduced - matches the card verbatim; the frozen anchor out/replay_r1.json is absent (session artifact), so the custody mirror is the authoritative record (card boundary discipline: report cites readings, not committed file bodies).",
+    "Seal D5: the sealed tree is nested at round9-custody/run-dir-r9/run-dir-r9; seal_run.py --verify at the nested root = VERIFY: OK (208 files match the seal); sealed_at_utc 2026-11-10T13:23:44+00:00 > D0 freeze commit 123279b (12:47:05+08:00). The literal --verify at the outer run-dir-r9 reports DRIFT (209 findings) solely because the --move-to copy left an extra outer flat copy - a custody-directory layout artifact, not a seal-content drift (the 208-file nested seal verifies OK).",
+    "Instrument hash anchors (002 card ledger) confirmed as CRLF-disk vs LF-blob criterion, NOT red-zone edits: dsl_compiler.py LF blob ccbf37cc -> CRLF-disk ac553ad2 (ledger value); shadow_align.py LF blob 2627a38e -> CRLF-disk f8c7b82c (ledger value); replay_r1.py ledger cites the LF blob b9d35155 (consistent across 759a366..HEAD); prereg @123279b = 9f357af9 match. Mixed LF/CRLF criterion across the three instrument lines is a cosmetic ledger inconsistency, not a red-zone change.",
+    "artifacts.json D5 registration: XJ-20261110-001 entry = 10 paths (incl. tests/test_observation_failfast.py + README x2 + report-v9); _custody_supplements_XJ-20261110-002 = off-repo evidence ledger (E1-E7 products in round9-custody, not in repo, not in gate freshness) per card boundary discipline.",
+    "D4 report-v9 (433 lines / 51362 bytes) all seven required elements present: dual-version same-table (0.5825/0.4175/0.4375/0.5714/0.7179/0.3077), +48/-102 flip decomposition with gained-51/lost-102/net-51 and 3 out-of-set items listed separately, main-track M1 5.8%[1.7,11.2]/M2 0.0%, the 15-item round-6 transcription + I2-family reason registered as D-00 open items (not rewritten), limitations (env drift / product-rebuild anomaly / freeze-order execution history), no-laundering (truly_missing=0), and shadow-section zero E-tokens.",
+    "E7 supplement (the only functional code change, authorized): tools/eval/shadow_align.py + tests/test_observation_failfast.py (13 tests); frozen consistency rule consistent=bool(predicate_ok)==(level==E4) literally unchanged; default fail_fast shifts 129/309 -> 108/288 strict without retro-rewriting report-v9 or sealed products (C12 held); regression 546 tests OK (post-E7), sync_test_count in sync at 546.",
+    "Both cards 001/002 now CLOSED via 2132757 (Agnes PASS 0B/0C/5A + ADV-3 owned-files closure); this 002 verdict is the machine-readable record the pre-push gate requires."
+  ],
+  "rulings": [
+    "002 red-zone (V2/V2b): HOLDS - zero instrument-code and zero sealed-data diff by the 002 executor; the only tracked verdict delta is the review-side 001 verdict.",
+    "V3 replay 81/96: HOLDS - custody mirror authoritative; out/ anchor absence is a session-artifact lifecycle, not a card defect (report cites readings).",
+    "D5 seal: HOLDS - nested-root VERIFY OK (208 files), sealed_at later than D0; the outer-flat-copy DRIFT is a custody layout artifact, not seal drift.",
+    "Instrument hash anchors: HOLDS - ac553ad2/f8c7b82c are CRLF-disk criterion of the LF blobs (ccbf37cc/2627a38e), red zone untouched; mixed LF/CRLF across the three ledger lines is cosmetic only.",
+    "artifacts + off-repo ledger: HOLDS - 10-path registration + E1-E7 custody ledger, repo/ gate-freshness boundary held.",
+    "report-v9 completeness: HOLDS - all seven required elements present, no-laundering + C12 + section-16 freeze text unchanged.",
+    "E7 fail-fast: HOLDS - frozen consistency rule literally unchanged; default-contract change disclosed, historical readings frozen, 546 regression green."
+  ],
+  "advisory_findings": [
+    "ADV-1 (seal custody layout): round9-custody/run-dir-r9 holds both an outer flat copy AND a nested run-dir-r9/run-dir-r9 (the --move-to copy artifact). seal_run.py --verify resolves OK only at the nested root; the literal --verify at the outer reports DRIFT (209) by counting the duplicate outer copy. Recommend a custody cleanup or an explicit 'verify at the nested sealed root' note so a downstream re-verify does not misread the outer DRIFT as seal corruption.",
+    "ADV-2 (out/ anchor lifecycle): the frozen replay anchor out/replay_r1.json was cleaned (out/ session dir absent); V3 re-verification currently depends on the custody mirror round9-custody/replay_r1.json. Recommend noting the custody mirror as the canonical V3 anchor for future re-audits, since out/ is not tracked.",
+    "ADV-3 (instrument-hash criterion): the 002 card ledger mixes CRLF-disk hashes (dsl_compiler ac553ad2 / shadow_align f8c7b82c) with an LF-blob hash (replay_r1 b9d35155) for the three D1/D2 instruments under core.autocrlf=true. No red-zone impact (all confirmed as criterion differences, blobs stable across commits), but a single LF-blob (git) criterion for all three would make the ledger re-auditable without CRLF assumptions.",
+    "ADV-4 (002 verdict was the missing push-gate input): this machine-readable verdict closes the 002 VERDICT_WITHOUT_REVIEW strict-fail that was blocking pre-push; with 001 (PASS 0B/0C/5A) and 002 (this) both in verdicts/, the dual-card gate precondition is satisfied."
+  ],
+  "not_verified_disclosed": [
+    "The 15-item round-6 transcription deviation and the I2-family reason boilerplate are registered as D-00 open items in report-v9 (not rewritten this card); their resolution is deferred to the D-00 investigation, consistent with the no-laundering / C12 discipline - this verdict does not adjudicate the D-00 findings themselves.",
+    "E1 clean-vs-host dual caliber and the E6 env-fixing clause are carried in the parent XJ-20261110-001 verdict advisory (ADV-1/ADV-2); 002 inherits them, not re-adjudicated here."
+  ],
+  "unblocks_note": "PASS (0 blockers / 0 conditions / 4 advisory). The 002 continuation-card scope (D4 report-v9, D5 seal transfer + IN_REVIEW + artifacts, E1-E7 supplement incl. E7 fail-fast) independently verified; red zone + sealed data zero-diff by the executor; seal nested-root 208-file VERIFY OK; report completeness + no-laundering + C12 held. This verdict is the machine-readable 002 closure that clears the pre-push VERDICT_WITHOUT_REVIEW strict gate; dual cards 001/002 are now CLOSED with both verdicts in place.",
+  "subcard_note": "XJ-20261110-002 is the continuation card of the round-9 R1 observation-surface alignment: it owns only D4 (report-v9) + D5 (seal transfer / IN_REVIEW / artifacts / review handoff) + the E1-E7 council supplement (single functional change = E7 fail-fast in shadow_align.py). All core readings and the red-zone adjudication live in the parent XJ-20261110-001 PASS verdict; this verdict closes the 002 machine-readable record required for pre-push.",
+  "_provenance": "Independent review of feature/xj-20261110-001-round9-r1 @ 45c570b (002 continuation scope) by AgnesCode (fuxiang), non-card-author, non-implementer. 002 red-zone diff, V3 custody-mirror re-read, seal nested-root verify, instrument CRLF-disk hash confirmation, artifacts re-read, and report-v9 element scan performed on the real artifacts; core readings cross-referenced to the parent 001 PASS verdict. No blockers, no conditions; 4 advisory (seal layout, out/ anchor, hash criterion, the missing-002-verdict gate itself).",
+  "ts_resign_notes": "",
+  "notes": "PASS. 002 red-zone + sealed data zero-diff (executor); seal nested-root VERIFY OK 208 files; V3 81/96 via custody mirror; report-v9 complete, no-laundering + C12 held; E7 fail-fast (13 tests, 546 green). 4 advisory. This verdict clears the 002 pre-push VERDICT_WITHOUT_REVIEW strict gate; parent 001 = PASS 0B/0C/5A."
+}
