@@ -1014,6 +1014,49 @@
       "s17_floor_cross_check_identical": true,
       "voided_round10_value": 0.95,
       "direction_disclosure": "m_c 0.45 is numerically LOWER (looser) than the voided 0.95; the frozen three-branch table hit not_evaluable, so NO gate conclusion is issued and the perverse incentive cannot pay out. Published as-is, never re-run for a different value."
+    },
+    "d5_exit_source_and_gate_rerun": {
+      "fixture": "tools/eval/fixtures/exit_codes.yaml",
+      "fixture_sha256": "f5002d9b94ba61243e920581ca66cfdbfe25eaf1ca0c283af8308e45af7e4dac",
+      "fixture_runner": "tools/eval/exit_fixture.py",
+      "fixture_runner_sha256": "37274b84d998c333541fc9af447b212f169a9aee8f21ee3d2afdf283f4e19b48",
+      "fixture_result": "out/exit-fixture-r11.json",
+      "fixture_result_sha256": "6b86832d9967c64e608c242fe88d0f66aa710c9aa63b8bb98e5926fe5988554a",
+      "fixture_expect": "10/10",
+      "fixture_by_source": {"os": 4, "adapter": 4, "launch_failed": 2},
+      "launch_failed_as_unsupported_fixture": 0,
+      "windows_9009_note": "cmd.exe really returns 1 on this host; 9009 is a frozen semantic marker only, never a fabricated OS exit code",
+      "gate_metrics": "tools/eval/gate_metrics.py",
+      "gate_metrics_sha256": "1fe6afdbe44801cbc59907a5ac0e1c1bf90a7b0d93bac303ac8746b524b40586",
+      "gate_metrics_out": "out/gate-metrics-r11.json",
+      "gate_metrics_out_sha256": "3de7a235f41b89150f209f31b19fa8e1b35716d95a4f11a5e35bb5fb9892bf41",
+      "zero_new_data": true,
+      "source": "D:/15812/projects/round10-custody/r10-gate-input.json (210 pairs)",
+      "comparable": 210,
+      "decidable": 180,
+      "decidable_rate": 0.857143,
+      "triple": {"pass_rate": 0.833333, "precision": 0.6, "recall": 0.75},
+      "confusion_matrix": {"TP": 90, "TN": 0, "FP": 60, "FN": 30},
+      "conditional_agreement_secondary": 0.5,
+      "c_demoted_to_secondary": true,
+      "exit_source_counts": {"os": 0, "adapter": 210, "launch_failed": 0},
+      "adapter_samples_in_secondary": 210,
+      "launch_failed_counted_as_unsupported": 0,
+      "error_breakdown": {"FILE_NOT_FOUND": 30, "CWD_MISMATCH": 0, "PARSE_FAIL": 0, "TIMEOUT": 0, "SILENT_FALLBACK": 30},
+      "primary_metrics_evaluable": false,
+      "primary_void_reason": "r10-gate-input.json field_semantics.exit_code declares a mechanical map over flags/detail, NOT an independent OS process exit code; all 210 pairs are adapter, so §18 clause 11 excludes them from main C / main precision and no valid primary denominator remains. Reported as non-evaluable, not laundered.",
+      "regression": {
+        "literal_unittest_exit": 1,
+        "literal_unittest_failures": 2,
+        "literal_unittest_errors": 3,
+        "literal_failure_root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT (same as round-10 V9)",
+        "with_hint_unittest_exit": 0,
+        "with_hint_tests": 546,
+        "logs": [
+          "round11-custody/r11-v12-unittest-literal.log",
+          "round11-custody/r11-v12-unittest-with-hint.log"
+        ]
+      }
     }
   }
 }

@@ -401,6 +401,246 @@ def run_goldset(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
+# mode 4: round-11 gate re-run (§18 D18-B clauses 7/8/10, card D4/D5)
+# --------------------------------------------------------------------------
+def run_r11(args: argparse.Namespace) -> Dict[str, Any]:
+    """Re-run the gate metrics on the round-10 210 pairs, zero new data.
+
+    The round-11 upgrades applied here are **measurement-only**:
+
+    * three-state ``exit_source`` provenance (os / adapter / launch_failed);
+    * main metric = (pass_rate, precision, recall) + 2x2 confusion matrix,
+      with C demoted to a secondary historical-comparison cell rate;
+    * ``adapter`` samples excluded from main C / main precision and moved to
+      the secondary report;
+    * ``launch_failed`` never counted as "not supported";
+    * gate conclusion copied from the D4 frozen lookup result, never
+      re-interpreted here.
+
+    Honesty note: ``r10-gate-input.json::field_semantics.exit_code`` declares
+    verbatim that its exit codes are "a mechanical map over flags/detail, NOT
+    an independent OS process exit code".  Every one of the 210 pairs is
+    therefore ``exit_source = adapter``.  Applying clause 11 excludes all of
+    them from main C / main precision, which leaves the primary metrics with
+    no valid denominator.  That is reported as ``evaluable = false`` rather
+    than being laundered into a favourable number.
+    """
+    gate_input = Path(args.gate_input)
+    doc = _load_json(gate_input)
+    pairs = list(doc.get("pairs", []))
+
+    mc_doc = _load_json(Path(args.mc)) if args.mc else {}
+    rel_doc = (_load_json(Path(args.reliability))
+               if args.reliability else {})
+
+    provenance = str(doc.get("field_semantics", {}).get("exit_code", ""))
+    mechanical = ("mechanical map" in provenance.lower()
+                  or "not an independent os" in provenance.lower())
+
+    def own_bucket(p: Dict[str, Any]) -> bool:
+        return bool(p.get("not_applicable") or p.get("evaluative")
+                    or p.get("schema_invalid"))
+
+    comparable = [p for p in pairs if not own_bucket(p)]
+
+    exit_source_counts = {"os": 0, "adapter": 0, "launch_failed": 0}
+    launch_failed_as_unsupported = 0
+    provenance_rows: List[Dict[str, Any]] = []
+    for p in comparable:
+        code = int(p.get("exit_code", -1))
+        if code in (127, 9009):
+            src = "launch_failed"
+        elif mechanical:
+            src = "adapter"
+        else:
+            src = "os"
+        exit_source_counts[src] += 1
+        classes = [c for c in p.get("error_classes", [])
+                   if c in OBSERVATION_ERROR_CLASSES]
+        # "not supported" here means the observation was used to judge the
+        # claim as unsupported. launch_failed must never contribute.
+        judged_unsupported = (not bool(p.get("predicate_ok"))
+                              and src != "launch_failed")
+        if src == "launch_failed" and judged_unsupported:
+            launch_failed_as_unsupported += 1
+        provenance_rows.append({
+            "claim_id": p.get("claim_id"),
+            "exit_source": src,
+            "caliber": ("primary" if src == "os"
+                        else "degraded" if src == "adapter" else "excluded"),
+            "error_classes": classes,
+        })
+
+    error_breakdown = {c: 0 for c in OBSERVATION_ERROR_CLASSES}
+    for p in comparable:
+        for cls in p.get("error_classes", []):
+            if cls in error_breakdown:
+                error_breakdown[cls] += 1
+
+    decidable = []
+    excluded: List[Dict[str, Any]] = []
+    for p in comparable:
+        classes = [c for c in p.get("error_classes", [])
+                   if c in OBSERVATION_ERROR_CLASSES]
+        ok = (int(p.get("exit_code", -1)) == 0
+              and bool(p.get("parse_ok")) and not classes)
+        if ok:
+            decidable.append(p)
+        else:
+            excluded.append({"claim_id": p.get("claim_id"),
+                             "exit_code": p.get("exit_code"),
+                             "parse_ok": p.get("parse_ok"),
+                             "error_classes": classes})
+
+    confusion = {"TP": 0, "TN": 0, "FP": 0, "FN": 0}
+    for p in decidable:
+        pred = bool(p.get("predicate_ok"))
+        main = bool(p.get("main_supports"))
+        if pred and main:
+            confusion["TP"] += 1
+        elif not pred and not main:
+            confusion["TN"] += 1
+        elif pred and not main:
+            confusion["FP"] += 1
+        else:
+            confusion["FN"] += 1
+
+    tp, tn, fp, fn = (confusion[k] for k in ("TP", "TN", "FP", "FN"))
+    positives = tp + fp
+    actual_positives = tp + fn
+    n_dec = len(decidable)
+    n_comp = len(comparable)
+
+    # Top-level triple is the SECONDARY diagnostic (adapter-inclusive) view;
+    # the primary view is reported separately and may be non-evaluable.
+    pass_rate = (positives / n_dec) if n_dec else None
+    precision = (tp / positives) if positives else None
+    recall = (tp / actual_positives) if actual_positives else None
+    conditional_agreement = ((tp + tn) / n_dec) if n_dec else None
+
+    decidable_ids = set(id(p) for p in decidable)
+    primary_decidable = [
+        p for p, row in zip(comparable, provenance_rows)
+        if row["exit_source"] == "os"
+        and id(p) in decidable_ids
+    ]
+    primary_confusion = {"TP": 0, "TN": 0, "FP": 0, "FN": 0}
+    for p in primary_decidable:
+        pred, main = bool(p.get("predicate_ok")), bool(p.get("main_supports"))
+        if pred and main:
+            primary_confusion["TP"] += 1
+        elif not pred and not main:
+            primary_confusion["TN"] += 1
+        elif pred and not main:
+            primary_confusion["FP"] += 1
+        else:
+            primary_confusion["FN"] += 1
+    ptp, pfp, pfn = (primary_confusion[k] for k in ("TP", "FP", "FN"))
+    primary_evaluable = len(primary_decidable) > 0
+
+    # Cross-check the classifier against the frozen D5 fixture, so the gate
+    # report and the 10/10 fixture cannot silently use different rules.
+    fixture_cross: Dict[str, Any] = {"available": False}
+    try:
+        import exit_fixture  # noqa: E402  (same directory, already on sys.path)
+        probe = exit_fixture.classify("adapter", "flags_ok", REPO_ROOT)
+        fixture_cross = {
+            "available": True,
+            "adapter_caliber": probe["caliber"],
+            "agrees_with_gate_report": probe["caliber"] == "degraded",
+        }
+    except (ImportError, ValueError, OSError) as exc:
+        fixture_cross = {"available": False, "reason": str(exc)}
+
+    m_c = mc_doc.get("m_c")
+    branch = mc_doc.get("branch")
+    gate_result = mc_doc.get("gate_result")
+    gate_conclusion_issued = bool(mc_doc.get("gate_conclusion_issued", False))
+
+    return {
+        "mode": "r11_gate_rerun",
+        "card": "XJ-20261111-002",
+        "zero_new_data": True,
+        "source": "D:/15812/projects/round10-custody/r10-gate-input.json",
+        "source_sha256": _sha256_file(gate_input),
+        "source_pairs": len(pairs),
+        "exit_code_provenance_verbatim": provenance,
+        "comparable": n_comp,
+        "decidable": n_dec,
+        "excluded_from_c_denominator": len(excluded),
+        "decidable_rate": (round(n_dec / n_comp, 6) if n_comp else None),
+        "decidable_rate_floor": DECIDABLE_RATE_FLOOR,
+        # ---- main metrics: (pass_rate, precision, recall) + 2x2 ----------
+        "pass_rate": round(pass_rate, 6) if pass_rate is not None else None,
+        "precision": round(precision, 6) if precision is not None else None,
+        "recall": round(recall, 6) if recall is not None else None,
+        "confusion_matrix": confusion,
+        "metrics_caliber": "secondary_diagnostic_only_adapter_inclusive",
+        "metrics_note": ("top-level triple is the secondary diagnostic view "
+                         "over all decidable pairs; §18 clause 11 excludes "
+                         "adapter samples from MAIN C / MAIN precision, see "
+                         "primary_metrics_excluding_adapter"),
+        # ---- C demoted to secondary --------------------------------------
+        "conditional_agreement": (round(conditional_agreement, 6)
+                                  if conditional_agreement is not None else None),
+        "c_role": "secondary_historical_comparison_only",
+        "c_demoted_to_secondary": True,
+        "c_voided_by_triage": True,
+        "c_void_reason": "triage bucket b = 100% >= 60% -> §18 clause 8 voids scalar C",
+        # ---- degraded / excluded provenance -------------------------------
+        "exit_source_counts": exit_source_counts,
+        "adapter_samples_in_secondary": exit_source_counts["adapter"],
+        "secondary_report": {
+            "sample_count": exit_source_counts["adapter"],
+            "caliber": "degraded",
+            "excluded_from": ["main_c", "main_precision"],
+            "sample_ids": [r["claim_id"] for r in provenance_rows
+                           if r["exit_source"] == "adapter"],
+        },
+        "launch_failed_counted_as_unsupported": launch_failed_as_unsupported,
+        "primary_metrics_excluding_adapter": {
+            "sample_count": len(primary_decidable),
+            "evaluable": primary_evaluable,
+            "c": (round((ptp + primary_confusion["TN"])
+                        / len(primary_decidable), 6)
+                  if primary_evaluable else None),
+            "precision": (round(ptp / (ptp + pfp), 6)
+                          if primary_evaluable and (ptp + pfp) else None),
+            "recall": (round(ptp / (ptp + pfn), 6)
+                       if primary_evaluable and (ptp + pfn) else None),
+            "confusion_matrix": primary_confusion,
+            "reason": ("all {} decidable pairs are exit_source=adapter, "
+                       "excluded by §18 clause 11; no valid primary "
+                       "denominator remains".format(n_dec)),
+        },
+        "fixture_cross_check": fixture_cross,
+        "fixture_path": "out/exit-fixture-r11.json",
+        "fixture_sha256": _sha256_file(REPO_ROOT / "out" / "exit-fixture-r11.json"),
+        "fixture_yaml": "tools/eval/fixtures/exit_codes.yaml",
+        "fixture_yaml_sha256": _sha256_file(
+            REPO_ROOT / "tools" / "eval" / "fixtures" / "exit_codes.yaml"),
+        # ---- error classes (SILENT_FALLBACK never folded away) ------------
+        "error_breakdown": error_breakdown,
+        "silent_fallback_count": error_breakdown.get("SILENT_FALLBACK", 0),
+        "silent_fallback_reported_separately": ("SILENT_FALLBACK" in error_breakdown),
+        "fail_fast_observation": bool(doc.get("fail_fast_observation", True)),
+        "allow_silent_fallback_used": bool(doc.get("allow_silent_fallback_used", False)),
+        # ---- frozen lookup result, copied verbatim, never re-argued -------
+        "m_c": m_c,
+        "branch": branch,
+        "gate_result": gate_result,
+        "gate_conclusion_issued": gate_conclusion_issued,
+        "r_main": rel_doc.get("r_main", mc_doc.get("r_main")),
+        "lb95": rel_doc.get("lb95", mc_doc.get("lb95")),
+        "caliber": mc_doc.get("caliber"),
+        "independence_satisfied": rel_doc.get("independence_satisfied", False),
+        "note": ("measurement-only re-run on frozen round-10 pairs; no new "
+                 "true data, no re-judging, no verdict; gate conclusion copied "
+                 "from out/derive-mc-r11.json frozen lookup"),
+    }
+
+
+# --------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------
 def build_parser() -> argparse.ArgumentParser:
@@ -414,6 +654,17 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--shadow", help="round-10 shadow directory")
     ap.add_argument("--goldset", help="gold claims JSONL")
     ap.add_argument("--timeout", type=int, default=30)
+    # Round-11 mode (D4/D5): zero-new-data gate re-run with tri-state
+    # exit_source, triple + 2x2 main metrics and C demoted to secondary.
+    ap.add_argument("--r11", action="store_true",
+                    help="round-11 gate re-run mode")
+    ap.add_argument("--gate-input", dest="gate_input",
+                    default="D:/15812/projects/round10-custody/r10-gate-input.json",
+                    help="frozen round-10 gate input (210 pairs)")
+    ap.add_argument("--mc", default="out/derive-mc-r11.json",
+                    help="D4 frozen M_C lookup result")
+    ap.add_argument("--reliability", default="out/r11-main-reliability.json",
+                    help="D3 blind R_main result")
     ap.add_argument("--out", required=True, help="output JSON path")
     return ap
 
@@ -421,15 +672,17 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.gate0:
+        if args.r11:
+            payload = run_r11(args)
+        elif args.gate0:
             payload = run_gate0(args)
         elif args.goldset:
             payload = run_goldset(args)
         elif args.run_dir or args.shadow:
             payload = run_dual_metric(args)
         else:
-            print("usage error: choose --gate0 / --goldset / --run-dir + --shadow",
-                  file=sys.stderr)
+            print("usage error: choose --r11 / --gate0 / --goldset / "
+                  "--run-dir + --shadow", file=sys.stderr)
             return 2
     except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
         print("gate_metrics: {} ({})".format(type(exc).__name__, exc),
