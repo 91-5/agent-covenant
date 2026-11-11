@@ -640,5 +640,13 @@
       "supplement-verify-before/"
     ],
     "verification_note": "2026-11-10 统一复核：重放 E1/E2-E5/E3 与 6 组消融、13 项单测、546 项全量套件、sync/lint/gate，逐条机器捕获 returncode（见 supplement-verify.log 的 EXIT_TABLE）。封存产物先备份 sha256，重放后 IDENTICAL 8 / RESTORED 0；verify-*.json 为新路径，不覆盖原判级输出。本组同样仓外、不参与 gate freshness。"
-  }
+  },
+  "XJ-20261111-001": [
+    "docs/eval-prereg.md",
+    "tools/eval/gate_metrics.py",
+    "docs/eval-gate0-main-reliability.md",
+    "docs/eval-report-v10.md",
+    "goldset/gold_claims.jsonl",
+    "artifacts.json"
+  ]
 }
