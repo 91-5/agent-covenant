@@ -45,3 +45,9 @@ tools/eval/tasks/controls-sealed/
 run-dir/
 # Dry-run probes are session artifacts, never tracked
 dryrun/
+
+# Round-10 execution products (XJ-20261111-001 D0; card constraint L48).
+# Not covered by the exact-name rules run-dir/ and dryrun/ above.
+out/
+run-dir-r10/
+shadow-r10/
