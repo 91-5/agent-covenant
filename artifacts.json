@@ -996,6 +996,24 @@
         "r11_samples.py", "r11_reliability.py", "r11-samples.sha256",
         "r11-reliability-console.log"
       ]
+    },
+    "d4_mc_rederivation": {
+      "script": "tools/eval/derive_mc.py",
+      "script_sha256": "ee5718ed11a92c0ae6964cbe1950e5746402086a71b4b48a4fbe3a8393bae807",
+      "out": "out/derive-mc-r11.json",
+      "out_sha256": "e091424a2fe852c9ad7bca6c57878bc5fecede4879a164769dfc22325d69e648",
+      "input_sha256": "b54d2d43038ff6ce9f39e96e89235f54cf9f8085559ea44b6eb44a44a73c2b68",
+      "formula": "floor_to_5pct(min(0.95, LB95(R_main) - 0.05))",
+      "raw_formula_value": 0.496722,
+      "m_c": 0.45,
+      "branch": "not_evaluable",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "computed_once": true,
+      "first_count_utc": "2026-11-11T15:17:56.998592+00:00",
+      "s17_floor_cross_check_identical": true,
+      "voided_round10_value": 0.95,
+      "direction_disclosure": "m_c 0.45 is numerically LOWER (looser) than the voided 0.95; the frozen three-branch table hit not_evaluable, so NO gate conclusion is issued and the perverse incentive cannot pay out. Published as-is, never re-run for a different value."
     }
   }
 }
