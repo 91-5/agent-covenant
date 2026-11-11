@@ -913,5 +913,89 @@
       "implementation_output_existed": false,
       "signed_at_utc": "2026-11-11T14:36:05.953632+00:00"
     }
+  },
+  "_round11_progress_XJ-20261111_002": {
+    "_comment": "XJ-20261111-002 D1–D3 产物与仓外 custody 台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；out/ 为执行产物不入 repo，哈希按工作树真实字节计算。登记不改 §18 冻结文本、不写 verdict、不 push、不 merge。",
+    "custody_root": "D:/15812/projects/round11-custody",
+    "d1_triage": {
+      "commit": "60e18e9",
+      "zero_new_data": true,
+      "sources": [
+        "D:/15812/projects/round10-custody/r10-gate-input.json",
+        "D:/15812/projects/round10-custody/sealed/run-dir-r10/main-judgements.json"
+      ],
+      "buckets": {"a": 0, "b": 90, "c": 0, "d": 0, "unclassifiable": 0},
+      "trigger": "b_ge_60pct",
+      "cross_check": "90/90",
+      "report": "docs/eval-triage-r11.md",
+      "report_sha256": "1c86dfa627acde9340534df8c0bc0da49181b05d02ead9e29ea971c20b1baa7a",
+      "script": "tools/eval/triage.py",
+      "script_sha256": "5a7841733c52f753c6891f0cbfd34958ee563fa8e5807c55e501f7352cc2b41a",
+      "out": {
+        "out/triage-r11.tsv": "c339a7ba0bb1e9a1652c1917aa3b9a34ff474cdff34436975fb17bd67b539e41",
+        "out/triage-r11-summary.json": "dedcf473e560325988327738bb8adf6590f1f6bc2b6a80884707bf2e874f4bef",
+        "out/triage-codebook-r11.json": "0d6c2a776fae4068cf53ee58b990ef9f5e7ed04be725427fa4b415363793d789"
+      }
+    },
+    "d2_independence": {
+      "commit": "9ba53fd",
+      "independence_satisfied": false,
+      "honesty_clause_invoked": true,
+      "failed_fields": ["judge_model_family", "rubric_blind"],
+      "disagreement_rate": 0.6,
+      "strict_bool_disagreement_rate": 0.15,
+      "n_probe": 40,
+      "probe_families": 4,
+      "caliber": "single_agent_dual_view_direction_only",
+      "implementation": "tools/eval/independent_judge.py",
+      "implementation_sha256": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+      "cert": "tools/eval/independence_cert.json",
+      "cert_sha256": "297a1409599a96ca91fc5c2f1b2e60b236e4f998fa7f1c171edb218337b8b0c2",
+      "probe_set": "tools/eval/probe_set.json",
+      "probe_set_sha256": "cbe980f945879e50a1cedae3a1c64790c9e7bedae231bf3bcf5dc212eab974d1",
+      "out": {
+        "out/probe-report-r11.json": "23c4422e2ed36da9e6a8efe8ec3180c2c3b944225cfc315def1900a6d6163cf5",
+        "out/r11-probe-independent-blind.json": "91a7bb71fd4519c4608836923309808e21c2a299e939582c26bef48a18d9cbbf"
+      },
+      "custody": [
+        "probe_set_r11.py", "probe_runner_r11.py", "probe_set.sha256",
+        "probe-run-console.log", "rubric-v2-r11.md",
+        "build_independence_cert.py", "r11-probe-seal-log.json"
+      ]
+    },
+    "d3_reliability": {
+      "n": 400,
+      "seed": 20261111,
+      "r_main": 0.62069,
+      "lb95": 0.546722,
+      "comparable": 174,
+      "abstain": 226,
+      "branch": "not_evaluable",
+      "computed_once": true,
+      "seal_then_unblind_order": true,
+      "blind_sealed_sha256": "3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+      "triangle_two_human_independent": false,
+      "report": "docs/eval-r11-main-reliability.md",
+      "report_sha256": "0f4651e5d6f0261a00a0baa407b9db92f46628f084375381b0b9d579e630b7a6",
+      "calibration_report": "docs/eval-goldset-calibration-r11.md",
+      "calibration_report_sha256": "8855757bcee8329d283c6bcd99afd1894141dcfd536df925f39e5884aea25116",
+      "goldset": "goldset/calibration_r11.jsonl",
+      "goldset_sha256": "ebf3821ecd005a6f8f0ef5baa0696762ae5c44c2e5e21c42ea4caf36c02e517e",
+      "verifier": "tools/eval/verify_artifact_pointers.py",
+      "verifier_sha256": "ad3a4afe8857c44d6aab2d0a53d4660423f142212c1d4df74b03ecfb078da709",
+      "pointer_verification": "D1/D3/D3-calibration reports all 100% coverage, 0 bad digest (verify_artifact_pointers.py)",
+      "out": {
+        "out/r11-blind-samples.json": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9",
+        "out/r11-independent-blind.json": "3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+        "out/r11-seal-log.json": "49517437036cc151fa6c1c39dcd3cc4e140aa49f2d96f762ec28244da3cae0a2",
+        "out/r11-main-reliability.json": "b54d2d43038ff6ce9f39e96e89235f54cf9f8085559ea44b6eb44a44a73c2b68",
+        "out/r11-reliability-rows.json": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7",
+        "out/r11-triangle-anchor.json": "215e706ab81a5b0f6d1ba488f70cd7d0a76ecfff7f4a6300681abbe15bdae3e2"
+      },
+      "custody": [
+        "r11_samples.py", "r11_reliability.py", "r11-samples.sha256",
+        "r11-reliability-console.log"
+      ]
+    }
   }
 }
