@@ -883,5 +883,35 @@
     "tools/eval/fixtures/exit_codes.yaml",
     "goldset/calibration_r11.jsonl",
     "artifacts.json"
-  ]
+  ],
+  "_s18_freeze_XJ-20261111_002": {
+    "freeze_commit": "2699a9c",
+    "freeze_commit_time": "2026-11-11T22:35:24+08:00",
+    "freeze_before_any_r11_product": true,
+    "prereg_before_bytes": 129854,
+    "prereg_before_sha256": "71ef19c30353c0283db1f9dd2a21505176d9b7eaaeaf1999fe7270152b69b103",
+    "prereg_after_bytes": 151545,
+    "prereg_after_sha256": "3862b251e2a48f8af2dde9655eea9fdefd2b44622d36e3ea1f28a1d8d32df129",
+    "s18_section_bytes": 21691,
+    "s18_section_sha256": "343d45f85c0f6c2bc6e78e6d8fd76c3a1e248e73ac85bb2805d9a26175e05ff1",
+    "verbatim_block_bytes": 5658,
+    "verbatim_block_sha256": "9515fd47723e46d0bf62dfc48851ff2a4520029ce9421d67c97e210a78b300eb",
+    "prefix_intact": true,
+    "verbatim_intact": true,
+    "clauses": 11,
+    "prohibitions": 3,
+    "r11_seed": 20261111,
+    "codebook_canon_sha256": "0d6c2a776fae4068cf53ee58b990ef9f5e7ed04be725427fa4b415363793d789",
+    "codebook_canon_path": "D:/15812/projects/round11-custody/triage-codebook-canon.json",
+    "custody_anchors": "D:/15812/projects/round11-custody/s18-freeze-anchors.json",
+    "gitignore_added": ["run-dir-r11/", "shadow-r11/"],
+    "gitignore_note": "out/ already covered by round-10 D0; card 其他纪律 L109 authorises the two new lines",
+    "void_mc095": {
+      "path": "out/void-mc095.json",
+      "custody_path": "D:/15812/projects/round11-custody/void-mc095.json",
+      "voided_value": 0.95,
+      "implementation_output_existed": false,
+      "signed_at_utc": "2026-11-11T14:36:05.953632+00:00"
+    }
+  }
 }
