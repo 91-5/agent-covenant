@@ -1081,6 +1081,78 @@
       "once_only_declaration": true,
       "branch_lookup_only": true,
       "direction_disclosure": "0.45 looser than voided 0.95; not_evaluable emits no gate conclusion"
+    },
+    "d7_seal": {
+      "bundle": "run-dir-r11/",
+      "bundle_kind": "execution_artifacts_only",
+      "not_true_data": true,
+      "note": "round 11 generated no new true-data run; §18 D18-F freezes the generation rules for round 12. run-data.json says this verbatim.",
+      "seal": "run-dir-r11/seal.json",
+      "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)",
+      "sealed_files": 16,
+      "products": 15,
+      "sealed_at_utc": "2026-11-11T15:41:14+00:00",
+      "root_label": "r11-execution-artifacts",
+      "seal_json_sha256": "f08be48d129a132a9a0a76c5dcf9ad5e7abd39de1e74b2121f5e499533dfc37a",
+      "custody_copy": "D:/15812/projects/round11-custody/sealed/run-dir-r11",
+      "seal_cmd_exit": 0,
+      "verify_exit": 0,
+      "verify_output": "VERIFY: OK (16 files match the seal)",
+      "custody_summary": "D:/15812/projects/round11-custody/r11-seal-summary.json",
+      "custody_script": "D:/15812/projects/round11-custody/seal_r11.py",
+      "card_status": "IN_REVIEW",
+      "review_request": "D:/15812/mo brain/review/agnes/XJ-REVIEW-REQUEST-AGNES-20261111-002.md",
+      "review_request_note": "review handoff lives outside the repo (round-9/round-10 precedent); not an Owned files claim"
+    },
+    "_round11_acceptance_XJ-20261111_002": {
+      "_comment": "V1–V12 executor-run acceptance (25 commands). Card commands are PowerShell; runner executes Git-Bash/Python equivalents, captures real return codes. Underline-prefixed ledger, not a judged artifact. No author precheck adopted.",
+      "runner": "D:/15812/projects/round11-custody/acceptance_r11.py",
+      "log": "D:/15812/projects/round11-custody/r11-acceptance.log",
+      "json": "D:/15812/projects/round11-custody/r11-acceptance.json",
+      "commands": 25,
+      "exit_table": {
+        "V1": [0, 0, 0], "V2": [0], "V3": [0, 0], "V4": [0],
+        "V5_literal": 0, "V5_semantic": "FAIL (exit 0 but six fields not all satisfied)",
+        "V6": [0], "V7": [0, 0], "V8": [0, 0, 0], "V9": [0, 0],
+        "V10": [0, 0], "V11": [0],
+        "V12_pointers": 0, "V12_redzone": 0,
+        "V12_unittest_literal": 1, "V12_unittest_with_hint": 0,
+        "V12_lint_strict_first": 1, "V12_lint_strict_after_card_fix": 1
+      },
+      "v1": {"freeze_commit_cI": "2026-11-11T22:35:24+08:00", "numstat": "110 0 docs/eval-prereg.md", "missing_clauses": []},
+      "v5_semantic": {
+        "distinct_model_family": false,
+        "rubric_blind": false,
+        "output_blind": true,
+        "independence_satisfied": false,
+        "registered_as": "FAIL, not laundered"
+      },
+      "v8_recompute": "RECOMPUTE_IDENTICAL: not a second counting run; sealed result unchanged",
+      "v8_m_c_values": ["0.45"],
+      "v9_keys": ["pass_rate", "precision", "recall", "2×2", "R_main", "可判定率", "条件一致率"],
+      "v12_unittest": {
+        "literal": {"exit": 1, "tests": 527, "failures": 2, "errors": 3,
+                    "root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT"},
+        "with_hint": {"exit": 0, "tests": 546, "result": "OK"},
+        "logs": ["round11-custody/r11-v12-unittest-literal.log",
+                 "round11-custody/r11-v12-unittest-with-hint.log"]
+      },
+      "v12_lint": {
+        "first": {"exit": 1, "errors": 1, "warnings": 8},
+        "after_card_fix": {"exit": 1, "errors": 1, "warnings": 2},
+        "remaining_error": "SUBPROCESS_TEXT_NO_ENCODING independent_judge.py:102 (text=True without encoding=)",
+        "remaining_warnings": ["VERDICT_WITHOUT_REVIEW (no-verdict discipline)",
+                               "TEST_COUNT_UNVERIFIED (unittest discovery without bash hint)"],
+        "executor_disposition": "NOT silently greened. The error sits in the D2 sealed independent judge, whose blob sha is a certificate field and whose output is the D3 blind sealed artifact; editing it after seeing R_main would break the once-only evidence chain (§18 prohibition 3). Registered as unresolved item #1 and left for AgnesCode / a separate repair card.",
+        "card_writing_fix": "Owned files prose moved off path lines (round-10 precedent), warnings 8 -> 2, no change to claim boundaries",
+        "logs": ["round11-custody/r11-v12-lint-after-cardfix.log",
+                 "round11-custody/r11-v12-lint-final.log"],
+        "final_lint_exit": 1,
+        "final_lint_summary": "LINT: FAIL (1 errors, 2 warnings)",
+        "final_pointer_recheck": "4 reports all PASS, 0 bad digest",
+        "final_redzone_diff": "empty"
+      },
+      "determinism_recheck": "V3 triage and V10 fixture re-runs reproduced byte-identical outputs; all report artifact pointers stayed valid (100% coverage, 0 bad digest)"
     }
   }
 }
