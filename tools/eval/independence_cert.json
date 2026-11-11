@@ -1,0 +1,110 @@
+{
+  "card": "XJ-20261111-002",
+  "cert_version": "r11-v1",
+  "generated_at_utc": "2026-11-11T14:53:41.428925+00:00",
+  "generated_by": "WB (WorkBuddy), single agent",
+  "impl_blob_sha": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+  "judge_model_family": "NOT_DISTINCT: both are deterministic symbolic rule engines with no model family; distinct model family unavailable; honesty clause invoked (independence NOT satisfiable)",
+  "rubric_source_sha": "8f3f8ff9fa9e0e9f9170b43ca0445d6dbd11ed9e5e7afd62b990425acac10c1f",
+  "rubric_blind": false,
+  "output_blind": true,
+  "discrimination_pass_rate": 0.6,
+  "input_shared": true,
+  "independence_satisfied": false,
+  "honesty_clause_invoked": true,
+  "degraded_conclusion": "单 agent 双视图一致性 + 方向诊断；R_main 与 M_C 照跑并如实发布，但门结论不得宣布有效",
+  "field_checks": {
+    "impl_blob_sha": {
+      "pass": true,
+      "main_blob_sha256": "973756a3e79ad9950e99c99bd6a9e1c7b8941286bb5ce453d93764093ac30ef3",
+      "independent_blob_sha256": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+      "shared_imports": [
+        "__future__",
+        "hashlib",
+        "pathlib",
+        "re",
+        "subprocess",
+        "sys",
+        "typing"
+      ],
+      "shared_import_whitelist_violation": [],
+      "evidence": "git blob sha of judge.py@f62f353 vs LF-normalised independent_judge.py; AST import intersection"
+    },
+    "judge_model_family": {
+      "pass": false,
+      "main_is_deterministic_symbolic": true,
+      "independent_is_deterministic_symbolic": true,
+      "distinct_model_family": false,
+      "reason": "Main judge.py is a deterministic symbolic rule engine with NO model family (its own docstring: 'No LLM, no network, no randomness'). The independent_judge.py is also a deterministic symbolic scorer with NO model. This environment (single agent WB, CI Python 3.9, no network or external model call, red zone read-only) cannot supply a second model family that is mechanically reproducible and hash-sealable. Per the honesty clause this is declared as NOT DISTINCT, not disguised as a different version/vendor.",
+      "evidence": "judge.py docstring + independent_judge.py module docstring + environment constraint"
+    },
+    "rubric_source_sha": {
+      "pass": true,
+      "path": "D:\\15812\\projects\\round11-custody\\rubric-v2-r11.md",
+      "sha256": "8f3f8ff9fa9e0e9f9170b43ca0445d6dbd11ed9e5e7afd62b990425acac10c1f",
+      "v1_freeze_commit_time": "2026-11-07T20:44:40+08:00 (fc258b9)",
+      "v2_written_after_v1_freeze": true,
+      "evidence": "rubric v2 file written this round, after v1 freeze"
+    },
+    "rubric_blind": {
+      "pass": false,
+      "claimed": false,
+      "reason": "Author WB had already read prereg sections 0-17 (including section 1 E0-E4 frozen order) and judge.py's docstring before writing rubric v2, so 'author declares not having read v1' cannot be truthfully asserted. Clause 3 itself downgrades this field to weak evidence; this card records it as false rather than claiming true."
+    },
+    "output_blind": {
+      "pass": true,
+      "forbidden_artifact_hits_in_source": [],
+      "main_track_invoked_before_seal": false,
+      "blind_sha_matches_report": true,
+      "evidence": "source scan + out/r11-probe-independent-blind.json sealed before any main-track invoke"
+    },
+    "discrimination_pass_rate": {
+      "pass": true,
+      "rate": 0.6,
+      "strict_bool_rate": 0.15,
+      "threshold": 0.3,
+      "n_probe": 40,
+      "by_family": {
+        "cwd_root_misalign": {
+          "n": 10,
+          "disagreements": 6,
+          "rate": 0.6,
+          "strict_bool_disagreements": 6
+        },
+        "silent_fallback": {
+          "n": 10,
+          "disagreements": 6,
+          "rate": 0.6,
+          "strict_bool_disagreements": 0
+        },
+        "proposition_level": {
+          "n": 10,
+          "disagreements": 6,
+          "rate": 0.6,
+          "strict_bool_disagreements": 0
+        },
+        "dotfile_claim": {
+          "n": 10,
+          "disagreements": 6,
+          "rate": 0.6,
+          "strict_bool_disagreements": 0
+        }
+      },
+      "caveat": "Most disagreements are independent abstentions (OBSERVATION_ERROR / INSUFFICIENT), not opposite boolean judgements; strict boolean disagreement is only 0.15."
+    },
+    "input_shared": {
+      "pass": true,
+      "shared_input": "tools/eval/probe_set.json (same 40 cases)",
+      "intermediate_products_shared": false,
+      "independent_product": "out/r11-probe-independent-blind.json",
+      "main_product": "out/probe-report-r11.json (rows only, produced later)",
+      "evidence": "probe_runner_r11.py stage order + distinct output paths"
+    }
+  },
+  "six_field_all_pass": false,
+  "failed_fields": [
+    "judge_model_family",
+    "rubric_blind"
+  ],
+  "note": "Forging a distinct model family or a rubric_blind=true would be worse than lacking independence. This certificate deliberately fails those two fields. V5's literal command still exits 0 (it only prints), but its semantic criteria are NOT met and are reported as such, not laundered."
+}

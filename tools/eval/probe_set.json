@@ -1,0 +1,478 @@
+[
+  {
+    "case_id": "P-A01",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 01 的验收输出为 1。\n  证据：ref=`probe-01.txt`\n",
+    "fixtures_workspace": {
+      "probe-01.txt": "01 1\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A02",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 02 的验收输出为 2。\n  证据：ref=`probe-02.txt`\n",
+    "fixtures_workspace": {
+      "probe-02.txt": "02 2\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A03",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 03 的验收输出为 3。\n  证据：ref=`probe-03.txt`\n",
+    "fixtures_workspace": {
+      "probe-03.txt": "03 3\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A04",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 04 的验收输出为 4。\n  证据：ref=`probe-04.txt`\n",
+    "fixtures_workspace": {
+      "probe-04.txt": "04 4\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A05",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 05 的验收输出为 5。\n  证据：ref=`probe-05.txt`\n",
+    "fixtures_workspace": {
+      "probe-05.txt": "05 5\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A06",
+    "family": "cwd_root_misalign",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 06 的验收输出为 6。\n  证据：ref=`probe-06.txt`\n",
+    "fixtures_workspace": {
+      "probe-06.txt": "06 6\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "cwd 根错位（轮九 R1 回归面）：产物只在 workspace，主轨以 root-only 配置解析；对抗点：主轨在 root 找不到 ref 判 E2，独立实现只读 workspace 判支持"
+  },
+  {
+    "case_id": "P-A07",
+    "family": "cwd_root_misalign",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 07 的验收输出为 7。\n  证据：ref=`probe-07.txt`\n",
+    "fixtures_workspace": {
+      "probe-07.txt": "07 7\n"
+    },
+    "fixtures_root": {
+      "probe-07.txt": "07 7\n"
+    },
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "对照：ref 在 root 与 workspace 同时存在，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-A08",
+    "family": "cwd_root_misalign",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 08 的验收输出为 8。\n  证据：ref=`probe-08.txt`\n",
+    "fixtures_workspace": {
+      "probe-08.txt": "08 8\n"
+    },
+    "fixtures_root": {
+      "probe-08.txt": "08 8\n"
+    },
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "对照：ref 在 root 与 workspace 同时存在，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-A09",
+    "family": "cwd_root_misalign",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 09 的验收输出为 9。\n  证据：ref=`probe-09.txt`\n",
+    "fixtures_workspace": {
+      "probe-09.txt": "09 9\n"
+    },
+    "fixtures_root": {
+      "probe-09.txt": "09 9\n"
+    },
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "对照：ref 在 root 与 workspace 同时存在，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-A10",
+    "family": "cwd_root_misalign",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 10 的验收输出为 10。\n  证据：ref=`probe-10.txt`\n",
+    "fixtures_workspace": {
+      "probe-10.txt": "10 10\n"
+    },
+    "fixtures_root": {
+      "probe-10.txt": "10 10\n"
+    },
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "对照：ref 在 root 与 workspace 同时存在，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-B01",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 01 的验收输出为 1。\n  证据：ref=`missing-probe-01.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B02",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 02 的验收输出为 2。\n  证据：ref=`missing-probe-02.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B03",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 03 的验收输出为 3。\n  证据：ref=`missing-probe-03.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B04",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 04 的验收输出为 4。\n  证据：ref=`missing-probe-04.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B05",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 05 的验收输出为 5。\n  证据：ref=`missing-probe-05.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B06",
+    "family": "silent_fallback",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 任务 06 的验收输出为 6。\n  证据：ref=`missing-probe-06.txt`\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "SILENT_FALLBACK 伪装（轮九伪一致面）：观测面缺失，主轨静默退化为「不支持」；对抗点：两处皆无文件，主轨静默退化 E2，独立实现显式报 FILE_NOT_FOUND"
+  },
+  {
+    "case_id": "P-B07",
+    "family": "silent_fallback",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 07 的验收输出为 7。\n  证据：ref=`probe-07.txt`\n",
+    "fixtures_workspace": {
+      "probe-07.txt": "07 7\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：文件存在且锚点齐，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-B08",
+    "family": "silent_fallback",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 08 的验收输出为 8。\n  证据：ref=`probe-08.txt`\n",
+    "fixtures_workspace": {
+      "probe-08.txt": "08 8\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：文件存在且锚点齐，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-B09",
+    "family": "silent_fallback",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 09 的验收输出为 9。\n  证据：ref=`probe-09.txt`\n",
+    "fixtures_workspace": {
+      "probe-09.txt": "09 9\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：文件存在且锚点齐，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-B10",
+    "family": "silent_fallback",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 10 的验收输出为 10。\n  证据：ref=`probe-10.txt`\n",
+    "fixtures_workspace": {
+      "probe-10.txt": "10 10\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：文件存在且锚点齐，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-C01",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-01.txt`\n",
+    "fixtures_workspace": {
+      "probe-01.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C02",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-02.txt`\n",
+    "fixtures_workspace": {
+      "probe-02.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C03",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-03.txt`\n",
+    "fixtures_workspace": {
+      "probe-03.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C04",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-04.txt`\n",
+    "fixtures_workspace": {
+      "probe-04.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C05",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-05.txt`\n",
+    "fixtures_workspace": {
+      "probe-05.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C06",
+    "family": "proposition_level",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 该许可证为 Apache 许可。\n  证据：ref=`probe-06.txt`\n",
+    "fixtures_workspace": {
+      "probe-06.txt": "MIT license\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "内容为真但证据未复现（命题层级面）：unanchored 断言被主轨机械放行；对抗点：unanchored 断言主轨机械判 E4，独立实现要求显式锚点判 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-C07",
+    "family": "proposition_level",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 07 的计数为 7。\n  证据：ref=`probe-07.txt`\n",
+    "fixtures_workspace": {
+      "probe-07.txt": "07 7\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：带显式数字锚点且观测含锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-C08",
+    "family": "proposition_level",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 08 的计数为 8。\n  证据：ref=`probe-08.txt`\n",
+    "fixtures_workspace": {
+      "probe-08.txt": "08 8\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：带显式数字锚点且观测含锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-C09",
+    "family": "proposition_level",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 09 的计数为 9。\n  证据：ref=`probe-09.txt`\n",
+    "fixtures_workspace": {
+      "probe-09.txt": "09 9\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：带显式数字锚点且观测含锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-C10",
+    "family": "proposition_level",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 10 的计数为 10。\n  证据：ref=`probe-10.txt`\n",
+    "fixtures_workspace": {
+      "probe-10.txt": "10 10\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：带显式数字锚点且观测含锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-D01",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D02",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D03",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D04",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D05",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D06",
+    "family": "dotfile_claim",
+    "intent": "adversarial",
+    "markdown": "- [已验证] 仓库存在 gitignore 配置文件。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "gitignore config\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "dotfile Owned-claim（工具缺口面）：无扩展名配置声明，无显式锚点；对抗点：无扩展名 dotfile + unanchored，主轨机械 E4，独立实现 INSUFFICIENT"
+  },
+  {
+    "case_id": "P-D07",
+    "family": "dotfile_claim",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 07 的配置编号为 7。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "07 7\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：dotfile 内容含显式数字锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-D08",
+    "family": "dotfile_claim",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 08 的配置编号为 8。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "08 8\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：dotfile 内容含显式数字锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-D09",
+    "family": "dotfile_claim",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 09 的配置编号为 9。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "09 9\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：dotfile 内容含显式数字锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-D10",
+    "family": "dotfile_claim",
+    "intent": "control",
+    "markdown": "- [已验证] 任务 10 的配置编号为 10。\n  证据：ref=`.gitignore`\n",
+    "fixtures_workspace": {
+      ".gitignore": "10 10\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "对照：dotfile 内容含显式数字锚点，两实现应一致判支持"
+  }
+]
