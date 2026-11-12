@@ -1572,6 +1572,45 @@
       "caliber": "instrument_calibration_only",
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D5_double_annotation": {
+      "phase": "D5 / card D6 (V7)",
+      "files": {
+        "goldset/calibration_r12.jsonl": "9f8f7a0748e26fd78ca56208814d49b114680354d5775480940389d42c170347",
+        "out/r12-calibration-summary.json": "946db8da232e0ce22d1acba9bda7ef49af745b43fb545c18a0d82d0259cf3495"
+      },
+      "custody": {
+        "build_calibration_r12.py": "211b71ae1f8dfdf90c17410cc8607bebb937cc69e7fcdab833b86b521195bcfb",
+        "calibration_r12.jsonl": "9f8f7a0748e26fd78ca56208814d49b114680354d5775480940389d42c170347"
+      },
+      "data_rows": 50,
+      "file_lines": 51,
+      "seed": 20261111,
+      "v7_literal": {"n": 51, "exit": 0},
+      "honest_downgrade": {
+        "annotator_count": 1,
+        "two_human_independent_annotation": false,
+        "two_human_independent": false,
+        "independence_satisfied": false,
+        "triangle_verdict": "not_evaluable_no_independent_human_annotation",
+        "caliber": "single_agent_dual_view_direction_only",
+        "same_form_disclosure": "round-10 ADV-3 / round-11 ADV-5",
+        "adv6_remains_in_force": true,
+        "not_recorded_as_two_independent_humans": true
+      },
+      "views": {
+        "view_a": "round-11 sealed main-track row",
+        "view_b": "independent rubric v3, RE-MEASURED here for real (not copied from a v2 label)"
+      },
+      "readings": {
+        "comparable": 22,
+        "agree": 13,
+        "agreement_rate": 0.590909
+      },
+      "not_a_gate_conclusion": true,
+      "gate_result": "not_evaluable",
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
     }
   }
 }
