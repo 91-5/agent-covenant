@@ -100,4 +100,6 @@ V10 0 / 0 / 0 / 0 / 0 / 0   V11 1 / 1 / 0 / 1        R13 0 / 0 / 0
 
 §20 冻结 commit `ae237e3` 早于一切 `run-dir-r13/` / `shadow-r13/` / `out/` 轮十三产物；红区 11 项**完整路径**零触碰（7 个仪器在 `tools/eval/`、`gate.py` / `lint_cards.py` 在 `tools/`，写裸文件名会让 diff 假绿），主轨 `judge.py` 仅被只读调用；CI py3.9 下 4 个新增脚本均经 `ast.parse(feature_version=(3,9))`，未给 Path 文本写入方法传 `newline` 关键字，JSON/JSONL 写入一律 `open(..., newline="")`。
 
+**收尾最终复核（`6eb5d74` 之后亲跑）**：工作树 `git status --short` 空；11 个完整红区路径 `git diff 831a46a -- ...` 输出为空、exit 0；`git diff --name-only` 仅列出 Owned files；`artifacts.json` 登记 20 个产物哈希 **0 失配**；报告 SHA 与台账一致；指针验真 `24/24 / BAD_DIGEST 0 / RESULT PASS`（exit 0）、V10 字面 `pointers 24 bad 0`（exit 0）；lint `--strict` 仍为 `0 errors, 2 warnings`（`VERDICT_WITHOUT_REVIEW` / `TEST_COUNT_UNVERIFIED`，与 V11_4 同一组、未增加，exit 1 照实保留）；带真实 `COVENANT_BASH_HINT` 单测 `Ran 546 tests ... OK`（exit 0）。补记本段后 `artifacts.json` 中本递评单哈希已同步更新。
+
 本轮**不写 verdict、不 push、不 merge、不自评审、不碰 master**。执行者到此停手，等 Orchestrator 预审 + 浮香 PASS gate；对合宪性、验收通过与否、未闭合项与交裁定项的处置均不自行裁定。
