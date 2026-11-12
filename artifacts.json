@@ -1342,7 +1342,13 @@
     "prohibitions_in_d19_c": 3,
     "clauses_total_numbered": 9,
     "banned_api_literal_in_new_section": false,
-    "diagnostic_facts_verbatim": ["C-1", "C-2", "C-3", "C-4", "C-5"],
+    "diagnostic_facts_verbatim": [
+      "C-1",
+      "C-2",
+      "C-3",
+      "C-4",
+      "C-5"
+    ],
     "frozen_constants": {
       "strict_bool_threshold": 0.15,
       "sample_seed": 20261111,
@@ -1352,7 +1358,10 @@
       "gate_result": "not_evaluable",
       "calibration_caliber": "instrument_calibration_only"
     },
-    "gitignore_added": ["run-dir-r12/", "shadow-r12/"],
+    "gitignore_added": [
+      "run-dir-r12/",
+      "shadow-r12/"
+    ],
     "gitignore_note": "out/ already covered by round-10 D0; card constraint 产物落点 authorises the two new lines; git check-ignore -v verified",
     "custody": {
       "template": "D:/15812/projects/round12-custody/s19-template.md",
@@ -1403,8 +1412,11 @@
         "capability_gain_claim": false
       },
       "v3_level_distribution": {
-        "SUPPORT": 126, "NOT_SUPPORT": 48, "OBSERVATION_ERROR": 126,
-        "STRUCTURALLY_UNJUDGEABLE": 30, "INSUFFICIENT": 70
+        "SUPPORT": 126,
+        "NOT_SUPPORT": 48,
+        "OBSERVATION_ERROR": 126,
+        "STRUCTURALLY_UNJUDGEABLE": 30,
+        "INSUFFICIENT": 70
       },
       "partial_closure_disclosure": "§19 clause 2 literal wording covers only the 30 non-empty-evidence-line structural samples; the other 30 empty-evidence-line samples keep their v2 verdict, stay in the raw denominator and are disclosed as out_of_scope for the next round. ADV-4 is PARTIALLY closed, not fully closed.",
       "py39_ast_ok": true,
@@ -1454,15 +1466,20 @@
       "r_main_recomputed": false,
       "gate_value_recomputed": false,
       "historical_readings_not_recomputed": [
-        "round11 R_main 0.62069", "round11 LB95 0.546722",
-        "round11 M_C 0.45", "round11 SILENT_FALLBACK 30"
+        "round11 R_main 0.62069",
+        "round11 LB95 0.546722",
+        "round11 M_C 0.45",
+        "round11 SILENT_FALLBACK 30"
       ],
       "py39_ast_ok": true,
       "banned_api_literal_present": false
     },
     "D3_real_os_collection": {
       "phase": "D3 / card D4 (V3)",
-      "closes": ["ADV-2", "ADV-5"],
+      "closes": [
+        "ADV-2",
+        "ADV-5"
+      ],
       "files": {
         "tools/eval/gate_metrics.py": "fbd4fd361fded6d10e2e676152ccd3d55a74203a010e0c601fecd2cf77e12ff6",
         "out/r12-gate-input.json": "bf6d3ca51b96b16e49108f1419eede14401ed3a3d8e72af55973f9a862623058",
@@ -1479,7 +1496,11 @@
       "round10_210_pairs_used": false,
       "round10_note": "round-10 210 pairs contain no command/cmd/ref/evidence field (all 6 counts = 0), so they cannot be re-observed; new collection-layer samples were used instead, disclosed as instrument-calibration samples, NOT a new true-data gate round",
       "v3_literal": {
-        "exit_source_counts": {"os": 24, "adapter": 0, "launch_failed": 2},
+        "exit_source_counts": {
+          "os": 24,
+          "adapter": 0,
+          "launch_failed": 2
+        },
         "primary_evaluable": true,
         "exit": 0
       },
@@ -1490,8 +1511,17 @@
         "precision": 0.5,
         "recall": 1.0,
         "pass_rate": 0.8,
-        "confusion_matrix": {"TP": 8, "TN": 4, "FP": 8, "FN": 0},
-        "main_level_distribution": {"E4": 12, "E2": 12, "NO_PROCESS": 2}
+        "confusion_matrix": {
+          "TP": 8,
+          "TN": 4,
+          "FP": 8,
+          "FN": 0
+        },
+        "main_level_distribution": {
+          "E4": 12,
+          "E2": 12,
+          "NO_PROCESS": 2
+        }
       },
       "sample_reverification": {
         "mechanism": "re-run each os command in a fresh isolated child and compare the OS returncode with the stored value",
@@ -1554,15 +1584,21 @@
         "disagreement_rate": 0.62,
         "strict_bool_disagreements": 9,
         "by_family_strict": {
-          "cwd_root_misalign": 6, "silent_fallback": 0,
-          "proposition_level": 0, "dotfile_claim": 0,
+          "cwd_root_misalign": 6,
+          "silent_fallback": 0,
+          "proposition_level": 0,
+          "dotfile_claim": 0,
           "structural_unjudgeable": 3
         },
         "new_family_agreeing_controls": 3
       },
       "offline_design_replay": {
-        "v3_on_original_40": {"structural": 0, "disagreement": 24,
-                              "strict_bool": 6, "rate": 0.15},
+        "v3_on_original_40": {
+          "structural": 0,
+          "disagreement": 24,
+          "strict_bool": 6,
+          "rate": 0.15
+        },
         "note": "offline核算 only, no probe product written; if the new family contributed zero strict disagreements the rate would have been 6/50 = 0.12 < 0.15"
       },
       "blind_order": "independent v3 -> sha256 seal -> main track -> compare",
@@ -1586,7 +1622,10 @@
       "data_rows": 50,
       "file_lines": 51,
       "seed": 20261111,
-      "v7_literal": {"n": 51, "exit": 0},
+      "v7_literal": {
+        "n": 51,
+        "exit": 0
+      },
       "honest_downgrade": {
         "annotator_count": 1,
         "two_human_independent_annotation": false,
@@ -1665,8 +1704,12 @@
           "v5_literal_rerun_idempotent": true
         },
         "unchanged_by_fix": [
-          "frozen threshold 0.15", "probe_set.json", "judge implementation",
-          "gate conclusion caliber", "no sample removed", "no second gate value"
+          "frozen threshold 0.15",
+          "probe_set.json",
+          "judge implementation",
+          "gate conclusion caliber",
+          "no sample removed",
+          "no second gate value"
         ],
         "old_seal_log_preserved_at": "round12-custody/r12-probe-seal-log.pre-deterministic-fix.json"
       },
@@ -1699,7 +1742,10 @@
         "log": "round12-custody/r12-acceptance.log",
         "log_sha256": "be1d33a2a1e4063dcefd9e98ad80af840ec670be95b6d85d40b040733ad9497f",
         "commands": 23,
-        "nonzero_labels": ["V9_2", "V10_1"],
+        "nonzero_labels": [
+          "V9_2",
+          "V10_1"
+        ],
         "v9_2": {
           "exit": 1,
           "ran": 527,
@@ -1716,7 +1762,10 @@
         "v10_1": {
           "exit": 1,
           "result": "LINT: FAIL (0 errors, 2 warnings)",
-          "warnings": ["VERDICT_WITHOUT_REVIEW", "TEST_COUNT_UNVERIFIED"],
+          "warnings": [
+            "VERDICT_WITHOUT_REVIEW",
+            "TEST_COUNT_UNVERIFIED"
+          ],
           "not_whitened": true
         },
         "pointer_verify_after_all_reruns": "PASS (26/26, BAD_DIGEST 0)",
@@ -1740,5 +1789,16 @@
         "redzone_zero_touch": true
       }
     }
-  }
+  },
+  "XJ-20261112-002": [
+    "tools/eval/rubric_v4.py",
+    "tools/eval/independent_judge.py",
+    "tools/eval/label_mapping.py",
+    "docs/eval-prereg.md",
+    "docs/eval-report-r13-alignment.md",
+    "tools/eval/r13_alignment.py",
+    "goldset/annotation_r13.jsonl",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md"
+  ]
 }
