@@ -1318,5 +1318,56 @@
     "tools/eval/r12_reliability.py",
     "goldset/calibration_r12.jsonl",
     "artifacts.json"
-  ]
+  ],
+  "_s19_freeze_XJ-20261112_001": {
+    "freeze_commit": "353bcb4",
+    "freeze_commit_full": "353bcb4d4cd69a90dba194081c047c8a3156c5db",
+    "freeze_commit_time": "2026-11-12T13:22:23+08:00",
+    "freeze_before_any_r12_product": true,
+    "r12_products_before_freeze": [],
+    "prereg_before_bytes": 151545,
+    "prereg_before_sha256": "3862b251e2a48f8af2dde9655eea9fdefd2b44622d36e3ea1f28a1d8d32df129",
+    "prereg_after_bytes": 168010,
+    "prereg_after_sha256": "0975c1bdfc6acfb2554704307e41498db4a5842052c307c8faafeb2f4220cf49",
+    "prereg_git_blob_bytes": 166693,
+    "prereg_git_blob_sha256": "8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561",
+    "calibre_note": "working tree CRLF vs git blob LF under core.autocrlf=true; V1 reads in text mode (universal newlines -> LF), so the V1 prefix hash is the LF calibre",
+    "v1_prefix_sha256_before": "d30c9b062205de7ca0cc3b001de0e6a16f1958b67b177996e5f8b8b942c140c4",
+    "v1_prefix_sha256_after": "d30c9b062205de7ca0cc3b001de0e6a16f1958b67b177996e5f8b8b942c140c4",
+    "prefix_intact": true,
+    "s19_section_bytes": 16465,
+    "s19_section_sha256": "268ad535ded0b31a2714398f79b6919c726906200988babdce0f81a0426970df",
+    "s19_heading_count": 1,
+    "clauses_in_d19_b": 6,
+    "prohibitions_in_d19_c": 3,
+    "clauses_total_numbered": 9,
+    "banned_api_literal_in_new_section": false,
+    "diagnostic_facts_verbatim": ["C-1", "C-2", "C-3", "C-4", "C-5"],
+    "frozen_constants": {
+      "strict_bool_threshold": 0.15,
+      "sample_seed": 20261111,
+      "raw_denominator": 400,
+      "probe_n": 50,
+      "probe_families_min": 5,
+      "gate_result": "not_evaluable",
+      "calibration_caliber": "instrument_calibration_only"
+    },
+    "gitignore_added": ["run-dir-r12/", "shadow-r12/"],
+    "gitignore_note": "out/ already covered by round-10 D0; card constraint 产物落点 authorises the two new lines; git check-ignore -v verified",
+    "custody": {
+      "template": "D:/15812/projects/round12-custody/s19-template.md",
+      "template_sha256": "c7f6887ba539edc6ee0899e7a08790a4173d25078c7eb7b3fd3bca49bd8b47db",
+      "anchors": "D:/15812/projects/round12-custody/s19-freeze-anchors.json",
+      "anchors_sha256": "2aa8a94b4839337fd0f3422f10b037ae83762403bccd000a4f9aead5c275f57d",
+      "freeze_script": "D:/15812/projects/round12-custody/freeze_s19.py",
+      "freeze_script_sha256": "ad5f6fef49de84954e831432346ffd60ed95c857978a5e68ac92adeb75546676"
+    },
+    "freeze_script_py39_ast_ok": true,
+    "v1_literal_result": {
+      "prereg_prefix_sha256": "d30c9b062205de7ca0cc3b001de0e6a16f1958b67b177996e5f8b8b942c140c4",
+      "has_s19": true,
+      "clauses": 9
+    },
+    "freeze_abort_and_restore": "first run reported a CRLF/LF calibre mismatch (decode() kept CRLF, V1 uses text mode); prereg was truncated back to 151545 bytes, SHA restored and git diff empty, then the script was fixed and re-run. No product existed at either attempt."
+  }
 }
