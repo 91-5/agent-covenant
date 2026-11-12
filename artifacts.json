@@ -1409,6 +1409,56 @@
       "partial_closure_disclosure": "§19 clause 2 literal wording covers only the 30 non-empty-evidence-line structural samples; the other 30 empty-evidence-line samples keep their v2 verdict, stay in the raw denominator and are disclosed as out_of_scope for the next round. ADV-4 is PARTIALLY closed, not fully closed.",
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D2_env_isolation": {
+      "phase": "D2 / card D3 (V2, V6)",
+      "closes": "round-9 ADV-1",
+      "files": {
+        "tools/eval/env_isolation.py": "40b8921a53c796d0c0f1d7af0a15b375068a241a12ce7640d65cf47c3085e3c3",
+        "tools/eval/r12_reliability.py": "eda440df9d9e302832a0ce1ca6c809ce551b6ab3791656d6e5d88e04ae1515b5",
+        "out/r12-decomposition.json": "d5989b0a6436454054195cafab0df5e6d1fd1019641677fd2a9a03b2524edb52"
+      },
+      "custody": "D:/15812/projects/round12-custody/r12-decomposition.json",
+      "custody_sha256": "d5989b0a6436454054195cafab0df5e6d1fd1019641677fd2a9a03b2524edb52",
+      "extracted_from": "tools/eval/exit_fixture.py::clean_env (verbatim extraction; fixture NOT rewritten, not in Owned files)",
+      "isolation_contract": [
+        "clear PYTHONPATH",
+        "clear every COVENANT_* variable",
+        "disable sitecustomize / site initialisation with -S",
+        "set PYTHONNOUSERSITE=1",
+        "fix child cwd"
+      ],
+      "v2_literal": {
+        "has_clean_env": true,
+        "source_first_400_has_PYTHONPATH": true,
+        "source_first_400_has_sitecustomize": true,
+        "exit": 0
+      },
+      "measured_child_report": {
+        "pythonpath_present": false,
+        "covenant_keys": [],
+        "no_site": true,
+        "nousersite": "1",
+        "cwd": "D:\\15812\\projects\\agent-covenant"
+      },
+      "measured_all_checks_pass": true,
+      "v6_literal": {
+        "abstain_rate": 0.565,
+        "abstain_total": 226,
+        "by_stratum_R10_ANCHOR_abstain_rate": 0.716667,
+        "by_stratum_HOLDOUT_abstain_rate": 0.3375,
+        "exit": 0
+      },
+      "caliber": "instrument_calibration_only",
+      "not_gate_conclusion": true,
+      "r_main_recomputed": false,
+      "gate_value_recomputed": false,
+      "historical_readings_not_recomputed": [
+        "round11 R_main 0.62069", "round11 LB95 0.546722",
+        "round11 M_C 0.45", "round11 SILENT_FALLBACK 30"
+      ],
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
     }
   }
 }
