@@ -1315,3 +1315,151 @@ triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_suppor
 ### D19-E 红区、CI 与收尾纪律
 
 `run-dir-r12/`、`shadow-r12/`、`out/` 为执行产物，走 custody 不入 repo（`.gitignore` 在冻结 commit 内明写追加 `run-dir-r12/` 与 `shadow-r12/`，`out/` 已覆盖）。每条 D6 结论须带 `路径 + sha256` artifact 指针，由 V8 机械核验（`sections ≥ 4`、`pointers ≥ 10`）。V1–V10 由执行者亲跑并粘贴真实退出码，不采纳作者 precheck；任一 FAIL 照实登记，不刷绿。收尾：seal 移交 custody → `artifacts.json` 补登记 → 卡转 `IN_REVIEW` → 递浮香 → 停手等 Orchestrator 预审 + 浮香 PASS gate，执行者无评审权、无合并权。
+## §20 变更记录（v2.1 → v2.2：轮十三 判级口径对齐与锚点规则修正，2026-11-12，冻结于轮十三任何数据产生之前）
+
+### D20-0 合法性前提、冻结序与上游边界
+
+本节在轮十三任何 `run-dir-r13/`、`shadow-r13/`、`out/` 的 r13 产物产生之前冻结，沿用 §16 D16-5 三段序 `freeze → offline replay → data`：先冻结本协议与全部决策规则，再离线复算，最后才允许产生任何执行读数。上游：轮十二卡 XJ-20261112-001（CLOSED，已并入 master，浮香 PASS 0B/0C/6A，`gate_result = not_evaluable`）；本卡 Context 的归因事实全部为 Orchestrator 逐行读码 + 对 `out/r11-reliability-rows.json`（400 条）逐条归因实测，不是推断。
+
+轮十一/十二的门结论为 `not_evaluable`（R_main 0.62069 < 0.80 命中 §18 三档表）。**本卡是仪器口径对齐轮，不是门轮**：本轮只做「独立侧判级器与主轨冻结口径的对齐 + 标签映射表冻结 + 校准复算」，**不重测门值、不重算门结论、不产出第二个门计数 R_main、不产出第二个 M_C**。`gate_result` 一律登记 `not_evaluable`（复核用），`gate_conclusion_issued = false`。
+
+§0–§19 为冻结文本，纯追加、零回写；§20 冻结 commit 之后其前缀哈希须保持不变，由 V1 机械核验。本卡 Context 的全部诊断事实与 6 行映射初稿逐字并入 D20-A，作为条款的事实地基，**不得在跑数据后补写或追改**。所有分支的决策规则、阈值、类别白名单、映射矩阵、处置裁决均在本节（冻结 commit 内）写死；D1–D6 只允许「实现 + 查表 + 机械验证」，不允许「看数据后解释或调规则」——此为对抗问题 7（HARKing）的正面答案，冻结序由 V1 前缀哈希、冻结 commit 时间戳、`artifacts.json` 三重锚点证明。
+
+### D20-A 诊断事实地基与 6 行映射初稿逐条核对（冻结前实测，非推断）
+
+**A-1 · 可比集 66 条分歧的机制归因（Orchestrator 实测，合计 66 无残余）**。轮十一 R_main = 0.62069（108 True / 66 False / 226 None，可比 174），与 `out/r11-reliability-rows.json` 逐位吻合。
+
+| 机制 | 条数 | 具体位置 | 判级归属 |
+|---|---|---|---|
+| A. 锚点抽取规则差异 | 48（另 8 条同果） | 独立轨 `tools/eval/independent_judge.py:84` 的 `_ANCHOR_RE` 与主轨 `tools/eval/extract.py:47` 的 `INTEGER_ANCHOR_RE = (?<![\w.\-])\d+(?![\w.\-])` 不同；实测 56/400 条锚点集合不同，全部因独立轨把 `Apache-2.0` 的 `2.0` 抽成锚点（主轨正确排除连字符/小数片段） | **仪器实现缺陷**（独立轨未与主轨冻结规则对齐） |
+| B. cwd 观测面差异 | 18 | `cwd_probe` 层：主轨在仓库根复现失败 → E2；独立轨在 workspace 复现成功 → SUPPORT；18 条方向一致 | 观测面未对齐（复算调用方式，非主轨源码缺陷） |
+
+**A-2 · 226 条弃权（agree=None）完整构成，即本卡「6 行映射初稿」**（卡面 Context 逐字并入）：
+
+| 层 | n | 主轨 | 独立侧（v2 口径） | 判级归属 |
+|---|---|---|---|---|
+| `repro_fail` | 48 | E2（布尔） | SILENT_FALLBACK（弃权） | 保护性弃权——禁止映射（禁令 2） |
+| `ref_missing` | 48 | E2（布尔） | FILE_NOT_FOUND（弃权） | 「可验证的缺席」——是否可判待裁定 |
+| `ref_ok` | 48 | E4（布尔） | INSUFFICIENT（弃权） | 无锚政策差异 |
+| `goldset_text` | 22 | E4（布尔） | INSUFFICIENT（弃权） | 无锚政策差异 |
+| `no_evidence` | 30 | E0 | PARSE_FAIL（弃权） | 真不可判（无证据行） |
+| `incomplete` | 30 | E1 | PARSE_FAIL（弃权） | 真不可判（证据行字段不完整） |
+
+封存产物 `out/r11-independent-blind.json` 实测 400 条：SUPPORT 126 / NOT_SUPPORT 48 / OBSERVATION_ERROR 156 / INSUFFICIENT 70；error_class 为 SILENT_FALLBACK 48、FILE_NOT_FOUND 48、PARSE_FAIL 60、空 244。**保护性弃权合计 `SILENT_FALLBACK 48 + FILE_NOT_FOUND 48 = 96`，冻结为不得下降的常量。**
+
+**A-3 · 6 行初稿逐条对照 `judge.py:342-405` 与 `independent_judge.py` 实际分支的核对结果（D1 冻结依据；核对在冻结前完成）**：
+
+| 行 | 主轨分支 | 独立侧实际分支 | 核对结论 |
+|---|---|---|---|
+| 1 `repro_fail` | `judge.py:370-377` `if not result.reproduced: return E2` | `independent_judge.py:140-141,152,154-155` 拒绝执行 / OSError / 无输出 → `SILENT_FALLBACK` | 一致；同一观测面不同处置，属政策差异非缺陷 |
+| 2 `ref_missing` | `judge.py:276-290` ref 解析 workspace→root 均缺 → `ref_missing_both` → E2 | `independent_judge.py:130-133` `if not target.is_file(): FILE_NOT_FOUND` | 一致；主轨有 root fallback，本层 `fixtures_root` 为空故两轨同判缺 |
+| 3 `ref_ok` | `judge.py:379-386` `if claim.unanchored: return E4`（无语义锚机械通过，带 `unanchored` flag） | `independent_judge.py:189-194` `explicit_anchor_required and not anchors → INSUFFICIENT` | 一致；**无锚政策差异**，非缺陷 |
+| 4 `goldset_text` | 同 `judge.py:379-386` | 同 `independent_judge.py:189-194` | 一致；同属无锚政策差异 |
+| 5 `no_evidence` | `judge.py:342-347` `if claim.evidence is None: return E0` | `independent_judge.py:175-177` `if not evidence_raw: OBSERVATION_ERROR / PARSE_FAIL` | 一致；真不可判 |
+| 6 `incomplete` | `judge.py:348-360` `if not is_complete: return E1` | **偏差登记**：v2 为 `_reproduce` 无命令 → `PARSE_FAIL`；轮十二 v3 起 `independent_judge.py:246-250` 已重分类为 `STRUCTURALLY_UNJUDGEABLE`（`error_class=STRUCTURAL_NO_EVIDENCE`） | **卡面初稿第 6 行沿用 v2 口径，与当前实现不符**。冻结以当前实现为准：v4 保留 `STRUCTURALLY_UNJUDGEABLE` 为 `incomplete` 的显式类别，`no_evidence` 另立显式类别，不得按初稿把两层混为同一 `PARSE_FAIL` |
+
+**A-4 · 主轨 E 级真实定义（`tools/eval/judge.py:342-405`，映射表的锚，冻结参照）**：E0 断言存在但无证据行；E1 证据行存在但字段不完整；E2 证据结构完整但观察未复现（命令失败、ref 不存在、拒绝执行等）；E3 观察复现成功但锚未命中；E4 观察复现成功且全部锚命中，**或**无语义锚但机械复核通过（带 `unanchored` flag）。复算口径沿用轮十一 `main_supports = (level == "E4")`。
+
+**A-5 · 三条判级政策差异（非缺陷，须在映射表显式约定）**：① 无锚政策——主轨无锚可机械通过 E4，独立轨 `explicit_anchor_required=True` 判 INSUFFICIENT 弃权（差异 70 条）；② 缺席的判级——主轨把 ref 不存在判 E2 布尔，独立轨判 FILE_NOT_FOUND 弃权（48 条）；③ 静默失败——主轨把命令跑但产物缺失判 E2 布尔，独立轨判 SILENT_FALLBACK 弃权（48 条）。以谁为基准由条款 5 冻结裁决，**不得为提高一致率而改动主轨**。
+
+### D20-B §20 条款清单（七条，冻结后不得回写）
+
+1. **冻结序与纯追加**（来源：接卡指令 D0、卡面约束「只追加」、V1）：§20 冻结 commit 的时间须早于一切 `run-dir-r13/`、`shadow-r13/`、`out/` 的 r13 产物；§0–§19 冻结文本零回写，冻结前后全文 SHA、V1 口径前缀 SHA（`8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561`）、§20 小节 SHA 与逐字段校验锚点写入 `artifacts.json`；沿用 §16 D16-5 三段序 `freeze → offline replay → data`；D20-A 全部诊断事实与 6 行初稿核对结果须在冻结 commit 内逐字并入，**冻结后补写诊断事实或调整任何规则/阈值即为违规**。冻结序由 V1 与评审重点 1 双重核验。
+2. **标签对齐映射表冻结（接卡指令 D1 / 卡面 D3 / V2）**：主轨 5 级（E0–E4）× 独立侧 5 类（SUPPORT / NOT_SUPPORT / INSUFFICIENT / OBSERVATION_ERROR / STRUCTURAL）共 25 格**全部显式条目，无 `unmapped`**，每格归入冻结的三类之一：`equivalent`（两轨均布尔且同向）/ `conflict`（两轨均布尔且反向）/ `protected_abstention`（独立侧弃权，**禁止映射成布尔一致或冲突**）。`SILENT_FALLBACK` 与 `FILE_NOT_FOUND` 属于 `protected_abstention`，**不得出现在 `equivalent` 或 `conflict` 映射里**；无锚政策差异（`INSUFFICIENT`）以 `protected_abstention` 的 `subtype=no_anchor_policy` 标注，不新增第四类。机器可读映射矩阵逐字冻结于 D20-E，`tools/eval/label_mapping.py --verify --prereg` 必须从 §20 **机械读回**该矩阵并与代码常量逐格比对（代码不得绕过冻结文本擅改），输出 `unmapped` 为空、protected 类不在 equivalent/conflict。6 行初稿以 D20-A 的核对结果为准（含第 6 行偏差登记）。
+3. **锚点规则逐字等价（接卡指令 D2 / 卡面 D2 / V3）**：`tools/eval/independent_judge.py` 的 `_ANCHOR_RE`（`:84`）与 `_anchors()`（`:95-97`）改为与 `tools/eval/extract.py::extract_anchors` 逐字等价语义：先按 `BACKTICK_RE` 收集全部反引号 token，再在反引号被替换为空格的文本上以 `INTEGER_ANCHOR_RE = (?<![\w.\-])\d+(?![\w.\-])` 抽取整数，最后 `dict.fromkeys` 去重保序。`tools/eval/r13_alignment.py --check-anchors` 在 400 条冻结样本上逐条做**集合相等**比对，`anchor_set_mismatches` 修正前 56 → 修正后须为 0。**禁令 1：主轨 `extract.py` / `judge.py` 是冻结参照，不得修改**（改主轨等于改答案）；保留 `_judge_case_v2` / `_judge_case_v3` 可复算路径，不改写轮十一封存读数。56 条差集消解定性为口径修正（禁令 3），非能力提升。
+4. **rubric v4 显式类别与弃权政策（接卡指令 D3 / 卡面 D1 / V4 / V7）**：冻结类别白名单（不新增其他不可判类别）：`no_evidence`（30 条）→ 显式类别 `NO_EVIDENCE_LINE`（`error_class=PARSE_FAIL`）；`incomplete`（30 条）→ 显式类别 `STRUCTURALLY_UNJUDGEABLE`（沿用 v3，`error_class=STRUCTURAL_NO_EVIDENCE`）；`ref_missing`（48 条）→ 显式独立路径 `VERIFIABLE_ABSENCE`（「可验证的缺席」），`supports` 保持 `None` 弃权，`error_class` 仍登记 `FILE_NOT_FOUND`，并标 `upgrade_candidate=true` 单独立项留痕；`SILENT_FALLBACK`（48 条）→ 保持 `OBSERVATION_ERROR` 弃权，**禁止映射**。`new_unobservable_classes` 冻结定义为「v4 相对 v3 把原本布尔可判（supports 为 bool）的样本新变成弃权的类别数」，判据 `= 0`；上述类别均为既有弃权集合内的显式归类，不得把布尔样本转弃权。**保护性弃权合计 `protected_total = 96` 修正前后不得下降**（V7）。**张力裁决（照实声明，不粉饰）**：接卡指令 D3 写「ref_missing→缺席可判路径」，与卡面禁令 2（禁止把保护性弃权映射成布尔）及 V7（`protected_total=96` 不得下降）直接冲突。本轮按**禁令优先**执行：只建立 `VERIFIABLE_ABSENCE` 显式独立路径与升级候选留痕，**不激活为布尔判定、不改变 `protected_total`**；是否升级为可判的 NOT_SUPPORT **单独立项并留痕，交浮香裁定**（对抗问题 2 正面答案：两者都是「期望物不存在」，本轮裁决为二者同属保护性弃权、不做区别对待，避免重建轮九伪一致）。
+5. **无锚政策显式裁决与 cwd 观测面对齐（接卡指令 D4 / 卡面 D4 / V5）**：70 条 INSUFFICIENT（`ref_ok` 48 + `goldset_text` 22）的处置冻结为：映射表标 `protected_abstention` / `subtype=no_anchor_policy`，维持独立轨 `explicit_anchor_required=True`，**不放宽任何既有弃权、不为抬高一致率而迁就主轨无锚 E4**（禁令 3）。基准裁决：以**主轨冻结 E 级为参照、独立轨显式锚要求为自身判级政策**，二者差异登记为「设计政策差异」，主轨无锚 E4 是否属设计缺陷**不在本卡裁定范围**（禁令 1 不许改主轨），交浮香裁定（对抗问题 4）。`cwd_probe` 18 条：`tools/eval/r13_alignment.py --recompute` 对两轨**统一观测面到 workspace**（主轨用其 v1.5 C10 已支持的 `workspace` 参数调用，**不改 `judge.py` 源码**），`--check-cwd` 判据 `cwd_mismatches` 修正前 18 → 0；如实登记「主轨在 root 跑失败是复算调用方式造成的观测面错位，非主轨源码缺陷」（对抗问题 3 正面答案）。
+6. **双标注独立实测与照实降级（接卡指令 D5 / 卡面 D5 / 禁令 5）**：`goldset/annotation_r13.jsonl` 逐条留痕；须**实测** `annotator_count`。若无法提供 ≥2 名独立人类标注者，照轮十一 ADV-3 / 轮十二 ADV-5 同形降级：`two_human_independent_annotation=false`、`annotator_count=1`，明确披露「单 agent 双视图一致性 + 方向诊断」，**不得记为双标注已满足**；尝试构造的第二机械视图须标 `mechanical_view=true`，不得冒充独立人类标注。
+7. **复算口径、禁令 3/4 与不出门结论（接卡指令 D6 / 卡面 D6 / V6 / V10）**：`r13_alignment.py --recompute` 输出 `r_main` / `comparable` / `abstain` / `disagree_by_mechanism`；`disagree_by_mechanism` 冻结机制枚举为 `anchor_rule_diff`（修正前 48）/ `cwd_observation_surface_diff`（修正前 18）/ `policy_conflict` / `other`（**必须为空**），逐条合计 = disagree 总数，**无残余、无「其他」桶藏分歧**。**口径区分（禁令 4 正面答案）**：本轮 `r_main` 是标 `caliber = instrument_alignment_calibration_only` 的**校准复算读数**，不是第二个门计数读数；报告必须并列轮十一封存 `R_main = 0.62069`（门计数，冻结不动）与本轮校准值，明确「不重测门值、不重算门结论、不产出第二个 M_C、报告不出现任何门值数值」；`gate_result = not_evaluable`、`gate_conclusion_issued=false`。**禁令 3**：修正前后分歧构成并列（修正前 66 = A48 + B18；修正后逐机制归因），一致率上升**全部**由 A/B 两处口径修正贡献，**不得叙述为「影子轨能力提升」或「仪器能力提升」**（对抗问题 5/6 正面答案）。每条结论带**双格式** artifact 指针：方括号 `[artifact: 路径 sha256=<64hex>]` 供 `verify_artifact_pointers.py` 验真，圆括号 `(路径.md/.json) <64hex>` 供 V10 字面判据；路径须为真实存在的文件，**禁止裸文件名假绿**。
+
+### D20-C §20 禁令区（三条，随条款写入，覆盖卡面禁令 1–6）
+
+1. **禁止改主轨、禁止把保护性弃权映射成布尔**（覆盖卡面禁令 1、2）：本卡只改独立侧 `independent_judge.py` / `rubric_v4.py` / `label_mapping.py` / `r13_alignment.py`；主轨 `judge.py` / `extract.py` 是冻结参照，不得为提高一致率而修改——改主轨等于改答案。`SILENT_FALLBACK`（48）与 `FILE_NOT_FOUND`（48）是保护性弃权（轮九假一致根因的防线），映射表禁止把这两类映射为「一致」或「冲突」，映射即重建轮九伪一致；`FILE_NOT_FOUND` 升级为「可验证的缺席」须单独立项留痕（条款 4 已裁决本轮不激活）。
+2. **禁止抬高一致率叙述、禁止第二个 R_main / 第二个 M_C / 门结论**（覆盖卡面禁令 3、4）：修锚点规则机械消解 48 条分歧是**口径修正**不是能力提升，报告须并列修正前后分歧构成；本轮不重测门值、不重算门结论、不产出第二个门计数 R_main、不产出第二个 M_C、`gate_result` 一律 `not_evaluable`，本轮产出为仪器口径对齐 + 校准复算，**不出门结论**。
+3. **禁止伪造独立标注、禁止动冻结文本与触碰红区、禁止 push/merge/verdict**（覆盖卡面禁令 5、6）：单 agent 双视图须照 ADV-3/ADV-5 同形降级披露（`two_human_independent_annotation=false`）；§0–§19 零回写；红区零触碰，完整路径为 `tools/eval/judge.py`、`tools/eval/extract.py`、`tools/eval/blind.py`、`tools/eval/report.py`、`tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、`tools/gate.py`、`tools/lint_cards.py`、`verdicts/`、`.eval-sealed/`（7 个仪器在 `tools/eval/` 下、gate/lint 在 `tools/` 下，**写裸文件名会让 diff 检查假绿**）；CI py3.9 下禁止给 Path 的文本写入方法传 `newline` 关键字，JSON 写入一律用 `open(..., newline="")`；不碰 master、不 push、不 merge、不写 verdict、不自评审。
+
+### D20-C′ 卡面 6 条禁令逐字并入（冻结文本完整性留痕）
+
+- **禁令 1（不许改主轨）**：本卡只改独立侧（`independent_judge.py` / `rubric_v4.py` / `label_mapping.py`）。主轨 `judge.py` / `extract.py` 是冻结参照，**不得**为提高一致率而修改——改主轨等于改答案。
+- **禁令 2（不许把保护性弃权映射成布尔）**：`SILENT_FALLBACK`（48 条）与 `FILE_NOT_FOUND`（48 条）当前是**保护性弃权**（独立轨拒绝在观测失败时给出布尔判定，这是轮九假一致根因的防线）。映射表**禁止**把这两类映射为「一致」或「冲突」——映射即重建轮九伪一致。是否把 `FILE_NOT_FOUND` 升级为可判的「可验证的缺席」必须单独立项并留痕（D2）。
+- **禁令 3（不许抬高一致率）**：修锚点规则会机械消解 48 条分歧，这是**口径修正**不是能力提升；报告不得叙述为「影子轨能力提升」，且须并列修正前后的分歧构成。
+- **禁令 4（不许第二个 R_main / 不许出门结论）**：本轮不重测门值、不产出第二个 M_C；`gate_result` 一律登记 `not_evaluable`，本轮产出为仪器修订 + 校准复算，**不出门结论**。
+- **禁令 5（不许伪造独立标注）**：D5 若无法实现双人独立标注，须照实降级为「单 agent 双视图一致性」，**不得**记为双人独立（轮十二 ADV-3/ADV-5 同形先例）。
+- **禁令 6（不许动冻结文本）**：§0–§19 的哈希在冻结 commit 后必须不变；§20 为纯追加。
+
+### D20-D 冻结常量表（数据生成前写死）
+
+| 常量 | 冻结值 | 来源 / 用途 |
+|---|---|---|
+| 冻结样本集 | `out/r11-blind-samples.json`，400 条，seed `20261111` | 轮十一封存，V3/V4/V5/V6 复算输入；本轮不改样本 |
+| 原始分母 | 400 | 条款 7，任何报告不得只报可比分母 |
+| 轮十一封存 R_main（门计数） | `0.62069`（108 True / 66 False / 226 None，可比 174） | 冻结不动，报告须与本轮校准值并列 |
+| 锚点集合差集 | 修正前 56 → 判据 0 | 条款 3 / V3 |
+| cwd 观测面错位 | 修正前 18 → 判据 0 | 条款 5 / V5 |
+| 保护性弃权合计 | `SILENT_FALLBACK 48 + FILE_NOT_FOUND 48 = 96`（不得下降） | 条款 4 / V7 |
+| 弃权总数 / INSUFFICIENT | 226 / 70（`ref_ok` 48 + `goldset_text` 22） | A-2 / 条款 5 |
+| rubric v4 类别白名单 | `NO_EVIDENCE_LINE` / `STRUCTURALLY_UNJUDGEABLE` / `VERIFIABLE_ABSENCE` / `OBSERVATION_ERROR(SILENT_FALLBACK)` | 条款 4 / V4 |
+| `new_unobservable_classes` | 定义 = 布尔样本被新转弃权的类别数，判据 0 | 条款 4 / V4 |
+| 映射矩阵 | 5×5 = 25 格，三类 `equivalent` / `conflict` / `protected_abstention`，`unmapped=0` | 条款 2 / D20-E / V2 |
+| 分歧机制枚举 | `anchor_rule_diff` / `cwd_observation_surface_diff` / `policy_conflict` / `other`（须空） | 条款 7 / V6 |
+| 本轮校准读数 caliber | `instrument_alignment_calibration_only` | 条款 7；不进门结论 |
+| `gate_result` | `not_evaluable`（复核用），`gate_conclusion_issued=false` | 禁令 2/4 |
+| V1 前缀 SHA（文本口径） | `8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561` | 冻结前后须一致 |
+| 双标注判据 | `annotator_count ≥ 2` 否则照实降级 | 条款 6 / 禁令 3 |
+| 指针格式 | 双格式：方括号 `[artifact: ...]` + 圆括号 `(路径) <64hex>` | 条款 7 / V10 |
+
+### D20-E 机器可读标签映射矩阵（冻结，`label_mapping.py --verify` 读回）
+
+以下矩阵为条款 2 的冻结正文。`tools/eval/label_mapping.py` 必须逐格读回并与代码常量比对，不得绕过冻结文本；`unmapped` 须为空，`SILENT_FALLBACK` / `FILE_NOT_FOUND` 不得落入 `equivalent` 或 `conflict`。
+
+<!-- R13-MAPPING-BEGIN -->
+```json
+{
+  "schema": "r13-label-mapping-v1",
+  "frozen_in": "section 20 D20-E",
+  "main_levels": ["E0", "E1", "E2", "E3", "E4"],
+  "indep_classes": ["SUPPORT", "NOT_SUPPORT", "INSUFFICIENT", "OBSERVATION_ERROR", "STRUCTURAL"],
+  "verdict_classes": ["equivalent", "conflict", "protected_abstention"],
+  "cells": {
+    "E0|SUPPORT": "conflict",
+    "E0|NOT_SUPPORT": "equivalent",
+    "E0|INSUFFICIENT": "protected_abstention",
+    "E0|OBSERVATION_ERROR": "protected_abstention",
+    "E0|STRUCTURAL": "protected_abstention",
+    "E1|SUPPORT": "conflict",
+    "E1|NOT_SUPPORT": "equivalent",
+    "E1|INSUFFICIENT": "protected_abstention",
+    "E1|OBSERVATION_ERROR": "protected_abstention",
+    "E1|STRUCTURAL": "protected_abstention",
+    "E2|SUPPORT": "conflict",
+    "E2|NOT_SUPPORT": "equivalent",
+    "E2|INSUFFICIENT": "protected_abstention",
+    "E2|OBSERVATION_ERROR": "protected_abstention",
+    "E2|STRUCTURAL": "protected_abstention",
+    "E3|SUPPORT": "conflict",
+    "E3|NOT_SUPPORT": "equivalent",
+    "E3|INSUFFICIENT": "protected_abstention",
+    "E3|OBSERVATION_ERROR": "protected_abstention",
+    "E3|STRUCTURAL": "protected_abstention",
+    "E4|SUPPORT": "equivalent",
+    "E4|NOT_SUPPORT": "conflict",
+    "E4|INSUFFICIENT": "protected_abstention",
+    "E4|OBSERVATION_ERROR": "protected_abstention",
+    "E4|STRUCTURAL": "protected_abstention"
+  },
+  "protected_abstention_error_classes": ["SILENT_FALLBACK", "FILE_NOT_FOUND"],
+  "protected_abstention_subtypes": {
+    "INSUFFICIENT": "no_anchor_policy",
+    "OBSERVATION_ERROR": "observation_failure",
+    "STRUCTURAL": "structural_unjudgeable"
+  },
+  "policy_note": "main track E-level is the frozen reference; the independent explicit-anchor policy is NOT relaxed to raise agreement. No cell maps a protected abstention to equivalent or conflict."
+}
+```
+<!-- R13-MAPPING-END -->
+
+**三类语义**：`equivalent` = 两轨均给出布尔且同向（按 `main_supports = (E_level == "E4")` 计算）；`conflict` = 两轨均给出布尔且反向；`protected_abstention` = 独立侧弃权（INSUFFICIENT / OBSERVATION_ERROR / STRUCTURAL），**禁止映射成布尔一致或冲突**，即轮九假一致的防线。25 格为穷举覆盖，实际观测到的格子分布由 V6 复算统计，不得反推修改本矩阵。
+
+### D20-F 红区、CI 与收尾纪律
+
+`run-dir-r13/`、`shadow-r13/`、`out/` 为执行产物，走 custody 不入 repo（`.gitignore` 在冻结 commit 内明写追加 `run-dir-r13/` 与 `shadow-r13/`，`out/` 已覆盖）。每条 D6 结论须带双格式 `路径 + sha256` artifact 指针，由 V10 机械核验（`bad == 0`）。V1–V11（卡面 Acceptance 实为 V1–V11，接卡指令写 V1–V10，执行者全量亲跑）由执行者亲跑并粘贴真实退出码，不采纳作者 precheck；任一 FAIL 照实登记，不刷绿。V11 单测须同时给出带 `COVENANT_BASH_HINT` 与不带 hint 两次输出，lint `--strict` 残留 WARN（`VERDICT_WITHOUT_REVIEW` 为评审前瞬态、`TEST_COUNT_UNVERIFIED` 为仓库既有 discovery 问题）照实披露，不改红区 `lint_cards.py` 刷绿。收尾：seal 移交 custody → `artifacts.json` 补登记 → 卡转 `IN_REVIEW` → 递浮香 → 停手等 Orchestrator 预审 + 浮香 PASS gate，执行者无评审权、无合并权。
