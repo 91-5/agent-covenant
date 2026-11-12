@@ -2082,5 +2082,180 @@
     "docs/eval-report-r14-strata.md",
     "artifacts.json",
     "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-001.md"
-  ]
+  ],
+  "_s21_freeze_XJ-20261113_001": {
+    "_comment": "XJ-20261113-001 D1 §21 冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness；登记动作不改 §21 冻结文本。",
+    "phase": "D1_section21_freeze",
+    "acceptance_point": "66f547c",
+    "acceptance_commit": "efa20c6",
+    "freeze_commit": "89264dc",
+    "freeze_before_any_r14_product": true,
+    "r14_products_before_freeze": [],
+    "prereg_before_bytes": 191760,
+    "prereg_before_sha256": "53d43d1b76e6bb9bee2eb470be0d391f261d8c0bd81fad9a1aefa4b3ecb0f3a8",
+    "v1_prefix_sha256": "4abeb25527682b6da4b889012c984355c159ea5743e7c82bd3e3ab65f1a0e58b",
+    "v1_prefix_calibre": "text mode universal newlines -> LF (round-12 D0 same calibre); CRLF raw calibre 53d43d1b... also byte-identical before/after",
+    "prefix_intact": true,
+    "prereg_after_bytes": 213278,
+    "prereg_after_sha256": "b1b32c49d33f814b2440bf60c4cde71ac4c842291959805d4e0a73ff11d4b226",
+    "s21_section_lines_added": 165,
+    "v1_numstat": "165 0 docs/eval-prereg.md",
+    "s21_section_sha256_lf": "245f54a552314804e2bcbe8bd4299d4e5451744c9c748a23751b32e3bebc67c0",
+    "clauses": "D21-0 legality / D21-A diagnostic facts (card F1/F2/F3 verbatim + executor pre-freeze console recheck, zero products on disk) / D21-B 7 clauses / D21-C 4 prohibitions / D21-D frozen constants / D21-E machine-readable r14-truth-frozen-v1 block / D21-F acceptance mapping",
+    "gitignore_added": [
+      "run-r14/"
+    ],
+    "gitignore_note": "card 产物落点 clause authorises; .gitignore is not in Owned files — disclosed here for adjudication (round-13 D0 same form)",
+    "custody_anchors": "D:/15812/projects/round14-custody/s21-freeze-anchors.json"
+  },
+  "_round14_progress_XJ-20261113_001": {
+    "_comment": "XJ-20261113-001 D2–D4 产物与仓外 custody 台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；out/ 为执行产物不入 repo，哈希按工作树真实字节计算。登记不改 §21 冻结文本、不写 verdict、不 push、不 merge。",
+    "custody_root": "D:/15812/projects/round14-custody",
+    "d2_truth_source": {
+      "commit": "2b42d94",
+      "implementation": "tools/eval/verify_truth_source.py",
+      "implementation_sha256": "35c03f758ae6b98594a41912a6cddde1ce90cecc6110856e8cba9fe152c525fb",
+      "out": "out/truth-source.json",
+      "out_sha256": "bcfe1a9ddd8d880dddc00a32ce3e86235b8a768b70855fe2f4c5b8731ba4a706",
+      "rules_read_back_from": "prereg section 21 D21-E (label_mapping.py read-back precedent)",
+      "readings": {
+        "holdout_labels_inert": "133/133",
+        "contradictions": 0,
+        "splits": "cmd 59 (29 numeric verbatim-in-out + 30 no numeric value position) / ref_present 59 / ref_absent 15",
+        "direction_check": "15/15 ref-absent rows main_level != E4",
+        "truth_source_caliber": "layer_semantics_plus_fixture_mechanical_check"
+      },
+      "py39_ast_ok": true
+    },
+    "d3_measure": {
+      "commit": "a701646",
+      "implementation": "tools/eval/measure_unanchored_fp.py",
+      "implementation_sha256": "644591f623efd69b6bc5adaf1d20f253bb8543beacbfa34cf008f6b59f240b8f",
+      "out": "out/unanchored-fp.json",
+      "out_sha256": "bbab0f6fe8ee911e1dfa84075a51dffc37ec7a1b8c4a6915c241b299160faca0",
+      "readings": {
+        "false_support": 30,
+        "false_support_rate": 0.2,
+        "anchor_miss_e4": "30/30",
+        "fp_upper95": 0.26666666666666666,
+        "bootstrap": "B=2000 seed=20261113 nearest-rank percentile (frozen in D21-E)",
+        "severity": "high",
+        "severity_source": "frozen_table",
+        "m1_impact": {
+          "caliber": "diagnostic_only",
+          "main_arm": "M1 33.33% as-judged -> 50.00% counterfactual (+16.67pp; 30 false supports reclassified E3a)",
+          "independent_arm": "0 false supports, 0.00pp",
+          "anchored_only": "fp mass 0; anchored M1 0.00% unchanged"
+        }
+      },
+      "py39_ast_ok": true
+    },
+    "d4_strata": {
+      "commit": "3779d22",
+      "implementation": "tools/eval/report_strata.py",
+      "implementation_sha256": "56cdefec1f84dc49535627fe34ce9a0a0d984c9eb8e06bc5e20095bc0702bdd1",
+      "out": "out/strata.json",
+      "out_sha256": "ac0d3b25380d50d9c69af07371a0e8b9f4b3b5bcc2077258cf4c635fc1cc7c60",
+      "readings": {
+        "anchored": "raw 118 / comparable 118",
+        "no_anchor": "raw 126 / comparable 0 (protected abstention)",
+        "verified_absence": "raw 48 / comparable 0 (protected abstention)",
+        "residual": "SILENT_FALLBACK_PROTECTED 48 + STRUCTURALLY_UNJUDGEABLE 30 + NO_EVIDENCE_LINE 30 = 108",
+        "raw_conservation": "292 + 108 = 400",
+        "sum_strata_equals_comparable_set": true,
+        "primary_denominator_changed": false,
+        "r_main": 1.0,
+        "r_main_denominator": 118,
+        "r_main_anchored": 1.0,
+        "r_main_anchored_denominator": 118,
+        "no_anchor_mapping_count": 0,
+        "layer_cross_check": "per-layer v4 class distribution equals sealed out/r13-rubric-v4-decomposition.json per_layer_classes cell-for-cell (fail-fast)"
+      },
+      "agree_caliber_note": "agreement is NEVER recomputed from the rows file (its main levels are the stale round-11 unaligned judgments); R_main and agree are read from the sealed round-13 alignment artifact, and the comparable-set == v4-SUPPORT == anchored-stratum identification is proven by the sealed 118/118/0 plus the membership cross-check",
+      "py39_ast_ok": true
+    }
+  },
+  "_round14_final_XJ-20261113_001": {
+    "_comment": "XJ-20261113-001 D5–D6 产物、seal 与 V1–V10 亲跑台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；不写 verdict、不 push、不 merge、不碰 master。",
+    "d5_report": {
+      "path": "docs/eval-report-r14-strata.md",
+      "commit": "3bd8721",
+      "sha256": "0047823a67e8824260fba03682f4353957713fb45b581dc7edcbf726cab4ebd8",
+      "conclusions": 8,
+      "pointer_verify": "CONCLUSIONS 8 / WITH_VALID_POINTER 8 / MISSING 0 / COVERAGE 100.0% / POINTERS_TOTAL 13 / UNIQUE_PATHS 9 / BAD_DIGEST 0 / MALFORMED 0 / RESULT PASS (exit 0)",
+      "anti_misread_section": "section 0 prominent primary-vs-anchored statement; capability_gain_claim=false; gate_result=not_evaluable"
+    },
+    "d6_seal": {
+      "bundle": "run-r14 (execution artifacts only, not_true_data=true)",
+      "sealed_files": 8,
+      "root_label": "run-r14",
+      "seal_json_sha256": "3de2e6d276af2e242acd71a7d0b9d11bea98e8c1b96efdb73bc38ad9eac4b80f",
+      "custody_copy": "D:/15812/projects/round14-custody/sealed/run-r14",
+      "seal_cmd_exit": 0,
+      "verify_exit": 0,
+      "verify_output": "VERIFY: OK (8 files match the seal)",
+      "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)",
+      "custody_summary": "D:/15812/projects/round14-custody/r14-seal-summary.json"
+    },
+    "acceptance": {
+      "runner": "D:/15812/projects/round14-custody/acceptance_r14.py",
+      "log": "D:/15812/projects/round14-custody/r14-acceptance.log",
+      "json": "D:/15812/projects/round14-custody/r14-acceptance.json",
+      "commands": 17,
+      "exit_table": {
+        "V1_numstat": 0,
+        "V1_prefix_check": 0,
+        "V2": 0,
+        "V3": 0,
+        "V4_severity": 0,
+        "V4_source": 0,
+        "V5": 0,
+        "V6_print": 0,
+        "V6_bitidentity": 0,
+        "V7": 0,
+        "V8_redzone": 0,
+        "V9_seal_verify": 0,
+        "V10_unittest_literal": 1,
+        "V10_unittest_with_hint": 0,
+        "V10_lint": 0,
+        "X_pointers": 0,
+        "X_product_hashes": 0
+      },
+      "nonzero_registered": [
+        {
+          "id": "V10_unittest_literal",
+          "exit": 1,
+          "detail": "Ran 527 tests ... FAILED (failures=2, errors=3); root cause no Git for Windows bash found -> set COVENANT_BASH_HINT (round-10/11/12/13 registered Windows dependency, same form); with the real hint path the suite is Ran 546 tests ... OK (exit 0)"
+        }
+      ],
+      "v10_lint": "exit 0, LINT: PASS (2 warnings, 0 errors): VERDICT_WITHOUT_REVIEW (executor must not write verdict) + TEST_COUNT_UNVERIFIED (lint-internal discovery raised without bash hint)",
+      "v1_evidence": "numstat 165 0; v1_prefix_sha256 4abeb255... identical pre/post freeze (LF calibre); raw CRLF calibre 53d43d1b... also identical",
+      "v4_evidence": "severity high; severity_source frozen_table",
+      "v6_evidence": "1.0 118 1.0; r_main_identical True / denominator_identical True / frozen_118 True",
+      "v8_evidence": "git diff 3126899 --stat over the 11 full red-zone paths -> empty output, exit 0",
+      "v9_evidence": "VERIFY: OK (8 files match the seal), exit 0",
+      "determinism": "X_product_hashes: truth-source/unanchored-fp/strata byte-identical (True/True/True) after the full acceptance rerun"
+    },
+    "card_status": "IN_REVIEW",
+    "review_request": "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-001.md",
+    "courtesy_copy": "D:/15812/mo brain/review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-001.md",
+    "reviewer": "AgnesCode (浮香), Orchestrator 预审",
+    "unresolved_for_review": [
+      "residual circularity of layer-semantics truth (generator-defined layers, no external benchmark)",
+      "how severity=high disposition (formal conclusions anchored-only) plugs into the section 17/18 gate clauses in future gate rounds",
+      "disposition of the 15 ref_absent rows vs the round-13 VERIFIABLE_ABSENCE upgrade-candidate thread",
+      "M1 arm caliber: judging arms (main/independent) used because A/B study-arm labels are not recoverable in this corpus"
+    ],
+    "discipline": {
+      "no_push": true,
+      "no_merge": true,
+      "no_verdict": true,
+      "no_self_review": true,
+      "master_untouched": true,
+      "redzone_zero_touch": true,
+      "main_track_frozen": "tools/eval/judge.py / tools/eval/extract.py untouched (V8 empty diff)",
+      "design_error_class_not_used_as_truth": true,
+      "r_main_denominator_unchanged": true
+    }
+  }
 }
