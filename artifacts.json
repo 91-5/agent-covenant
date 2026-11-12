@@ -2073,5 +2073,14 @@
       "reviewer": "AgnesCode (浮香), Orchestrator 预审",
       "no_verdict_no_push_no_merge": true
     }
-  }
+  },
+  "XJ-20261113-001": [
+    "tools/eval/verify_truth_source.py",
+    "tools/eval/measure_unanchored_fp.py",
+    "tools/eval/report_strata.py",
+    "docs/eval-prereg.md",
+    "docs/eval-report-r14-strata.md",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-001.md"
+  ]
 }
