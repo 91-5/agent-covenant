@@ -1672,6 +1672,73 @@
       },
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D7_seal_and_handoff": {
+      "phase": "D7 / Review handoff",
+      "seal": {
+        "bundle": "run-dir-r12 (execution-artifact bundle, not_true_data=true)",
+        "custody_copy": "D:/15812/projects/round12-custody/sealed/run-dir-r12",
+        "sealed_files": 9,
+        "products_copied": 8,
+        "seal_cmd_exit": 0,
+        "verify_exit": 0,
+        "verify_message": "VERIFY: OK (9 files match the seal)",
+        "root_label": "r12-execution-artifacts",
+        "seal_json_sha256": "070f69955a49399f515f2a70bf2d38d6b7b8909bb23d8a746a0b772e922c3aea",
+        "run_data_json_sha256": "001ca44a854b2e4e6b9d462f666697ddfd6392a7f150395fbb6e8285c40a3f41",
+        "seal_summary": "round12-custody/r12-seal-summary.json",
+        "seal_summary_sha256": "e71ea128a94f8fa537b5e95e8fafb62816d28997904b3db5e79e586dce575e45",
+        "custody_script": "round12-custody/seal_r12.py",
+        "custody_script_sha256": "09b6e45f3353a101cdbe9eee3e04fbafc280c63fc10b9324ba6c3d0b54b04347"
+      },
+      "acceptance": {
+        "runner": "round12-custody/acceptance_r12.py",
+        "runner_sha256": "6a88c1e639103b1c68dbb6566606b522d0c59a697aeff7c95a89024428524898",
+        "ledger": "round12-custody/r12-acceptance.json",
+        "ledger_sha256": "64ec8a36d0fb40c09a1d3a2b37fd0ff86095547e589396b6547835e18944aa80",
+        "log": "round12-custody/r12-acceptance.log",
+        "log_sha256": "be1d33a2a1e4063dcefd9e98ad80af840ec670be95b6d85d40b040733ad9497f",
+        "commands": 23,
+        "nonzero_labels": ["V9_2", "V10_1"],
+        "v9_2": {
+          "exit": 1,
+          "ran": 527,
+          "result": "FAILED (failures=2, errors=3)",
+          "root_cause": "RuntimeError: no Git for Windows bash found; set COVENANT_BASH_HINT (all failures in test_sync_test_count); same form as round-10/11 registered Windows dependency",
+          "not_whitened": true
+        },
+        "v9_3": {
+          "exit": 0,
+          "ran": 546,
+          "result": "OK",
+          "hint": "D:/WorkBuddy/resources/vendor/PortableGit/usr/bin/bash.exe"
+        },
+        "v10_1": {
+          "exit": 1,
+          "result": "LINT: FAIL (0 errors, 2 warnings)",
+          "warnings": ["VERDICT_WITHOUT_REVIEW", "TEST_COUNT_UNVERIFIED"],
+          "not_whitened": true
+        },
+        "pointer_verify_after_all_reruns": "PASS (26/26, BAD_DIGEST 0)",
+        "product_hashes_stable_after_all_reruns": true,
+        "gate_value_assignments_in_report": 0
+      },
+      "review_request": {
+        "primary": "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-001.md",
+        "path_case_note": "card Review handoff writes review\\agnes\\ (lowercase); the repo's existing tracked directory is review/AGNES/ (uppercase). Windows is case-insensitive, so both denote the same file. Registered under the git-tracked spelling.",
+        "courtesy_copy": "D:/15812/mo brain/review/agnes/XJ-REVIEW-REQUEST-AGNES-20261112-001.md",
+        "reviewer": "AgnesCode (Fu Xiang) + Orchestrator pre-review",
+        "owned_files_disclosure": "review/agnes/ request file is mandated by card Review handoff but was not in the Owned files list; mechanically registered on the card and submitted for adjudication"
+      },
+      "card_status": "IN_REVIEW",
+      "discipline": {
+        "no_push": true,
+        "no_merge": true,
+        "no_verdict": true,
+        "no_self_review": true,
+        "master_untouched": true,
+        "redzone_zero_touch": true
+      }
     }
   }
 }
