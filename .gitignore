@@ -56,3 +56,8 @@ shadow-r10/
 # out/ already covered above; these two exact names are not.
 run-dir-r11/
 shadow-r11/
+
+# Round-12 execution products (XJ-20261112-001 D0; card constraint "产物落点").
+# out/ already covered above; these two exact names are not.
+run-dir-r12/
+shadow-r12/

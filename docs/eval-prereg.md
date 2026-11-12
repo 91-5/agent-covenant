@@ -1260,3 +1260,58 @@ triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_suppor
 8. **验收纪律**：V1–V12 由执行者亲跑并粘贴退出码，不采纳作者 precheck；**任一 FAIL 不进入门结论讨论**；按 §18 条款 6 与附加否决项，**若 M_C 出现第二个数值，或任一结论缺 artifact 指针（路径 + sha256），整轮判 `invalid`（不是 `not met`）**。卡面 V8 之外，seal 命令字面与真实 CLI 不符时，先按字面跑登记退出码、再按等价正确命令跑登记，两者都不修饰。
 
 **未变更项（v1.0.0–v1.9 继续有效）**：E0–E4 判定顺序与各级语义（§1）、主轨判级 = v1.5（§11 C10/C11）、指标定义与 M1 分子口径、最小效应阈值、采样与留出（§3）、配对与 bootstrap（§5）、排除与重试（§4）、盲化与 custody（§3.6）、局限性清单（附录 D）、任务文件 T01–T30、predicate 封闭集合、影子轨零判级输出与隔离保证、B 臂 `not_applicable` 规则、§16 冻结文本及其 96 条映射表、§17 双指标门与 Gate 0 协议冻结文本——本节只冻结**轮十一独立判级、R_main 重测、M_C 重推与四桶 triage**，不改上述任何一项；旧门 0.95 的作废见 D18-0，且不作回写。
+## §19 变更记录（v2.0 → v2.1：轮十二 仪器闭合轮，2026-11-12，冻结于轮十二任何数据产生之前）
+
+### D19-0 合法性前提、冻结序与上游边界
+
+本节在轮十二任何 `run-dir-r12/`、`shadow-r12/`、`out/` 产物产生之前冻结，沿用 §16 D16-5 三段序 `freeze → offline replay → data`：先冻结本协议，再离线复算，最后才允许产生任何执行读数。上游：轮十一卡 XJ-20261111-002（CLOSED，归档 legacy；浮香 verdict PASS 0B/0C/6A，ADV-6 闭合），dp 大脑 2026-11-12 Q3 裁定「有效演练 + 仪器缺陷待修」。
+
+轮十一的终局是 `gate_result = not_evaluable`（R_main 0.62069 / LB95 0.546722 < 0.80 命中 §18 三档表，`gate_conclusion_issued = false`）。本轮的任务**只**是补齐「仪器缺陷待修」这一半：闭合轮十一留下的 4 条可修 advisory（ADV-1 环境隔离 / ADV-2 exit_source 采集 / ADV-4 弃权归因 / ADV-5 exit_code 口径），使仪器具备在下一轮脱离 `not_evaluable` 的条件。**本轮自身不出门结论，不重跑 R_main 计数，不重算任何门值。** 轮十一 ADV-6（独立性不可满足）不在本轮闭合范围，本轮不得宣称独立性已满足。
+
+§0–§18 为冻结文本，纯追加、零回写；§19 冻结 commit 之后其前缀哈希须保持不变，由 V1 机械核验。本卡 C-1～C-5 的全部诊断事实逐字并入 D19-A，作为条款的事实地基，不得在跑数据后补写或追改。
+
+### D19-A 诊断事实地基（本卡 Context C-1～C-5 逐字并入）
+
+**C-1 · 弃权 226/400 的真实构成（Orchestrator 实测，非推断）**。轮十一盲态产物 `out/r11-independent-blind.json`（400 条）逐条分解：R10_ANCHOR 层 240 条中 SUPPORT 38（15.8%）、NOT_SUPPORT 30（12.5%）、OBSERVATION_ERROR 120（50.0%）、INSUFFICIENT 52（21.7%），弃权率 71.67%；HOLDOUT 层 160 条中 SUPPORT 88（55.0%）、NOT_SUPPORT 18（11.3%）、OBSERVATION_ERROR 36（22.5%）、INSUFFICIENT 18（11.3%），弃权率 33.75%。OBSERVATION_ERROR / INSUFFICIENT 的错误分类构成：R10_ANCHOR 层 PARSE_FAIL 60、SILENT_FALLBACK 30、FILE_NOT_FOUND 30、INSUFFICIENT（无锚点）52；HOLDOUT 层 PARSE_FAIL 0、SILENT_FALLBACK 18、FILE_NOT_FOUND 18、INSUFFICIENT（无锚点）18。
+
+**C-2 · 弃权偏置的真因不是判级器偏置，是仪器定义缺口（实测更正）**。dp 裁定原先把 R10_ANCHOR 层 71.67% 弃权归因为「judge 仪器对该层的偏置性不可判」，Orchestrator 逐条定位后更正该表述：60 条 PARSE_FAIL 全部来自轮十 `round10-custody/gate0-claims.json` 的「无证据行」样本（证据行形如 `证据：（缺字段）`，没有 `cmd=`、没有 `ref=`、没有 anchors；`tools/eval/independent_judge.py::_parse_case` 实测这类样本 `cmd=None ref=None anchors=[]`，证据行非空故不走 PARSE_FAIL 早退，但 `_reproduce` 无可执行命令 → 落 PARSE_FAIL）。400 条样本中 239 条没有 `cmd=`，分布为 `ref_ok 48 / ref_missing 48 / goldset_text 48 / incomplete 30 / no_evidence 30 / cwd_probe 18 / dotfile_claim 17` —— 独立判级器只对 161 条 cmd 样本有完整判级路径，其余 7 层共 239 条（59.75%）走「无命令可复现」分支。结论：这 60 条不是「执行者做错」，也不是「判级器对某层有偏置」，而是独立判级 rubric v2 未定义「结构上无证据可复现」这一类样本的处置（v2 要求显式锚点、无锚点 → INSUFFICIENT；无命令 → PARSE_FAIL）。**这是仪器定义缺口，可修，且修得干净**，处置方式由本节条款 2 冻结。控制变量：HOLDOUT 层 88 条 SUPPORT 对 0 条 PARSE_FAIL，说明这不是判级能力的普遍不足，而是分层样本构成差异（R10_ANCHOR 源自轮十 gate0-claims，HOLDOUT 源自 30 个 seed 任务）。
+
+**C-3 · ADV-2 的真因：`exit_source` 全部为 adapter 是采集方式问题，不是不可得**。`tools/eval/gate_metrics.py::run_r11` 实测读取 `r10-gate-input.json::field_semantics.exit_code`，该字段逐字声明是「a mechanical map over flags/detail, NOT an independent OS process exit code」→ 判定 `mechanical = True` → 210/210 全部标 `exit_source = adapter` → §18 条款 11 排除后主样本集 0 条 → `precision/recall = null`。而 `tools/eval/exit_fixture.py` 已具备真实 OS 退出码采集能力（三态 os/adapter/launch_failed，夹具 10/10 已通过，见轮十一 D5）。即：**真实 OS 观测能力已存在，只是门重跑没有用它**，这是采集管线未接通，不是能力缺失。执行者接卡复核另证实：轮十 210 pairs 的字段集合为 `claim_id / error_classes / evaluative / exit_code / layer / main_level / main_supports / not_applicable / parse_ok / predicate_ok / product / schema_invalid`，`command`、`cmd`、`evidence`、`ref`、`flags`、`detail` 六项在 210 条中出现次数均为 0 —— 旧 pairs 结构上不存在可重观测的命令，故本轮不得对旧 pairs 假装「重观测」，须由采集层真实启动子进程产出新样本（条款 4）。
+
+**C-4 · 轮九 ADV-1 环境隔离条款至今未闭合（实测）**。`round11-custody/r11_reliability.py` 零环境隔离：全文无 `PYTHONPATH` 清理、无 `sitecustomize` 禁用、无 `COVENANT_*` 清理（grep 0 命中）。而 `tools/eval/exit_fixture.py::clean_env` 已实现完整隔离（清 PYTHONPATH + `-S` 禁 sitecustomize + 固定 cwd）——**两处实现不一致**。轮九 ADV-1 明确要求把环境隔离写进条款，此条至今未追记，本轮由条款 3 闭合。
+
+**C-5 · 本轮不做、也不许做的事（禁令，钉入卡）**。卡面明列 4 点：不许重跑 R_main 并重算门值产生第二个值（§18 条款 2 + 轮十一 V7 否决项「出现第二个数值 → 整轮判 invalid」），本轮是仪器修订轮，产出修订后的仪器 + 复算校准证据，不出门结论、门结论留给下一轮；不许把「修好仪器」叙述为「影子轨能力提升」——本轮修的是判级器定义与采集管线，与能力无关；不许用「把无证据样本从分母剔除」的方式抬高一致率（那是轮九伪一致的形态二），无证据样本的处置须按本节冻结的显式分层口径处理，且原始分母必须并列报告；不许把「双标注」伪装成已满足——若只能做到单 agent 双视图，须照轮十一 ADV-3/ADV-5 同形降级披露。以上 4 点归入 D19-C 三条禁令，逐点覆盖，不得遗漏。
+
+### D19-B §19 条款清单（六条，冻结后不得回写）
+
+1. **冻结序与纯追加**（来源：接卡指令 D0、本卡约束「只追加」、Deliverables D1）：§19 冻结 commit 的时间须早于一切 `run-dir-r12/`、`shadow-r12/`、`out/` 轮十二产物；§0–§18 冻结文本零回写，冻结前后全文 SHA、V1 口径前缀 SHA、§19 小节 SHA 与逐字段校验锚点写入 `artifacts.json`；沿用 §16 D16-5 三段序 `freeze → offline replay → data`；本卡 C-1～C-5 全部诊断事实须逐字并入 D19-A，作为条款事实地基。**冻结序由 V1 与评审重点 1 双重核验，冻结后补写诊断事实即为违规。**
+2. **结构性不可判样本的分层处置口径（rubric v3，ADV-4 闭合）**（来源：C-2、C-5 第 3 点、约束「不洗白」、V4）：定义「结构性不可判样本」为证据行存在但 `cmd=None` 且 `ref=None` 且 `anchors=[]` 的样本（形如 `证据：（缺字段）`，对应 C-1 的 60 条 PARSE_FAIL 与无锚点 INSUFFICIENT 两类）；rubric v3 须为其给出**显式定义的处置类别** `STRUCTURALLY_UNJUDGEABLE`，`supports` 保持 `None`（**仍是弃权**），`error_class = STRUCTURAL_NO_EVIDENCE`，不得判成 SUPPORT / NOT_SUPPORT。**禁止把这类样本从分母剔除**：原始分母 = 全部冻结样本（沿用轮十一 400 条、seed 20261111），可判分母 = 原始分母 − 结构性不可判样本数，两套分母必须并列报告；所有重分类须逐条留痕（`case_id / stratum / layer / 原始分类 / 新分类 / 依据`），`trace_complete = (trace 行数 == 被重分类样本总数)`；产物 `out/r12-abstention-decomposition.json`。**元判据**：可判分母缩小后一致率若上升，不得叙述为仪器修复带来的能力提升，两套分母同时报出即为合规判据（对抗问题 1/2）。
+3. **环境隔离统一（轮九 ADV-1 闭合）**（来源：C-4、约束、V2）：把 `exit_fixture.py` 已有的 `clean_env()` 隔离实现**逐字提取**为共享模块 `tools/eval/env_isolation.py`，提供 `clean_env()`；四项隔离缺一不可——清空 `PYTHONPATH`、清空全部 `COVENANT_*`、`-S` 禁 site/sitecustomize（轮九 `bisect` 遮蔽根因）、`PYTHONNOUSERSITE=1` 且固定 cwd。本轮所有复算脚本（`r12_reliability.py`、采集脚本、`probe_runner_r12.py`）须统一调用该共享模块，由 V2 机械核验（`has_clean_env = True` 且源码含 `PYTHONPATH` 清理与 `sitecustomize` 禁用）。`exit_fixture.py` 属轮十一冻结夹具且**不在本卡 Owned files**，本轮不回写、不改写，其隔离实现与共享模块的行为一致性须如实披露。**历史读数重算边界**：环境隔离生效后，轮十一封存读数（含 SILENT_FALLBACK 30、R_main 0.62069）本轮一律不重算、不改写（条款 6 / 禁令 1），是否重算归下一轮裁定，报告中须显式登记该项被回避而非遗漏（对抗问题 5）。
+4. **真实 OS 退出码采集（ADV-2 / ADV-5 闭合）**（来源：C-3、V3、评审重点 3/对抗问题 4）：`exit_source` 三态（`os` / `adapter` / `launch_failed`）须**由采集层在观测发生时标注**，随样本落盘字段 `observed_returncode`、`cmd`、`exit_source`；`os` 类必须真实启动独立子进程（`sys.executable -S -c ...` 等）取 OS returncode，`adapter` 类为冻结编译器 flags/detail 机械映射，`launch_failed`（127 / 9009）不得计入「不支持」。`tools/eval/gate_metrics.py --r12` **只统计采集层已标注的 `exit_source`，禁止从 `field_semantics` 等 provenance 文本推断**（这是 ADV-2 闭合的判据，见评审重点 3）。V3 判据：`exit_source_counts.os > 0`、`adapter = 0`、`primary_metrics.evaluable = true`、`precision` / `recall` 非 null。**抽样复核机制**（对抗问题 4）：采集层逐条记录 `cmd` 与 `observed_returncode`，复核脚本按冻结抽样规则重跑子进程并逐条比对 returncode，任何不一致即登记为采集层证伪；轮十 210 pairs 结构上无可执行命令，不得作为本轮真实 OS 采集的门输入。`gate_result` 仍一律登记 `not_evaluable`，本项接通不构成门结论。
+5. **判别探针扩族与阈值冻结**（来源：C-5 第 4 点、V5、对抗问题 3）：探针集从轮十一 4 族 40 条扩到 ≥ 5 族，新增「结构性不可判样本」族（`structural_unjudgeable`），总条数 50；严格布尔分歧率口径沿用轮十一 `n_strict / N_probe`（**全体验证分母，不从分母剔除任何样本**），其中 `n_strict` 只计两轨均给出布尔且相反的样本。**冻结阈值 = 0.15**（等于轮十一 4 族基线 `6/40`），**冻结后不得下调**（沿用 §18 条款 4 `p = 0.30 冻结后不得下调` 的同形纪律）。新增族必须包含 control 对照样本（证明该族并非被设计成必然分歧），且**不得硬编码 expectation**——两轨均真实调用、真实记录，逐条披露分歧机制。若实测 `strict_bool_disagreement_rate < 0.15`，V5 照实登记 FAIL，不下调阈值、不删样本、不事后改探针集，整轮不得宣称仪器闭合完成，交浮香裁定；扩族稀释分母导致下降亦须如实报出，不得改口径洗白。
+6. **不出门结论、只跑一次延续与元条款**（来源：C-5 第 1 点、约束「本轮不出门结论」、Review 重点 6）：修订后仪器对 400 条冻结样本的弃权分解复算与 R_main 复算**仅作校准参考**，标 `caliber = instrument_calibration_only`，明确标注不进门结论；不得重跑 R_main 计数、不得重算任何门值、报告中不得出现第二个门值数值（§18 条款 2 + 轮十一 V7 否决项）；`gate_result` 一律登记 `not_evaluable`（复核用），`gate_conclusion_issued = false`。双标注若只能做到单 agent 双视图，按 ADV-3/ADV-5 同形降级披露，不得记为双人独立。**元条款：所有分支的决策规则与阈值必须在数据生成前写死；D6 报告只允许「查表」，不允许「解释」；修仪器不得被包装成能力提升（对抗问题 6）。** 独立性不可满足的裁定在轮十一已永久生效，本轮不得借仪器修订重新主张独立性，也不得把 `primary_metrics.evaluable = true` 叙述为门结论有效。
+
+### D19-C §19 禁令区（三条，随条款写入）
+
+1. **禁止重跑 R_main / 重算门值产生第二个值**（覆盖 C-5 第 1 点）：§18 条款 2 与轮十一 V7 否决项继续生效——出现第二个门值数值即整轮判 `invalid`。本轮是仪器修订轮，产出为「修订后的仪器 + 复算校准证据」，**不出门结论**，门结论留给下一轮；复算读数只进校准报告，不进任何门判定。
+2. **禁止把修好仪器叙述为影子轨能力提升、禁止用剔除无证据样本抬高一致率**（覆盖 C-5 第 2、3 点）：本轮修的是判级器定义与采集管线，与影子轨能力无关；「把无证据样本从分母剔除」是轮九伪一致的形态二，无证据样本一律按条款 2 显式分层处置，原始分母与可判分母必须并列报告，任何只报可判分母的叙述即为违规。
+3. **禁止把双标注伪装成已满足、禁止回写冻结文本与触碰红区**（覆盖 C-5 第 4 点 + 本卡约束）：单 agent 双视图必须照轮十一 ADV-3/ADV-5 同形降级披露（`two_human_independent_annotation = false`）；§0–§18 零回写；红区零触碰，完整路径为 `tools/eval/judge.py`、`tools/eval/extract.py`、`tools/eval/blind.py`、`tools/eval/report.py`、`tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、`tools/gate.py`、`tools/lint_cards.py`、`verdicts/`、`.eval-sealed/`（7 个仪器在 `tools/eval/` 下、gate/lint 在 `tools/` 下，写裸文件名会让 diff 检查假绿）；CI py3.9 下禁止给 Path 的文本写入方法传 `newline` 关键字，JSON 写入一律用 `open(..., newline="")`；不碰 master、不 push、不 merge、不写 verdict、不自评审。
+
+### D19-D 冻结常量表（数据生成前写死）
+
+| 常量 | 冻结值 | 来源 / 用途 |
+|---|---|---|
+| 冻结样本集 | `out/r11-blind-samples.json`，400 条，seed `20261111` | 轮十一封存，V6 复算输入；本轮不改样本 |
+| 原始分母 | 400 | 条款 2，任何报告不得只报可判分母 |
+| 严格布尔分歧阈值 | `0.15` | 条款 5，冻结后不得下调；轮十一 4 族基线 6/40 |
+| 探针总条数 / 族数 | 50 / ≥ 5 | 条款 5；新增第 5 族 `structural_unjudgeable` |
+| 探针分歧口径 | `n_strict / N_probe`，全体分母 | 条款 5；弃权不计入严格布尔分歧 |
+| `exit_source` 三态 | `os` / `adapter` / `launch_failed` | 条款 4；`adapter = 0` 为 V3 判据 |
+| 校准子集 | 50 条 | 条款 6；双标注降级披露 |
+| `gate_result` | `not_evaluable`（复核用） | 条款 6；`gate_conclusion_issued = false` |
+| 校准读数 caliber | `instrument_calibration_only` | 条款 6；不进门结论 |
+| ADV 闭合判据 | ADV-1 → V2；ADV-2 → V3；ADV-4 → V4 + 条款 2；ADV-5 → 条款 4 三态 + 抽样复核 | D6 查表用；ADV-6 不在本轮范围 |
+
+### D19-E 红区、CI 与收尾纪律
+
+`run-dir-r12/`、`shadow-r12/`、`out/` 为执行产物，走 custody 不入 repo（`.gitignore` 在冻结 commit 内明写追加 `run-dir-r12/` 与 `shadow-r12/`，`out/` 已覆盖）。每条 D6 结论须带 `路径 + sha256` artifact 指针，由 V8 机械核验（`sections ≥ 4`、`pointers ≥ 10`）。V1–V10 由执行者亲跑并粘贴真实退出码，不采纳作者 precheck；任一 FAIL 照实登记，不刷绿。收尾：seal 移交 custody → `artifacts.json` 补登记 → 卡转 `IN_REVIEW` → 递浮香 → 停手等 Orchestrator 预审 + 浮香 PASS gate，执行者无评审权、无合并权。
