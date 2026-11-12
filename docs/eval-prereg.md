@@ -1150,3 +1150,113 @@ PA_calibration = |{ g ∈ GS-15-PA : 标注值 = 实现判定值 }| / |GS-15-PA|
 8. **验收纪律**：V1–V9 由执行者亲跑并粘贴退出码，不采纳作者 precheck；任一 FAIL 不进入门结论讨论。卡面 V8 字面命令 `seal_run.py --verify --run-dir ...` 与 `seal_run.py` 实际 CLI（`--verify RUN_DIR`，位置参数）不符，执行者须**先按字面跑并登记其退出码**，再按等价正确命令跑并登记，两者都不修饰。
 
 **未变更项（v1.0.0–v1.8 继续有效）**：E0–E4 判定顺序与各级语义（§1）、主轨判级 = v1.5（§11 C10/C11）、指标定义与 M1 分子口径、最小效应阈值（≥10pp 且 95% CI 不跨零）、采样与留出（§3）、配对与 bootstrap（§5）、排除与重试（§4）、盲化与 custody（§3.6）、局限性清单（附录 D）、任务文件 T01–T30、predicate 封闭集合、影子轨零判级输出与隔离保证、B 臂 `not_applicable` 规则、§16 冻结文本及其 96 条映射表——本节只冻结**轮十门重设计、Gate 0 协议与 §15 草案的逐字生效**，不改上述任何一项。
+
+## §18 变更记录（v1.9 → v2.0：轮十一 独立判级实现 + R_main 重测 + M_C 重推，2026-11-11，冻结于轮十一任何数据产生之前）
+
+### D18-0 合法性前提、0.95 作废留痕与「只跑一次」
+
+本节在轮十一任何 `run-dir-r11/`、`shadow-r11/`、`out/` 产物产生之前冻结。上游：轮十卡 XJ-20261111-001（浮香 PASS 0B/0C/5A，`gate_result = not met`，`C = 0.5` 为诊断轮读数、非能力读数）；dp 大脑轮十一裁定（六问全答）。
+
+**0.95 作废留痕（纯追加，不触「只许一次」条款）**：轮十 `M_C = 0.95` 由 `R_main = 1.0` 推得，而该 1.0 是「同一 judge 同一输入两次运行」的确定性重放恒等，是 stability、不是语义信度。因此 0.95 **从生成起无信息量**，其输入已被证明无效。留痕按轮十 44 条金标准同格式，产物 `out/void-mc095.json`，字段 `implementation_output_existed = false`（签署时不存在任何实现输出）、`voided_value = 0.95`、`reason` 非空。本留痕是**纯追加登记**，不构成第二次门重设计；重推 M_C 是原规则（§17 D17-E）的**首次有效执行**。
+
+**三重约束（缺一即失效）**：①本协议 + 作废留痕必须先于任何 R_main 数据生成写入本节；②重推**只跑一次**，结果公开发布，**即使使门更难也不得再动**；③R_main 重测若跑两次，**只有第一次计数**。
+
+**反常激励防线**：`M_C = f(R_main)` 存在「R_main 越低门越松」的反常激励（等于给「把参照测坏」发奖金）。本节 D18-B 的三档分支表在数据生成前写死以封死该激励：`< 0.80` 不出门结论、`gate_result = not_evaluable`，**R_main 低不允许自动放宽门**（低 R_main 的含义是主轨判据本身不可信，影子轨去贴合一个不可信的参照不是美德）。
+
+**核心结构（顺序不可交换）**：① §18 冻结批（零数据成本，阻塞一切）→ ② 四桶 triage（零新数据）→ ③ 独立判级实现 + 独立性证书 + 判别探针 → ④ R_main 重测（盲态：先跑→封哈希→揭盲）→ ⑤ M_C 重推（只一次）+ 门重跑 → ⑥ 报告。先看影子数据再定公式即事后调参，明文禁止。
+
+### D18-A §18 条款清单（11 条）与禁令区（3 条）——卡面逐字并入
+
+以下为卡面 `.tasks/XJ-20261111-002.md`「§18 条款清单」与「§18 禁令区」的**逐字并入**，由 HTML 注释定界符 S18_VERBATIM_BEGIN / S18_VERBATIM_END 包裹（独立成行），两定界符之间的字节与卡面抽取段全等（仅前置一个换行）；哈希锚点登记入 `round11-custody/s18-freeze-anchors.json`。
+
+<!-- S18_VERBATIM_BEGIN -->
+### §18 条款清单（D0 必须逐条写入，冻结后不得回写）
+
+1. **R_main 重定义**：`R_main := 主轨判级 与 独立判级 在同一盲样本上的逐条一致率`（inter-implementation agreement），**不是** test-retest；`R_stability` 保留但降级为确定性 sanity check（应为 1.0，不为 1.0 反而是 bug），**不入公式**。
+2. **0.95 作废 + 重推合宪性裁定**：重推 M_C 不构成第二次门重设计，是原规则（轮十 §17）的首次有效执行（0.95 的输入 R_main = 1.0 已被证明为同义反复，该输出值从生成起无信息量）；附三重约束——①本协议 + 作废留痕必须先于任何 R_main 数据生成；②重推**只跑一次**，结果公开发布，**即使使门更难也不得再动**；③R_main 重测若跑两次，**只有第一次计数**。作废留痕按轮十 44 条金标准同格式（`implementation_output_existed = false`，纯追加）。
+3. **独立性六字段判据**（`independence_cert.json`，六字段全过才算独立）：`impl_blob_sha`（与主轨判级源码 blob 哈希不同，且 import 图交集 ⊆ 白名单 tokenizer/IO/schema）/ `judge_model_family`（与主轨 judge **模型族**不同；换版本不算，换厂商或架构才算）/ `rubric_source_sha` + `rubric_blind`（rubric v2 仅由规格撰写，作者声明未读 v1；v2 commit 时间戳 > v1 freeze；**推断：无法完全机械证明，降级为弱证据，由判别探针兜底**）/ `output_blind`（独立判级运行时未读取主轨输出 artifact，运行日志中无主轨 artifact 哈希的 open 记录）/ `discrimination_pass_rate`（见条款 3 附）/ `input_shared`（允许共享输入样本，禁止共享中间判级产物，产物目录 diff 验）。
+4. **判别探针集**（同义反复的实现层证伪测试）：构造 N_probe 条**故意让主轨判错**的对抗样本，覆盖四族——cwd 根错位（轮九 R1 回归面）、SILENT_FALLBACK 伪装（轮九伪一致面）、内容为真但证据未复现（命题层级面）、dotfile Owned-claim（工具缺口面）。要求独立判级与主轨在探针集上**分歧率 ≥ p = 0.30**。**反面判据**：若两实现连对抗探针都 100% 一致，则二者不独立（或探针无效），`R_main` 无效、本卡不得出 M_C。p = 0.30 为冻结值，冻结后不得下调。
+5. **样本设计**：`n ≥ 400`（p ≈ 0.9 时 95% CI 半宽 ≈ 2.9pp）；预算受限下限 `n = 240`（沿用轮十同批）+ 160 新 holdout，**必须分层报告，不得合并掩盖**；抽样按 `{5 类 ERROR 分类} × {轮十 一致/不一致 桶}` 分层；**固定 seed 写入 §18，seed 值本身是冻结条款**；盲态协议——独立实现先跑 → 输出 sha256 封存 → 揭盲 → 比对，封存哈希写入 run log。
+6. **M_C 重推公式 + 三档分支表**：`M_C = floor_to_5pct(min(0.95, LB95(R_main) − 0.05))`（用 **95% CI 下界**而非点估计，堵死「样本太小 → 门偏松」）；分支表见 Context 节三档表，`< 0.80 → gate_result = not_evaluable`，**R_main 低不允许自动放宽门**（低 R_main 的含义是主轨判据本身不可信，影子轨去贴合一个不可信的参照不是美德）。
+7. **统一命题层级定义 + 指标降级**：双轨均以「证据复现」为统一命题层级（方案 A 为目标态），过渡期允许方案 B（双层级并报，报告并列两个数，不做门判据）；**C 降为次要指标**，仅作统一层级后的对角线单元率供历史对比；**主指标 = (pass_rate, precision, recall) 三元组 + 2×2 混淆矩阵**，全部预注册。
+8. **四桶 triage codebook + 触发条款**：codebook 须含明确判定规则与 `unclassifiable` 桶，占比和 = 100%；**桶 b ≥ 60% → C 这个标量指标作废，改用 2×2 矩阵**；**桶 c ≥ 10% → 判 E7 回归，本轮降级为修复轮（先修后测，不出 C 结论）**。
+9. **轮九三条遗留追记**：①环境固定条款——PYTHONPATH / sitecustomize 隔离（轮九 ADV-1：宿主环境 PYTHONPATH shim 的 `sitecustomize.py` 遮蔽 stdlib `bisect`，致 6 条 lost 归因变化，须显式清空 PYTHONPATH、禁 sitecustomize、固定 cwd，并入本卡 D5）；②E7 fail-fast 默认契约变更须预注册（129/309 冻结读数 vs 108/288 strict 口径，默认值与复现命令写入 §18）；③E5 与 E7 同机制追记（集外 3 条新假阳性 与 strict 剔除 21 条 ERROR 属同一机制两面）。
+10. **D5 真数据生成/抽样规则**（轮十 ADV-1 闭合）：真数据生成规则、层次划分与比例必须**明文写入 §18**——轮十因未冻结，`C = 0.5` 的绝对值不具备对影子轨能力的裁决意义。本卡若不跑新真数据（见 D3 分支），则本条仍须冻结以备轮十二使用。
+11. **降级口径排除规则 + 元条款**：`exit_source = adapter` 的样本标 `caliber = degraded`，**从主 C / 主 precision 中排除，进二级报告**；`launch_failed`（127 / 9009）**不得计入「不支持」判定**（轮九伪一致同类根因）。**元条款：所有分支的决策规则必须在数据生成前写死；报告只允许「查表」，不允许「解释」。**
+
+### §18 禁令区（三条，随条款写入）
+
+1. **禁止用「影子只判可观测面」把 C 刷高**——这是轮九伪一致的形态二，不是修复。
+2. **禁止 R_main 偏低时自动放宽门**——低 R_main 是参照失效，不是影子达标。
+3. **禁止在拿到 R_main 后修改公式或样本**——一次重测、一次重推、公开发布，**含对自己不利的结果**。
+
+<!-- S18_VERBATIM_END -->
+
+### D18-B 派生冻结常量（本节全部为冻结条款，报告只查表不解释）
+
+1. **seed**：`R11_SEED = 20261111`（整数，冻结值本身是条款）。所有抽样、holdout 派生、探针顺序均由该 seed 确定性生成；seed 不得在数据生成后修改。
+2. **样本量**：`n = 400`，分层为 `R10_ANCHOR = 240`（沿用轮十同批 Gate 0 冻结输入 `round10-custody/gate0-claims.json`）+ `HOLDOUT = 160`（由已冻结任务定义 `tools/eval/tasks/T*.json` 按 seed 确定性派生，不引入新人工判级）。**两层必须分层报告，不得合并掩盖**；`n >= 240` 为预算受限下限。三角锚定子集 `n_human = 50`，从 400 中按 seed 抽取。
+3. **LB95 定义**：R_main 的 95% CI 下界采用 **Wilson score interval** 下界，`z = 1.959963984540054`，`LB95 = (p + z²/(2n) − z·sqrt(p(1−p)/n + z²/(4n²))) / (1 + z²/n)`。选 Wilson 而非 Wald，因 p 接近 1 时 Wald 上界越界且下界偏松（会使门偏松，正是反常激励面）。该公式在看到任何 R_main 之前冻结。
+4. **M_C 公式**：`M_C = floor_to_5pct(min(0.95, LB95(R_main) − 0.05))`，`floor_to_5pct` 为 §17 D17-E 同一 Decimal `ROUND_FLOOR` 实现（0.05 步长）。**用 95% CI 下界而非点估计**，堵死「样本太小 → 门偏松」。
+5. **三档分支查表**（决策规则写死，报告只允许查表，不允许解释）：
+
+   | R_main（点估计） | `branch` | 处置 |
+   |---|---|---|
+   | ≥ 0.85 | `normal` | 按公式应用 M_C，出正常门结论 |
+   | 0.80 – 0.85 | `weak_reference` | 门结论标 `caliber = weak_reference`，M_C 照算，同时报告主轨有效性存疑 |
+   | **< 0.80** | `not_evaluable` | **不出门结论**，`gate_result = not_evaluable`（**不是** `not met`）；本轮产出转为「主轨判级有效性报告」 |
+
+6. **判别探针冻结值**：`p = 0.30`（分歧率下限，冻结后不得下调），`N_probe = 40`，四族各 10 条。四族：cwd 根错位（轮九 R1 回归面）、SILENT_FALLBACK 伪装（轮九伪一致面）、内容为真但证据未复现（命题层级面）、dotfile Owned-claim（工具缺口面）。**反面判据**：若两实现连对抗探针都 100% 一致，则二者不独立（或探针无效），R_main 无效、本卡不得出 M_C。
+7. **`exit_source` 枚举与降级排除**：`exit_source ∈ {os, adapter}` 为**三态区分**（`os` = 独立 OS 进程退出码；`adapter` = 冻结编译器 flags/detail 的机械映射；`launch_failed` = 127 / 9009 等进程未启动）。`exit_source = adapter` 的样本标 `caliber = degraded`，**从主 C / 主 precision 中排除、进二级报告**；`launch_failed` **不得计入「不支持」判定**（轮九伪一致同类根因）。环境固定：显式清空 `PYTHONPATH`、`COVENANT_*`，禁 `sitecustomize`（`-S`），固定 cwd（轮九 ADV-1 的 `bisect` 遮蔽根因）。
+8. **指标降级**：双轨统一命题层级为「证据复现」（方案 A 目标态），过渡期允许方案 B（双层级并报，两个数并列、不做门判据）；**方案 C「影子只判可观测面」明确拒绝**（轮九伪一致形态二）。`C` 降为**次要指标**（仅作统一层级后的对角线单元率供历史对比）；**主指标 = `(pass_rate, precision, recall)` 三元组 + 2×2 混淆矩阵**，全部在本节预注册。
+9. **E7 默认契约与环境固定**：fail-fast 默认为 `fail_fast_observation = True`，`--allow-silent-fallback` 在本轮**禁用**；129/309 冻结读数（默认口径）与 108/288 strict 口径的差异照实登记，复现命令写入本节 D18-G。轮九三条遗留追记：①环境固定（同上）；②E7 默认契约变更已预注册；③E5 集外 3 条新假阳性与 E7 strict 剔除 21 条 ERROR 属同一机制两面。
+10. **元条款**：所有分支的决策规则必须在数据生成前写死；报告只允许「查表」，不允许「解释」。降级口径排除规则：`adapter` 样本进二级报告、`launch_failed` 不计入「不支持」。
+
+### D18-C R_main 重定义与盲态协议（操作化）
+
+`R_main := 主轨判级 与 独立判级 在同一盲样本上的逐条一致率`（inter-implementation agreement），**不是** test-retest。`R_stability` 保留但降级为确定性 sanity check（应为 1.0，不为 1.0 反而是 bug），**不入公式**。
+
+盲态序（机械可验，`seal_then_unblind_order`）：① 独立判级实现在**未读取任何主轨输出 artifact** 的情况下先跑 400 条，产出 `out/r11-independent-blind.json`；② 立即计算该产物 SHA-256 并写入 `out/r11-seal-log.json`（含 UTC 时间戳）；③ 封存完成后才允许读取主轨判级结果并逐条比对得 R_main。禁止先看主轨结果再调独立实现。产物目录 diff 验：独立实现与主轨只允许共享**输入样本**，禁止共享中间判级产物。
+
+### D18-D 独立性诚实条款（不可伪造，本轮枢纽）
+
+条款 3 的 `judge_model_family` 要求与主轨 judge **模型族不同**（换版本不算，换厂商或架构才算）。接卡时机械登记的事实：主轨 `tools/eval/judge.py` 文件头自述 `Five-level deterministic judge ... No LLM, no network, no randomness at this layer` —— **主轨是确定性符号规则引擎，本身没有模型族**。
+
+**若执行环境无法提供不同模型族、且可机械复算、可在 CI py3.9 无网络环境重放的独立判级实现，必须在 D2 明确声明「独立性不可满足」并按 D18-C / D18-B 第 5 条的降级分支处理**——不得用同族不同版本伪装成独立，**不得伪造证书字段**。伪造独立性比缺独立性严重。
+
+六字段证书 `tools/eval/independence_cert.json` 的字段一律照实填写，包括不满足的字段：`impl_blob_sha`（与主轨判级源码 blob 哈希不同，import 图交集 ⊆ 白名单 tokenizer/IO/schema）、`judge_model_family`、`rubric_source_sha` + `rubric_blind`（rubric v2 仅由规格撰写、作者声明未读 v1、v2 commit 时间戳 > v1 freeze；**推断：无法完全机械证明，降级为弱证据，由判别探针兜底**）、`output_blind`（运行时未读取主轨输出 artifact）、`discrimination_pass_rate`、`input_shared`。另加 `independence_satisfied` 与 `degraded_conclusion` 两个如实字段。**六字段全过才算独立；任一不满足即 `independence_satisfied = false`，结论效力降级为「单 agent 双视图一致性 + 方向诊断」，不得记为双人独立。**
+
+若 `independence_satisfied = false`，R_main 重测与 M_C 重推仍按冻结协议**照跑并如实发布**，但门结论不得宣布有效；报告须在五层并列中标 `caliber = single_agent_dual_view_direction_only`，并把「是否需要独立人类/不同模型族判级」交浮香裁定。
+
+三角锚定：n=50 人工双标子集用于打破「独立实现自身也要信度」的无穷回退。`|R_main_human − R_indep_human| ≤ 0.05` → 两实现可互换；`R_indep_human ≫ R_main_human` → 主轨是薄弱环，本轮输出改为「主轨有效性报告」、不出门结论；`R_main_human ≪ R_indep_human` → 独立实现是薄弱环，重建（**只允许一次重建**）。**若无法满足双人独立标注，须按轮十 ADV-3 同形处理：明确披露 + 结论效力降级，不得记为双人独立；0 分歧不证明独立性。**
+
+### D18-E 四桶 triage codebook 冻结（零新数据）
+
+四桶：`a` 谓词/DSL 表达力（轮七/八先验 ≈ 0，已死）/ `b` 命题层级不一致（先验 75/159 ≈ 47%）/ `c` 观测面残留（E7 后应 ≈ 0）/ `d` 抽样与 ERROR 口径污染；另设 `unclassifiable` 桶（须为 0）。占比和 = 100%。
+
+codebook 规范全文冻结于 `round11-custody/triage-codebook-canon.json`，其 SHA-256 锚点登记于 `s18-freeze-anchors.json`；`out/triage-codebook-r11.json` 须与规范字节全等。触发条款（写死、只查表）：**桶 b ≥ 60% → C 这个标量指标作废，改用 2×2 矩阵 + 三元组**；**桶 c ≥ 10% → 判 E7 回归，本轮降级为修复轮（先修后测，不出 C 结论）**；否则 `no trigger`。
+
+triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_supports`），源仅 `round10-custody/r10-gate-input.json` 与 `round10-custody/sealed/run-dir-r10/main-judgements.json`，**零新数据、零重判、不改写轮十 verdict**。
+
+### D18-F 真数据生成与抽样规则（轮十 ADV-1 闭合，明文冻结）
+
+轮十 `C = 0.5` 的绝对值不具对影子轨能力的裁决意义，根因是**真数据生成规则与层次比例未冻结**。本条在轮十一任何真数据产生之前明文冻结，供本轮门重跑与轮十二复用：
+
+1. 输入源：`R10_ANCHOR = 240` 条来自 `round10-custody/gate0-claims.json`（已冻结 Gate 0 输入集）；`HOLDOUT = 160` 条来自 `tools/eval/tasks/T*.json` 的已冻结任务定义，按 `R11_SEED` 确定性派生。
+2. 层次划分与比例（**冻结**）：`cmd_ok / anchor_miss / repro_fail / ref_ok / ref_missing / cwd_probe / fallback_probe / dotfile_claim / goldset_text` 共 9 层，`R10_ANCHOR` 按轮十同批原始层次比例承接，`HOLDOUT` 按 5 类预注册 ERROR 分类 × {轮十 一致/不一致 桶} 分层，每层目标占比在生成前由 seed 决定并写入生成日志。
+3. 分层报告：240 与 160 两层的 R_main、可判定率、C、三元组**分别报告**，不得合并掩盖。
+4. 口径：`fail_fast_observation = True` 默认；**禁 `--allow-silent-fallback`**；`exit_source` 三态按 D18-B 第 7 条落地；`SILENT_FALLBACK` 单列不折叠。
+5. 生成脚本落 `round11-custody/`（仓外），`run-dir-r11/` / `shadow-r11/` / `out/` 为执行产物不入 repo。
+
+### D18-G 冻结序、哈希锚点、红区、C12 与执行纪律
+
+1. **三段序**（沿用 §16 D16-5）：`§18 冻结 commit` → `off-line 回放 / triage / 实现证书` → `轮十一真数据`。§18 文本落盘 commit 时间**早于**一切 `run-dir-r11/`、`shadow-r11/`、`out/` 中轮十一产物的时间戳；机械可验（V1）。
+2. **哈希锚点**：冻结前全文 SHA-256、逐字并入段 SHA-256、冻结后全文 SHA-256、§18 小节 SHA-256、codebook 规范 SHA-256、冻结 commit hash 全部登记入卡面 `.tasks/XJ-20261111-002.md` 与 `artifacts.json`。按 §11/§12/§16/§17 先例，字面 commit hash 由**后续机械 commit 追记于卡面**，不改本节冻结文本。
+3. **红区零触碰**：`tools/eval/judge.py`、`tools/eval/extract.py`、`tools/eval/blind.py`、`tools/eval/report.py`、`tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、`tools/eval/gate.py`、`tools/lint_cards.py`、`tools/eval/shadow_align.py`、`tools/eval/dsl_compiler.py`、`verdicts/`、`.eval-sealed/`、以及 `docs/eval-prereg.md` 的 §0–§17 冻结文本——`git diff f62f353..HEAD -- <红区>` 必须为空（V12）。
+4. **C12**：不重判轮六–轮十历史轮次；轮十一只对新增数据开口。轮十 90 条失配只作 triage 分析对象，不重判、不改写轮十 verdict。
+5. **产物落点**：`run-dir-r11/`、`shadow-r11/`、`out/` 走 `round11-custody/` **不入 repo**；`.gitignore` 在 D0 同步补 `run-dir-r11/` / `shadow-r11/` 两条 + 注释行（`out/` 已由轮十覆盖），依据卡面「其他纪律」明文授权。
+6. **CI 兼容**：CI 为 Python 3.9。禁止给 Path 的文本写入方法传 `newline` 关键字（该关键字在 py3.9 不存在），一律用 `open(path, "w", newline="", encoding="utf-8")` 显式写；新增代码不得依赖 py3.10+ 语法（如 `X | Y` 类型联合须用 `Optional`）。
+7. **工具缺口**：`lint_cards.py::_looks_like_path` 只认形如 `^[^/\\]+\.[A-Za-z0-9]{1,8}$` 的条目，无扩展名 dotfile 一律不认——**本卡不改该工具**（工具改动须独立卡 + 评审）；`fixtures/exit_codes.yaml` 属有扩展名路径，可正常作 Owned files claim。
+8. **验收纪律**：V1–V12 由执行者亲跑并粘贴退出码，不采纳作者 precheck；**任一 FAIL 不进入门结论讨论**；按 §18 条款 6 与附加否决项，**若 M_C 出现第二个数值，或任一结论缺 artifact 指针（路径 + sha256），整轮判 `invalid`（不是 `not met`）**。卡面 V8 之外，seal 命令字面与真实 CLI 不符时，先按字面跑登记退出码、再按等价正确命令跑登记，两者都不修饰。
+
+**未变更项（v1.0.0–v1.9 继续有效）**：E0–E4 判定顺序与各级语义（§1）、主轨判级 = v1.5（§11 C10/C11）、指标定义与 M1 分子口径、最小效应阈值、采样与留出（§3）、配对与 bootstrap（§5）、排除与重试（§4）、盲化与 custody（§3.6）、局限性清单（附录 D）、任务文件 T01–T30、predicate 封闭集合、影子轨零判级输出与隔离保证、B 臂 `not_applicable` 规则、§16 冻结文本及其 96 条映射表、§17 双指标门与 Gate 0 协议冻结文本——本节只冻结**轮十一独立判级、R_main 重测、M_C 重推与四桶 triage**，不改上述任何一项；旧门 0.95 的作废见 D18-0，且不作回写。

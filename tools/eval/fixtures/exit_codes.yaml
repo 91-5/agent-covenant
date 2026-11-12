@@ -1,0 +1,111 @@
+# Round-11 exit_source fixture (card XJ-20261111-002, D5 / V10).
+# Frozen before any D5 fixture run. Section 18 D18-B clause 7:
+#   os            = independent OS process exit code
+#   adapter       = mechanical map over frozen compiler flags/detail
+#   launch_failed = 127 / 9009 and friends, process never started
+# adapter samples are caliber=degraded and are excluded from main C / main
+# precision, going to the secondary report instead. launch_failed must NEVER
+# be counted as "not supported" (round-9 pseudo-agreement root cause).
+#
+# Every case is really executed by tools/eval/exit_fixture.py. In particular
+# LAUNCH_WIN_9009 records the *observed* cmd.exe return code (1 on this host)
+# and carries 9009 only as the frozen Windows shell semantic marker; inventing
+# a 9009 return code that the OS never produced would defeat the fixture.
+#
+# Mini-YAML subset: top-level scalar keys, a `cases:` list of `- key: value`
+# mappings. Parsed by the fixture runner with the standard library only, so
+# CI py3.9 needs no third-party YAML package.
+
+schema: agent-covenant/r11-exit-codes/v1
+seed: 20261111
+cases:
+  - id: OS_OK_0
+    kind: os
+    payload: 0
+    expect_exit_source: os
+    expect_exit_code: 0
+    expect_caliber: primary
+    expect_unsupported: false
+    expect_error_class: none
+    note: 独立 OS 子进程正常退出，可判定
+  - id: OS_FAIL_1
+    kind: os
+    payload: 1
+    expect_exit_source: os
+    expect_exit_code: 1
+    expect_caliber: primary
+    expect_unsupported: true
+    expect_error_class: none
+    note: 独立 OS 子进程非零退出，判不支持
+  - id: OS_FAIL_2
+    kind: os
+    payload: 2
+    expect_exit_source: os
+    expect_exit_code: 2
+    expect_caliber: primary
+    expect_unsupported: true
+    expect_error_class: none
+    note: 独立 OS 子进程退出码 2
+  - id: OS_FAIL_42
+    kind: os
+    payload: 42
+    expect_exit_source: os
+    expect_exit_code: 42
+    expect_caliber: primary
+    expect_unsupported: true
+    expect_error_class: none
+    note: 独立 OS 子进程自定义退出码 42
+  - id: ADAPTER_OK
+    kind: adapter
+    payload: flags_ok
+    expect_exit_source: adapter
+    expect_exit_code: 0
+    expect_caliber: degraded
+    expect_unsupported: false
+    expect_error_class: none
+    note: 冻结编译器 flags/detail 机械映射，标 degraded 进二级报告
+  - id: ADAPTER_OBS_FAILED
+    kind: adapter
+    payload: observation_failed
+    expect_exit_source: adapter
+    expect_exit_code: 1
+    expect_caliber: degraded
+    expect_unsupported: true
+    expect_error_class: FILE_NOT_FOUND
+    note: 编译器 observation_failed 机械映射，不是 OS 退出码
+  - id: ADAPTER_PARSE_FAIL
+    kind: adapter
+    payload: parse_fail
+    expect_exit_source: adapter
+    expect_exit_code: 1
+    expect_caliber: degraded
+    expect_unsupported: true
+    expect_error_class: PARSE_FAIL
+    note: 编译器 parse_fail 机械映射
+  - id: ADAPTER_SILENT_FALLBACK
+    kind: adapter
+    payload: silent_fallback
+    expect_exit_source: adapter
+    expect_exit_code: 0
+    expect_caliber: degraded
+    expect_unsupported: false
+    expect_error_class: SILENT_FALLBACK
+    note: E7 fail-fast 口径，单列不折叠，禁止静默判成不支持
+  - id: LAUNCH_127
+    kind: launch_failed
+    payload: missing_cmd
+    expect_exit_source: launch_failed
+    expect_exit_code: 127
+    expect_caliber: excluded
+    expect_unsupported: false
+    expect_error_class: none
+    note: 可执行文件不存在触发 FileNotFoundError，POSIX 127 语义，不得计入不支持
+  - id: LAUNCH_WIN_9009
+    kind: launch_failed
+    payload: cmd_missing
+    expect_exit_source: launch_failed
+    expect_exit_code: 1
+    expect_caliber: excluded
+    expect_unsupported: false
+    expect_error_class: none
+    note: cmd.exe 命令未找到，本机真实返回 1；9009 仅作冻结 Windows shell 语义标注，不得计入不支持

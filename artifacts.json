@@ -649,7 +649,660 @@
     "goldset/gold_claims.jsonl",
     "artifacts.json"
   ],
-  "_s17_freeze_XJ-20261111-001": {"_comment": "XJ-20261111-001 D0 §17 冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness；登记动作不改 §17 冻结文本。", "freeze_commit": "ee7e765", "freeze_commit_cI": "2026-11-11T13:23:58+08:00", "prereg_before_sha256": "6055eda98277b2b27316b70cde9329451622407fe53cb505e9f186be53ef6b57", "prereg_after_sha256": "71ef19c30353c0283db1f9dd2a21505176d9b7eaaeaf1999fe7270152b69b103", "s17_section_sha256": "c65269c5d9390ce1761a2c8479703bca164fb31d4d9510cad067b51764c86f54", "s15_draft_sha256": "2198f7e96a857ec4c096d334f8ea03ecc62e1bc34536041bae99cdbb151c90d6", "prefix_intact": true, "verbatim_intact": true, "gitignore_added": ["out/", "run-dir-r10/", "shadow-r10/"], "custody_anchors": "D:/15812/projects/round10-custody/s17-freeze-anchors.json", "gate_metrics_sha256": "4f43b098bc15288071f35432f04dfac662b78ef5dfe0eab02e864942406bc39e"},
-  "_round10_progress_XJ-20261111_001": {"_comment": "XJ-20261111-001 D1–D4 产物与 custody 台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；登记动作不改 §17 冻结文本、不改门值冻结包、不写 verdict。", "d1_gate0": {"report": "docs/eval-gate0-main-reliability.md", "commit": "f921427", "r_main": 1.0, "gate0_suspend": false, "compared_claims": 240, "out": ["out/gate0-reliability.json", "out/gate0-reliability-full.json"], "custody": ["round10-custody/gate0_claims.py", "round10-custody/gate0_session.py", "round10-custody/gate0_double_run.py", "round10-custody/gate0-claims.json", "round10-custody/gate0-main-a.json", "round10-custody/gate0-main-b.json", "round10-custody/gate0-main-perturbed.json", "round10-custody/gate0-double-run-console.log"], "gate0_claim_set_sha256": "54379b38a0b1f0d88c6d8f4e47aa5ee16d16fdfe27f75765ea4ec2797583f6cd", "determinism_limitation": "judge.py is deterministic; r_main=1.0 is replay identity, NOT semantic reliability evidence"}, "d2_gate_value_freeze": {"out": "out/gate-value-freeze.json", "custody": "round10-custody/gate-value-freeze.json", "script": "round10-custody/freeze_gate_value.py", "r_main": 1.0, "m_c": 0.95, "m_pre_screen": 0.85, "signer_blind_to_c": true, "shadow_data_seen": false, "cross_check_with_frozen_implementation": true, "signer_independence_limitation": "blindness by ordering + data isolation, not a separate human signer; left for AgnesCode"}, "d3_gate_metrics_sha256": "4f43b098bc15288071f35432f04dfac662b78ef5dfe0eab02e864942406bc39e", "d4_goldset": {"goldset": "goldset/gold_claims.jsonl", "goldset_sha256": "fbc059750c164bfb7779daa79045255aa1124935128db5636ece9a4daf7c94e8", "rows": 60, "meta_rows": 0, "legacy_rows_verbatim": 30, "new_rows": 30, "calibration_report": "docs/eval-goldset-calibration-r10.md", "out": "out/goldset-r10.json", "out_sha256": "adf0496bdc66e88f1ab20790c321f125b1a09ef14bb069d8401e4a38cbc7e353", "comparable": 51, "excluded": 9, "a_main": 1.0, "a_shadow": 1.0, "direction_pass": true, "direction_is_diagnostic_only": true, "mismatch_count": 0, "ab_disagreements": 0, "v6_exits": [0, 0, 0], "blindness_verify_all_pass": true, "annotation_script_sha256": "8a48e8257d9e6878a86576b3328af0a8005b56d1631086a59c2e6b6b23e18c2d", "custody": ["round10-custody/goldset_r10.py", "round10-custody/goldset-legacy-v1.7.jsonl", "round10-custody/goldset-spec-r10.json", "round10-custody/goldset-annotations-a.json", "round10-custody/goldset-annotations-b.json", "round10-custody/goldset-annotation-manifest.json", "round10-custody/goldset-arbitration-r10.json", "round10-custody/goldset-blindness-verify.json", "round10-custody/attempt1/"], "single_agent_limitation": "two annotator views inside one agent WB, not two independent human annotators; 0 disagreements + identical A/B sha256; left for AgnesCode", "attempt1_voided": "44 spurious main-level disagreements from an annotation-instrument field-path defect; archived and re-frozen BEFORE any implementation output existed"}, "owned_files_note": "D17-F clause 5 names docs/eval-goldset-calibration-r10.md but the card Owned files list omitted it; mechanically registered on the card and left for AgnesCode to rule"},
-  "_round10_final_XJ-20261111_001": {"_comment": "XJ-20261111-001 D5–D7 产物、seal 与 V1–V9 亲跑台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；不写 verdict、不 push、不 merge。", "d5_true_data": {"generator": "round10-custody/r10_truedata.py", "generator_sha256": "6fda269a1a72c871dcd9a05a9709a44161d590eec74219199b0389104e1d9b6b", "run_dir": "run-dir-r10/", "shadow": "shadow-r10/", "products": 30, "claims": 270, "pairs": 210, "structural_exclusions": 60, "fail_fast_observation": true, "allow_silent_fallback_used": false, "gate_result": "not met", "decidable_rate": 0.857143, "conditional_agreement": 0.5, "m_c": 0.95, "silent_fallback_count": 30, "error_breakdown": {"FILE_NOT_FOUND": 30, "CWD_MISMATCH": 0, "PARSE_FAIL": 0, "TIMEOUT": 0, "SILENT_FALLBACK": 30}, "confusion_matrix": {"TP": 90, "TN": 0, "FP": 60, "FN": 30}, "caveat": "section 17 does not name a D5 data generator; layer design/proportions are an executor supplement after the gate-value freeze, C=0.5 has no adjudicative force on shadow capability; left for AgnesCode"}, "d6_report": {"path": "docs/eval-report-v10.md", "sha256": "aa844e917142f03585f821b0d3d8410e3fcf6ee98e507b6b2000bfdd2b11efd0", "four_layers": ["Gate 0 R_main", "dual-metric gate", "gold-set A comparison", "layered diagnostics"], "v7_keys": ["R_main", "可判定率", "条件一致率", "A_shadow", "分层"]}, "d7_seal": {"seal": "run-dir-r10/seal.json", "sha256": "1a82c24ca9002f52246a4ebf30ae9eaf832fc3b256e06afa8e198c316ddbfdb8", "sealed_files": 32, "custody_copy": "D:/15812/projects/round10-custody/sealed/run-dir-r10", "verify_equivalent_exit": 0, "verify_literal_exit": 2, "literal_cli_mismatch_note": "card V8 uses --verify --run-dir; real CLI is --verify RUN_DIR; dual-run disposition frozen in section 17 D17-H clause 8"}, "acceptance_exits": {"V1": [0, 0, 0], "V2": [0, 0], "V3": [0], "V4": [0, 0], "V5": [0], "V6": [0, 0, 0], "V7": [0], "V8_literal": 2, "V8_equivalent": 0, "V8_redzone": 0, "V9_unittest_first": 1, "V9_unittest_with_bash_hint": 0, "V9_lint_strict_first": 1, "V9_lint_strict_rerun": 1, "V9_sync_check": 0}, "unresolved": ["V8 literal command exit 2 (card CLI defect, dual-run registered)", "V9 lint --strict exit 1 with 2 warnings: OWNED_FILES_NONPATH on dotfile .gitignore (tool gap) and VERDICT_WITHOUT_REVIEW (no-verdict discipline)", "V9 unittest requires COVENANT_BASH_HINT on Windows", "single-agent signer/annotator independence", "D5 data generator not pre-registered in section 17"], "hashes": {"run_data": "d02905eb02ff2875530c0115c7d00ad4c42ac123f2b48af57976738ac3b2f880", "gate_input": "8260dcad587a9047f935e4bcc08df80e3c552d105bb2a51273d93899df1b3117", "align": "60caca49c510105702ea0274114f3b9bc5477da24f58df61128c06c3634965f7", "records": "49311bc6f8f29f04aa1c280af544d8c16280a96d03762521bf7e69c7f6ce3894", "gate_metrics_r10": "d3b0af9a45ad2ed3435d0470c5065639eb8bcb018b2ecb2eac136560d1f52c17", "goldset_r10": "adf0496bdc66e88f1ab20790c321f125b1a09ef14bb069d8401e4a38cbc7e353", "gate_value_freeze": "989742c381431de5b208ac32287879936c80728491e1695baa8933eebe34384a", "goldset": "fbc059750c164bfb7779daa79045255aa1124935128db5636ece9a4daf7c94e8", "calibration_report": "929ada3c56fc7b362a670c05045664acd8625ce92a41e0c699a1dd160bf2baee", "custody_anchors": "D:/15812/projects/round10-custody/r10-truedata-anchors.json", "custody_blindness_verify": "D:/15812/projects/round10-custody/goldset-blindness-verify.json", "custody_v9_logs": ["r10-v9-unittest.log", "r10-v9-unittest-with-hint.log", "r10-v9-lint.log", "r10-v9-lint-rerun.log"]}}
+  "_s17_freeze_XJ-20261111-001": {
+    "_comment": "XJ-20261111-001 D0 §17 冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness；登记动作不改 §17 冻结文本。",
+    "freeze_commit": "ee7e765",
+    "freeze_commit_cI": "2026-11-11T13:23:58+08:00",
+    "prereg_before_sha256": "6055eda98277b2b27316b70cde9329451622407fe53cb505e9f186be53ef6b57",
+    "prereg_after_sha256": "71ef19c30353c0283db1f9dd2a21505176d9b7eaaeaf1999fe7270152b69b103",
+    "s17_section_sha256": "c65269c5d9390ce1761a2c8479703bca164fb31d4d9510cad067b51764c86f54",
+    "s15_draft_sha256": "2198f7e96a857ec4c096d334f8ea03ecc62e1bc34536041bae99cdbb151c90d6",
+    "prefix_intact": true,
+    "verbatim_intact": true,
+    "gitignore_added": [
+      "out/",
+      "run-dir-r10/",
+      "shadow-r10/"
+    ],
+    "custody_anchors": "D:/15812/projects/round10-custody/s17-freeze-anchors.json",
+    "gate_metrics_sha256": "4f43b098bc15288071f35432f04dfac662b78ef5dfe0eab02e864942406bc39e"
+  },
+  "_round10_progress_XJ-20261111_001": {
+    "_comment": "XJ-20261111-001 D1–D4 产物与 custody 台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；登记动作不改 §17 冻结文本、不改门值冻结包、不写 verdict。",
+    "d1_gate0": {
+      "report": "docs/eval-gate0-main-reliability.md",
+      "commit": "f921427",
+      "r_main": 1.0,
+      "gate0_suspend": false,
+      "compared_claims": 240,
+      "out": [
+        "out/gate0-reliability.json",
+        "out/gate0-reliability-full.json"
+      ],
+      "custody": [
+        "round10-custody/gate0_claims.py",
+        "round10-custody/gate0_session.py",
+        "round10-custody/gate0_double_run.py",
+        "round10-custody/gate0-claims.json",
+        "round10-custody/gate0-main-a.json",
+        "round10-custody/gate0-main-b.json",
+        "round10-custody/gate0-main-perturbed.json",
+        "round10-custody/gate0-double-run-console.log"
+      ],
+      "gate0_claim_set_sha256": "54379b38a0b1f0d88c6d8f4e47aa5ee16d16fdfe27f75765ea4ec2797583f6cd",
+      "determinism_limitation": "judge.py is deterministic; r_main=1.0 is replay identity, NOT semantic reliability evidence"
+    },
+    "d2_gate_value_freeze": {
+      "out": "out/gate-value-freeze.json",
+      "custody": "round10-custody/gate-value-freeze.json",
+      "script": "round10-custody/freeze_gate_value.py",
+      "r_main": 1.0,
+      "m_c": 0.95,
+      "m_pre_screen": 0.85,
+      "signer_blind_to_c": true,
+      "shadow_data_seen": false,
+      "cross_check_with_frozen_implementation": true,
+      "signer_independence_limitation": "blindness by ordering + data isolation, not a separate human signer; left for AgnesCode"
+    },
+    "d3_gate_metrics_sha256": "4f43b098bc15288071f35432f04dfac662b78ef5dfe0eab02e864942406bc39e",
+    "d4_goldset": {
+      "goldset": "goldset/gold_claims.jsonl",
+      "goldset_sha256": "fbc059750c164bfb7779daa79045255aa1124935128db5636ece9a4daf7c94e8",
+      "rows": 60,
+      "meta_rows": 0,
+      "legacy_rows_verbatim": 30,
+      "new_rows": 30,
+      "calibration_report": "docs/eval-goldset-calibration-r10.md",
+      "out": "out/goldset-r10.json",
+      "out_sha256": "adf0496bdc66e88f1ab20790c321f125b1a09ef14bb069d8401e4a38cbc7e353",
+      "comparable": 51,
+      "excluded": 9,
+      "a_main": 1.0,
+      "a_shadow": 1.0,
+      "direction_pass": true,
+      "direction_is_diagnostic_only": true,
+      "mismatch_count": 0,
+      "ab_disagreements": 0,
+      "v6_exits": [
+        0,
+        0,
+        0
+      ],
+      "blindness_verify_all_pass": true,
+      "annotation_script_sha256": "8a48e8257d9e6878a86576b3328af0a8005b56d1631086a59c2e6b6b23e18c2d",
+      "custody": [
+        "round10-custody/goldset_r10.py",
+        "round10-custody/goldset-legacy-v1.7.jsonl",
+        "round10-custody/goldset-spec-r10.json",
+        "round10-custody/goldset-annotations-a.json",
+        "round10-custody/goldset-annotations-b.json",
+        "round10-custody/goldset-annotation-manifest.json",
+        "round10-custody/goldset-arbitration-r10.json",
+        "round10-custody/goldset-blindness-verify.json",
+        "round10-custody/attempt1/"
+      ],
+      "single_agent_limitation": "two annotator views inside one agent WB, not two independent human annotators; 0 disagreements + identical A/B sha256; left for AgnesCode",
+      "attempt1_voided": "44 spurious main-level disagreements from an annotation-instrument field-path defect; archived and re-frozen BEFORE any implementation output existed"
+    },
+    "owned_files_note": "D17-F clause 5 names docs/eval-goldset-calibration-r10.md but the card Owned files list omitted it; mechanically registered on the card and left for AgnesCode to rule"
+  },
+  "_round10_final_XJ-20261111_001": {
+    "_comment": "XJ-20261111-001 D5–D7 产物、seal 与 V1–V9 亲跑台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；不写 verdict、不 push、不 merge。",
+    "d5_true_data": {
+      "generator": "round10-custody/r10_truedata.py",
+      "generator_sha256": "6fda269a1a72c871dcd9a05a9709a44161d590eec74219199b0389104e1d9b6b",
+      "run_dir": "run-dir-r10/",
+      "shadow": "shadow-r10/",
+      "products": 30,
+      "claims": 270,
+      "pairs": 210,
+      "structural_exclusions": 60,
+      "fail_fast_observation": true,
+      "allow_silent_fallback_used": false,
+      "gate_result": "not met",
+      "decidable_rate": 0.857143,
+      "conditional_agreement": 0.5,
+      "m_c": 0.95,
+      "silent_fallback_count": 30,
+      "error_breakdown": {
+        "FILE_NOT_FOUND": 30,
+        "CWD_MISMATCH": 0,
+        "PARSE_FAIL": 0,
+        "TIMEOUT": 0,
+        "SILENT_FALLBACK": 30
+      },
+      "confusion_matrix": {
+        "TP": 90,
+        "TN": 0,
+        "FP": 60,
+        "FN": 30
+      },
+      "caveat": "section 17 does not name a D5 data generator; layer design/proportions are an executor supplement after the gate-value freeze, C=0.5 has no adjudicative force on shadow capability; left for AgnesCode"
+    },
+    "d6_report": {
+      "path": "docs/eval-report-v10.md",
+      "sha256": "aa844e917142f03585f821b0d3d8410e3fcf6ee98e507b6b2000bfdd2b11efd0",
+      "four_layers": [
+        "Gate 0 R_main",
+        "dual-metric gate",
+        "gold-set A comparison",
+        "layered diagnostics"
+      ],
+      "v7_keys": [
+        "R_main",
+        "可判定率",
+        "条件一致率",
+        "A_shadow",
+        "分层"
+      ]
+    },
+    "d7_seal": {
+      "seal": "run-dir-r10/seal.json",
+      "sha256": "1a82c24ca9002f52246a4ebf30ae9eaf832fc3b256e06afa8e198c316ddbfdb8",
+      "sealed_files": 32,
+      "custody_copy": "D:/15812/projects/round10-custody/sealed/run-dir-r10",
+      "verify_equivalent_exit": 0,
+      "verify_literal_exit": 2,
+      "literal_cli_mismatch_note": "card V8 uses --verify --run-dir; real CLI is --verify RUN_DIR; dual-run disposition frozen in section 17 D17-H clause 8"
+    },
+    "acceptance_exits": {
+      "V1": [
+        0,
+        0,
+        0
+      ],
+      "V2": [
+        0,
+        0
+      ],
+      "V3": [
+        0
+      ],
+      "V4": [
+        0,
+        0
+      ],
+      "V5": [
+        0
+      ],
+      "V6": [
+        0,
+        0,
+        0
+      ],
+      "V7": [
+        0
+      ],
+      "V8_literal": 2,
+      "V8_equivalent": 0,
+      "V8_redzone": 0,
+      "V9_unittest_first": 1,
+      "V9_unittest_with_bash_hint": 0,
+      "V9_lint_strict_first": 1,
+      "V9_lint_strict_rerun": 1,
+      "V9_sync_check": 0
+    },
+    "unresolved": [
+      "V8 literal command exit 2 (card CLI defect, dual-run registered)",
+      "V9 lint --strict exit 1 with 2 warnings: OWNED_FILES_NONPATH on dotfile .gitignore (tool gap) and VERDICT_WITHOUT_REVIEW (no-verdict discipline)",
+      "V9 unittest requires COVENANT_BASH_HINT on Windows",
+      "single-agent signer/annotator independence",
+      "D5 data generator not pre-registered in section 17"
+    ],
+    "hashes": {
+      "run_data": "d02905eb02ff2875530c0115c7d00ad4c42ac123f2b48af57976738ac3b2f880",
+      "gate_input": "8260dcad587a9047f935e4bcc08df80e3c552d105bb2a51273d93899df1b3117",
+      "align": "60caca49c510105702ea0274114f3b9bc5477da24f58df61128c06c3634965f7",
+      "records": "49311bc6f8f29f04aa1c280af544d8c16280a96d03762521bf7e69c7f6ce3894",
+      "gate_metrics_r10": "d3b0af9a45ad2ed3435d0470c5065639eb8bcb018b2ecb2eac136560d1f52c17",
+      "goldset_r10": "adf0496bdc66e88f1ab20790c321f125b1a09ef14bb069d8401e4a38cbc7e353",
+      "gate_value_freeze": "989742c381431de5b208ac32287879936c80728491e1695baa8933eebe34384a",
+      "goldset": "fbc059750c164bfb7779daa79045255aa1124935128db5636ece9a4daf7c94e8",
+      "calibration_report": "929ada3c56fc7b362a670c05045664acd8625ce92a41e0c699a1dd160bf2baee",
+      "custody_anchors": "D:/15812/projects/round10-custody/r10-truedata-anchors.json",
+      "custody_blindness_verify": "D:/15812/projects/round10-custody/goldset-blindness-verify.json",
+      "custody_v9_logs": [
+        "r10-v9-unittest.log",
+        "r10-v9-unittest-with-hint.log",
+        "r10-v9-lint.log",
+        "r10-v9-lint-rerun.log"
+      ]
+    }
+  },
+  "XJ-20261111-002": [
+    "docs/eval-prereg.md",
+    "docs/eval-triage-r11.md",
+    "docs/eval-r11-main-reliability.md",
+    "docs/eval-report-v11.md",
+    "docs/eval-goldset-calibration-r11.md",
+    "tools/eval/triage.py",
+    "tools/eval/independent_judge.py",
+    "tools/eval/derive_mc.py",
+    "tools/eval/exit_fixture.py",
+    "tools/eval/gate_metrics.py",
+    "tools/eval/fixtures/exit_codes.yaml",
+    "goldset/calibration_r11.jsonl",
+    "artifacts.json"
+  ],
+  "_s18_freeze_XJ-20261111_002": {
+    "freeze_commit": "2699a9c",
+    "freeze_commit_time": "2026-11-11T22:35:24+08:00",
+    "freeze_before_any_r11_product": true,
+    "prereg_before_bytes": 129854,
+    "prereg_before_sha256": "71ef19c30353c0283db1f9dd2a21505176d9b7eaaeaf1999fe7270152b69b103",
+    "prereg_after_bytes": 151545,
+    "prereg_after_sha256": "3862b251e2a48f8af2dde9655eea9fdefd2b44622d36e3ea1f28a1d8d32df129",
+    "s18_section_bytes": 21691,
+    "s18_section_sha256": "343d45f85c0f6c2bc6e78e6d8fd76c3a1e248e73ac85bb2805d9a26175e05ff1",
+    "verbatim_block_bytes": 5658,
+    "verbatim_block_sha256": "9515fd47723e46d0bf62dfc48851ff2a4520029ce9421d67c97e210a78b300eb",
+    "prefix_intact": true,
+    "verbatim_intact": true,
+    "clauses": 11,
+    "prohibitions": 3,
+    "r11_seed": 20261111,
+    "codebook_canon_sha256": "0d6c2a776fae4068cf53ee58b990ef9f5e7ed04be725427fa4b415363793d789",
+    "codebook_canon_path": "D:/15812/projects/round11-custody/triage-codebook-canon.json",
+    "custody_anchors": "D:/15812/projects/round11-custody/s18-freeze-anchors.json",
+    "gitignore_added": [
+      "run-dir-r11/",
+      "shadow-r11/"
+    ],
+    "gitignore_note": "out/ already covered by round-10 D0; card 其他纪律 L109 authorises the two new lines",
+    "void_mc095": {
+      "path": "out/void-mc095.json",
+      "custody_path": "D:/15812/projects/round11-custody/void-mc095.json",
+      "voided_value": 0.95,
+      "implementation_output_existed": false,
+      "signed_at_utc": "2026-11-11T14:36:05.953632+00:00"
+    }
+  },
+  "_round11_progress_XJ-20261111_002": {
+    "_comment": "XJ-20261111-002 D1–D3 产物与仓外 custody 台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；out/ 为执行产物不入 repo，哈希按工作树真实字节计算。登记不改 §18 冻结文本、不写 verdict、不 push、不 merge。",
+    "custody_root": "D:/15812/projects/round11-custody",
+    "d1_triage": {
+      "commit": "60e18e9",
+      "zero_new_data": true,
+      "sources": [
+        "D:/15812/projects/round10-custody/r10-gate-input.json",
+        "D:/15812/projects/round10-custody/sealed/run-dir-r10/main-judgements.json"
+      ],
+      "buckets": {
+        "a": 0,
+        "b": 90,
+        "c": 0,
+        "d": 0,
+        "unclassifiable": 0
+      },
+      "trigger": "b_ge_60pct",
+      "cross_check": "90/90",
+      "report": "docs/eval-triage-r11.md",
+      "report_sha256": "1c86dfa627acde9340534df8c0bc0da49181b05d02ead9e29ea971c20b1baa7a",
+      "script": "tools/eval/triage.py",
+      "script_sha256": "5a7841733c52f753c6891f0cbfd34958ee563fa8e5807c55e501f7352cc2b41a",
+      "out": {
+        "out/triage-r11.tsv": "c339a7ba0bb1e9a1652c1917aa3b9a34ff474cdff34436975fb17bd67b539e41",
+        "out/triage-r11-summary.json": "dedcf473e560325988327738bb8adf6590f1f6bc2b6a80884707bf2e874f4bef",
+        "out/triage-codebook-r11.json": "0d6c2a776fae4068cf53ee58b990ef9f5e7ed04be725427fa4b415363793d789"
+      }
+    },
+    "d2_independence": {
+      "commit": "9ba53fd",
+      "independence_satisfied": false,
+      "honesty_clause_invoked": true,
+      "failed_fields": [
+        "judge_model_family",
+        "rubric_blind"
+      ],
+      "disagreement_rate": 0.6,
+      "strict_bool_disagreement_rate": 0.15,
+      "n_probe": 40,
+      "probe_families": 4,
+      "caliber": "single_agent_dual_view_direction_only",
+      "implementation": "tools/eval/independent_judge.py",
+      "implementation_sha256": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+      "cert": "tools/eval/independence_cert.json",
+      "cert_sha256": "297a1409599a96ca91fc5c2f1b2e60b236e4f998fa7f1c171edb218337b8b0c2",
+      "probe_set": "tools/eval/probe_set.json",
+      "probe_set_sha256": "cbe980f945879e50a1cedae3a1c64790c9e7bedae231bf3bcf5dc212eab974d1",
+      "out": {
+        "out/probe-report-r11.json": "23c4422e2ed36da9e6a8efe8ec3180c2c3b944225cfc315def1900a6d6163cf5",
+        "out/r11-probe-independent-blind.json": "91a7bb71fd4519c4608836923309808e21c2a299e939582c26bef48a18d9cbbf"
+      },
+      "custody": [
+        "probe_set_r11.py",
+        "probe_runner_r11.py",
+        "probe_set.sha256",
+        "probe-run-console.log",
+        "rubric-v2-r11.md",
+        "build_independence_cert.py",
+        "r11-probe-seal-log.json"
+      ],
+      "implementation_sha256_v1": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+      "implementation_sha256_v2": "97a8ff23f4672f4747f96dbd3251aa59e90f9297e8364e90b1fa2118e7e9f9af",
+      "cert_sha256_v1": "297a1409599a96ca91fc5c2f1b2e60b236e4f998fa7f1c171edb218337b8b0c2",
+      "cert_sha256_v2": "62de7bb262b88c6e543d4d80086d57341e551cc7e61fcb5692b434293e60969c",
+      "decode_caliber_fix": {
+        "condition": "C1 (SUBPROCESS_TEXT_NO_ENCODING at independent_judge.py:102)",
+        "kind": "decode-caliber correction only; no judging-logic/formula/threshold/parsing/sample change",
+        "r_main_rerun": false,
+        "m_c_recomputed": false,
+        "sealed_artifact_unchanged": "out/r11-independent-blind.json sha256=3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+        "postfix_vs_sealed": {
+          "cases_compared": 400,
+          "identical": 400,
+          "different": 0
+        },
+        "two_decode_modes": {
+          "cmd_cases": 161,
+          "observation_text_differs": 0,
+          "decision_differs": 0,
+          "locale_decode_exceptions": 0
+        },
+        "adjudication": "dp-brain 2026-11-12 Q1 -> path (c'): fix in place, record blob change additively, do not re-run R_main"
+      }
+    },
+    "d3_reliability": {
+      "n": 400,
+      "seed": 20261111,
+      "r_main": 0.62069,
+      "lb95": 0.546722,
+      "comparable": 174,
+      "abstain": 226,
+      "branch": "not_evaluable",
+      "computed_once": true,
+      "seal_then_unblind_order": true,
+      "blind_sealed_sha256": "3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+      "triangle_two_human_independent": false,
+      "report": "docs/eval-r11-main-reliability.md",
+      "report_sha256": "0f4651e5d6f0261a00a0baa407b9db92f46628f084375381b0b9d579e630b7a6",
+      "calibration_report": "docs/eval-goldset-calibration-r11.md",
+      "calibration_report_sha256": "8855757bcee8329d283c6bcd99afd1894141dcfd536df925f39e5884aea25116",
+      "goldset": "goldset/calibration_r11.jsonl",
+      "goldset_sha256": "ebf3821ecd005a6f8f0ef5baa0696762ae5c44c2e5e21c42ea4caf36c02e517e",
+      "verifier": "tools/eval/verify_artifact_pointers.py",
+      "verifier_sha256": "ad3a4afe8857c44d6aab2d0a53d4660423f142212c1d4df74b03ecfb078da709",
+      "pointer_verification": "D1/D3/D3-calibration reports all 100% coverage, 0 bad digest (verify_artifact_pointers.py)",
+      "out": {
+        "out/r11-blind-samples.json": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9",
+        "out/r11-independent-blind.json": "3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+        "out/r11-seal-log.json": "49517437036cc151fa6c1c39dcd3cc4e140aa49f2d96f762ec28244da3cae0a2",
+        "out/r11-main-reliability.json": "b54d2d43038ff6ce9f39e96e89235f54cf9f8085559ea44b6eb44a44a73c2b68",
+        "out/r11-reliability-rows.json": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7",
+        "out/r11-triangle-anchor.json": "215e706ab81a5b0f6d1ba488f70cd7d0a76ecfff7f4a6300681abbe15bdae3e2"
+      },
+      "custody": [
+        "r11_samples.py",
+        "r11_reliability.py",
+        "r11-samples.sha256",
+        "r11-reliability-console.log"
+      ]
+    },
+    "d4_mc_rederivation": {
+      "script": "tools/eval/derive_mc.py",
+      "script_sha256": "ee5718ed11a92c0ae6964cbe1950e5746402086a71b4b48a4fbe3a8393bae807",
+      "out": "out/derive-mc-r11.json",
+      "out_sha256": "e091424a2fe852c9ad7bca6c57878bc5fecede4879a164769dfc22325d69e648",
+      "input_sha256": "b54d2d43038ff6ce9f39e96e89235f54cf9f8085559ea44b6eb44a44a73c2b68",
+      "formula": "floor_to_5pct(min(0.95, LB95(R_main) - 0.05))",
+      "raw_formula_value": 0.496722,
+      "m_c": 0.45,
+      "branch": "not_evaluable",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "computed_once": true,
+      "first_count_utc": "2026-11-11T15:17:56.998592+00:00",
+      "s17_floor_cross_check_identical": true,
+      "voided_round10_value": 0.95,
+      "direction_disclosure": "m_c 0.45 is numerically LOWER (looser) than the voided 0.95; the frozen three-branch table hit not_evaluable, so NO gate conclusion is issued and the perverse incentive cannot pay out. Published as-is, never re-run for a different value."
+    },
+    "d5_exit_source_and_gate_rerun": {
+      "fixture": "tools/eval/fixtures/exit_codes.yaml",
+      "fixture_sha256": "f5002d9b94ba61243e920581ca66cfdbfe25eaf1ca0c283af8308e45af7e4dac",
+      "fixture_runner": "tools/eval/exit_fixture.py",
+      "fixture_runner_sha256": "37274b84d998c333541fc9af447b212f169a9aee8f21ee3d2afdf283f4e19b48",
+      "fixture_result": "out/exit-fixture-r11.json",
+      "fixture_result_sha256": "6b86832d9967c64e608c242fe88d0f66aa710c9aa63b8bb98e5926fe5988554a",
+      "fixture_expect": "10/10",
+      "fixture_by_source": {
+        "os": 4,
+        "adapter": 4,
+        "launch_failed": 2
+      },
+      "launch_failed_as_unsupported_fixture": 0,
+      "windows_9009_note": "cmd.exe really returns 1 on this host; 9009 is a frozen semantic marker only, never a fabricated OS exit code",
+      "gate_metrics": "tools/eval/gate_metrics.py",
+      "gate_metrics_sha256": "1fe6afdbe44801cbc59907a5ac0e1c1bf90a7b0d93bac303ac8746b524b40586",
+      "gate_metrics_out": "out/gate-metrics-r11.json",
+      "gate_metrics_out_sha256": "3de7a235f41b89150f209f31b19fa8e1b35716d95a4f11a5e35bb5fb9892bf41",
+      "zero_new_data": true,
+      "source": "D:/15812/projects/round10-custody/r10-gate-input.json (210 pairs)",
+      "comparable": 210,
+      "decidable": 180,
+      "decidable_rate": 0.857143,
+      "triple": {
+        "pass_rate": 0.833333,
+        "precision": 0.6,
+        "recall": 0.75
+      },
+      "confusion_matrix": {
+        "TP": 90,
+        "TN": 0,
+        "FP": 60,
+        "FN": 30
+      },
+      "conditional_agreement_secondary": 0.5,
+      "c_demoted_to_secondary": true,
+      "exit_source_counts": {
+        "os": 0,
+        "adapter": 210,
+        "launch_failed": 0
+      },
+      "adapter_samples_in_secondary": 210,
+      "launch_failed_counted_as_unsupported": 0,
+      "error_breakdown": {
+        "FILE_NOT_FOUND": 30,
+        "CWD_MISMATCH": 0,
+        "PARSE_FAIL": 0,
+        "TIMEOUT": 0,
+        "SILENT_FALLBACK": 30
+      },
+      "primary_metrics_evaluable": false,
+      "primary_void_reason": "r10-gate-input.json field_semantics.exit_code declares a mechanical map over flags/detail, NOT an independent OS process exit code; all 210 pairs are adapter, so §18 clause 11 excludes them from main C / main precision and no valid primary denominator remains. Reported as non-evaluable, not laundered.",
+      "regression": {
+        "literal_unittest_exit": 1,
+        "literal_unittest_failures": 2,
+        "literal_unittest_errors": 3,
+        "literal_failure_root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT (same as round-10 V9)",
+        "with_hint_unittest_exit": 0,
+        "with_hint_tests": 546,
+        "logs": [
+          "round11-custody/r11-v12-unittest-literal.log",
+          "round11-custody/r11-v12-unittest-with-hint.log"
+        ]
+      }
+    },
+    "d6_report": {
+      "path": "docs/eval-report-v11.md",
+      "sha256": "230dc61d8406d0b2e76fb52aa79ded36f041478fabe399334136f0a16d7fbe45",
+      "five_layers": [
+        "Gate 0 R_main 重测（盲态，n=400）",
+        "双指标门 + 三元组 + 2x2 + exit_source 三态",
+        "金标准校准（50 条三角锚定）",
+        "四桶 triage（轮十 90 条失配，零新数据）",
+        "分层诊断"
+      ],
+      "conclusions": 28,
+      "pointers": 29,
+      "unique_paths": 19,
+      "pointer_coverage_pct": 100.0,
+      "bad_digest": 0,
+      "malformed": 0,
+      "verifier": "tools/eval/verify_artifact_pointers.py",
+      "v8_m_c_values_in_full_text": [
+        "0.45"
+      ],
+      "v9_keys_present": [
+        "pass_rate",
+        "precision",
+        "recall",
+        "2×2",
+        "R_main",
+        "可判定率",
+        "条件一致率"
+      ],
+      "void_095_disclosure": true,
+      "once_only_declaration": true,
+      "branch_lookup_only": true,
+      "direction_disclosure": "0.45 looser than voided 0.95; not_evaluable emits no gate conclusion"
+    },
+    "d7_seal": {
+      "bundle": "run-dir-r11/",
+      "bundle_kind": "execution_artifacts_only",
+      "not_true_data": true,
+      "note": "round 11 generated no new true-data run; §18 D18-F freezes the generation rules for round 12. run-data.json says this verbatim.",
+      "seal": "run-dir-r11/seal.json",
+      "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)",
+      "sealed_files": 16,
+      "products": 15,
+      "sealed_at_utc": "2026-11-11T15:41:14+00:00",
+      "root_label": "r11-execution-artifacts",
+      "seal_json_sha256": "f08be48d129a132a9a0a76c5dcf9ad5e7abd39de1e74b2121f5e499533dfc37a",
+      "custody_copy": "D:/15812/projects/round11-custody/sealed/run-dir-r11",
+      "seal_cmd_exit": 0,
+      "verify_exit": 0,
+      "verify_output": "VERIFY: OK (16 files match the seal)",
+      "custody_summary": "D:/15812/projects/round11-custody/r11-seal-summary.json",
+      "custody_script": "D:/15812/projects/round11-custody/seal_r11.py",
+      "card_status": "IN_REVIEW",
+      "review_request": "D:/15812/mo brain/review/agnes/XJ-REVIEW-REQUEST-AGNES-20261111-002.md",
+      "review_request_note": "review handoff lives outside the repo (round-9/round-10 precedent); not an Owned files claim"
+    },
+    "_round11_acceptance_XJ-20261111_002": {
+      "_comment": "V1–V12 executor-run acceptance (25 commands). Card commands are PowerShell; runner executes Git-Bash/Python equivalents, captures real return codes. Underline-prefixed ledger, not a judged artifact. No author precheck adopted.",
+      "runner": "D:/15812/projects/round11-custody/acceptance_r11.py",
+      "log": "D:/15812/projects/round11-custody/r11-acceptance.log",
+      "json": "D:/15812/projects/round11-custody/r11-acceptance.json",
+      "commands": 25,
+      "exit_table": {
+        "V1": [
+          0,
+          0,
+          0
+        ],
+        "V2": [
+          0
+        ],
+        "V3": [
+          0,
+          0
+        ],
+        "V4": [
+          0
+        ],
+        "V5_literal": 0,
+        "V5_semantic": "FAIL (exit 0 but six fields not all satisfied)",
+        "V6": [
+          0
+        ],
+        "V7": [
+          0,
+          0
+        ],
+        "V8": [
+          0,
+          0,
+          0
+        ],
+        "V9": [
+          0,
+          0
+        ],
+        "V10": [
+          0,
+          0
+        ],
+        "V11": [
+          0
+        ],
+        "V12_pointers": 0,
+        "V12_redzone": 0,
+        "V12_unittest_literal": 1,
+        "V12_unittest_with_hint": 0,
+        "V12_lint_strict_first": 1,
+        "V12_lint_strict_after_card_fix": 1
+      },
+      "v1": {
+        "freeze_commit_cI": "2026-11-11T22:35:24+08:00",
+        "numstat": "110 0 docs/eval-prereg.md",
+        "missing_clauses": []
+      },
+      "v5_semantic": {
+        "distinct_model_family": false,
+        "rubric_blind": false,
+        "output_blind": true,
+        "independence_satisfied": false,
+        "registered_as": "FAIL, not laundered"
+      },
+      "v8_recompute": "RECOMPUTE_IDENTICAL: not a second counting run; sealed result unchanged",
+      "v8_m_c_values": [
+        "0.45"
+      ],
+      "v9_keys": [
+        "pass_rate",
+        "precision",
+        "recall",
+        "2×2",
+        "R_main",
+        "可判定率",
+        "条件一致率"
+      ],
+      "v12_unittest": {
+        "literal": {
+          "exit": 1,
+          "tests": 527,
+          "failures": 2,
+          "errors": 3,
+          "root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT"
+        },
+        "with_hint": {
+          "exit": 0,
+          "tests": 546,
+          "result": "OK"
+        },
+        "logs": [
+          "round11-custody/r11-v12-unittest-literal.log",
+          "round11-custody/r11-v12-unittest-with-hint.log"
+        ]
+      },
+      "v12_lint": {
+        "first": {
+          "exit": 1,
+          "errors": 1,
+          "warnings": 8
+        },
+        "after_card_fix": {
+          "exit": 1,
+          "errors": 1,
+          "warnings": 2
+        },
+        "remaining_error": "SUBPROCESS_TEXT_NO_ENCODING independent_judge.py:102 (text=True without encoding=)",
+        "remaining_warnings": [
+          "VERDICT_WITHOUT_REVIEW (no-verdict discipline)",
+          "TEST_COUNT_UNVERIFIED (unittest discovery without bash hint)"
+        ],
+        "executor_disposition": "NOT silently greened. The error sits in the D2 sealed independent judge, whose blob sha is a certificate field and whose output is the D3 blind sealed artifact; editing it after seeing R_main would break the once-only evidence chain (§18 prohibition 3). Registered as unresolved item #1 and left for AgnesCode / a separate repair card.",
+        "card_writing_fix": "Owned files prose moved off path lines (round-10 precedent), warnings 8 -> 2, no change to claim boundaries",
+        "logs": [
+          "round11-custody/r11-v12-lint-after-cardfix.log",
+          "round11-custody/r11-v12-lint-final.log"
+        ],
+        "final_lint_exit": 1,
+        "final_lint_summary": "LINT: FAIL (1 errors, 2 warnings)",
+        "final_pointer_recheck": "4 reports all PASS, 0 bad digest",
+        "final_redzone_diff": "empty"
+      },
+      "determinism_recheck": "V3 triage and V10 fixture re-runs reproduced byte-identical outputs; all report artifact pointers stayed valid (100% coverage, 0 bad digest)"
+    }
+  }
 }

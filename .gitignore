@@ -51,3 +51,8 @@ dryrun/
 out/
 run-dir-r10/
 shadow-r10/
+
+# Round-11 execution products (XJ-20261111-002 D0; card "其他纪律" L109).
+# out/ already covered above; these two exact names are not.
+run-dir-r11/
+shadow-r11/
