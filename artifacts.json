@@ -1837,7 +1837,10 @@
       "cwd_mismatch_before": 18,
       "gate_result": "not_evaluable"
     },
-    "gitignore_append": ["run-dir-r13/", "shadow-r13/"],
+    "gitignore_append": [
+      "run-dir-r13/",
+      "shadow-r13/"
+    ],
     "custody": {
       "template": "round13-custody/s20-template.md",
       "template_sha256": "a6d9c6dd1c06d97e7cfae34e4d996d18ab48e558a2831d7a21d7591e74bdce74",
@@ -1857,12 +1860,19 @@
       "verify_report_sha256": "10f0902506d42b10d2131968d7f63b3a14496e1bdf932b716dba01ba004c317b",
       "matrix_read_from": "docs/eval-prereg.md section 20 D20-E (machine-readable JSON block)",
       "cells": 25,
-      "verdict_classes": ["equivalent", "conflict", "protected_abstention"],
+      "verdict_classes": [
+        "equivalent",
+        "conflict",
+        "protected_abstention"
+      ],
       "unmapped": [],
       "code_vs_frozen_mismatches": [],
       "protected_class_in_boolean_cells": [],
       "protected_error_class_disposition_leaks": [],
-      "protected_abstention_error_classes": ["SILENT_FALLBACK", "FILE_NOT_FOUND"],
+      "protected_abstention_error_classes": [
+        "SILENT_FALLBACK",
+        "FILE_NOT_FOUND"
+      ],
       "v2_literal_exit": 0,
       "v2_path_calibre_note": "card V2 literal uses PowerShell backslash paths; quoted-backslash and forward-slash equivalents both exit 0 in Git Bash. Unquoted backslash under bash exits 2 due to shell escape (\\e swallowed), NOT a code defect; registered verbatim like round-10 V8.",
       "tamper_negative_control": {
@@ -1935,7 +1945,9 @@
       "readings": {
         "cwd_mismatches_before": 18,
         "cwd_mismatches": 0,
-        "before_layers": {"cwd_probe": 18},
+        "before_layers": {
+          "cwd_probe": 18
+        },
         "main_track_source_modified": false,
         "pass": true
       },
@@ -1955,7 +1967,9 @@
         "data_rows": 50,
         "file_lines": 51,
         "seed": 20261111,
-        "annotator_ids_measured": ["WB"],
+        "annotator_ids_measured": [
+          "WB"
+        ],
         "annotator_count": 1,
         "two_human_independent_annotation": false,
         "independence_satisfied": false,
@@ -1982,14 +1996,22 @@
         "before_agree": 108,
         "before_disagree": 66,
         "before_abstain": 226,
-        "before_disagree_by_mechanism": {"anchor_rule_diff": 48, "cwd_observation_surface_diff": 18},
+        "before_disagree_by_mechanism": {
+          "anchor_rule_diff": 48,
+          "cwd_observation_surface_diff": 18
+        },
         "before_matches_sealed": true,
         "after_r_main": 1.0,
         "after_comparable": 118,
         "after_agree": 118,
         "after_disagree": 0,
         "after_abstain": 282,
-        "disagree_by_mechanism": {"anchor_rule_diff": 0, "cwd_observation_surface_diff": 0, "policy_conflict": 0, "other": 0},
+        "disagree_by_mechanism": {
+          "anchor_rule_diff": 0,
+          "cwd_observation_surface_diff": 0,
+          "policy_conflict": 0,
+          "other": 0
+        },
         "disagree_by_mechanism_no_residual": true,
         "protected_total": 96,
         "comparable_delta": -56,
@@ -2034,7 +2056,12 @@
         "runner": "round13-custody/acceptance_r13.py (V1-V9 / V11, 33 commands)",
         "v10_runner": "round13-custody/verify_r13_v10.py (V10 + extras, 6 commands)",
         "total_commands": 39,
-        "nonzero": ["V2_1", "V11_1", "V11_2", "V11_4"],
+        "nonzero": [
+          "V2_1",
+          "V11_1",
+          "V11_2",
+          "V11_4"
+        ],
         "nonzero_disclosure": "V2_1 unquoted PowerShell backslash path under Git Bash (exit 2, shell artefact); V11_1/V11_2 unittest without real COVENANT_BASH_HINT (527 tests, failures=2 errors=3); V11_4 lint --strict (0 errors, 2 structural WARNs). All registered verbatim, never whitened.",
         "v11_3_with_real_bash_hint": "Ran 546 tests ... OK (exit 0)",
         "determinism": "8 products byte-identical after the full acceptance rerun; all 8 sealed copies hash-match",
