@@ -641,6 +641,143 @@ def run_r11(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
+# mode 5: round-12 real-OS collection gate re-run (§19 D19-B clause 4)
+# --------------------------------------------------------------------------
+def run_r12(args: argparse.Namespace) -> Dict[str, Any]:
+    """Count the exit_source PRODUCED BY THE COLLECTION LAYER, never infer it.
+
+    ADV-2 closure: round-11 ``run_r11`` read
+    ``r10-gate-input.json::field_semantics.exit_code`` ("a mechanical map over
+    flags/detail") and mechanically concluded 210/210 adapter. That was a
+    COLLECTION defect, not a capability gap. Here the input has no provenance
+    text at all; each pair carries ``exit_source`` stamped when the collection
+    layer actually launched an isolated OS subprocess and read its returncode.
+
+    This function deliberately does NOT look at any field_semantics key. The
+    only source of exit_source is ``pairs[i]["exit_source"]``. A missing field
+    is a hard error, so a silently unstamped sample cannot pass as primary.
+
+    This is an instrument-calibration re-run: gate_result is pinned to
+    not_evaluable (§19 clause 6) and NO gate conclusion is emitted.
+    """
+    gate_input = Path(args.gate_input)
+    doc = _load_json(gate_input)
+    pairs = list(doc.get("pairs", []))
+
+    exit_source_counts: Dict[str, int] = {
+        "os": 0, "adapter": 0, "launch_failed": 0}
+    for p in pairs:
+        src = p.get("exit_source")
+        if src not in exit_source_counts:
+            raise ValueError("unstamped or unknown exit_source: {!r}".format(src))
+        exit_source_counts[str(src)] += 1
+
+    launch_failed_as_unsupported = sum(
+        1 for p in pairs
+        if p["exit_source"] == "launch_failed" and p.get("unsupported"))
+
+    # Primary set: real OS samples that are decidable under §17's rule.
+    primary = []
+    excluded: List[Dict[str, Any]] = []
+    for p in pairs:
+        if p["exit_source"] != "os":
+            continue
+        classes = [c for c in p.get("error_classes", [])
+                   if c in OBSERVATION_ERROR_CLASSES]
+        ok = (int(p.get("exit_code", -1)) == 0
+              and bool(p.get("parse_ok")) and not classes)
+        if ok:
+            primary.append(p)
+        else:
+            excluded.append({
+                "claim_id": p.get("claim_id"),
+                "exit_code": p.get("exit_code"),
+                "parse_ok": p.get("parse_ok"),
+                "error_classes": classes,
+                "reason": ("§17 decidable rule: exit==0 AND parseable AND "
+                           "no pre-registered ERROR class"),
+            })
+
+    confusion = {"TP": 0, "TN": 0, "FP": 0, "FN": 0}
+    for p in primary:
+        pred = bool(p.get("predicate_ok"))
+        main = bool(p.get("main_supports"))
+        if pred and main:
+            confusion["TP"] += 1
+        elif not pred and not main:
+            confusion["TN"] += 1
+        elif pred and not main:
+            confusion["FP"] += 1
+        else:
+            confusion["FN"] += 1
+    tp, tn, fp, fn = (confusion[k] for k in ("TP", "TN", "FP", "FN"))
+    n_primary = len(primary)
+    evaluable = n_primary > 0
+    precision = (tp / (tp + fp)) if (tp + fp) else None
+    recall = (tp / (tp + fn)) if (tp + fn) else None
+    pass_rate = ((tp + fp) / n_primary) if n_primary else None
+    conditional_agreement = ((tp + tn) / n_primary) if n_primary else None
+
+    verification = doc.get("collection_self_verification", {})
+    return {
+        "mode": "r12_gate_rerun_real_os_collection",
+        "card": "XJ-20261112-001",
+        "phase": "D3 / card D4",
+        "source": str(args.gate_input),
+        "source_sha256": _sha256_file(gate_input),
+        "n_pairs": len(pairs),
+        # ---- ADV-2: provenance from the collection layer only ------------
+        "exit_source_counts": exit_source_counts,
+        "exit_source_from_collection_layer": True,
+        "provenance_text_used_for_inference": False,
+        "field_semantics_key_read": False,
+        "provenance_discipline_note": (
+            "run_r12 never reads field_semantics or any provenance text; "
+            "exit_source is counted verbatim from each collected pair"),
+        "collection_layer": doc.get("collection_layer"),
+        "collection_self_verification": verification,
+        "os_samples_returncode_reverified": bool(verification.get("all_match")),
+        "sample_reverification_mechanism": verification.get("mechanism"),
+        "launch_failed_counted_as_unsupported": launch_failed_as_unsupported,
+        "env_isolation_shared_module": doc.get("env_isolation_shared_module"),
+        # ---- main metrics (triple + 2x2), C stays secondary -------------
+        "primary_sample_count": n_primary,
+        "excluded_from_primary": len(excluded),
+        "excluded_detail": excluded,
+        "pass_rate": round(pass_rate, 6) if pass_rate is not None else None,
+        "precision": round(precision, 6) if precision is not None else None,
+        "recall": round(recall, 6) if recall is not None else None,
+        "confusion_matrix": confusion,
+        "conditional_agreement": (round(conditional_agreement, 6)
+                                  if conditional_agreement is not None else None),
+        "c_role": "secondary_historical_comparison_only",
+        "primary_metrics": {
+            "evaluable": evaluable,
+            "sample_count": n_primary,
+            "precision": round(precision, 6) if precision is not None else None,
+            "recall": round(recall, 6) if recall is not None else None,
+            "pass_rate": (round(pass_rate, 6)
+                          if pass_rate is not None else None),
+            "confusion_matrix": dict(confusion),
+            "exit_source": "os_only",
+            "reason": ("§19 clause 4 / clause 11: adapter samples are excluded "
+                       "from main precision; here adapter=0 because the "
+                       "collection layer really launched OS processes"),
+        },
+        "c_demoted_to_secondary": True,
+        # ---- no gate conclusion, ever -------------------------------------
+        "caliber": "instrument_calibration_only",
+        "gate_result": "not_evaluable",
+        "gate_conclusion_issued": False,
+        "gate_value_recomputed": False,
+        "r_main_recomputed": False,
+        "note": ("instrument-calibration re-run to prove the real-OS "
+                 "collection pipeline is connected (ADV-2). NOT a new true-data "
+                 "gate round and NOT a gate conclusion; no gate value appears."),
+    }
+
+
+# --------------------------------------------------------------------------
 # CLI
 # --------------------------------------------------------------------------
 def build_parser() -> argparse.ArgumentParser:
@@ -658,6 +795,10 @@ def build_parser() -> argparse.ArgumentParser:
     # exit_source, triple + 2x2 main metrics and C demoted to secondary.
     ap.add_argument("--r11", action="store_true",
                     help="round-11 gate re-run mode")
+    # Round-12 mode (D3): count exit_source stamped by the real-OS collection
+    # layer; no provenance-text inference; no gate conclusion.
+    ap.add_argument("--r12", action="store_true",
+                    help="round-12 real-OS collection gate re-run mode")
     ap.add_argument("--gate-input", dest="gate_input",
                     default="D:/15812/projects/round10-custody/r10-gate-input.json",
                     help="frozen round-10 gate input (210 pairs)")
@@ -672,7 +813,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[List[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.r11:
+        if args.r12:
+            payload = run_r12(args)
+        elif args.r11:
             payload = run_r11(args)
         elif args.gate0:
             payload = run_gate0(args)
@@ -681,7 +824,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         elif args.run_dir or args.shadow:
             payload = run_dual_metric(args)
         else:
-            print("usage error: choose --r11 / --gate0 / --goldset / "
+            print("usage error: choose --r12 / --r11 / --gate0 / --goldset / "
                   "--run-dir + --shadow", file=sys.stderr)
             return 2
     except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
