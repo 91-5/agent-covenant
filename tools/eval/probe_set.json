@@ -474,5 +474,117 @@
     "fixtures_root": {},
     "main_workspace_mode": "workspace",
     "adversarial_intent": "对照：dotfile 内容含显式数字锚点，两实现应一致判支持"
+  },
+  {
+    "case_id": "P-E01",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E01\n\n- [已验证] 该观测已按冻结规则完成。\n  证据：（缺字段）\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "true structural case: non-empty evidence line with no cmd/ref/anchors; rubric v3 should return an explicit STRUCTURALLY_UNJUDGEABLE abstention instead of dressing an instrument-definition gap up as an observation failure. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E02",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E02\n\n- [已验证] 该观测已按冻结规则完成。\n  证据：（缺字段）\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "true structural case: non-empty evidence line with no cmd/ref/anchors; rubric v3 should return an explicit STRUCTURALLY_UNJUDGEABLE abstention instead of dressing an instrument-definition gap up as an observation failure. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E03",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E03\n\n- [已验证] 该观测已按冻结规则完成。\n  证据：（缺字段）\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "true structural case: non-empty evidence line with no cmd/ref/anchors; rubric v3 should return an explicit STRUCTURALLY_UNJUDGEABLE abstention instead of dressing an instrument-definition gap up as an observation failure. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E04",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E04\n\n- [已验证] 该观测已按冻结规则完成。\n  证据：（缺字段）\n",
+    "fixtures_workspace": {},
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "true structural case: non-empty evidence line with no cmd/ref/anchors; rubric v3 should return an explicit STRUCTURALLY_UNJUDGEABLE abstention instead of dressing an instrument-definition gap up as an observation failure. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E05",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E05\n\n- [已验证] 观测 R12SU05 的答案为 42。\n  证据：ref=`probe-E05.txt`\n",
+    "fixtures_workspace": {
+      "probe-E05.txt": "R12SU05 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "boundary case: has a ref but no cmd, therefore NOT structurally unjudgeable; checks that v3 gives a boolean verdict instead of abstaining on every cmd-less case. root_only makes the main track resolve the ref from the repository root. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E06",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E06\n\n- [已验证] 观测 R12SU06 的答案为 42。\n  证据：ref=`probe-E06.txt`\n",
+    "fixtures_workspace": {
+      "probe-E06.txt": "R12SU06 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "boundary case: has a ref but no cmd, therefore NOT structurally unjudgeable; checks that v3 gives a boolean verdict instead of abstaining on every cmd-less case. root_only makes the main track resolve the ref from the repository root. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E07",
+    "family": "structural_unjudgeable",
+    "intent": "adversarial",
+    "markdown": "# R12 structural probe P-E07\n\n- [已验证] 观测 R12SU07 的答案为 42。\n  证据：ref=`probe-E07.txt`\n",
+    "fixtures_workspace": {
+      "probe-E07.txt": "R12SU07 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "root_only",
+    "adversarial_intent": "boundary case: has a ref but no cmd, therefore NOT structurally unjudgeable; checks that v3 gives a boolean verdict instead of abstaining on every cmd-less case. root_only makes the main track resolve the ref from the repository root. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E08",
+    "family": "structural_unjudgeable",
+    "intent": "control",
+    "markdown": "# R12 structural probe P-E08\n\n- [已验证] 观测 R12SU08 的答案为 42。\n  证据：ref=`probe-E08.txt`\n",
+    "fixtures_workspace": {
+      "probe-E08.txt": "R12SU08 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "control case: same shape as the boundary cases but the main track uses the workspace, so the two tracks can agree. Included to prove the new family is NOT engineered to disagree by construction. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E09",
+    "family": "structural_unjudgeable",
+    "intent": "control",
+    "markdown": "# R12 structural probe P-E09\n\n- [已验证] 观测 R12SU09 的答案为 42。\n  证据：ref=`probe-E09.txt`\n",
+    "fixtures_workspace": {
+      "probe-E09.txt": "R12SU09 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "control case: same shape as the boundary cases but the main track uses the workspace, so the two tracks can agree. Included to prove the new family is NOT engineered to disagree by construction. Both tracks are invoked for real; no expected judgement is stored."
+  },
+  {
+    "case_id": "P-E10",
+    "family": "structural_unjudgeable",
+    "intent": "control",
+    "markdown": "# R12 structural probe P-E10\n\n- [已验证] 观测 R12SU10 的答案为 42。\n  证据：ref=`probe-E10.txt`\n",
+    "fixtures_workspace": {
+      "probe-E10.txt": "R12SU10 42\n"
+    },
+    "fixtures_root": {},
+    "main_workspace_mode": "workspace",
+    "adversarial_intent": "control case: same shape as the boundary cases but the main track uses the workspace, so the two tracks can agree. Included to prove the new family is NOT engineered to disagree by construction. Both tracks are invoked for real; no expected judgement is stored."
   }
 ]

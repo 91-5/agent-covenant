@@ -1507,6 +1507,71 @@
       "r11_mode_regression_exit": 0,
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D4_probe_family_extension": {
+      "phase": "D4 / card D5 (V5)",
+      "files": {
+        "tools/eval/probe_set.json": "92dbb9552b011e64637b6c5cd6af6c75e7ba4aa5db6930255b58a6ae81c5f6c2",
+        "tools/eval/probe_runner_r12.py": "6eac57f36b0d06f1da38ab94b6f6f36a851545f0024c7150041d1cb73972ee71",
+        "out/r12-probe-report.json": "47b74f1568ae4522c7c421956b33f2a78030b61b0bd6a7bb3bfe61b6bf9e99ed",
+        "out/r12-probe-independent-blind.json": "ae8f9ef9777d46cbee175d3d714a92f3c5e0e6ce2c5cb38d63c86e97ac11ce13",
+        "out/r12-probe-seal-log.json": "4e4130bd956cd2af8a31e99bb02f1d6ced929db20be89a139ff066094918dbd4"
+      },
+      "custody": {
+        "probe_set_r12.py": "97a92271359ff409fda5ff62e582ad10946163d25ba278bbd412bba83ca0259c",
+        "probe_set_r12.sha256": "ba9a063fb33481631b127535391978648b942a009945873dad348c4739f4ba41",
+        "r12-probe-report.json": "D:/15812/projects/round12-custody/r12-probe-report.json"
+      },
+      "probe_set_before_sha256": "d6ab79d4946c8fcd03330ae3775121477a9bd150d2d0c940e68905b237e0aaa2",
+      "probe_set_before_bytes": 20416,
+      "probe_set_after_bytes": 27198,
+      "first40_prefix_byte_intact": true,
+      "first40_semantic_intact": true,
+      "byte_level_append": true,
+      "n_probe": 50,
+      "n_families": 5,
+      "new_family": "structural_unjudgeable",
+      "new_family_composition": {
+        "true_structural_abstention_adversarial": 4,
+        "ref_without_cmd_boundary_adversarial": 3,
+        "agreeing_control": 3
+      },
+      "expectation_labels_stored": false,
+      "v5_literal": {
+        "strict_bool_disagreement_rate": 0.18,
+        "families": 5,
+        "exit": 0
+      },
+      "threshold": {
+        "frozen_value": 0.15,
+        "read_from_section19": 0.15,
+        "matches_section19": true,
+        "lowered_after_data": false,
+        "denominator": 50,
+        "denominator_policy": "ALL probe cases; no sample removed"
+      },
+      "readings": {
+        "disagreement_rate": 0.62,
+        "strict_bool_disagreements": 9,
+        "by_family_strict": {
+          "cwd_root_misalign": 6, "silent_fallback": 0,
+          "proposition_level": 0, "dotfile_claim": 0,
+          "structural_unjudgeable": 3
+        },
+        "new_family_agreeing_controls": 3
+      },
+      "offline_design_replay": {
+        "v3_on_original_40": {"structural": 0, "disagreement": 24,
+                              "strict_bool": 6, "rate": 0.15},
+        "note": "offline核算 only, no probe product written; if the new family contributed zero strict disagreements the rate would have been 6/50 = 0.12 < 0.15"
+      },
+      "blind_order": "independent v3 -> sha256 seal -> main track -> compare",
+      "env_isolation_shared_module": "tools/eval/env_isolation.py",
+      "env_isolation_all_checks_pass": true,
+      "gate_result": "not_evaluable",
+      "caliber": "instrument_calibration_only",
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
     }
   }
 }
