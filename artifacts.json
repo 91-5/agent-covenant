@@ -1800,5 +1800,53 @@
     "goldset/annotation_r13.jsonl",
     "artifacts.json",
     "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md"
-  ]
+  ],
+  "_s20_freeze_XJ-20261112_002": {
+    "phase": "D0_section20_freeze",
+    "freeze_commit": "ae237e3",
+    "freeze_commit_full": "ae237e35718b4e77ac6d30dbddb617cee8d2c768",
+    "freeze_committed_at": "2026-11-12T22:26:14+08:00",
+    "freeze_before_any_r13_product": true,
+    "r13_products_before_freeze": [],
+    "prereg_before_bytes": 168010,
+    "prereg_before_sha256": "0975c1bdfc6acfb2554704307e41498db4a5842052c307c8faafeb2f4220cf49",
+    "v1_prefix_sha256_before": "8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561",
+    "v1_prefix_sha256_after": "8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561",
+    "prefix_intact": true,
+    "prereg_after_bytes": 191760,
+    "prereg_after_sha256": "53d43d1b76e6bb9bee2eb470be0d391f261d8c0bd81fad9a1aefa4b3ecb0f3a8",
+    "prereg_blob_lf_bytes": 190295,
+    "prereg_blob_lf_sha256": "4abeb25527682b6da4b889012c984355c159ea5743e7c82bd3e3ab65f1a0e58b",
+    "s20_section_bytes": 23750,
+    "s20_section_sha256": "9c3f8529336b682ba4e3555abf964b8d152ad9e4262c82120d010c21efd1e20c",
+    "s20_heading_count": 1,
+    "clauses_in_d20_b": 7,
+    "prohibitions_in_d20_c": 3,
+    "clauses_total_numbered": 10,
+    "card_prohibitions_verbatim_in_d20_c_prime": 6,
+    "mapping_matrix_ok": true,
+    "mapping_matrix_cells": 25,
+    "banned_api_literal_in_new_section": false,
+    "v1_literal_clauses": 10,
+    "v1_literal_has_s20": true,
+    "frozen_constants": {
+      "sample_seed": 20261111,
+      "raw_denominator": 400,
+      "protected_total": 96,
+      "anchor_mismatch_before": 56,
+      "cwd_mismatch_before": 18,
+      "gate_result": "not_evaluable"
+    },
+    "gitignore_append": ["run-dir-r13/", "shadow-r13/"],
+    "custody": {
+      "template": "round13-custody/s20-template.md",
+      "template_sha256": "a6d9c6dd1c06d97e7cfae34e4d996d18ab48e558a2831d7a21d7591e74bdce74",
+      "freeze_script": "round13-custody/freeze_s20.py",
+      "freeze_script_sha256": "db372e230ec1ae3001ce71628a79abad3e5bee97cf8f17a3316748c921d38f6e",
+      "anchors": "round13-custody/s20-freeze-anchors.json",
+      "anchors_sha256": "84c9635d39eab14eae8d2b7f45cb8cbbcbabede1f82a55cfd66a702b51db68cf"
+    },
+    "draft_deviation_registered": "card 6-row draft line 6 says incomplete -> PARSE_FAIL, but round-12 v3 reclassifies that layer to STRUCTURALLY_UNJUDGEABLE; §20 freezes to the CURRENT implementation and registers the deviation in D20-A (A-3).",
+    "instruction_tension_registered": "接卡指令 D3 'ref_missing -> 缺席可判路径' conflicts with card 禁令 2 + V7 (protected_total=96 must not drop); §20 clause 4 rules by prohibition precedence: explicit VERIFIABLE_ABSENCE path + upgrade_candidate trace, still abstains, no boolean mapping, escalation deferred to AgnesCode."
+  }
 }
