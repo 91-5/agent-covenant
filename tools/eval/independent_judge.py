@@ -99,8 +99,13 @@ def _reproduce(spec: Dict[str, Any], workspace: Path) -> Tuple[float, str, str]:
         if any(tok in spec["cmd"].lower() for tok in _DENY):
             return 0.0, "", "SILENT_FALLBACK"
         try:
+            # encoding= is explicit on purpose (XJ-20261111-002 C1): text=True
+            # without it decodes the child's bytes with the caller's locale, so a
+            # cp936/GBK console mangles any non-ASCII output. errors="replace"
+            # keeps a decode failure from raising instead of degrading.
             cp = subprocess.run(spec["cmd"], shell=True, cwd=str(workspace),
-                                capture_output=True, text=True, timeout=20)
+                                capture_output=True, text=True, timeout=20,
+                                encoding="utf-8", errors="replace")
         except subprocess.TimeoutExpired:
             return 0.0, "", "TIMEOUT"
         except OSError:

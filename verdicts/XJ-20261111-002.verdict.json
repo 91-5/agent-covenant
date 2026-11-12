@@ -1,0 +1,71 @@
+{
+  "id": "XJ-20261111-002",
+  "artifact": [
+    "docs/eval-prereg.md",
+    "docs/eval-triage-r11.md",
+    "tools/eval/triage.py",
+    "tools/eval/independent_judge.py",
+    "tools/eval/independence_cert.json",
+    "tools/eval/probe_set.json",
+    "docs/eval-r11-main-reliability.md",
+    "docs/eval-goldset-calibration-r11.md",
+    "goldset/calibration_r11.jsonl",
+    "tools/eval/derive_mc.py",
+    "out/derive-mc-r11.json",
+    "tools/eval/exit_fixture.py",
+    "tools/eval/fixtures/exit_codes.yaml",
+    "tools/eval/gate_metrics.py",
+    "out/gate-metrics-r11.json",
+    "docs/eval-report-v11.md",
+    "tools/eval/verify_artifact_pointers.py",
+    "run-dir-r11/seal.json",
+    "artifacts.json"
+  ],
+  "commit": "feature/xj-20261111-002-round11-independent-judge @ 2416ba4 (baseline master f62f353, 12 commits; D0 section-18 freeze 2699a9c 22:35:24 -> D1-D7; executor WorkBuddy/WB 2026-11-11; gate_result=not_evaluable (R_main 0.62069 < 0.80), M_C 0.45 published not judged; independence_satisfied=false honestly declared; V5 semantic FAIL + V12 lint 1 ERROR left open, NOT a green-acceptance delivery).",
+  "verdict": "CONDITIONAL",
+  "acknowledged_by": "XJ-REVIEW-REQUEST-AGNES-20261111-002 dispatch to fuxiang (independent review, non-card-author, non-executor WB; the Orchestrator pre-review P1/P2 are NOT adjudications - fuxiang rules). Four key JSONs (R_main 0.62069, derive-mc 0.45, independence_cert six fields, gate-metrics-r11 all-adapter) independently re-read; M_C formula and R_main branch independently recomputed; seal 16 files verified; 11-path red zone re-diffed; P1 lint --strict actually run. The CONDITIONAL is driven by the real lint ERROR (P1) that blocks pre-push/CI, not by any defect in the core not_evaluable adjudication.",
+  "blockers": 0,
+  "conditions": [
+    "C1 (P1): SUBPROCESS_TEXT_NO_ENCODING at independent_judge.py:102 (text=True without encoding=) - LINT: FAIL (1 error, 1 warning), exit 1, which blocks the pre-push hook and the CI gate job. Must be fixed in a downstream card. Fix path to be ruled by sir/pre-review: (a) a dedicated fix card that adds encoding='utf-8',errors='replace' (a decode-caliber correction, not a judging-logic change / not touching the impl_blob judging semantics) then re-seals the D2 certificate + D3 blind artifact and re-runs the one-time R_main remeasure (re-checking the once-only clause, see ADV-6); or (b) if ruled that the encoding correction does not break the evidence chain, apply a local '# noqa: SUBPROCESS_TEXT_NO_ENCODING' preserving impl_blob_sha so lint passes. This card passes CONDITIONALLY (not rejected - the core not_evaluable adjudication + honest disclosure + zero overreach are all sound; not a plain PASS - it would be CI-blocked as-is)."
+  ],
+  "independent": true,
+  "verifier": "fuxiang(AgnesCode)",
+  "ts": "2026-11-11T16:13:00Z",
+  "ts_note": "ts = UTC at moment of writing (2026-11-12 00:13 +08:00 == 16:13 UTC on 2026-11-11), not ahead of current system UTC. All independent verification completed before this ts: re-read of the four key out/ JSONs, M_C floor_to_5pct and R_main branch recompute, seal --verify (16 files), 11-path red-zone diff, and the P1 lint --strict real run (1 ERROR confirmed).",
+  "evidence": [
+    "RED-ZONE + freeze HOLDS: git diff f62f353..HEAD across the 10 instrument red-zone files + verdicts/ + .eval-sealed/ is EMPTY; docs/eval-prereg.md = +110/-0 pure append (sections 0-17 prefix 129854 bytes byte-identical, section-18 11 clauses + 3 prohibitions verbatim_intact); section-18 freeze commit 2699a9c (22:35:24) precedes all round-11 artifacts (D1 60e18e9 22:40:44 onward); seal round11-custody/sealed/run-dir-r11 = VERIFY: OK (16 files); blind seal order out/r11-independent-blind.json sha 3d4d6bb3 with main_track_invoked_before_seal=false.",
+    "M_C 0.45 INDEPENDENTLY RECOMPUTED: floor_to_5pct(min(0.95, LB95(R_main)-0.05)) = floor_to_5pct(min(0.95, 0.546722-0.05)) = floor_to_5pct(0.496722) = 0.45, matching out/derive-mc-r11.json; branch not_evaluable (R_main 0.62069 < 0.80), gate_conclusion_issued=false; the only M_C value in report-v11 is 0.45.",
+    "R_main 0.62069 (108/174): independently recomputed; abstain 226/400 (56.5%) is a non-random missingness (R10_ANCHOR abstain 71.67% vs HOLDOUT 33.75%, not merged/hidden); LB95 0.546722; n=400 seed=20261111; directional diagnostic only, not a test-retest reliability.",
+    "independence_cert.json six fields all present, NONE fabricated: independence_satisfied=false, judge_model_family=NOT_DISTINCT (both deterministic symbolic rule engines, no model family, distinct family unavailable, honesty clause invoked), rubric_blind=false (rubric v2 author had read sections 0-17 + judge header before writing), output_blind=true, discrimination_pass_rate=0.6, input_shared=true; impl_blob_sha a792aef6 distinct from main blob 973756a3.",
+    "gate-metrics-r11.json: 210 round-10 pairs, zero new data; decidable_rate 0.857143, triple 0.833333/0.6/0.75, 2x2 TP90/TN0/FP60/FN30, C secondary 0.5 (voided by triage bucket b=100% >= 60%, clause 8); exit_source_counts os 0 / adapter 210 / launch_failed 0 -> clause 11 excludes all adapter samples, so primary_metrics_excluding_adapter.evaluable=false and the top-level triple is labelled secondary_diagnostic_only_adapter_inclusive (not passed off as primary).",
+    "P1 lint --strict ACTUALLY RUN: LINT: FAIL (1 errors, 1 warnings) exit 1 - the 1 ERROR is SUBPROCESS_TEXT_NO_ENCODING at independent_judge.py:102 (text=True without encoding=); the 1 WARN is VERDICT_WITHOUT_REVIEW (executor's no-verdict discipline, a pre-review transient). This ERROR blocks the pre-push hook and CI gate job -> the C1 condition.",
+    "triage-r11-summary.json: four-bucket over the 90 round-10 decidable mismatches with ZERO new data; buckets a0/b90/c0/d0/unclassifiable0, share_sum=1.0, main_level_crosscheck 90/90, codebook_sha256 0d6c2a77 matches the section-18 frozen canon; bucket b=100% fired the C-void clause 8."
+  ],
+  "rulings": [
+    "P1 (lint --strict residual 1 ERROR): RULE CONDITIONAL (C1) - the ERROR is real and CI-blocking; the executor's refusal to self-patch or wash green is correct; a fix goes to a downstream card (encoding correction + re-seal + one-time R_main rerun, or local noqa), path to be ruled by sir/pre-review. Card passes conditionally, not rejected (core adjudication is sound), not plain PASS (would be CI-blocked).",
+    "P2 (once-only vs later re-run): RULE - deferred to ADV-6; section-18 clause 2 says only the first R_main remeasure counts; whether a post-fix re-seal counts as a new first-run or voids this card's reading is a sir ruling, not pre-adjudicated.",
+    "§6.1 independence-not-satisfiable handling (honest declaration + run-as-is + no gate conclusion): HOLDS - D18-D honesty clause holds, gate_result=not_evaluable, caliber=main_track_validity_report_only; 'refuse to judge when the reference is untrustworthy' for the first time, not a failure.",
+    "§6.2 M_C 0.45 loosens but is sealed: HOLDS - the three-tier table is frozen in D0 before data; the not_evaluable tier emits no gate verdict so the anomaly incentive cannot cash out; 'publish even if it loosens the gate' honored; 're-derivation is the first valid execution of the original rule' holds (input switched from the point estimate R_main=1.0, a deterministic replay identity, to LB95, with R_main<0.80 firing not_evaluable).",
+    "§6.3 primary metrics all-adapter: ADV-2 - 210/210 exit_source=adapter (field_semantics.exit_code verbatim 'a mechanical map over flags/detail, NOT an independent OS process exit code') -> main C / main precision non-evaluable; a downstream card must supply real OS process observation and re-freeze the gate-rerun input.",
+    "§6.4 independent human / other-model-family annotation: ADV-1 - two_human_independent_annotation=false and judge_model_family=NOT_DISTINCT; R_main/M_C stay not_evaluable until a downstream round adds independent human annotation + a different model-family judge.",
+    "§6.6 three Owned-files mechanical trace: ACCEPTED - the notes were moved off the path lines, the claim boundary unchanged; the D2 two JSONs + V12 verifier registration is compliant.",
+    "Adversarial 1-8: all HOLDS - Q1 not independent (judge_model_family weakest), Q2 probe 0.60 is mostly explicit abstention with strict-bool disagreement only 0.15 (disclosed, not misrepresented), Q3 LB95 loosens (0.45) and is sealed by not_evaluable, Q4 re-derivation is not a second gate redesign (section-18 D18-0 froze the 0.95 input-invalid + triple constraint; input point-estimate->LB95 left to ruling), Q5 codebook frozen at D0/section-18 and byte-matched, bucket c=0 did not fire, Q6 the triple+2x2 is the pre-registered primary metric and C demoted, Q7 the 50-item double-label is single-agent two-view 0.590909 not two humans, Q8 no gate-conclusion overreach (R_main<0.80 lookup -> not_evaluable, gate_conclusion_issued=false)."
+  ],
+  "advisory_findings": [
+    "ADV-1: independence cannot be satisfied in this environment (single agent, CI py3.9, no network/external model). Until a downstream round adds an independent HUMAN annotation and a different MODEL-FAMILY judge, R_main and M_C remain not_evaluable and no valid gate conclusion can be issued. This card's readings are directional diagnostics only.",
+    "ADV-2: all 210/210 gate-rerun pairs are exit_source=adapter (the mechanical flag/detail map, not a real OS process exit code), so per section-18 clause 11 the MAIN C / MAIN precision are non-evaluable (evaluable=false). A downstream card must capture real OS subprocess exit codes and re-freeze the gate-rerun input before any primary-metric conclusion.",
+    "ADV-3: the re-derived M_C=0.45 is numerically LOWER/looser than the voided round-10 0.95, but the section-18 three-tier table makes the not_evaluable branch emit no gate verdict, so the looser value has no decisional effect; 're-derivation is the first valid execution of the original rule' holds and the reverse incentive cannot cash out.",
+    "ADV-4: R_main 0.62069 rests on 108/174 with 226/400 abstentions that are NOT random missingness (R10_ANCHOR abstain 71.67% vs HOLDOUT 33.75%, stratified not merged). The value is a directional diagnostic only.",
+    "ADV-5: the triangle anchor (0.590909 two-view agreement) is single-agent, not two-human independent; the discrimination probe 0.60 is driven mostly by explicit abstention with strict-boolean disagreement only 0.15 - do not read the 0.60 as strong independent discrimination.",
+    "ADV-6: the once-only caliber (section-18 clause 2 'if R_main is re-measured twice, only the first counts') versus Orchestrator option (a) 're-seal and re-run' is undecided: whether the post-encoding-fix re-seal counts as a new first-run (old reading voided) or whether this card's reading is replaced must be explicitly ruled by sir before any re-measure."
+  ],
+  "not_verified_disclosed": [
+    "Whether the P1 fix should be (a) a dedicated re-seal + re-run card or (b) a local noqa is left to sir/pre-review (C1/ADV-6); this card is ruled CONDITIONAL on that fix landing, and its current form is not mergeable (lint --strict exit 1 blocks pre-push/CI).",
+    "Any valid gate conclusion requires the two ADV-1/ADV-2 downstream cards (independent human + other-model-family annotation; real OS observation). This round is a main-track validity report, not a gate pass or fail."
+  ],
+  "unblocks_note": "CONDITIONAL (0 blockers / 1 condition / 6 advisory). The round-11 core adjudication - gate_result=not_evaluable (R_main 0.62069 < 0.80), M_C 0.45 published-not-judged, independence honestly declared unsatisfied, zero gate-conclusion overreach - is independently confirmed and sound (conservative direction, no laundering, red zone + sealed data zero-diff, section-18 pure append, seal 16 files VERIFY OK). The single blocking condition C1 is the real lint ERROR (SUBPROCESS_TEXT_NO_ENCODING) that stops pre-push/CI; it is an engineering-hygiene defect, not a defect in the not_evaluable reasoning. Fix C1 in a downstream card (path per sir/ADV-6) and this card's substantive review stands as CONDITIONAL-pass.",
+  "subcard_note": "Round-11 independent-judge card (single executor WB): an independent symbolic scorer was built to cross-check main-track R_main; it returned R_main 0.62069 (< 0.80) so the section-18 three-tier table yields gate_result=not_evaluable (a main-track validity report, not a gate pass/fail). Independence could not be honestly satisfied (single agent, no distinct model family, rubric not blind), declared via the D18-D honesty clause; the re-derived M_C=0.45 is published but emits no verdict. The open item is a lint --strict ERROR that blocks merge (C1).",
+  "_provenance": "Independent review of feature/xj-20261111-002-round11-independent-judge @ 2416ba4 by AgnesCode (fuxiang), non-card-author, non-executor, and distinct from the Orchestrator pre-review (P1/P2 were ruled, not inherited). Four key out/ JSONs re-read, M_C floor_to_5pct and R_main branch recomputed, seal 16 files verified, 11-path red zone re-diffed, P1 lint --strict actually run. 1 condition (lint ERROR) + 6 advisory.",
+  "ts_resign_notes": "",
+  "notes": "CONDITIONAL. gate_result=not_evaluable (R_main 0.62069 < 0.80, 108/174, abstain 226/400 non-random); M_C 0.45 published not judged (floor_to_5pct(min(0.95,0.496722))=0.45); independence_satisfied=false honestly declared; zero gate-conclusion overreach; red zone + sealed data zero-diff; section-18 +110/-0 pure append; seal 16 files VERIFY OK; main metrics all-adapter non-evaluable. C1 = SUBPROCESS_TEXT_NO_ENCODING lint ERROR (CI-blocking) must be fixed downstream. 6 advisory."
+}

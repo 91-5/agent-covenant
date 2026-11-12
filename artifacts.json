@@ -904,7 +904,10 @@
     "codebook_canon_sha256": "0d6c2a776fae4068cf53ee58b990ef9f5e7ed04be725427fa4b415363793d789",
     "codebook_canon_path": "D:/15812/projects/round11-custody/triage-codebook-canon.json",
     "custody_anchors": "D:/15812/projects/round11-custody/s18-freeze-anchors.json",
-    "gitignore_added": ["run-dir-r11/", "shadow-r11/"],
+    "gitignore_added": [
+      "run-dir-r11/",
+      "shadow-r11/"
+    ],
     "gitignore_note": "out/ already covered by round-10 D0; card 其他纪律 L109 authorises the two new lines",
     "void_mc095": {
       "path": "out/void-mc095.json",
@@ -924,7 +927,13 @@
         "D:/15812/projects/round10-custody/r10-gate-input.json",
         "D:/15812/projects/round10-custody/sealed/run-dir-r10/main-judgements.json"
       ],
-      "buckets": {"a": 0, "b": 90, "c": 0, "d": 0, "unclassifiable": 0},
+      "buckets": {
+        "a": 0,
+        "b": 90,
+        "c": 0,
+        "d": 0,
+        "unclassifiable": 0
+      },
       "trigger": "b_ge_60pct",
       "cross_check": "90/90",
       "report": "docs/eval-triage-r11.md",
@@ -941,7 +950,10 @@
       "commit": "9ba53fd",
       "independence_satisfied": false,
       "honesty_clause_invoked": true,
-      "failed_fields": ["judge_model_family", "rubric_blind"],
+      "failed_fields": [
+        "judge_model_family",
+        "rubric_blind"
+      ],
       "disagreement_rate": 0.6,
       "strict_bool_disagreement_rate": 0.15,
       "n_probe": 40,
@@ -958,10 +970,37 @@
         "out/r11-probe-independent-blind.json": "91a7bb71fd4519c4608836923309808e21c2a299e939582c26bef48a18d9cbbf"
       },
       "custody": [
-        "probe_set_r11.py", "probe_runner_r11.py", "probe_set.sha256",
-        "probe-run-console.log", "rubric-v2-r11.md",
-        "build_independence_cert.py", "r11-probe-seal-log.json"
-      ]
+        "probe_set_r11.py",
+        "probe_runner_r11.py",
+        "probe_set.sha256",
+        "probe-run-console.log",
+        "rubric-v2-r11.md",
+        "build_independence_cert.py",
+        "r11-probe-seal-log.json"
+      ],
+      "implementation_sha256_v1": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+      "implementation_sha256_v2": "97a8ff23f4672f4747f96dbd3251aa59e90f9297e8364e90b1fa2118e7e9f9af",
+      "cert_sha256_v1": "297a1409599a96ca91fc5c2f1b2e60b236e4f998fa7f1c171edb218337b8b0c2",
+      "cert_sha256_v2": "62de7bb262b88c6e543d4d80086d57341e551cc7e61fcb5692b434293e60969c",
+      "decode_caliber_fix": {
+        "condition": "C1 (SUBPROCESS_TEXT_NO_ENCODING at independent_judge.py:102)",
+        "kind": "decode-caliber correction only; no judging-logic/formula/threshold/parsing/sample change",
+        "r_main_rerun": false,
+        "m_c_recomputed": false,
+        "sealed_artifact_unchanged": "out/r11-independent-blind.json sha256=3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+        "postfix_vs_sealed": {
+          "cases_compared": 400,
+          "identical": 400,
+          "different": 0
+        },
+        "two_decode_modes": {
+          "cmd_cases": 161,
+          "observation_text_differs": 0,
+          "decision_differs": 0,
+          "locale_decode_exceptions": 0
+        },
+        "adjudication": "dp-brain 2026-11-12 Q1 -> path (c'): fix in place, record blob change additively, do not re-run R_main"
+      }
     },
     "d3_reliability": {
       "n": 400,
@@ -993,7 +1032,9 @@
         "out/r11-triangle-anchor.json": "215e706ab81a5b0f6d1ba488f70cd7d0a76ecfff7f4a6300681abbe15bdae3e2"
       },
       "custody": [
-        "r11_samples.py", "r11_reliability.py", "r11-samples.sha256",
+        "r11_samples.py",
+        "r11_reliability.py",
+        "r11-samples.sha256",
         "r11-reliability-console.log"
       ]
     },
@@ -1023,7 +1064,11 @@
       "fixture_result": "out/exit-fixture-r11.json",
       "fixture_result_sha256": "6b86832d9967c64e608c242fe88d0f66aa710c9aa63b8bb98e5926fe5988554a",
       "fixture_expect": "10/10",
-      "fixture_by_source": {"os": 4, "adapter": 4, "launch_failed": 2},
+      "fixture_by_source": {
+        "os": 4,
+        "adapter": 4,
+        "launch_failed": 2
+      },
       "launch_failed_as_unsupported_fixture": 0,
       "windows_9009_note": "cmd.exe really returns 1 on this host; 9009 is a frozen semantic marker only, never a fabricated OS exit code",
       "gate_metrics": "tools/eval/gate_metrics.py",
@@ -1035,14 +1080,33 @@
       "comparable": 210,
       "decidable": 180,
       "decidable_rate": 0.857143,
-      "triple": {"pass_rate": 0.833333, "precision": 0.6, "recall": 0.75},
-      "confusion_matrix": {"TP": 90, "TN": 0, "FP": 60, "FN": 30},
+      "triple": {
+        "pass_rate": 0.833333,
+        "precision": 0.6,
+        "recall": 0.75
+      },
+      "confusion_matrix": {
+        "TP": 90,
+        "TN": 0,
+        "FP": 60,
+        "FN": 30
+      },
       "conditional_agreement_secondary": 0.5,
       "c_demoted_to_secondary": true,
-      "exit_source_counts": {"os": 0, "adapter": 210, "launch_failed": 0},
+      "exit_source_counts": {
+        "os": 0,
+        "adapter": 210,
+        "launch_failed": 0
+      },
       "adapter_samples_in_secondary": 210,
       "launch_failed_counted_as_unsupported": 0,
-      "error_breakdown": {"FILE_NOT_FOUND": 30, "CWD_MISMATCH": 0, "PARSE_FAIL": 0, "TIMEOUT": 0, "SILENT_FALLBACK": 30},
+      "error_breakdown": {
+        "FILE_NOT_FOUND": 30,
+        "CWD_MISMATCH": 0,
+        "PARSE_FAIL": 0,
+        "TIMEOUT": 0,
+        "SILENT_FALLBACK": 30
+      },
       "primary_metrics_evaluable": false,
       "primary_void_reason": "r10-gate-input.json field_semantics.exit_code declares a mechanical map over flags/detail, NOT an independent OS process exit code; all 210 pairs are adapter, so §18 clause 11 excludes them from main C / main precision and no valid primary denominator remains. Reported as non-evaluable, not laundered.",
       "regression": {
@@ -1075,8 +1139,18 @@
       "bad_digest": 0,
       "malformed": 0,
       "verifier": "tools/eval/verify_artifact_pointers.py",
-      "v8_m_c_values_in_full_text": ["0.45"],
-      "v9_keys_present": ["pass_rate", "precision", "recall", "2×2", "R_main", "可判定率", "条件一致率"],
+      "v8_m_c_values_in_full_text": [
+        "0.45"
+      ],
+      "v9_keys_present": [
+        "pass_rate",
+        "precision",
+        "recall",
+        "2×2",
+        "R_main",
+        "可判定率",
+        "条件一致率"
+      ],
       "void_095_disclosure": true,
       "once_only_declaration": true,
       "branch_lookup_only": true,
@@ -1111,15 +1185,58 @@
       "json": "D:/15812/projects/round11-custody/r11-acceptance.json",
       "commands": 25,
       "exit_table": {
-        "V1": [0, 0, 0], "V2": [0], "V3": [0, 0], "V4": [0],
-        "V5_literal": 0, "V5_semantic": "FAIL (exit 0 but six fields not all satisfied)",
-        "V6": [0], "V7": [0, 0], "V8": [0, 0, 0], "V9": [0, 0],
-        "V10": [0, 0], "V11": [0],
-        "V12_pointers": 0, "V12_redzone": 0,
-        "V12_unittest_literal": 1, "V12_unittest_with_hint": 0,
-        "V12_lint_strict_first": 1, "V12_lint_strict_after_card_fix": 1
+        "V1": [
+          0,
+          0,
+          0
+        ],
+        "V2": [
+          0
+        ],
+        "V3": [
+          0,
+          0
+        ],
+        "V4": [
+          0
+        ],
+        "V5_literal": 0,
+        "V5_semantic": "FAIL (exit 0 but six fields not all satisfied)",
+        "V6": [
+          0
+        ],
+        "V7": [
+          0,
+          0
+        ],
+        "V8": [
+          0,
+          0,
+          0
+        ],
+        "V9": [
+          0,
+          0
+        ],
+        "V10": [
+          0,
+          0
+        ],
+        "V11": [
+          0
+        ],
+        "V12_pointers": 0,
+        "V12_redzone": 0,
+        "V12_unittest_literal": 1,
+        "V12_unittest_with_hint": 0,
+        "V12_lint_strict_first": 1,
+        "V12_lint_strict_after_card_fix": 1
       },
-      "v1": {"freeze_commit_cI": "2026-11-11T22:35:24+08:00", "numstat": "110 0 docs/eval-prereg.md", "missing_clauses": []},
+      "v1": {
+        "freeze_commit_cI": "2026-11-11T22:35:24+08:00",
+        "numstat": "110 0 docs/eval-prereg.md",
+        "missing_clauses": []
+      },
       "v5_semantic": {
         "distinct_model_family": false,
         "rubric_blind": false,
@@ -1128,25 +1245,58 @@
         "registered_as": "FAIL, not laundered"
       },
       "v8_recompute": "RECOMPUTE_IDENTICAL: not a second counting run; sealed result unchanged",
-      "v8_m_c_values": ["0.45"],
-      "v9_keys": ["pass_rate", "precision", "recall", "2×2", "R_main", "可判定率", "条件一致率"],
+      "v8_m_c_values": [
+        "0.45"
+      ],
+      "v9_keys": [
+        "pass_rate",
+        "precision",
+        "recall",
+        "2×2",
+        "R_main",
+        "可判定率",
+        "条件一致率"
+      ],
       "v12_unittest": {
-        "literal": {"exit": 1, "tests": 527, "failures": 2, "errors": 3,
-                    "root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT"},
-        "with_hint": {"exit": 0, "tests": 546, "result": "OK"},
-        "logs": ["round11-custody/r11-v12-unittest-literal.log",
-                 "round11-custody/r11-v12-unittest-with-hint.log"]
+        "literal": {
+          "exit": 1,
+          "tests": 527,
+          "failures": 2,
+          "errors": 3,
+          "root_cause": "no Git for Windows bash found; set COVENANT_BASH_HINT"
+        },
+        "with_hint": {
+          "exit": 0,
+          "tests": 546,
+          "result": "OK"
+        },
+        "logs": [
+          "round11-custody/r11-v12-unittest-literal.log",
+          "round11-custody/r11-v12-unittest-with-hint.log"
+        ]
       },
       "v12_lint": {
-        "first": {"exit": 1, "errors": 1, "warnings": 8},
-        "after_card_fix": {"exit": 1, "errors": 1, "warnings": 2},
+        "first": {
+          "exit": 1,
+          "errors": 1,
+          "warnings": 8
+        },
+        "after_card_fix": {
+          "exit": 1,
+          "errors": 1,
+          "warnings": 2
+        },
         "remaining_error": "SUBPROCESS_TEXT_NO_ENCODING independent_judge.py:102 (text=True without encoding=)",
-        "remaining_warnings": ["VERDICT_WITHOUT_REVIEW (no-verdict discipline)",
-                               "TEST_COUNT_UNVERIFIED (unittest discovery without bash hint)"],
+        "remaining_warnings": [
+          "VERDICT_WITHOUT_REVIEW (no-verdict discipline)",
+          "TEST_COUNT_UNVERIFIED (unittest discovery without bash hint)"
+        ],
         "executor_disposition": "NOT silently greened. The error sits in the D2 sealed independent judge, whose blob sha is a certificate field and whose output is the D3 blind sealed artifact; editing it after seeing R_main would break the once-only evidence chain (§18 prohibition 3). Registered as unresolved item #1 and left for AgnesCode / a separate repair card.",
         "card_writing_fix": "Owned files prose moved off path lines (round-10 precedent), warnings 8 -> 2, no change to claim boundaries",
-        "logs": ["round11-custody/r11-v12-lint-after-cardfix.log",
-                 "round11-custody/r11-v12-lint-final.log"],
+        "logs": [
+          "round11-custody/r11-v12-lint-after-cardfix.log",
+          "round11-custody/r11-v12-lint-final.log"
+        ],
         "final_lint_exit": 1,
         "final_lint_summary": "LINT: FAIL (1 errors, 2 warnings)",
         "final_pointer_recheck": "4 reports all PASS, 0 bad digest",

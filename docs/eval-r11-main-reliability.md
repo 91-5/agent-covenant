@@ -16,7 +16,7 @@
 
 - **结论 R5**：R_main **只计算一次**。`r11_reliability.py` 设 `FIRST_RUN_ONLY` 重跑保护，结果文件已存在时拒绝第二次计数并返回退出码 3；本次为唯一一次计数运行，违反「只跑一次」即作废的三重约束未触发。`[artifact: out/r11-main-reliability.json sha256=b54d2d43038ff6ce9f39e96e89235f54cf9f8085559ea44b6eb44a44a73c2b68]`
 
-- **结论 R6**：`R_stability` 未入公式（按 §18 条款 1，确定性 sanity check 本应为 1.0，不是信度证据）；本轮未做 test-retest，R_main 是「主轨判级 vs 独立判级」的逐条一致率。`[artifact: tools/eval/independent_judge.py sha256=a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329]`
+- **结论 R6**：`R_stability` 未入公式（按 §18 条款 1，确定性 sanity check 本应为 1.0，不是信度证据）；本轮未做 test-retest，R_main 是「主轨判级 vs 独立判级」的逐条一致率。`[artifact: tools/eval/independent_judge.py sha256=a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329 [v1, 产出 R_main 的版本；v2 = 97a8ff23f4672f4747f96dbd3251aa59e90f9297e8364e90b1fa2118e7e9f9af 为 C1 解码口径修正版，与封存判级 400/400 逐条一致，未重跑 R_main、未重算 M_C]]`
 
 ## 2. 样本设计（冻结规则的可复算落地）
 

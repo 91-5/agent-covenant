@@ -1,6 +1,6 @@
 {
   "card": "XJ-20261111-002",
-  "cert_version": "r11-v1",
+  "cert_version": "r11-v2",
   "generated_at_utc": "2026-11-11T14:53:41.428925+00:00",
   "generated_by": "WB (WorkBuddy), single agent",
   "impl_blob_sha": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
@@ -106,5 +106,38 @@
     "judge_model_family",
     "rubric_blind"
   ],
-  "note": "Forging a distinct model family or a rubric_blind=true would be worse than lacking independence. This certificate deliberately fails those two fields. V5's literal command still exits 0 (it only prints), but its semantic criteria are NOT met and are reported as such, not laundered."
+  "note": "Forging a distinct model family or a rubric_blind=true would be worse than lacking independence. This certificate deliberately fails those two fields. V5's literal command still exits 0 (it only prints), but its semantic criteria are NOT met and are reported as such, not laundered.",
+  "impl_blob_sha_v1": "a792aef6bb3afc6188512941aeadfcae6da6543804175e00e6e752e0d6c00329",
+  "impl_blob_sha_v2": "97a8ff23f4672f4747f96dbd3251aa59e90f9297e8364e90b1fa2118e7e9f9af",
+  "decode_caliber_fix": {
+    "card": "XJ-20261111-002",
+    "condition": "C1 (SUBPROCESS_TEXT_NO_ENCODING at independent_judge.py:102)",
+    "change": "subprocess.run(..., text=True) gained encoding='utf-8', errors='replace'",
+    "kind": "decode-caliber correction only; no judging-logic, formula, threshold, parsing, or sample change",
+    "r_main_rerun": false,
+    "m_c_recomputed": false,
+    "rationale": "re-running R_main would produce a second R_main count and a second M_C value, tripping 18 clause 2 (only the first run counts) and the V7 veto (M_C appearing twice invalidates the round). The round carries gate_result=not_evaluable, so no gate conclusion depends on the number.",
+    "equivalence_evidence": {
+      "method_1_two_decode_modes": {
+        "what": "all 161 cmd-bearing cases of the frozen blind samples re-run under ambient-locale text=True vs forced utf-8/replace",
+        "observation_text_differs": 0,
+        "decision_differs": 0,
+        "locale_decode_exceptions": 0,
+        "locale_getpreferredencoding": "utf-8",
+        "note": "the two modes are byte-identical on this machine because the ambient locale is already utf-8; 0 decode exceptions means errors='replace' vs 'strict' cannot differ on these inputs"
+      },
+      "method_2_postfix_vs_sealed": {
+        "what": "the FIXED judge re-run over all 400 frozen samples, compared case by case against the sealed artifact",
+        "sealed_file": "out/r11-independent-blind.json",
+        "sealed_sha256": "3d4d6bb3f555ed14b9dcc817d2a5eb8c817b79861ecae4b639a26f22254a4180",
+        "sealed_sha256_matches_seal_log": true,
+        "cases_compared": 400,
+        "identical": 400,
+        "different": 0,
+        "note": "the sealed artifact was not modified: its sha256 still equals the value recorded in out/r11-seal-log.json"
+      },
+      "scope_of_the_equivalence_claim": "empirical, over the 400 frozen samples of this round -- not a formal proof"
+    },
+    "adjudication": "path (c') adjudicated by dp-brain 2026-11-12 (Q1): fix the defect in place, record the blob change additively, and do not re-run R_main. Path (a) (re-seal D2/D3 and re-run) and path (b) (in-place # noqa) were both rejected: (a) produces a second M_C and invalidates the round, (b) suppresses a real defect."
+  }
 }
