@@ -1874,6 +1874,177 @@
       },
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D2_anchor_rule_alignment": {
+      "phase": "D2 / card D2 (V3)",
+      "commit": "c2347e3",
+      "main_track_reference": "tools/eval/extract.py::extract_anchors (red zone, read-only)",
+      "anchor_re_pattern_verbatim_equal": true,
+      "files": {
+        "tools/eval/independent_judge.py": "25b55674573f2373844e486458741c4350cf2338099d473f8c6c475080b76896",
+        "tools/eval/r13_alignment.py": "b3c98072ba284561b9b109baf1ed3f270a25519b52039f9d9f82355e077591fa",
+        "out/r13-anchor-check.json": "95aa7235a62782752fdb9a96c868fe6eef539f5d3c5553d7c93a21d1effea156"
+      },
+      "readings": {
+        "legacy_anchor_set_mismatches_before": 56,
+        "anchor_set_mismatches": 0,
+        "claim_text_calibre_mismatches": 0,
+        "pass": true
+      },
+      "legacy_rule_isolation": "_ANCHOR_RE is now INTEGER_ANCHOR_RE (verbatim main-track pattern); the legacy alternation survives only as _LEGACY_ANCHOR_RE for v2/v3 replay",
+      "offline_probe": "round13-custody/anchor_probe.py (N 400 / legacy 56 / main-equivalent 0 / text-calibre 0)"
+    },
+    "D3_rubric_v4": {
+      "phase": "D3 / card D1 (V4, V7)",
+      "commit": "c2347e3",
+      "rubric": "R13-INDEPENDENT-RUBRIC-V4",
+      "standalone_deliverable": "tools/eval/rubric_v4.py (card Owned files path, row-by-row decomposition -- not a thin wrapper)",
+      "files": {
+        "tools/eval/rubric_v4.py": "930ca332c3eb09c4b5f9a02eb5d188b11eb3aedc460f7979fea9325a86ccb4a2",
+        "out/r13-rubric-check.json": "c2cb9dccabab2868522f883b9898b6b34602f2f30d02b5b5f0daa0aa4252d1ce",
+        "out/r13-rubric-v4-decomposition.json": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232"
+      },
+      "custody": "D:/15812/projects/round13-custody/r13-rubric-v4-decomposition.json",
+      "custody_sha256": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232",
+      "readings": {
+        "raw_denominator": 400,
+        "no_evidence_30": "NO_EVIDENCE_LINE",
+        "incomplete_30": "STRUCTURALLY_UNJUDGEABLE",
+        "ref_missing_48": "VERIFIABLE_ABSENCE",
+        "repro_fail_48": "SILENT_FALLBACK_PROTECTED",
+        "new_unobservable_class_count": 0,
+        "boolean_to_abstain_total": 56,
+        "boolean_to_abstain_attributed_anchor_rule": 56,
+        "boolean_to_abstain_unattributed_residual": 0,
+        "protected_total": 96,
+        "protected_total_unchanged": true,
+        "ref_missing_upgrade_candidate_rows": 48,
+        "ref_missing_activated_as_boolean": false,
+        "pass": true
+      },
+      "tension_ruling": "intake D3 'ref_missing -> 缺席可判路径' conflicts with card 禁令 2 / V7; prohibition precedence wins: explicit independent path + upgrade_candidate only, no boolean activation; escalation deferred to AgnesCode",
+      "initial_draft_deviation": "card 6-row draft line 6 said incomplete -> PARSE_FAIL (v2 wording); from rubric v3 onward it is STRUCTURALLY_UNJUDGEABLE. Frozen in section 20 D20-A/A-3 with the deviation registered.",
+      "capability_gain_claim": false
+    },
+    "D4_cwd_and_no_anchor_policy": {
+      "phase": "D4 / card D4 (V5)",
+      "commit": "c2347e3",
+      "files": {
+        "out/r13-cwd-check.json": "87e015736c9b6e0a19713a61e3b1469e5c8907aaf748e4ff45f0af556d496186"
+      },
+      "readings": {
+        "cwd_mismatches_before": 18,
+        "cwd_mismatches": 0,
+        "before_layers": {"cwd_probe": 18},
+        "main_track_source_modified": false,
+        "pass": true
+      },
+      "mechanism": "r13_alignment.py passes judge.judge_markdown(..., workspace=ws) for BOTH tracks; judge.py source untouched",
+      "no_anchor_policy_ruling": "70 INSUFFICIENT (ref_ok 48 + goldset_text 22) stay abstentions, protected_abstention / subtype=no_anchor_policy; explicit_anchor_required stays True; which track is the baseline is deferred to AgnesCode"
+    },
+    "D5_double_annotation": {
+      "phase": "D5 / card D5 (禁令 5)",
+      "files": {
+        "goldset/annotation_r13.jsonl": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+        "out/r13-annotation-summary.json": "ff1264792a97b60cc88a4c8082ceae8b1f353b875c429aca4aea80c5350307b5"
+      },
+      "custody": "D:/15812/projects/round13-custody/annotation_r13.jsonl",
+      "custody_sha256": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+      "generator": "round13-custody/build_annotation_r13.py",
+      "readings": {
+        "data_rows": 50,
+        "file_lines": 51,
+        "seed": 20261111,
+        "annotator_ids_measured": ["WB"],
+        "annotator_count": 1,
+        "two_human_independent_annotation": false,
+        "independence_satisfied": false,
+        "mechanical_view_count": 1,
+        "mechanical_view_is_human_annotation": false,
+        "comparable": 13,
+        "agree": 13,
+        "agreement_rate": 1.0,
+        "round12_same_seed_same_subset": true,
+        "round12_agreement_rate": 0.590909,
+        "triangle_verdict": "not_evaluable_no_independent_human_annotation"
+      },
+      "downgrade_disclosure": "same-form downgrade as round-10 ADV-3 / round-11 ADV-5 / round-12 ADV-5: single agent dual view + direction diagnosis only; 0 disagreement does NOT prove independence; the mechanical second view is NOT counted as a human annotator"
+    },
+    "D6_recompute_and_report": {
+      "phase": "D6 / card D6 (V6, V10)",
+      "files": {
+        "out/r13-alignment.json": "a3e37809d8b2cb7743c1ca8a533ae5f4f167cab37506f979c828aee17c5df181",
+        "docs/eval-report-r13-alignment.md": "9d948dd76f594d2af6556f2d47ad259778694a60cd4ad19207ce65ad4d315fb7"
+      },
+      "readings": {
+        "before_r_main": 0.6206896551724138,
+        "before_comparable": 174,
+        "before_agree": 108,
+        "before_disagree": 66,
+        "before_abstain": 226,
+        "before_disagree_by_mechanism": {"anchor_rule_diff": 48, "cwd_observation_surface_diff": 18},
+        "before_matches_sealed": true,
+        "after_r_main": 1.0,
+        "after_comparable": 118,
+        "after_agree": 118,
+        "after_disagree": 0,
+        "after_abstain": 282,
+        "disagree_by_mechanism": {"anchor_rule_diff": 0, "cwd_observation_surface_diff": 0, "policy_conflict": 0, "other": 0},
+        "disagree_by_mechanism_no_residual": true,
+        "protected_total": 96,
+        "comparable_delta": -56,
+        "abstain_delta": 56
+      },
+      "caliber": "instrument_alignment_calibration_only",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "gate_value_recomputed": false,
+      "r_main_gate_counting_recomputed": false,
+      "capability_gain_claim": false,
+      "ban3_attribution": "all change from section 20 clause 3 anchor-rule alignment and clause 5 cwd-surface alignment; comparable denominator SHRINKS; never narrated as capability improvement",
+      "report_conclusions": 24,
+      "report_square_pointers": 38,
+      "report_round_pointers": 24,
+      "pointer_verifier": "CONCLUSIONS 24 / COVERAGE 100.0% / BAD_DIGEST 0 / MALFORMED 0 / RESULT PASS",
+      "report_gate_value_literals": [],
+      "report_m_c_numeric_assignments": 0,
+      "report_builder": "round13-custody/build_report_r13.py (live hashes, no hand-copied digests)"
+    },
+    "D7_seal_and_handoff": {
+      "phase": "D7 / card D7",
+      "seal_bundle": "run-dir-r13 (gitignored, moved to custody)",
+      "custody_copy": "D:/15812/projects/round13-custody/sealed/run-dir-r13",
+      "seal_verify": "VERIFY: OK (9 files match the seal)",
+      "not_true_data": true,
+      "sealed_products": 8,
+      "file_count": 9,
+      "files": {
+        "round13-custody/sealed/run-dir-r13/seal.json": "98a81661e1f48f52236cd43c885740eb3cd7aabb372a5576af12c480c35de7a4",
+        "round13-custody/r13-seal-summary.json": "18d9e5c66e884ad6fc1b4eed73120ff355d30fd82e517b84b6d36c6355dbd6cb",
+        "round13-custody/r13-acceptance.json": "883fe714ab46d40fc812a6836b44bd18ce7f1e4b7d710baee1523111d9d3f066",
+        "round13-custody/r13-acceptance.log": "7c8dc90dac7bf061e422f5e9ac7807051c3c2927c27c7ccdd49718cc53a2d9e1",
+        "round13-custody/r13-acceptance-v10.json": "b362d2f29d0fba3d999622d491d19dcb954c3d61fbeb7624353a6471e4e4ee30",
+        "round13-custody/r13-acceptance-v10.log": "29df1a9cfffb3f7f7ba7971c44effd917542816ec923314c4bbd5e48ff4d62be",
+        "round13-custody/r13-rubric-v4-decomposition.json": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232",
+        "round13-custody/annotation_r13.jsonl": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+        "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md": "8c0387a1c7acfe52770c3c9cf72a3718f12547e14ce83a2bd5945db56a037020"
+      },
+      "courtesy_copy": "D:/15812/mo brain/review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md",
+      "acceptance": {
+        "runner": "round13-custody/acceptance_r13.py (V1-V9 / V11, 33 commands)",
+        "v10_runner": "round13-custody/verify_r13_v10.py (V10 + extras, 6 commands)",
+        "total_commands": 39,
+        "nonzero": ["V2_1", "V11_1", "V11_2", "V11_4"],
+        "nonzero_disclosure": "V2_1 unquoted PowerShell backslash path under Git Bash (exit 2, shell artefact); V11_1/V11_2 unittest without real COVENANT_BASH_HINT (527 tests, failures=2 errors=3); V11_4 lint --strict (0 errors, 2 structural WARNs). All registered verbatim, never whitened.",
+        "v11_3_with_real_bash_hint": "Ran 546 tests ... OK (exit 0)",
+        "determinism": "8 products byte-identical after the full acceptance rerun; all 8 sealed copies hash-match",
+        "py39_ast_ok": true,
+        "banned_api_literal_present": false,
+        "red_zone_diff_full_paths": "empty (exit 0)"
+      },
+      "status": "IN_REVIEW",
+      "reviewer": "AgnesCode (浮香), Orchestrator 预审",
+      "no_verdict_no_push_no_merge": true
     }
   }
 }
