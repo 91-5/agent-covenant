@@ -1611,6 +1611,67 @@
       "gate_result": "not_evaluable",
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D6_calibration_report": {
+      "phase": "D6 / card D7 (V8)",
+      "files": {
+        "docs/eval-r12-instrument-closure.md": "69d49d6e992479f730357568177fa03414ddb10bab1e9eefdc0d80b183143d27",
+        "tools/eval/probe_runner_r12.py": "4a13cf8db777b0e3ad85f071d3493b1715ffd7df0a45a494a9ce370994d28114",
+        "out/r12-probe-seal-log.json": "40088ceb0d5d9a7c4b9535a98c1c92ec043de08d1701f4dae4b020dc1ecf6384",
+        "out/r12-probe-report.json": "47b74f1568ae4522c7c421956b33f2a78030b61b0bd6a7bb3bfe61b6bf9e99ed",
+        "out/r12-probe-independent-blind.json": "ae8f9ef9777d46cbee175d3d714a92f3c5e0e6ce2c5cb38d63c86e97ac11ce13"
+      },
+      "custody": {
+        "r12-probe-seal-log.pre-deterministic-fix.json": "4e4130bd956cd2af8a31e99bb02f1d6ced929db20be89a139ff066094918dbd4"
+      },
+      "v8_literal": {
+        "sections": 7,
+        "pointers": 56,
+        "exit": 0
+      },
+      "pointer_verify": {
+        "conclusions": 26,
+        "with_valid_pointer": 26,
+        "coverage_pct": 100.0,
+        "pointers_total": 56,
+        "unique_paths": 23,
+        "bad_digest": 0,
+        "malformed": 0,
+        "result": "PASS",
+        "exit": 0
+      },
+      "no_gate_conclusion": {
+        "m_c_assignments_in_report": 0,
+        "gate_value_literals": [],
+        "four_required_sections_present": true,
+        "r_main_recomputed": false,
+        "gate_value_recomputed": false,
+        "gate_result": "not_evaluable"
+      },
+      "determinism_fix_disclosure": {
+        "registered_as": "R26 (honest supplementary conclusion, NOT hidden as 'never re-ran')",
+        "root_cause": "seal log carried a sealed_at_utc wall-clock field; V5 literal command re-runs the runner during acceptance, which would change the seal-log sha256 and invalidate report R17 pointer",
+        "fix": "removed wall-clock field; deterministic content-hash seal (deterministic_seal=true, seal_basis recorded); blind order proved by code path plus main_track_invoked_before_seal=false",
+        "nature": "deterministic replay of the SAME counting result before acceptance, NOT a second V5 count",
+        "mechanical_proof": {
+          "report_sha_unchanged": "47b74f1568ae4522c7c421956b33f2a78030b61b0bd6a7bb3bfe61b6bf9e99ed",
+          "independent_blind_sha_unchanged": "ae8f9ef9777d46cbee175d3d714a92f3c5e0e6ce2c5cb38d63c86e97ac11ce13",
+          "custody_report_sha_unchanged": "47b74f1568ae4522c7c421956b33f2a78030b61b0bd6a7bb3bfe61b6bf9e99ed",
+          "strict_bool_disagreement_rate_unchanged": 0.18,
+          "n_families_unchanged": 5,
+          "n_probe_unchanged": 50,
+          "by_family_unchanged": true,
+          "only_changed_artifact": "out/r12-probe-seal-log.json metadata",
+          "v5_literal_rerun_idempotent": true
+        },
+        "unchanged_by_fix": [
+          "frozen threshold 0.15", "probe_set.json", "judge implementation",
+          "gate conclusion caliber", "no sample removed", "no second gate value"
+        ],
+        "old_seal_log_preserved_at": "round12-custody/r12-probe-seal-log.pre-deterministic-fix.json"
+      },
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
     }
   }
 }
