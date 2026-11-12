@@ -1304,5 +1304,19 @@
       },
       "determinism_recheck": "V3 triage and V10 fixture re-runs reproduced byte-identical outputs; all report artifact pointers stayed valid (100% coverage, 0 bad digest)"
     }
-  }
+  },
+  "XJ-20261112-001": [
+    "docs/eval-prereg.md",
+    "docs/rubric-v3-r12.md",
+    "docs/eval-r12-instrument-closure.md",
+    "tools/eval/independent_judge.py",
+    "tools/eval/env_isolation.py",
+    "tools/eval/gate_metrics.py",
+    "tools/eval/probe_set.json",
+    "tools/eval/probe_runner_r12.py",
+    "tools/eval/rubric_v3.py",
+    "tools/eval/r12_reliability.py",
+    "goldset/calibration_r12.jsonl",
+    "artifacts.json"
+  ]
 }
