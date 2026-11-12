@@ -1463,3 +1463,168 @@ triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_suppor
 ### D20-F 红区、CI 与收尾纪律
 
 `run-dir-r13/`、`shadow-r13/`、`out/` 为执行产物，走 custody 不入 repo（`.gitignore` 在冻结 commit 内明写追加 `run-dir-r13/` 与 `shadow-r13/`，`out/` 已覆盖）。每条 D6 结论须带双格式 `路径 + sha256` artifact 指针，由 V10 机械核验（`bad == 0`）。V1–V11（卡面 Acceptance 实为 V1–V11，接卡指令写 V1–V10，执行者全量亲跑）由执行者亲跑并粘贴真实退出码，不采纳作者 precheck；任一 FAIL 照实登记，不刷绿。V11 单测须同时给出带 `COVENANT_BASH_HINT` 与不带 hint 两次输出，lint `--strict` 残留 WARN（`VERDICT_WITHOUT_REVIEW` 为评审前瞬态、`TEST_COUNT_UNVERIFIED` 为仓库既有 discovery 问题）照实披露，不改红区 `lint_cards.py` 刷绿。收尾：seal 移交 custody → `artifacts.json` 补登记 → 卡转 `IN_REVIEW` → 递浮香 → 停手等 Orchestrator 预审 + 浮香 PASS gate，执行者无评审权、无合并权。
+## §21 变更记录（v2.2 → v2.3：轮十四 真值源有效性校验、无锚假支持测量与分层报告骨架，2026-11-13，冻结于轮十四任何数据产物产生之前）
+
+### D21-0 合法性前提、冻结序与上游边界
+
+本节在轮十四任何 `run-r14/`、`out/` 的 r14 产物产生之前冻结，沿用 §16 D16-5 三段序 `freeze → offline replay → data`：先冻结本协议与全部决策规则，再离线复算，最后才允许产生任何执行读数。上游：轮十三卡 XJ-20261112-002（CLOSED，已并入 master，浮香 PASS 0B/0C/6A）；ADV-5 立项裁定 2026-11-13（dp 大脑，五问全答）：主轨「无锚 E4」定性为**命题错位**（相对「证据是否复现」无 bug，作为一致性参照基准存在**假支持偏置** bias→E4），处置为**不改主轨 + 强制分层报告 + 先量化再定级**（`FP_max=0.05`，以 95% CI 上限判，低/中/高 = 照用/强制分层/上报 sir）。
+
+**本轮性质：报告层测量轮，不是门轮**。只做三件事：①真值源有效性校验（证伪 `design_error_class` 的真值资格）；②无锚假支持率测量与按冻结表定级；③分层报告骨架（纯报告层、零主轨改动、可逆）。不重测门值、不重算门结论、不产出第二个门计数 `R_main`、不产出第二个 `M_C`：`gate_result` 一律登记 `not_evaluable`，主 `R_main` 及其分母**只从轮十三封存产物读入、永不重算**（条款 4）。`capability_gain_claim = false`。
+
+§0–§20 为冻结文本，纯追加、零回写；§21 冻结 commit 之后其前缀哈希须保持不变，由 V1 机械核验。本卡 Context 的全部诊断事实（F1/F2/F3）逐字并入 D21-A 作为条款的事实地基，**不得在跑数据后补写或追改**。所有分支的决策规则、阈值、定级表、层真值表、分层隶属函数、M1 量化协议均在本节（冻结 commit 内）写死；D2–D6 只允许「实现 + 查表 + 机械验证」，不允许「看数据后解释或调规则」——此为对抗 HARKing 的正面答案，冻结序由 V1 前缀哈希、冻结 commit 时间戳、`artifacts.json` 三重锚点证明。
+
+### D21-A 诊断事实地基（Orchestrator 2026-11-13 实测；执行者接卡后已在冻结前于控制台逐条机械复算通过，零产物落盘）
+
+**A-1 · F1：主轨无锚 E4 假支持已实测量化（卡面 F1 逐字并入，执行者复算一致）**。按**层语义**（`layer`）作真值、按 `main_level` 作主轨判定，R10_ANCHOR 层 240 条交叉表：
+
+| 真值（层语义） | 主轨判定 | 条数 | 判定正确性 |
+|---|---|---|---|
+| TRUE（`cmd_ok` / `ref_ok` / `goldset_text`） | E4 | **90** | 全部正确 |
+| FALSE（`anchor_miss` / `repro_fail` / `ref_missing` / `incomplete` / `no_evidence`） | E0 | 30 | 正确（弃权向） |
+| FALSE | E1 | 30 | 正确（弃权向） |
+| FALSE | E2 | 60 | 正确（弃权向） |
+| **FALSE** | **E4** | **30 ← 假支持** | **全部错误** |
+
+假支持 **30/150 = 20.0%**（占全部「应不支持」样本）；占 `anchor_miss` 层 **30/30 = 100%**。逐例坐实（`T01-c01` 等 30 条）：claim 原文「任务 T01 的答案为 Apache-2.0」，证据 `cmd=python -c "print('MIT')"` → `out=MIT`——断言内容与证据**直接矛盾**，主轨仍判 E4。机制：主轨锚点正则 `(?<![\w.\-])\d+(?![\w.\-])` 把 `Apache-2.0` 的 `2.0` 正确排除 → 提取到零锚点 → 走 `judge.py:379-386`「无锚机械通过」→ E4。按 D21-E 定级表 `FP_upper > 0.15` → 判「高」级（正式读数以 D3 输出为准，本行不是读数）。
+
+**A-2 · F2：`design_error_class` 不能作为 HOLDOUT 层真值源（卡面 F2 逐字并入，执行者复算一致）**。全 400 条中 `design_error_class != NONE` 者 **133 条，全部在 HOLDOUT 层**（R10_ANCHOR 层 240 条全为 NONE）；类别构成 `CWD_MISMATCH 27 / FILE_NOT_FOUND 27 / PARSE_FAIL 27 / SILENT_FALLBACK 25 / TIMEOUT 27`。按 D21-E 冻结机械规则逐条核对（claim 值位数值是否出现在 cmd 输出 / fixture 内容中）：**矛盾 0 条**，构成三分：
+
+| 机械核对结果 | 条数 | 构成 |
+|---|---|---|
+| cmd 型，数值引用全部见于 recorded `out=` | 59 | 29 条有数值引用逐字命中 + 30 条无数值位引用（`Apache-2.0` / `零` 等非数值，见条款 2 规则） |
+| ref 型，fixture 存在且数值引用全部见于 fixture 内容（或存在性 claim 由 fixture 存在佐证） | 59 | `cwd_probe 15 + dotfile_claim 14 + goldset_text 15 + ref_ok 15` |
+| ref 型，fixture 不在 `fixtures_workspace` | 15 | 全部 `ref_missing` 层；主轨判非 E4（E2），方向一致 |
+
+结论：**HOLDOUT 层「注入错误」实际未生效（133/133 标签与 fixture 不一致 = 标签惰性）**，任何以 `design_error_class` 为真值的测量在该层**无效**。推论：`design_error_class` 只可用于 HOLDOUT 的**设计意图记录**，不可用于真值计算；本轮真值源必须以**层语义 + fixture 机械核对**建立（条款 2）。
+
+**A-3 · F3：分层现状与主 R_main 的分母（卡面 F3 逐字并入）**。轮十一可比 174 / 弃权 226；轮十三对齐后可比 118 / 一致 118 / 弃权 282（封存 `out/r13-alignment.json`，`r_main = 1.0`）。rubric v4 类别分布（封存 `out/r13-rubric-v4-decomposition.json`）：`SUPPORT 118 / INSUFFICIENT_NO_ANCHOR 126（anchor_miss 48 + ref_ok 48 + goldset_text 30）/ SILENT_FALLBACK_PROTECTED 48 / STRUCTURALLY_UNJUDGEABLE 30 / VERIFIABLE_ABSENCE 48 / NO_EVIDENCE_LINE 30`（合计 400）。无锚 claim 70 条（v2 口径 `ref_ok 48 + goldset_text 22`）在独立侧判 `INSUFFICIENT_NO_ANCHOR` 弃权，未映射布尔；保护性弃权合计 `protected_total = 96` 不得下降。主 `R_main` 分母必须保持全量可比集不变（防刷分）；`R_main_anchored` 另出。
+
+### D21-B §21 条款清单（七条，冻结后不得回写）
+
+1. **冻结序与纯追加（卡面 D1 / V1）**：§21 冻结 commit 的时间须早于一切 `run-r14/`、`out/` 的 r14 产物（接卡时 `r14_products_before_freeze = []`，D21-A 复算全部为控制台输出、零落盘）；§0–§20 冻结文本零回写，冻结前后全文 SHA、V1 口径前缀 SHA（`4abeb25527682b6da4b889012c984355c159ea5743e7c82bd3e3ab65f1a0e58b`，文本口径 universal newlines → LF）、§21 小节锚点写入 `artifacts.json`；V1 判据 = `git diff 3126899 --numstat -- docs/eval-prereg.md` 删除列为 0 且前缀 SHA 冻结前后一致。`.gitignore` 追加 `run-r14/` 一行由卡面「产物落点」条款授权（同轮十至轮十三 D0 先例；`.gitignore` 不在 Owned files 清单，照实登记于 `artifacts.json` 台账交评审裁定）。
+2. **真值源有效性（卡面 D2 / V2）**：`tools/eval/verify_truth_source.py` 从 §21 D21-E 机器可读块机械读回全部规则（同轮十三 `label_mapping.py` 读回 §20 矩阵先例，代码不得绕过冻结文本擅改），在 400 条封存样本上输出**每层每条真值归属与反例清单**，并执行 F2 复核：population = `design_error_class != NONE` 的 133 条；**矛盾（contradiction）冻结定义** = 该行存在可用证据面（cmd 行 = recorded `out=`；ref 行 = `fixtures_workspace[ref]` 内容，仅当该 ref 存在）**且**存在可核查数值引用（值位正则 `为\s*(\d+(?:\.\d+)?)` 的捕获）**且**该数值不在证据面中。**非数值值位引用（如 `Apache-2.0`）与值位外 token 不构成标签矛盾**——它们是 F1 所测的 anchor_miss 主张内容机制，与 `design_error_class`（观测通道注入标签：CWD_MISMATCH / FILE_NOT_FOUND / PARSE_FAIL / SILENT_FALLBACK / TIMEOUT）正交；ref 缺 fixture 的 15 条登记 `unverifiable` 并附方向核验 `main_level != "E4"`。输出判据：`holdout_labels_inert 133/133`、`contradictions 0`；输入样本 SHA 不符即 fail-fast 非零退出。**禁令**：`design_error_class` 在本轮所有输出中只允许出现为「设计意图记录 / 被证伪对象」，禁止作为任何真值计算输入。
+3. **无锚假支持测量（卡面 D3 / V3 / V4）**：`tools/eval/measure_unanchored_fp.py` 从 D21-E 读回层真值表与定级表；population = R10_ANCHOR 240 条；真值 = 层语义（`layer_truth`），主轨支持 = `main_level == "E4"`；`false_support` = FALSE 层中主轨 E4 计数（预期 30）、`false_support_rate` = false_support / FALSE 层总数（预期 0.2）、`anchor_miss_e4` = anchor_miss 层中主轨 E4（预期 `30/30`）；bootstrap 重采样 B=2000、seed=20261113（`random.Random`，对 FALSE 层 150 条有放回抽样）、95% CI 取百分位 2.5/97.5，`fp_upper95` = 上界；**定级只从 D21-E 冻结表查得**（`severity_source = "frozen_table"` 字面固定），分带：`FP_upper ≤ 0.05 → low（照用）`、`0.05 < FP_upper ≤ 0.15 → medium（强制分层）`、`FP_upper > 0.15 → high（上报 sir + 正式结论仅用有锚子集）`；同一输出内附 **M1 影响量化块**（条款 5）。**循环论证登记（对抗问 3 的正面答案）**：层语义真值是**生成器设计属性**（层由样本生成器的注入设计定义，不由任何判级器输出定义），且其中所有内容可核查行（cmd/ref 型）的数值引用已按条款 2 规则对照证据面机械核实——但层语义不由本仓判级器判定这一事实仍须由评审复核；本测量据此登记 `truth_source_caliber = layer_semantics_plus_fixture_mechanical_check`，不是「用被测物定义真值」：被测物是判级器，真值来自生成器设计 + fixture 内容。
+4. **分层报告骨架（卡面 D4 / V5 / V6 / V7）**：`tools/eval/report_strata.py` 从 D21-E 读回分层隶属函数：逐行 v4 类别 = 层映射（`no_evidence→NO_EVIDENCE_LINE`、`incomplete→STRUCTURALLY_UNJUDGEABLE`、`ref_missing→VERIFIABLE_ABSENCE`、`repro_fail→SILENT_FALLBACK_PROTECTED`）+ 其余层按主轨锚点规则逐字重抽取（先收反引号 token，再在反引号替换为空格的文本上以 `INTEGER_ANCHOR_RE = (?<![\w.\-])\d+(?![\w.\-])` 抽取、`dict.fromkeys` 去重保序；有锚 → `SUPPORT`，零锚 → `INSUFFICIENT_NO_ANCHOR`；`extract.py` / `judge.py` 为冻结参照只读不改）；**逐层聚合与封存 `out/r13-rubric-v4-decomposition.json` 的 `per_layer_classes` 逐格相等，否则 fail-fast 非零退出**。三个 stratum：`anchored = SUPPORT`、`no_anchor = INSUFFICIENT_NO_ANCHOR`、`verified_absence = VERIFIABLE_ABSENCE`；其余三类（`SILENT_FALLBACK_PROTECTED` / `STRUCTURALLY_UNJUDGEABLE` / `NO_EVIDENCE_LINE`，合计 108）作为 residual 显式列报（292 + 108 = 400 守恒）。**守恒律（V5）**：三个 stratum 的可比行合计 `sum_strata == comparable_set`（可比行 = `v4 类别 == SUPPORT` 且主轨为布尔的行；`no_anchor` / `verified_absence` 按轮十三冻结政策为保护性弃权，可比贡献恒为 0——此为 V7 的构造性保证）；**主 `R_main` 与分母只从封存 `out/r13-alignment.json` 读入（`r_main`、`comparable` 字段）并对照 D21-D 常量，永不重算**，输出 `primary_denominator_changed = False`；`R_main_anchored` = anchored 可比行上的主/独立一致率（复算值须与封存 `agree` 逐位核对）。`--check-no-anchor-mapping`（V7）：重算隶属并报告 `INSUFFICIENT_NO_ANCHOR` 行进入一致性计算的次数，须为 0，否则非零退出。
+5. **M1 各臂绝对失败率影响量化协议（卡面 D5）**：M1 定义沿用 v1.2 C5 冻结口径 `M1 = (E2+E3)/(E2+E3+E4)`（E0/E1 不入分母）；**臂 = 判级臂**（主轨臂 / 独立轨臂——本轮语料不可恢复原研究 A/B 研究臂标签，照实披露）；主轨臂在 R10_ANCHOR 上：实测 M1（E2 计 60 / E4 计 120）与**反事实 M1**（把 30 条假支持按其机制归属重分类为 E3a 事实不支持）并列，绝对影响 = 两者之差；独立轨臂同口径（其假支持为 0，影响为 0）；另报**有锚子集限制版**（有锚 claim 上假支持质量 = 0）作为「分层不是变相放松门」的证据（对抗问 5 的正面答案：分层移除的恰是假支持质量本身，主 `R_main` 分母不因分层缩小）。该块登记 `caliber = diagnostic_only`，不进门结论、不叙述为能力变化。
+6. **seal 与 custody（卡面 D6 / V9）**：`run-r14/` 收本轮执行产物（`out/` 三个 r14 JSON 的封存副本与运行留痕），用红区工具 `tools/eval/seal_run.py` **只读调用、零修改**密封，custody 副本落 `D:/15812/projects/round14-custody/sealed/run-r14`；V9 = 对 custody 副本 `seal_run.py --verify` 须 `VERIFY: OK`。
+7. **报告纪律与指针（卡面 D5/D6 / V10）**：`docs/eval-report-r14-strata.md` 须含 F1/F2 实测、分层读数、M1 量化块、**最显眼的主/锚双读数防误读声明**（`R_main_anchored` 与主 `R_main` 并列时读者最可能误读为「门更容易过」——声明须写明：主 `R_main` 分母不变、`R_main_anchored` 只覆盖 anchored 可比子集、分层移除的是假支持质量而非任何真实通过门槛的放宽）；每条结论带双格式 artifact 指针（方括号 `[artifact: 路径 sha256=<64hex>]` + 圆括号 `(路径) <64hex>`），并运行 `tools/eval/verify_artifact_pointers.py` 验真（100% 覆盖、0 bad digest）。
+
+### D21-C §21 禁令区（四条，随条款写入，覆盖卡面约束）
+
+1. **禁止改主轨、红区零触碰**（覆盖 ADV5.C2）：主轨 `judge.py` / `extract.py` 冻结不动；红区完整路径 = `tools/eval/judge.py`、`tools/eval/extract.py`、`tools/eval/blind.py`、`tools/eval/report.py`、`tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、`tools/gate.py`、`tools/lint_cards.py`、`verdicts/`、`.eval-sealed/`（写裸文件名会让 diff 检查假绿）；`seal_run.py` 只允许只读调用。
+2. **禁止用 `design_error_class` 作 HOLDOUT 真值**（覆盖卡面 F2 禁令）：其 133/133 标签惰性已实测（A-2）；真值只能由层语义 + fixture 机械核对建立；该字段在本轮输出中只能以「设计意图记录 / 被证伪对象」身份出现。
+3. **禁止更换主 `R_main` 分子分母**（覆盖 ADV5.C4）：分层报告不得更换主 `R_main` 分子分母；`R_main` 及分母只从轮十三封存产物读入；`R_main_anchored` 只能并列另出且不得叙述为能力提升或门放松；旁路指标任何上升均不得表述为能力提升；`capability_gain_claim = false`。
+4. **独立轨无锚弃权维持、禁 push/merge/verdict、py3.9 纪律**（覆盖 ADV5.C5 与接卡指令）：`INSUFFICIENT_NO_ANCHOR` 不得映射为主轨 E4 的布尔一致/不一致；不碰 master、不 push、不 merge、不写 verdict、不自评审；CI 为 py3.9，禁止给 `Path` 文本写入方法传 `newline` 关键字，JSON 写入一律 `open(..., newline="")`。
+
+### D21-D 冻结常量表（数据产生前写死）
+
+| 常量 | 冻结值 | 来源 / 用途 |
+|---|---|---|
+| 冻结样本集 | `out/r11-blind-samples.json` sha256 `6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9`，400 条，seed `20261111` | 轮十一封存；D2/D3/D4 输入，本轮不改样本 |
+| 冻结行集 | `out/r11-reliability-rows.json` sha256 `2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7`，400 行 | 轮十一封存；D3/D4 输入 |
+| 封存 v4 分解 | `out/r13-rubric-v4-decomposition.json` sha256 `4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232` | D4 逐层聚合 fail-fast 对照 |
+| 封存轮十三对齐 | `out/r13-alignment.json` sha256 `a3e37809d8b2cb7743c1ca8a533ae5f4f167cab37506f979c828aee17c5df181`；`r_main=1.0`、`comparable=118`、`agree=118`、`abstain=282` | D4 只读读入，永不重算 |
+| F1 冻结预期 | TRUE 90 全 E4；FALSE 150 → E0 30 / E1 30 / E2 60 / E4 30；`false_support 30`、rate `0.2`、`anchor_miss_e4 30/30` | A-1 / 条款 3 / V3 |
+| F2 冻结预期 | 133 = cmd 59（29 数值命中 + 30 无数值位引用）+ ref 有 fixture 59 + ref 缺 fixture 15；`contradictions 0` | A-2 / 条款 2 / V2 |
+| FP 定级表 | `FP_upper ≤ 0.05 → low`；`0.05 < FP_upper ≤ 0.15 → medium`；`FP_upper > 0.15 → high`（处置：照用 / 强制分层 / 上报 sir + 正式结论仅用有锚子集） | ADV-5 裁定 4；D21-E 机器可读 |
+| bootstrap 规格 | B=2000、seed=`20261113`、有放回、百分位 2.5/97.5 | 条款 3 |
+| 分层预期 | `anchored 118 / no_anchor 126 / verified_absence 48 / residual 108`；`sum_strata == comparable_set == 118`；`primary_denominator_changed = False` | A-3 / 条款 4 / V5/V6 |
+| `protected_total` | 96（不得下降） | §20 条款 4 延续 |
+| V1 前缀 SHA（文本口径） | `4abeb25527682b6da4b889012c984355c159ea5743e7c82bd3e3ab65f1a0e58b` | 冻结前后须一致 |
+| 红区路径清单 | 见 D21-C 条 1 | V8 逐字路径 |
+| M1 量化口径 | `M1=(E2+E3)/(E2+E3+E4)`（v1.2 C5）；臂 = 主轨臂 / 独立轨臂；`caliber=diagnostic_only` | 条款 5 |
+| 主 R_main 来源 | 封存 `out/r13-alignment.json`（只读），禁止重算 | 条款 4 / 禁令 3 |
+
+### D21-E 机器可读冻结块（`verify_truth_source.py` / `measure_unanchored_fp.py` / `report_strata.py` 读回）
+
+<!-- R14-TRUTH-BEGIN -->
+```json
+{
+  "schema": "r14-truth-frozen-v1",
+  "frozen_in": "section 21 D21-E",
+  "samples_path": "out/r11-blind-samples.json",
+  "samples_sha256": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9",
+  "rows_path": "out/r11-reliability-rows.json",
+  "rows_sha256": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7",
+  "v4_decomposition_path": "out/r13-rubric-v4-decomposition.json",
+  "v4_decomposition_sha256": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232",
+  "r13_alignment_path": "out/r13-alignment.json",
+  "r13_alignment_sha256": "a3e37809d8b2cb7743c1ca8a533ae5f4f167cab37506f979c828aee17c5df181",
+  "layer_truth": {
+    "cmd_ok": "TRUE",
+    "ref_ok": "TRUE",
+    "goldset_text": "TRUE",
+    "cwd_probe": "TRUE",
+    "dotfile_claim": "TRUE",
+    "fallback_probe": "TRUE",
+    "anchor_miss": "FALSE",
+    "repro_fail": "FALSE",
+    "ref_missing": "FALSE",
+    "incomplete": "FALSE",
+    "no_evidence": "FALSE"
+  },
+  "citation_numeric_re": "为\\s*(\\d+(?:\\.\\d+)?)",
+  "claim_sentence_rule": "first line starting '- [已验证] ' up to first '。'",
+  "contradiction_rule": "available evidence surface (cmd: recorded out=; ref: fixtures_workspace[ref] content iff present) AND >=1 numeric value-position citation AND citation absent from surface",
+  "non_numeric_citation_disposition": "not a label contradiction; anchor_miss claim-content mechanism measured under F1",
+  "ref_absent_disposition": "unverifiable; inert_by_absence; direction check main_level != E4",
+  "label_error_classes": ["CWD_MISMATCH", "FILE_NOT_FOUND", "PARSE_FAIL", "SILENT_FALLBACK", "TIMEOUT"],
+  "fp_measurement": {
+    "population_stratum": "R10_ANCHOR",
+    "main_supports": "main_level == 'E4'",
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 20261113,
+    "ci_method": "percentile_95",
+    "severity_table": [
+      {"max_fp_upper": 0.05, "severity": "low", "disposition": "照用（全量结论可用）"},
+      {"max_fp_upper": 0.15, "severity": "medium", "disposition": "强制分层（正式结论限有锚子集）"},
+      {"max_fp_upper": null, "severity": "high", "disposition": "上报 sir + 正式结论仅用有锚子集"}
+    ],
+    "severity_source_literal": "frozen_table",
+    "truth_source_caliber": "layer_semantics_plus_fixture_mechanical_check"
+  },
+  "anchor_rule": {
+    "integer_anchor_re": "(?<![\\w.\\-])\\d+(?![\\w.\\-])",
+    "procedure": "collect backtick tokens; strip backticks to spaces; extract integers; dict.fromkeys dedup preserving order",
+    "frozen_reference": "tools/eval/extract.py (red zone, read-only)"
+  },
+  "v4_layer_class": {
+    "no_evidence": "NO_EVIDENCE_LINE",
+    "incomplete": "STRUCTURALLY_UNJUDGEABLE",
+    "ref_missing": "VERIFIABLE_ABSENCE",
+    "repro_fail": "SILENT_FALLBACK_PROTECTED"
+  },
+  "v4_else_rule": "anchors non-empty -> SUPPORT; zero anchors -> INSUFFICIENT_NO_ANCHOR",
+  "strata_map": {
+    "anchored": "SUPPORT",
+    "no_anchor": "INSUFFICIENT_NO_ANCHOR",
+    "verified_absence": "VERIFIABLE_ABSENCE"
+  },
+  "residual_classes": ["SILENT_FALLBACK_PROTECTED", "STRUCTURALLY_UNJUDGEABLE", "NO_EVIDENCE_LINE"],
+  "comparable_rule": "comparable rows = v4 class SUPPORT and main boolean; no_anchor/verified_absence comparable contribution is 0 by frozen policy",
+  "sealed_r13": {"r_main": 1.0, "comparable": 118, "agree": 118, "abstain": 282},
+  "protected_total": 96,
+  "m1": {
+    "formula": "(E2+E3)/(E2+E3+E4)",
+    "arms": ["main", "independent"],
+    "counterfactual": "reclassify the false supports to E3a",
+    "caliber": "diagnostic_only"
+  },
+  "gate_result": "not_evaluable",
+  "gate_conclusion_issued": false,
+  "capability_gain_claim": false
+}
+```
+<!-- R14-TRUTH-END -->
+
+### D21-F 与卡面 Acceptance 的对应
+
+| 卡面 | 本节依据 |
+|---|---|
+| V1 | 条款 1 + D21-D 前缀 SHA |
+| V2 | 条款 2 + D21-E `contradiction_rule` |
+| V3/V4 | 条款 3 + D21-E `fp_measurement` |
+| V5/V6/V7 | 条款 4 + D21-E `strata_map` / `comparable_rule` / `sealed_r13` |
+| V8 | D21-C 条 1 红区清单 |
+| V9 | 条款 6 |
+| V10 | 条款 7 + D21-C 条 4 |
