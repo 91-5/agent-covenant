@@ -1848,5 +1848,32 @@
     },
     "draft_deviation_registered": "card 6-row draft line 6 says incomplete -> PARSE_FAIL, but round-12 v3 reclassifies that layer to STRUCTURALLY_UNJUDGEABLE; §20 freezes to the CURRENT implementation and registers the deviation in D20-A (A-3).",
     "instruction_tension_registered": "接卡指令 D3 'ref_missing -> 缺席可判路径' conflicts with card 禁令 2 + V7 (protected_total=96 must not drop); §20 clause 4 rules by prohibition precedence: explicit VERIFIABLE_ABSENCE path + upgrade_candidate trace, still abstains, no boolean mapping, escalation deferred to AgnesCode."
+  },
+  "_round13_progress_XJ-20261112_002": {
+    "D1_label_mapping": {
+      "deliverable": "tools/eval/label_mapping.py",
+      "deliverable_sha256": "038b0403532625ed316871f8b86aadbef2f902f373a92216a3a0b3d5f3b384e4",
+      "verify_report": "out/r13-label-mapping-verify.json",
+      "verify_report_sha256": "10f0902506d42b10d2131968d7f63b3a14496e1bdf932b716dba01ba004c317b",
+      "matrix_read_from": "docs/eval-prereg.md section 20 D20-E (machine-readable JSON block)",
+      "cells": 25,
+      "verdict_classes": ["equivalent", "conflict", "protected_abstention"],
+      "unmapped": [],
+      "code_vs_frozen_mismatches": [],
+      "protected_class_in_boolean_cells": [],
+      "protected_error_class_disposition_leaks": [],
+      "protected_abstention_error_classes": ["SILENT_FALLBACK", "FILE_NOT_FOUND"],
+      "v2_literal_exit": 0,
+      "v2_path_calibre_note": "card V2 literal uses PowerShell backslash paths; quoted-backslash and forward-slash equivalents both exit 0 in Git Bash. Unquoted backslash under bash exits 2 due to shell escape (\\e swallowed), NOT a code defect; registered verbatim like round-10 V8.",
+      "tamper_negative_control": {
+        "script": "round13-custody/v2_probe.py",
+        "script_sha256": "8de6f8340578c93a5d6c4c431c697891821e814a287d9b64796c1c74e5971b3c",
+        "tampered_copy": "round13-custody/prereg-tamper-test.md",
+        "tampered_copy_sha256": "efe2501b2509853758df4d25c4176218cae2e216575c142ab67955eb2fd56aa9",
+        "result": "flipping one frozen cell E4|SUPPORT -> protected_abstention makes verify_pass False and pinpoints E4|SUPPORT as a code-vs-frozen mismatch; proves the verifier reads the frozen text, not a detached code constant"
+      },
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
+    }
   }
 }
