@@ -39,6 +39,46 @@ RUBRIC_V2 = {
     "observation_failure_fallback": False,
     "levels": ("SUPPORT", "NOT_SUPPORT", "OBSERVATION_ERROR", "INSUFFICIENT"),
 }
+# ---- rubric v3 (card XJ-20261112-001 D1 / §19 clause 2, frozen before data)
+# v3 INHERITS every v2 decision path verbatim. It adds exactly two explicit
+# early-return classes for samples where the evidence surface is structurally
+# insufficient to reproduce ANY observation. Both keep supports=None, i.e.
+# they remain ABSTENTIONS: v3 never launders an unjudgeable sample into a
+# boolean verdict. The raw denominator is never reduced (denominator policy).
+# v2 remains callable so the v2/v3 equivalence over non-structural samples can
+# be mechanically cross-checked instead of asserted in prose.
+RUBRIC_V3 = {
+    "id": "R12-INDEPENDENT-RUBRIC-V3",
+    "inherits": "R11-INDEPENDENT-RUBRIC-V2",
+    "weights": dict(RUBRIC_V2["weights"]),
+    "support_threshold": RUBRIC_V2["support_threshold"],
+    "min_anchor_coverage": RUBRIC_V2["min_anchor_coverage"],
+    "explicit_anchor_required": True,
+    "root_fallback": False,
+    "observation_failure_fallback": False,
+    "levels": ("SUPPORT", "NOT_SUPPORT", "OBSERVATION_ERROR", "INSUFFICIENT",
+               "STRUCTURALLY_UNJUDGEABLE"),
+    "structural_rule": ("evidence_raw non-empty AND cmd is None AND ref is None "
+                        "AND anchors empty"),
+    "structural_supports": None,
+    "denominator_policy": ("raw and judgable denominators reported side by side; "
+                           "no sample is dropped from the raw denominator"),
+    "out_of_scope": ("samples with an EMPTY evidence line are outside the frozen "
+                     "clause-2 definition; v3 keeps their v2 verdict verbatim "
+                     "instead of widening a frozen clause after seeing data"),
+}
+STRUCTURAL_LEVEL = "STRUCTURALLY_UNJUDGEABLE"
+STRUCTURAL_ERROR_CLASS = "STRUCTURAL_NO_EVIDENCE"
+
+
+def is_structurally_unjudgeable(spec: Dict[str, Any]) -> bool:
+    """Section 19 clause 2, verbatim. Empty evidence lines are NOT covered."""
+    return (bool(spec.get("evidence_raw"))
+            and spec.get("cmd") is None
+            and spec.get("ref") is None
+            and not spec.get("anchors"))
+
+
 OBSERVATION_ERROR_CLASSES = ("FILE_NOT_FOUND", "CWD_MISMATCH", "PARSE_FAIL",
                              "TIMEOUT", "SILENT_FALLBACK")
 _ANCHOR_RE = re.compile(r"`([^`]+)`|\b\d+(?:\.\d+)?\b")
@@ -122,8 +162,8 @@ def _reproduce(spec: Dict[str, Any], workspace: Path) -> Tuple[float, str, str]:
     return 0.0, "", "PARSE_FAIL"
 
 
-def judge_case(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
-    """Independent judgement. Never reads any main-track output artifact."""
+def _judge_case_v2(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
+    """Rubric v2, byte-for-byte the round-11 decision path (kept for equivalence)."""
     spec = _parse_case(case)
     cid = str(case.get("case_id", ""))
     base = {"case_id": cid, "family": case.get("family"),
@@ -178,10 +218,61 @@ def judge_case(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
                           "anchor_coverage": round(coverage, 6)})
 
 
-def judge_case_file(path: Path, workspace: Path) -> List[Dict[str, Any]]:
+def _judge_case_v3(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
+    """Rubric v3 = rubric v2 plus two explicit structural-abstention classes.
+
+    Every non-structural sample is decided by literally calling the v2 path,
+    so the v2/v3 equivalence over that subset is mechanical, not asserted.
+    """
+    spec = _parse_case(case)
+    cid = str(case.get("case_id", ""))
+    base = {"case_id": cid, "family": case.get("family"),
+            "judge": "independent_v3", "rubric": RUBRIC_V3["id"]}
+
+    if not spec["claim_text"]:
+        out = _judge_case_v2(case, workspace)
+        out.update(base)
+        return out
+    if not spec["evidence_raw"]:
+        # §19 clause 2 does NOT cover this class (it requires a non-empty
+        # evidence line). Keep the v2 verdict VERBATIM -- no widening of a
+        # frozen clause after seeing data. These samples stay abstentions,
+        # stay in the raw denominator, and are disclosed separately in the
+        # decomposition report as out-of-scope for the next round.
+        out = _judge_case_v2(case, workspace)
+        out.update(base)
+        out["out_of_frozen_clause2_scope"] = True
+        return out
+    if is_structurally_unjudgeable(spec):
+        return dict(base, level=STRUCTURAL_LEVEL, supports=None, score=0.0,
+                    error_class=STRUCTURAL_ERROR_CLASS, features={},
+                    structural_basis=("evidence_raw non-empty, cmd=None, ref=None, "
+                                      "anchors=[]: no observation surface exists"))
+
+    out = _judge_case_v2(case, workspace)
+    out.update(base)
+    return out
+
+
+def judge_case(case: Dict[str, Any], workspace: Path,
+               rubric_version: str = "v3") -> Dict[str, Any]:
+    """Independent judgement. Never reads any main-track output artifact.
+
+    Default is rubric v3 (round-12 instrument revision). Pass ``"v2"`` to
+    replay the frozen round-11 decision path for equivalence checks.
+    """
+    if rubric_version == "v2":
+        return _judge_case_v2(case, workspace)
+    if rubric_version == "v3":
+        return _judge_case_v3(case, workspace)
+    raise ValueError("unknown rubric version: {}".format(rubric_version))
+
+
+def judge_case_file(path: Path, workspace: Path,
+                    rubric_version: str = "v3") -> List[Dict[str, Any]]:
     with open(str(path), "r", encoding="utf-8") as fh:
         cases = json.load(fh)
-    return [judge_case(c, workspace) for c in cases]
+    return [judge_case(c, workspace, rubric_version) for c in cases]
 
 
 def _sha(b: bytes) -> str:

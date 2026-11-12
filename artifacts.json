@@ -1369,5 +1369,46 @@
       "clauses": 9
     },
     "freeze_abort_and_restore": "first run reported a CRLF/LF calibre mismatch (decode() kept CRLF, V1 uses text mode); prereg was truncated back to 151545 bytes, SHA restored and git diff empty, then the script was fixed and re-run. No product existed at either attempt."
+  },
+  "_round12_progress_XJ-20261112_001": {
+    "D1_rubric_v3": {
+      "phase": "D1 / card D2",
+      "rubric": "R12-INDEPENDENT-RUBRIC-V3",
+      "inherits": "R11-INDEPENDENT-RUBRIC-V2",
+      "structural_rule_frozen": "evidence_raw non-empty AND cmd is None AND ref is None AND anchors empty",
+      "files": {
+        "tools/eval/independent_judge.py": "3ba89be10588adec3f13d815884f4132f203f441671c4330e490a2193850a8d6",
+        "tools/eval/rubric_v3.py": "fc87560241b61584810860cbe18fc93bc01c813330dfbe09027f7caffaa0462e",
+        "docs/rubric-v3-r12.md": "7bb9220e97c556e22c535c381047d91caabcee6a533a800605d7303269a8d04b",
+        "out/r12-abstention-decomposition.json": "97091832be84c634b34414b161114f8e1373121318f49c393765ba5646ea40c8"
+      },
+      "custody": "D:/15812/projects/round12-custody/r12-abstention-decomposition.json",
+      "custody_sha256": "97091832be84c634b34414b161114f8e1373121318f49c393765ba5646ea40c8",
+      "v4_literal": {
+        "raw_denominator": 400,
+        "judgable_denominator": 370,
+        "trace_rows": 30,
+        "trace_complete": true,
+        "exit": 0
+      },
+      "readings": {
+        "structural_unjudgeable_count": 30,
+        "boolean_decidable_denominator": 174,
+        "abstain_total_v2": 226,
+        "abstain_total_v3": 226,
+        "abstain_unchanged": true,
+        "v2_v3_equivalence_mismatches": 0,
+        "out_of_scope_empty_evidence_line": 30,
+        "no_boolean_laundering": true,
+        "capability_gain_claim": false
+      },
+      "v3_level_distribution": {
+        "SUPPORT": 126, "NOT_SUPPORT": 48, "OBSERVATION_ERROR": 126,
+        "STRUCTURALLY_UNJUDGEABLE": 30, "INSUFFICIENT": 70
+      },
+      "partial_closure_disclosure": "§19 clause 2 literal wording covers only the 30 non-empty-evidence-line structural samples; the other 30 empty-evidence-line samples keep their v2 verdict, stay in the raw denominator and are disclosed as out_of_scope for the next round. ADV-4 is PARTIALLY closed, not fully closed.",
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
+    }
   }
 }
