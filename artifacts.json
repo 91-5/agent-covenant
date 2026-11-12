@@ -1459,6 +1459,54 @@
       ],
       "py39_ast_ok": true,
       "banned_api_literal_present": false
+    },
+    "D3_real_os_collection": {
+      "phase": "D3 / card D4 (V3)",
+      "closes": ["ADV-2", "ADV-5"],
+      "files": {
+        "tools/eval/gate_metrics.py": "fbd4fd361fded6d10e2e676152ccd3d55a74203a010e0c601fecd2cf77e12ff6",
+        "out/r12-gate-input.json": "bf6d3ca51b96b16e49108f1419eede14401ed3a3d8e72af55973f9a862623058",
+        "out/r12-gate-metrics.json": "7fcc037291174728aba2241e287f5395ab8e85195a22a29dd0aa8a3439a74cc3"
+      },
+      "custody": {
+        "collect_r12_os.py": "5f3136158bb87b70bd83e13efcdeed85a7889eeddc2a3e719bf23ef188f5fc1e",
+        "r12-gate-input.json": "bf6d3ca51b96b16e49108f1419eede14401ed3a3d8e72af55973f9a862623058"
+      },
+      "collection_layer": "round12-custody/collect_r12_os.py",
+      "exit_source_produced_by": "collection_layer_real_subprocess",
+      "provenance_text_inference_used": false,
+      "field_semantics_key_read": false,
+      "round10_210_pairs_used": false,
+      "round10_note": "round-10 210 pairs contain no command/cmd/ref/evidence field (all 6 counts = 0), so they cannot be re-observed; new collection-layer samples were used instead, disclosed as instrument-calibration samples, NOT a new true-data gate round",
+      "v3_literal": {
+        "exit_source_counts": {"os": 24, "adapter": 0, "launch_failed": 2},
+        "primary_evaluable": true,
+        "exit": 0
+      },
+      "readings": {
+        "n_pairs": 26,
+        "primary_sample_count": 20,
+        "excluded_from_primary": 4,
+        "precision": 0.5,
+        "recall": 1.0,
+        "pass_rate": 0.8,
+        "confusion_matrix": {"TP": 8, "TN": 4, "FP": 8, "FN": 0},
+        "main_level_distribution": {"E4": 12, "E2": 12, "NO_PROCESS": 2}
+      },
+      "sample_reverification": {
+        "mechanism": "re-run each os command in a fresh isolated child and compare the OS returncode with the stored value",
+        "verified": 24,
+        "all_match": true,
+        "mismatches": []
+      },
+      "env_isolation_shared_module": "tools/eval/env_isolation.py",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "gate_value_recomputed": false,
+      "caliber": "instrument_calibration_only",
+      "r11_mode_regression_exit": 0,
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
     }
   }
 }
