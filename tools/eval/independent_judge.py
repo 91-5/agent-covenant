@@ -70,6 +70,46 @@ RUBRIC_V3 = {
 STRUCTURAL_LEVEL = "STRUCTURALLY_UNJUDGEABLE"
 STRUCTURAL_ERROR_CLASS = "STRUCTURAL_NO_EVIDENCE"
 
+# ---- rubric v4 (card XJ-20261112-002 D3 / §20 clause 4, frozen before data)
+# v4 uses the ALIGNED (main-track-equivalent) anchor rule. It adds explicit
+# classes for the two structurally-unobservable sublayers and an explicit
+# "verifiable absence" path for ref_missing, but keeps EVERY protected
+# abstention an abstention: supports=None, error_class unchanged, so
+# protected_total (SILENT_FALLBACK 48 + FILE_NOT_FOUND 48 = 96) cannot drop.
+RUBRIC_V4 = {
+    "id": "R13-INDEPENDENT-RUBRIC-V4",
+    "inherits": "R12-INDEPENDENT-RUBRIC-V3",
+    "anchor_rule": "main-track-equivalent (section 20 clause 3)",
+    "weights": dict(RUBRIC_V3["weights"]),
+    "support_threshold": RUBRIC_V3["support_threshold"],
+    "min_anchor_coverage": RUBRIC_V3["min_anchor_coverage"],
+    "explicit_anchor_required": True,
+    "root_fallback": False,
+    "observation_failure_fallback": False,
+    "levels": ("SUPPORT", "NOT_SUPPORT", "INSUFFICIENT", "OBSERVATION_ERROR",
+               "STRUCTURALLY_UNJUDGEABLE", "NO_EVIDENCE_LINE",
+               "VERIFIABLE_ABSENCE"),
+    "class_whitelist": (
+        "SUPPORT", "NOT_SUPPORT", "INSUFFICIENT", "OBSERVATION_ERROR",
+        "STRUCTURALLY_UNJUDGEABLE", "NO_EVIDENCE_LINE", "VERIFIABLE_ABSENCE",
+    ),
+    "no_evidence_level": "NO_EVIDENCE_LINE",
+    "no_evidence_error_class": "PARSE_FAIL",
+    "incomplete_level": "STRUCTURALLY_UNJUDGEABLE",
+    "incomplete_error_class": STRUCTURAL_ERROR_CLASS,
+    "ref_missing_level": "VERIFIABLE_ABSENCE",
+    "ref_missing_error_class": "FILE_NOT_FOUND",
+    "ref_missing_upgrade_candidate": True,
+    "silent_fallback_level": "OBSERVATION_ERROR",
+    "silent_fallback_error_class": "SILENT_FALLBACK",
+    "denominator_policy": ("raw 400 never reduced; every v4 class is an "
+                           "explicit re-labelling of an existing abstention, "
+                           "no boolean sample is turned into an abstention by "
+                           "the rubric itself"),
+}
+NO_EVIDENCE_LEVEL = RUBRIC_V4["no_evidence_level"]
+VERIFIABLE_ABSENCE_LEVEL = RUBRIC_V4["ref_missing_level"]
+
 
 def is_structurally_unjudgeable(spec: Dict[str, Any]) -> bool:
     """Section 19 clause 2, verbatim. Empty evidence lines are NOT covered."""
@@ -81,7 +121,29 @@ def is_structurally_unjudgeable(spec: Dict[str, Any]) -> bool:
 
 OBSERVATION_ERROR_CLASSES = ("FILE_NOT_FOUND", "CWD_MISMATCH", "PARSE_FAIL",
                              "TIMEOUT", "SILENT_FALLBACK")
-_ANCHOR_RE = re.compile(r"`([^`]+)`|\b\d+(?:\.\d+)?\b")
+
+# ---- anchor rule alignment (card XJ-20261112-002 D2 / §20 clause 3) --------
+# The round-11/12 independent judge used a single alternation regex that
+# treated ``2.0`` inside ``Apache-2.0`` as an anchor, producing 56 anchor-set
+# mismatches against the frozen main track. §20 clause 3 mandates byte-equivalent
+# SEMANTICS with tools/eval/extract.py::extract_anchors (red zone, read-only):
+#   BACKTICK_RE       = re.compile(r"`([^`]+)`")
+#   INTEGER_ANCHOR_RE = re.compile(r"(?<![\w.\-])\d+(?![\w.\-])")
+#   extract_anchors(): collect ALL backtick tokens first, then integers on the
+#   backtick-blanked text, then dict.fromkeys de-duplication (order preserving).
+# The two pattern strings below are verbatim copies of the frozen main-track
+# patterns; _anchors() reproduces the three-step algorithm exactly.
+BACKTICK_RE = re.compile(r"`([^`]+)`")
+INTEGER_ANCHOR_RE = re.compile(r"(?<![\w.\-])\d+(?![\w.\-])")
+# Legacy rule retained ONLY for v2/v3 replay, so round-11/12 sealed readings
+# stay reproducible. V3 --check-anchors reports legacy (56) vs aligned (0).
+_LEGACY_ANCHOR_RE = re.compile(r"`([^`]+)`|\b\d+(?:\.\d+)?\b")
+# §20 clause 3: the named _ANCHOR_RE symbol now IS the frozen main-track
+# integer-anchor rule. The legacy alternation survives only under its own
+# explicit name and is used solely by _parse_case(legacy_anchors=True) for
+# v2/v3 replay. No v4 decision path reads it.
+_ANCHOR_RE = INTEGER_ANCHOR_RE
+
 _REF_RE = re.compile(r"ref=`([^`]+)`")
 _CMD_RE = re.compile(r"cmd=`([^`]+)`")
 _EXIT_RE = re.compile(r"\bexit=(-?\d+)")
@@ -93,11 +155,28 @@ _DENY = ("rm -rf", "rm -fr", "shutdown", "mkfs", "format ", "del /f",
 
 
 def _anchors(claim_text: str) -> List[str]:
+    """§20 clause 3: byte-equivalent semantics to main-track extract_anchors.
+
+    Order: all backtick tokens first (stripped, non-empty), then standalone
+    integers on the backtick-blanked text, then stable de-duplication.
+    """
+    anchors: List[str] = []
+    for match in BACKTICK_RE.finditer(claim_text):
+        token = match.group(1).strip()
+        if token:
+            anchors.append(token)
+    for match in INTEGER_ANCHOR_RE.finditer(BACKTICK_RE.sub(" ", claim_text)):
+        anchors.append(match.group(0))
+    return list(dict.fromkeys(anchors))
+
+
+def _anchors_legacy(claim_text: str) -> List[str]:
+    """Round-11/12 alternation rule, kept ONLY for v2/v3 replay."""
     return [m.group(1) if m.group(1) is not None else m.group(0)
-            for m in _ANCHOR_RE.finditer(claim_text)]
+            for m in _LEGACY_ANCHOR_RE.finditer(claim_text)]
 
 
-def _parse_case(case: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_case(case: Dict[str, Any], legacy_anchors: bool = False) -> Dict[str, Any]:
     lines = str(case.get("markdown", "")).splitlines()
     claim_text, evidence_raw = "", ""
     for i, line in enumerate(lines):
@@ -121,7 +200,8 @@ def _parse_case(case: Dict[str, Any]) -> Dict[str, Any]:
         "cmd": cmd.group(1) if cmd else None,
         "claimed_exit": int(ex.group(1)) if ex else None,
         "claimed_out": out.group(1) if out else None,
-        "anchors": _anchors(claim_text),
+        "anchors": (_anchors_legacy(claim_text) if legacy_anchors
+                    else _anchors(claim_text)),
     }
 
 
@@ -163,8 +243,13 @@ def _reproduce(spec: Dict[str, Any], workspace: Path) -> Tuple[float, str, str]:
 
 
 def _judge_case_v2(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
-    """Rubric v2, byte-for-byte the round-11 decision path (kept for equivalence)."""
-    spec = _parse_case(case)
+    """Rubric v2, byte-for-byte the round-11 decision path (kept for equivalence).
+
+    §20 clause 3: v2/v3 replay the LEGACY alternation anchor rule so the
+    sealed round-11/12 readings stay reproducible; only v4 uses the aligned
+    main-track-equivalent rule.
+    """
+    spec = _parse_case(case, legacy_anchors=True)
     cid = str(case.get("case_id", ""))
     base = {"case_id": cid, "family": case.get("family"),
             "judge": "independent_v2", "rubric": RUBRIC_V2["id"]}
@@ -223,8 +308,9 @@ def _judge_case_v3(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
 
     Every non-structural sample is decided by literally calling the v2 path,
     so the v2/v3 equivalence over that subset is mechanical, not asserted.
+    §20 clause 3: v3 also replays the LEGACY anchor rule (frozen readings).
     """
-    spec = _parse_case(case)
+    spec = _parse_case(case, legacy_anchors=True)
     cid = str(case.get("case_id", ""))
     base = {"case_id": cid, "family": case.get("family"),
             "judge": "independent_v3", "rubric": RUBRIC_V3["id"]}
@@ -254,17 +340,118 @@ def _judge_case_v3(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
     return out
 
 
+def _judge_case_v4(case: Dict[str, Any], workspace: Path) -> Dict[str, Any]:
+    """Rubric v4 (§20 clause 4): aligned anchors + explicit abstention classes.
+
+    Decision order is frozen in §20 D20-D class whitelist. All four named
+    abstention paths keep supports=None. No boolean sample is converted to an
+    abstention by the rubric; protected total (96) is preserved verbatim.
+    """
+    spec = _parse_case(case)  # aligned (main-track-equivalent) anchors
+    cid = str(case.get("case_id", ""))
+    base = {"case_id": cid, "family": case.get("family"),
+            "judge": "independent_v4", "rubric": RUBRIC_V4["id"]}
+
+    if not spec["claim_text"]:
+        return dict(base, level="OBSERVATION_ERROR", supports=None, score=0.0,
+                    error_class="PARSE_FAIL", features={},
+                    v4_class="OBSERVATION_ERROR")
+    if not spec["evidence_raw"]:
+        # no_evidence (30): explicit NO_EVIDENCE_LINE class
+        return dict(base, level=NO_EVIDENCE_LEVEL, supports=None, score=0.0,
+                    error_class=RUBRIC_V4["no_evidence_error_class"],
+                    features={}, v4_class="NO_EVIDENCE_LINE",
+                    abstention_basis="no evidence line at all")
+    if is_structurally_unjudgeable(spec):
+        # incomplete (30): explicit STRUCTURALLY_UNJUDGEABLE class
+        return dict(base, level=STRUCTURAL_LEVEL, supports=None, score=0.0,
+                    error_class=STRUCTURAL_ERROR_CLASS, features={},
+                    v4_class="STRUCTURALLY_UNJUDGEABLE",
+                    abstention_basis=("evidence line non-empty but cmd=None, "
+                                      "ref=None, anchors=[]"))
+
+    f_ref, observation, err = _reproduce(spec, workspace)
+    if err == "FILE_NOT_FOUND":
+        # ref_missing (48): explicit VERIFIABLE_ABSENCE path. This is the
+        # "缺席可判路径" from the intake instruction, but §20 clause 4 rules
+        # by prohibition precedence: it STAYS an abstention, error_class is
+        # unchanged (FILE_NOT_FOUND) so V7 protected_total=96 cannot drop,
+        # and the escalation is recorded as a candidate for a separate card.
+        return dict(base, level=VERIFIABLE_ABSENCE_LEVEL, supports=None,
+                    score=0.0, error_class=RUBRIC_V4["ref_missing_error_class"],
+                    features={"ref_readable": 0.0,
+                              "observation_reproduced": 0.0,
+                              "anchor_coverage": 0.0},
+                    v4_class="VERIFIABLE_ABSENCE",
+                    upgrade_candidate=RUBRIC_V4["ref_missing_upgrade_candidate"],
+                    upgrade_note=("verifiable absence; NOT mapped to boolean "
+                                  "in this round (card 禁令 2 / V7); separate "
+                                  "card + AgnesCode ruling required"),
+                    abstention_basis="ref target absent in workspace")
+    if err == "SILENT_FALLBACK":
+        # repro_fail (48): protected abstention, MUST NOT be mapped
+        return dict(base, level=RUBRIC_V4["silent_fallback_level"],
+                    supports=None, score=0.0,
+                    error_class=RUBRIC_V4["silent_fallback_error_class"],
+                    features={"ref_readable": 0.0,
+                              "observation_reproduced": 0.0,
+                              "anchor_coverage": 0.0},
+                    v4_class="SILENT_FALLBACK_PROTECTED",
+                    protected_abstention=True,
+                    abstention_basis=("command ran but produced no observation; "
+                                      "round-9 defence, boolean mapping forbidden"))
+    if err:
+        # any other observation error stays an explicit abstention
+        return dict(base, level="OBSERVATION_ERROR", supports=None, score=0.0,
+                    error_class=err, features={}, v4_class="OBSERVATION_ERROR",
+                    abstention_basis="observation error: %s" % err)
+
+    anchors = spec["anchors"]
+    if RUBRIC_V4["explicit_anchor_required"] and not anchors:
+        return dict(base, level="INSUFFICIENT", supports=None, score=0.0,
+                    error_class="", v4_class="INSUFFICIENT_NO_ANCHOR",
+                    features={"ref_readable": f_ref,
+                              "observation_reproduced": 1.0,
+                              "anchor_coverage": 0.0},
+                    abstention_basis="explicit anchor required, none present")
+    hits = [a for a in anchors if str(a) in observation]
+    coverage = len(hits) / len(anchors) if anchors else 0.0
+    if coverage < RUBRIC_V4["min_anchor_coverage"]:
+        return dict(base, level="NOT_SUPPORT", supports=False,
+                    score=round(RUBRIC_V4["weights"]["ref_readable"] * f_ref
+                                + RUBRIC_V4["weights"]["observation_reproduced"],
+                                6),
+                    error_class="", v4_class="NOT_SUPPORT",
+                    features={"ref_readable": f_ref,
+                              "observation_reproduced": 1.0,
+                              "anchor_coverage": round(coverage, 6)})
+    w = RUBRIC_V4["weights"]
+    score = (w["ref_readable"] * f_ref
+             + w["observation_reproduced"] * 1.0
+             + w["anchor_coverage"] * coverage)
+    ok = score >= RUBRIC_V4["support_threshold"]
+    return dict(base, level="SUPPORT" if ok else "NOT_SUPPORT",
+                supports=bool(ok), score=round(score, 6), error_class="",
+                v4_class="SUPPORT" if ok else "NOT_SUPPORT",
+                features={"ref_readable": f_ref,
+                          "observation_reproduced": 1.0,
+                          "anchor_coverage": round(coverage, 6)})
+
+
 def judge_case(case: Dict[str, Any], workspace: Path,
                rubric_version: str = "v3") -> Dict[str, Any]:
     """Independent judgement. Never reads any main-track output artifact.
 
     Default is rubric v3 (round-12 instrument revision). Pass ``"v2"`` to
-    replay the frozen round-11 decision path for equivalence checks.
+    replay the frozen round-11 decision path, ``"v4"`` for the round-13
+    aligned-anchor instrument (§20 clauses 3/4).
     """
     if rubric_version == "v2":
         return _judge_case_v2(case, workspace)
     if rubric_version == "v3":
         return _judge_case_v3(case, workspace)
+    if rubric_version == "v4":
+        return _judge_case_v4(case, workspace)
     raise ValueError("unknown rubric version: {}".format(rubric_version))
 
 

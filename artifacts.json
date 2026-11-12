@@ -1342,7 +1342,13 @@
     "prohibitions_in_d19_c": 3,
     "clauses_total_numbered": 9,
     "banned_api_literal_in_new_section": false,
-    "diagnostic_facts_verbatim": ["C-1", "C-2", "C-3", "C-4", "C-5"],
+    "diagnostic_facts_verbatim": [
+      "C-1",
+      "C-2",
+      "C-3",
+      "C-4",
+      "C-5"
+    ],
     "frozen_constants": {
       "strict_bool_threshold": 0.15,
       "sample_seed": 20261111,
@@ -1352,7 +1358,10 @@
       "gate_result": "not_evaluable",
       "calibration_caliber": "instrument_calibration_only"
     },
-    "gitignore_added": ["run-dir-r12/", "shadow-r12/"],
+    "gitignore_added": [
+      "run-dir-r12/",
+      "shadow-r12/"
+    ],
     "gitignore_note": "out/ already covered by round-10 D0; card constraint 产物落点 authorises the two new lines; git check-ignore -v verified",
     "custody": {
       "template": "D:/15812/projects/round12-custody/s19-template.md",
@@ -1403,8 +1412,11 @@
         "capability_gain_claim": false
       },
       "v3_level_distribution": {
-        "SUPPORT": 126, "NOT_SUPPORT": 48, "OBSERVATION_ERROR": 126,
-        "STRUCTURALLY_UNJUDGEABLE": 30, "INSUFFICIENT": 70
+        "SUPPORT": 126,
+        "NOT_SUPPORT": 48,
+        "OBSERVATION_ERROR": 126,
+        "STRUCTURALLY_UNJUDGEABLE": 30,
+        "INSUFFICIENT": 70
       },
       "partial_closure_disclosure": "§19 clause 2 literal wording covers only the 30 non-empty-evidence-line structural samples; the other 30 empty-evidence-line samples keep their v2 verdict, stay in the raw denominator and are disclosed as out_of_scope for the next round. ADV-4 is PARTIALLY closed, not fully closed.",
       "py39_ast_ok": true,
@@ -1454,15 +1466,20 @@
       "r_main_recomputed": false,
       "gate_value_recomputed": false,
       "historical_readings_not_recomputed": [
-        "round11 R_main 0.62069", "round11 LB95 0.546722",
-        "round11 M_C 0.45", "round11 SILENT_FALLBACK 30"
+        "round11 R_main 0.62069",
+        "round11 LB95 0.546722",
+        "round11 M_C 0.45",
+        "round11 SILENT_FALLBACK 30"
       ],
       "py39_ast_ok": true,
       "banned_api_literal_present": false
     },
     "D3_real_os_collection": {
       "phase": "D3 / card D4 (V3)",
-      "closes": ["ADV-2", "ADV-5"],
+      "closes": [
+        "ADV-2",
+        "ADV-5"
+      ],
       "files": {
         "tools/eval/gate_metrics.py": "fbd4fd361fded6d10e2e676152ccd3d55a74203a010e0c601fecd2cf77e12ff6",
         "out/r12-gate-input.json": "bf6d3ca51b96b16e49108f1419eede14401ed3a3d8e72af55973f9a862623058",
@@ -1479,7 +1496,11 @@
       "round10_210_pairs_used": false,
       "round10_note": "round-10 210 pairs contain no command/cmd/ref/evidence field (all 6 counts = 0), so they cannot be re-observed; new collection-layer samples were used instead, disclosed as instrument-calibration samples, NOT a new true-data gate round",
       "v3_literal": {
-        "exit_source_counts": {"os": 24, "adapter": 0, "launch_failed": 2},
+        "exit_source_counts": {
+          "os": 24,
+          "adapter": 0,
+          "launch_failed": 2
+        },
         "primary_evaluable": true,
         "exit": 0
       },
@@ -1490,8 +1511,17 @@
         "precision": 0.5,
         "recall": 1.0,
         "pass_rate": 0.8,
-        "confusion_matrix": {"TP": 8, "TN": 4, "FP": 8, "FN": 0},
-        "main_level_distribution": {"E4": 12, "E2": 12, "NO_PROCESS": 2}
+        "confusion_matrix": {
+          "TP": 8,
+          "TN": 4,
+          "FP": 8,
+          "FN": 0
+        },
+        "main_level_distribution": {
+          "E4": 12,
+          "E2": 12,
+          "NO_PROCESS": 2
+        }
       },
       "sample_reverification": {
         "mechanism": "re-run each os command in a fresh isolated child and compare the OS returncode with the stored value",
@@ -1554,15 +1584,21 @@
         "disagreement_rate": 0.62,
         "strict_bool_disagreements": 9,
         "by_family_strict": {
-          "cwd_root_misalign": 6, "silent_fallback": 0,
-          "proposition_level": 0, "dotfile_claim": 0,
+          "cwd_root_misalign": 6,
+          "silent_fallback": 0,
+          "proposition_level": 0,
+          "dotfile_claim": 0,
           "structural_unjudgeable": 3
         },
         "new_family_agreeing_controls": 3
       },
       "offline_design_replay": {
-        "v3_on_original_40": {"structural": 0, "disagreement": 24,
-                              "strict_bool": 6, "rate": 0.15},
+        "v3_on_original_40": {
+          "structural": 0,
+          "disagreement": 24,
+          "strict_bool": 6,
+          "rate": 0.15
+        },
         "note": "offline核算 only, no probe product written; if the new family contributed zero strict disagreements the rate would have been 6/50 = 0.12 < 0.15"
       },
       "blind_order": "independent v3 -> sha256 seal -> main track -> compare",
@@ -1586,7 +1622,10 @@
       "data_rows": 50,
       "file_lines": 51,
       "seed": 20261111,
-      "v7_literal": {"n": 51, "exit": 0},
+      "v7_literal": {
+        "n": 51,
+        "exit": 0
+      },
       "honest_downgrade": {
         "annotator_count": 1,
         "two_human_independent_annotation": false,
@@ -1665,8 +1704,12 @@
           "v5_literal_rerun_idempotent": true
         },
         "unchanged_by_fix": [
-          "frozen threshold 0.15", "probe_set.json", "judge implementation",
-          "gate conclusion caliber", "no sample removed", "no second gate value"
+          "frozen threshold 0.15",
+          "probe_set.json",
+          "judge implementation",
+          "gate conclusion caliber",
+          "no sample removed",
+          "no second gate value"
         ],
         "old_seal_log_preserved_at": "round12-custody/r12-probe-seal-log.pre-deterministic-fix.json"
       },
@@ -1699,7 +1742,10 @@
         "log": "round12-custody/r12-acceptance.log",
         "log_sha256": "be1d33a2a1e4063dcefd9e98ad80af840ec670be95b6d85d40b040733ad9497f",
         "commands": 23,
-        "nonzero_labels": ["V9_2", "V10_1"],
+        "nonzero_labels": [
+          "V9_2",
+          "V10_1"
+        ],
         "v9_2": {
           "exit": 1,
           "ran": 527,
@@ -1716,7 +1762,10 @@
         "v10_1": {
           "exit": 1,
           "result": "LINT: FAIL (0 errors, 2 warnings)",
-          "warnings": ["VERDICT_WITHOUT_REVIEW", "TEST_COUNT_UNVERIFIED"],
+          "warnings": [
+            "VERDICT_WITHOUT_REVIEW",
+            "TEST_COUNT_UNVERIFIED"
+          ],
           "not_whitened": true
         },
         "pointer_verify_after_all_reruns": "PASS (26/26, BAD_DIGEST 0)",
@@ -1739,6 +1788,290 @@
         "master_untouched": true,
         "redzone_zero_touch": true
       }
+    }
+  },
+  "XJ-20261112-002": [
+    "tools/eval/rubric_v4.py",
+    "tools/eval/independent_judge.py",
+    "tools/eval/label_mapping.py",
+    "docs/eval-prereg.md",
+    "docs/eval-report-r13-alignment.md",
+    "tools/eval/r13_alignment.py",
+    "goldset/annotation_r13.jsonl",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md"
+  ],
+  "_s20_freeze_XJ-20261112_002": {
+    "phase": "D0_section20_freeze",
+    "freeze_commit": "ae237e3",
+    "freeze_commit_full": "ae237e35718b4e77ac6d30dbddb617cee8d2c768",
+    "freeze_committed_at": "2026-11-12T22:26:14+08:00",
+    "freeze_before_any_r13_product": true,
+    "r13_products_before_freeze": [],
+    "prereg_before_bytes": 168010,
+    "prereg_before_sha256": "0975c1bdfc6acfb2554704307e41498db4a5842052c307c8faafeb2f4220cf49",
+    "v1_prefix_sha256_before": "8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561",
+    "v1_prefix_sha256_after": "8941bc966a02f94bee78ee3dfad34f09ddc808033d2284c8bbb4875858675561",
+    "prefix_intact": true,
+    "prereg_after_bytes": 191760,
+    "prereg_after_sha256": "53d43d1b76e6bb9bee2eb470be0d391f261d8c0bd81fad9a1aefa4b3ecb0f3a8",
+    "prereg_blob_lf_bytes": 190295,
+    "prereg_blob_lf_sha256": "4abeb25527682b6da4b889012c984355c159ea5743e7c82bd3e3ab65f1a0e58b",
+    "s20_section_bytes": 23750,
+    "s20_section_sha256": "9c3f8529336b682ba4e3555abf964b8d152ad9e4262c82120d010c21efd1e20c",
+    "s20_heading_count": 1,
+    "clauses_in_d20_b": 7,
+    "prohibitions_in_d20_c": 3,
+    "clauses_total_numbered": 10,
+    "card_prohibitions_verbatim_in_d20_c_prime": 6,
+    "mapping_matrix_ok": true,
+    "mapping_matrix_cells": 25,
+    "banned_api_literal_in_new_section": false,
+    "v1_literal_clauses": 10,
+    "v1_literal_has_s20": true,
+    "frozen_constants": {
+      "sample_seed": 20261111,
+      "raw_denominator": 400,
+      "protected_total": 96,
+      "anchor_mismatch_before": 56,
+      "cwd_mismatch_before": 18,
+      "gate_result": "not_evaluable"
+    },
+    "gitignore_append": [
+      "run-dir-r13/",
+      "shadow-r13/"
+    ],
+    "custody": {
+      "template": "round13-custody/s20-template.md",
+      "template_sha256": "a6d9c6dd1c06d97e7cfae34e4d996d18ab48e558a2831d7a21d7591e74bdce74",
+      "freeze_script": "round13-custody/freeze_s20.py",
+      "freeze_script_sha256": "db372e230ec1ae3001ce71628a79abad3e5bee97cf8f17a3316748c921d38f6e",
+      "anchors": "round13-custody/s20-freeze-anchors.json",
+      "anchors_sha256": "84c9635d39eab14eae8d2b7f45cb8cbbcbabede1f82a55cfd66a702b51db68cf"
+    },
+    "draft_deviation_registered": "card 6-row draft line 6 says incomplete -> PARSE_FAIL, but round-12 v3 reclassifies that layer to STRUCTURALLY_UNJUDGEABLE; §20 freezes to the CURRENT implementation and registers the deviation in D20-A (A-3).",
+    "instruction_tension_registered": "接卡指令 D3 'ref_missing -> 缺席可判路径' conflicts with card 禁令 2 + V7 (protected_total=96 must not drop); §20 clause 4 rules by prohibition precedence: explicit VERIFIABLE_ABSENCE path + upgrade_candidate trace, still abstains, no boolean mapping, escalation deferred to AgnesCode."
+  },
+  "_round13_progress_XJ-20261112_002": {
+    "D1_label_mapping": {
+      "deliverable": "tools/eval/label_mapping.py",
+      "deliverable_sha256": "038b0403532625ed316871f8b86aadbef2f902f373a92216a3a0b3d5f3b384e4",
+      "verify_report": "out/r13-label-mapping-verify.json",
+      "verify_report_sha256": "10f0902506d42b10d2131968d7f63b3a14496e1bdf932b716dba01ba004c317b",
+      "matrix_read_from": "docs/eval-prereg.md section 20 D20-E (machine-readable JSON block)",
+      "cells": 25,
+      "verdict_classes": [
+        "equivalent",
+        "conflict",
+        "protected_abstention"
+      ],
+      "unmapped": [],
+      "code_vs_frozen_mismatches": [],
+      "protected_class_in_boolean_cells": [],
+      "protected_error_class_disposition_leaks": [],
+      "protected_abstention_error_classes": [
+        "SILENT_FALLBACK",
+        "FILE_NOT_FOUND"
+      ],
+      "v2_literal_exit": 0,
+      "v2_path_calibre_note": "card V2 literal uses PowerShell backslash paths; quoted-backslash and forward-slash equivalents both exit 0 in Git Bash. Unquoted backslash under bash exits 2 due to shell escape (\\e swallowed), NOT a code defect; registered verbatim like round-10 V8.",
+      "tamper_negative_control": {
+        "script": "round13-custody/v2_probe.py",
+        "script_sha256": "8de6f8340578c93a5d6c4c431c697891821e814a287d9b64796c1c74e5971b3c",
+        "tampered_copy": "round13-custody/prereg-tamper-test.md",
+        "tampered_copy_sha256": "efe2501b2509853758df4d25c4176218cae2e216575c142ab67955eb2fd56aa9",
+        "result": "flipping one frozen cell E4|SUPPORT -> protected_abstention makes verify_pass False and pinpoints E4|SUPPORT as a code-vs-frozen mismatch; proves the verifier reads the frozen text, not a detached code constant"
+      },
+      "py39_ast_ok": true,
+      "banned_api_literal_present": false
+    },
+    "D2_anchor_rule_alignment": {
+      "phase": "D2 / card D2 (V3)",
+      "commit": "c2347e3",
+      "main_track_reference": "tools/eval/extract.py::extract_anchors (red zone, read-only)",
+      "anchor_re_pattern_verbatim_equal": true,
+      "files": {
+        "tools/eval/independent_judge.py": "25b55674573f2373844e486458741c4350cf2338099d473f8c6c475080b76896",
+        "tools/eval/r13_alignment.py": "b3c98072ba284561b9b109baf1ed3f270a25519b52039f9d9f82355e077591fa",
+        "out/r13-anchor-check.json": "95aa7235a62782752fdb9a96c868fe6eef539f5d3c5553d7c93a21d1effea156"
+      },
+      "readings": {
+        "legacy_anchor_set_mismatches_before": 56,
+        "anchor_set_mismatches": 0,
+        "claim_text_calibre_mismatches": 0,
+        "pass": true
+      },
+      "legacy_rule_isolation": "_ANCHOR_RE is now INTEGER_ANCHOR_RE (verbatim main-track pattern); the legacy alternation survives only as _LEGACY_ANCHOR_RE for v2/v3 replay",
+      "offline_probe": "round13-custody/anchor_probe.py (N 400 / legacy 56 / main-equivalent 0 / text-calibre 0)"
+    },
+    "D3_rubric_v4": {
+      "phase": "D3 / card D1 (V4, V7)",
+      "commit": "c2347e3",
+      "rubric": "R13-INDEPENDENT-RUBRIC-V4",
+      "standalone_deliverable": "tools/eval/rubric_v4.py (card Owned files path, row-by-row decomposition -- not a thin wrapper)",
+      "files": {
+        "tools/eval/rubric_v4.py": "930ca332c3eb09c4b5f9a02eb5d188b11eb3aedc460f7979fea9325a86ccb4a2",
+        "out/r13-rubric-check.json": "c2cb9dccabab2868522f883b9898b6b34602f2f30d02b5b5f0daa0aa4252d1ce",
+        "out/r13-rubric-v4-decomposition.json": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232"
+      },
+      "custody": "D:/15812/projects/round13-custody/r13-rubric-v4-decomposition.json",
+      "custody_sha256": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232",
+      "readings": {
+        "raw_denominator": 400,
+        "no_evidence_30": "NO_EVIDENCE_LINE",
+        "incomplete_30": "STRUCTURALLY_UNJUDGEABLE",
+        "ref_missing_48": "VERIFIABLE_ABSENCE",
+        "repro_fail_48": "SILENT_FALLBACK_PROTECTED",
+        "new_unobservable_class_count": 0,
+        "boolean_to_abstain_total": 56,
+        "boolean_to_abstain_attributed_anchor_rule": 56,
+        "boolean_to_abstain_unattributed_residual": 0,
+        "protected_total": 96,
+        "protected_total_unchanged": true,
+        "ref_missing_upgrade_candidate_rows": 48,
+        "ref_missing_activated_as_boolean": false,
+        "pass": true
+      },
+      "tension_ruling": "intake D3 'ref_missing -> 缺席可判路径' conflicts with card 禁令 2 / V7; prohibition precedence wins: explicit independent path + upgrade_candidate only, no boolean activation; escalation deferred to AgnesCode",
+      "initial_draft_deviation": "card 6-row draft line 6 said incomplete -> PARSE_FAIL (v2 wording); from rubric v3 onward it is STRUCTURALLY_UNJUDGEABLE. Frozen in section 20 D20-A/A-3 with the deviation registered.",
+      "capability_gain_claim": false
+    },
+    "D4_cwd_and_no_anchor_policy": {
+      "phase": "D4 / card D4 (V5)",
+      "commit": "c2347e3",
+      "files": {
+        "out/r13-cwd-check.json": "87e015736c9b6e0a19713a61e3b1469e5c8907aaf748e4ff45f0af556d496186"
+      },
+      "readings": {
+        "cwd_mismatches_before": 18,
+        "cwd_mismatches": 0,
+        "before_layers": {
+          "cwd_probe": 18
+        },
+        "main_track_source_modified": false,
+        "pass": true
+      },
+      "mechanism": "r13_alignment.py passes judge.judge_markdown(..., workspace=ws) for BOTH tracks; judge.py source untouched",
+      "no_anchor_policy_ruling": "70 INSUFFICIENT (ref_ok 48 + goldset_text 22) stay abstentions, protected_abstention / subtype=no_anchor_policy; explicit_anchor_required stays True; which track is the baseline is deferred to AgnesCode"
+    },
+    "D5_double_annotation": {
+      "phase": "D5 / card D5 (禁令 5)",
+      "files": {
+        "goldset/annotation_r13.jsonl": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+        "out/r13-annotation-summary.json": "ff1264792a97b60cc88a4c8082ceae8b1f353b875c429aca4aea80c5350307b5"
+      },
+      "custody": "D:/15812/projects/round13-custody/annotation_r13.jsonl",
+      "custody_sha256": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+      "generator": "round13-custody/build_annotation_r13.py",
+      "readings": {
+        "data_rows": 50,
+        "file_lines": 51,
+        "seed": 20261111,
+        "annotator_ids_measured": [
+          "WB"
+        ],
+        "annotator_count": 1,
+        "two_human_independent_annotation": false,
+        "independence_satisfied": false,
+        "mechanical_view_count": 1,
+        "mechanical_view_is_human_annotation": false,
+        "comparable": 13,
+        "agree": 13,
+        "agreement_rate": 1.0,
+        "round12_same_seed_same_subset": true,
+        "round12_agreement_rate": 0.590909,
+        "triangle_verdict": "not_evaluable_no_independent_human_annotation"
+      },
+      "downgrade_disclosure": "same-form downgrade as round-10 ADV-3 / round-11 ADV-5 / round-12 ADV-5: single agent dual view + direction diagnosis only; 0 disagreement does NOT prove independence; the mechanical second view is NOT counted as a human annotator"
+    },
+    "D6_recompute_and_report": {
+      "phase": "D6 / card D6 (V6, V10)",
+      "files": {
+        "out/r13-alignment.json": "a3e37809d8b2cb7743c1ca8a533ae5f4f167cab37506f979c828aee17c5df181",
+        "docs/eval-report-r13-alignment.md": "9d948dd76f594d2af6556f2d47ad259778694a60cd4ad19207ce65ad4d315fb7"
+      },
+      "readings": {
+        "before_r_main": 0.6206896551724138,
+        "before_comparable": 174,
+        "before_agree": 108,
+        "before_disagree": 66,
+        "before_abstain": 226,
+        "before_disagree_by_mechanism": {
+          "anchor_rule_diff": 48,
+          "cwd_observation_surface_diff": 18
+        },
+        "before_matches_sealed": true,
+        "after_r_main": 1.0,
+        "after_comparable": 118,
+        "after_agree": 118,
+        "after_disagree": 0,
+        "after_abstain": 282,
+        "disagree_by_mechanism": {
+          "anchor_rule_diff": 0,
+          "cwd_observation_surface_diff": 0,
+          "policy_conflict": 0,
+          "other": 0
+        },
+        "disagree_by_mechanism_no_residual": true,
+        "protected_total": 96,
+        "comparable_delta": -56,
+        "abstain_delta": 56
+      },
+      "caliber": "instrument_alignment_calibration_only",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "gate_value_recomputed": false,
+      "r_main_gate_counting_recomputed": false,
+      "capability_gain_claim": false,
+      "ban3_attribution": "all change from section 20 clause 3 anchor-rule alignment and clause 5 cwd-surface alignment; comparable denominator SHRINKS; never narrated as capability improvement",
+      "report_conclusions": 24,
+      "report_square_pointers": 38,
+      "report_round_pointers": 24,
+      "pointer_verifier": "CONCLUSIONS 24 / COVERAGE 100.0% / BAD_DIGEST 0 / MALFORMED 0 / RESULT PASS",
+      "report_gate_value_literals": [],
+      "report_m_c_numeric_assignments": 0,
+      "report_builder": "round13-custody/build_report_r13.py (live hashes, no hand-copied digests)"
+    },
+    "D7_seal_and_handoff": {
+      "phase": "D7 / card D7",
+      "seal_bundle": "run-dir-r13 (gitignored, moved to custody)",
+      "custody_copy": "D:/15812/projects/round13-custody/sealed/run-dir-r13",
+      "seal_verify": "VERIFY: OK (9 files match the seal)",
+      "not_true_data": true,
+      "sealed_products": 8,
+      "file_count": 9,
+      "files": {
+        "round13-custody/sealed/run-dir-r13/seal.json": "98a81661e1f48f52236cd43c885740eb3cd7aabb372a5576af12c480c35de7a4",
+        "round13-custody/r13-seal-summary.json": "18d9e5c66e884ad6fc1b4eed73120ff355d30fd82e517b84b6d36c6355dbd6cb",
+        "round13-custody/r13-acceptance.json": "883fe714ab46d40fc812a6836b44bd18ce7f1e4b7d710baee1523111d9d3f066",
+        "round13-custody/r13-acceptance.log": "7c8dc90dac7bf061e422f5e9ac7807051c3c2927c27c7ccdd49718cc53a2d9e1",
+        "round13-custody/r13-acceptance-v10.json": "b362d2f29d0fba3d999622d491d19dcb954c3d61fbeb7624353a6471e4e4ee30",
+        "round13-custody/r13-acceptance-v10.log": "29df1a9cfffb3f7f7ba7971c44effd917542816ec923314c4bbd5e48ff4d62be",
+        "round13-custody/r13-rubric-v4-decomposition.json": "4e0c40eaf751f80c3c87c962370d4bd409b66958f9a48f172cbec46270c77232",
+        "round13-custody/annotation_r13.jsonl": "60e4fcfe76f644f808b6b8c7d5a066105a2951812b577081d149dc95ccacba0e",
+        "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md": "542814bbf503f5245de92ec24e980d0e7ee5cc3b801eea30de841f1a380e8f33"
+      },
+      "courtesy_copy": "D:/15812/mo brain/review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261112-002.md",
+      "acceptance": {
+        "runner": "round13-custody/acceptance_r13.py (V1-V9 / V11, 33 commands)",
+        "v10_runner": "round13-custody/verify_r13_v10.py (V10 + extras, 6 commands)",
+        "total_commands": 39,
+        "nonzero": [
+          "V2_1",
+          "V11_1",
+          "V11_2",
+          "V11_4"
+        ],
+        "nonzero_disclosure": "V2_1 unquoted PowerShell backslash path under Git Bash (exit 2, shell artefact); V11_1/V11_2 unittest without real COVENANT_BASH_HINT (527 tests, failures=2 errors=3); V11_4 lint --strict (0 errors, 2 structural WARNs). All registered verbatim, never whitened.",
+        "v11_3_with_real_bash_hint": "Ran 546 tests ... OK (exit 0)",
+        "determinism": "8 products byte-identical after the full acceptance rerun; all 8 sealed copies hash-match",
+        "py39_ast_ok": true,
+        "banned_api_literal_present": false,
+        "red_zone_diff_full_paths": "empty (exit 0)"
+      },
+      "status": "IN_REVIEW",
+      "reviewer": "AgnesCode (浮香), Orchestrator 预审",
+      "no_verdict_no_push_no_merge": true
     }
   }
 }
