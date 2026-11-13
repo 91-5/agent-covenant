@@ -1628,3 +1628,309 @@ triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_suppor
 | V8 | D21-C 条 1 红区清单 |
 | V9 | 条款 6 |
 | V10 | 条款 7 + D21-C 条 4 |
+## §22 变更记录（v2.3 → v2.4：轮十五 外部真值源、门域冻结与 M1 可复算，2026-11-13，冻结于轮十五任何数据产物产生之前）
+
+### D22-0 合法性前提、冻结序与上游边界
+
+本节在轮十五任何 `run-r15/`、`out/` 的 r15 产物产生之前冻结，沿用 §16 D16-5 三段序 `freeze → hard gate → data`，并在冻结与数据之间插入 **D2 import 审计硬门**：先冻结本协议与全部决策规则，再以可执行扫描证明真值源 import 闭包不触碰判级器，最后才允许产生任何执行读数。上游：轮十四卡 XJ-20261113-001（CLOSED，浮香 PASS 0B/0C/7A，已归档 legacy）；ADV-4/5/6/7 立项裁定与复核裁定（dp 大脑 2026-11-13，复核主动撤销三条上一轮判断）；sir 拍板 2026-11-13（三件全同意）。
+
+**本轮性质：真值源与可复算性轮，不是门轮**。只做四件事：①把「假支持率」的正确作用域与分母冻结下来，并建三值外部真值 T\*；②把门域冻结条款以文本落地（**只落条款，不写 v2 实现**）；③把 M1 复算做成带 provenance 与执行性三重门的可复算读数；④把全部覆盖缺口、独立度缺口、降级声明并入报告。不重测门值、不重算门结论、不产出第二个 `R_main`、不产出第二个 `M_C`：`gate_result` 一律登记 `not_evaluable`，`capability_gain_claim = false`；`independence_satisfied = false`（无独立人类标注者、无异模型族判级），独立度三指标只作方向诊断。
+
+§0–§21 为冻结文本，纯追加、零回写；§22 冻结 commit 之后其前缀哈希须保持不变，由 V1 机械核验。本卡 Context 的全部诊断事实（F1–F6）逐字并入 D22-A 作为条款的事实地基，**不得在跑数据后补写或追改**。所有分支的决策规则、阈值、值位正则、层真值表、区间方法、覆盖率阈值、执行性门、provenance 候选路径均在本节（冻结 commit 内）写死；D2–D6 只允许「实现 + 读回冻结块 + 机械验证」，不允许「看数据后解释或调规则」——此为对抗 HARKing 的正面答案，冻结序由 V1 前缀哈希、冻结 commit 时间戳、`artifacts.json` 三重锚点证明。
+
+**F6 方法论教训并入冻结**：「不可恢复」这类否定性断言必须有可执行的扫描命令作证据；仅凭执行者披露不得作为裁定前提。本卡 F4 即由该审计推翻，D2/provenance 的所有「缺失 / 不可得」结论必须附实际扫描路径与候选清单。
+
+### D22-A 诊断事实地基（卡面 Context F1–F6 逐字并入，冻结前零落盘）
+
+- **F1 · 假支持率的正确作用域（dp 复核裁定，方向改为 UNKNOWN）**：轮十四实测主轨在 `anchor_miss` 层对 30 条假 claim 全判 E4（断言说 Apache-2.0、证据输出 MIT、因零锚点走无锚机械通过）→ `FP[anchor_miss] = 30/150 = 20.0%` 为**层内条件率，可信**。dp 初审判「污染方向 = 高估」，复审核撤销方向判断：存在被漏掉的**低估**机制（`cmd_ok`/`ref_ok`/`goldset_text` 层内未被层标签捕获的 claim-证据矛盾未进分子）→ **方向 UNKNOWN**。`FP_overall` 的干净分母 = T\* 判为假的全部样本，与 judge 的 E 层级无关；全 400 错（真 claim 稀释），排除 E0/E1 的 180 也错（按判级器输出筛分母 = 又一轮按因变量选样）。**禁令**：不得把 20% 作总体假支持率外推。
+- **F2 · 层语义的循环性分层（dp 条款 C-4.1）**：`cmd_ok`/`ref_ok`/`goldset_text` 依据退出码 / 文件存在 / 文本相等（外部事实）→ 不循环；`repro_fail` 依据复现命令重跑（外部事实）→ 不循环；`no_evidence`/`incomplete` 依据证据行模板格式（判级器解析概念）→ 弱循环；**`anchor_miss`** 依据「锚点不在证据内容里」（锚点抽取 = 判级器内部实现）→ **强循环**。→ 必须建三值外部真值 T\*（`external_truth.py`，**禁止 import** judge / rubric_v4 / independent_judge），不可判标注 `UNJUDGEABLE` 并从真假统计中排除（禁止在「循环真值」与「无真值」间二选一）。
+- **F3 · HOLDOUT `design_error_class` 133/133 失效**：轮十四机械核对 133 条「注入错误」标签与 fixture 逐条矛盾 0 条（claim 实际为真）。该层不得作真值源；真值只能由层语义 + fixture 机械核对建立。
+- **F4 · M1 原始语料完整存在，可复算（推翻「不可恢复」）**：`round6-custody/run-dir-r6/products/` 有 180 个产品 markdown（T01-A-r1 … T30-B-r3，30 任务 × 2 臂 × 3 重复）；`run-data.json` entries 180 条逐条登记 `{key, task_id, condition, repetition, product, coverage}`，实测 condition 分布 {A:90, B:90}；解盲映射 `key-20261108T122436Z.json`；B 臂执行阻塞证据 `b-arm-enforcement.json`（65 条工具调用全 blocked）；另 `seal.json`（32KB）+ `shadow-appendix-hashes.json` 在位。Orchestrator 已实测复算（judge.py 确定性判级，无 LLM）：A 臂 E1=60/E2=195/E3=120/E4=75 → M1(A)=0.8077（315/390）；B 臂 E1=60/E2=168/E3=123/E4=99 → M1(B)=0.7462（291/390）；**A−B = +6.15pp（claim 级，n=390）**，落在历史第 9 轮 +5.8% [1.7, 11.2] 的 95% CI 内。
+- **F5 · 该复算无沙箱、无环境哈希校验、无随机性检查**：按 dp 条款 X-7.3 只能标 `PROVISIONAL`，**不得与历史值并列称「收敛」**。本卡必须先补三重门再产正式复算值；门不过即降级，不许假装通过。
+- **F6 · dp 方法论教训**：见 D22-0 末段，写入预注册。
+
+### D22-B §22 条款清单（十二组，冻结后不得回写）
+
+1. **T\*-4.5 三值外部真值定义与冻结序（卡面 D1 / D3 / V1 / V3）**：`tools/eval/external_truth.py` 从 D22-E 机器可读块读回值位正则、证据面定义与决策序，在 400 条封存样本上输出 `true` / `false` / `unjudgeable` 三计数与 `coverage`。证据面 = cmd 行 recorded `out=` 内容（连同 `exit=N` 字面）/ ref 行 `fixtures_workspace[ref]` 内容（仅当该 ref 存在）/ 无证据行或字段不全则证据面不可用。值位引用 = claim 句中 `为\s*([0-9A-Za-z][0-9A-Za-z.\-_+]*)` 捕获的 ASCII/数字起始 token；中文数词、存在性/状态性断言**不**构成可核查值位。决策序：证据面不可用 → `unjudgeable`；无可核查值位 → `unjudgeable`；值 token 逐字出现于证据面 → `true`；否则 → `false`。T\* 不读任何判级器输出的 E 级 / 锚点 / 弃权类别，只读样本生成器写入的原始文本；**这是「外部」的全部含义**，不等于独立人类标注（I-4.3-c 仍为 false）。输入样本 SHA 不符即 fail-fast 非零退出。
+2. **C-4.1 循环性判据（卡面 D3 / 禁令 4 / V2）**：F2 四档分层逐字生效。`external_truth.py` **及其任何依赖（含间接 import）禁止 import** `judge` / `rubric_v4` / `independent_judge`；`independence_audit.py` 以 AST 建立 `tools/eval` 全模块 import 图，对 D22-E `truth_source_roots` 的传递闭包执行硬门，命中即 `violations` 非空、exit 1、**停下先修再往下**（卡面 D2 纪律）。闭包外的历史只读调用者登记 `unauditable_legacy_layers`（列名 + 声明：历史层生成脚本不在仓内，按 F6 附可执行扫描证据，不作违规、也不作「闭包干净」的证据）。V2 判据 = `audited_modules` 非空、`violations` 空、`unauditable_legacy_layers` 列名 + 声明齐全、exit 0。
+3. **I-4.3 独立度三指标（卡面 Review Q1/Q4）**：`I-4.3-a` import 闭包独立性（D2 机械审计）；`I-4.3-b` 真值源外部性（T\* 只读生成器文本、零判级器概念）；`I-4.3-c` 人类标注者与模型族独立性（**false**：无独立人类标注、无异模型族判级）。三指标并列登记于 `out/independence-audit.json` 与报告，`independence_satisfied = false` 恒定，只作方向诊断。**正面回答 Q1**：T\* 确实是一个机械规则引擎，但被冻结的是「生成器写入的原始文本事实」而非「判级器的锚点实现」，循环从判级器内部实现挪到了可外部核查的文本；它不能证明独立性，只能证明 import 层与概念层不循环，δ/σ 是这一区分的量化而不是独立性的证明。
+4. **P-4.4' FP 分母（卡面 D3 / V6 / 禁令 1）**：`FP_overall` 的分母恒为 **T\* 判为假的全部样本**（`denominator_basis = "Tstar_false"` 字面固定），分子为其中 `main_level == "E4"` 的条数。**禁止**用全 400（真 claim 稀释）、**禁止**用排除 E0/E1 后的 180（按因变量选样）。`FP[anchor_miss] = 20%` 只作层内条件率并列登记，附作用域标签，禁止外推为总体假支持率。**正面回答 Q3**：T\* 判假集合的假阳性风险由「T\* 判假行与冻结层真值表的交叉核对」显式列报，不隐藏；报告须声明分母可能因 T\* 误判而膨胀/收缩，故 `FP_overall` 与层内率两者作用域不同、不可互推。
+5. **P-4.5' 区间与覆盖率（卡面 D3 / V6 / 禁令 6）**：`tools/eval/fp_overall.py` 输出 `point` 与 Wilson 95% `[lower, upper]`，`coverage = (true + false) / 400`；**`coverage < 0.70` 时置 `truth_coverage_gap = true`**，并在报告逐层列明 `unjudgeable` 构成。`UNJUDGEABLE` **不得默认判真或判假**，一律从真假统计中排除并披露覆盖率；覆盖率缺口是结论而非缺陷掩饰，不得为提高覆盖率事后放宽值位规则。
+6. **G-5.2 门域冻结（卡面 D4 / V7，只落条款不写实现）**：门评估域恒为 `D_full`（轮十三封存可比集 118），有锚子集只作补充诊断，**不得用有锚子集出 PASS**；主 `R_main` 分母不得更换。**正面回答 Q6**：冻结的是**域规则 `D_full`**，不是数值 118；ADV-6 归并后分母数值会变，届时按域规则重算并另卡登记数值变更，条款不因数值变化而自相矛盾，也不得静默替换。本轮**只落文本条款，v2 实现分卡**，D22-E `gate_domain_clauses.implementation = clauses_only_no_v2_code`。
+7. **V-5.5 分区判（卡面 D4 / V7，只落条款不写实现）**：anchored / no_anchor / verified_absence 三分区分别列报，任何子集读数不得代入主分母，不得叙述为门放宽或能力提升。
+8. **T-5.3 结论文本模板（卡面 D4 / V7，只落条款不写实现）**：报告结论须带 `gate_result = not_evaluable`、`capability_gain_claim = false`、历史值与复算值双读数及各自聚合层级标签、覆盖缺口声明；禁止「能力提升 / 复现 / 收敛」措辞。
+9. **P-5.4 功效下限（卡面 D4 / V7，只落条款不写实现）**：低于冻结功效下限的子集读数一律 `diagnostic_only`，不得升级为门结论。
+10. **X-7.3 执行性复算三重门（卡面 D5 / V9 / 禁令 5）**：`tools/eval/replay_guard.py` 依次核验 `sandbox`（隔离/容器证明）、`env_manifest`（环境哈希：python 版本 + 依赖哈希 + 平台指纹）、`hash_match`（custody 产品字节与封存 `seal.json` 哈希逐条匹配）与 `nondeterministic_rate ≤ 0.05`。**任一门不满足 → V9 exit 1，M1 复算值标 `PROVISIONAL`，报告显式降级，不得与历史值并列称「收敛」，不得假装通过**。Windows 无容器环境下此结果为预期路径（Review Q5）：交付项价值在 provenance 可追溯性，而非数值复现。
+11. **M-7.1' / R-7.2 provenance 与并报表述（卡面 D5/D6 / V8 / V10 / V11 / 禁令 2）**：`provenance_check.py` 核验三件套（`key-json` / `seal-hash` / `b-arm-enforcement`），输出 `products=180`、`condition_counts={A:90,B:90}` 与三件哈希；卡面相对路径 `../../round6-custody` 按 D22-E 候选链解析并登记 `custody_resolved`，任何必需件不在解析后的 custody 内须登记 `provenance_gaps` 并声明，不得静默冒认。`ci_align.py` 核验复算值落在历史 CI `[1.7, 11.2]` 内（V10）。聚合层级对齐前，M1 复算值**不得**表述为「复现（replication）」，只能表述为「收敛性重算（convergent recomputation）」，且**不得替换已发表的历史值**（V11）。
+12. **D22-C 禁令区 + D22-E 机器可读块 + V1–V12 对应（卡面 D1 / D6）**：六条禁令逐字写入 D22-C；全部规则以 `<!-- R15-TRUTH-BEGIN/END -->` 包围的 JSON 块机器可读冻结，D2–D5 工具一律 `load_frozen_block()` 读回，**不得在代码里另写阈值**；报告、seal、`artifacts.json`、IN_REVIEW、递评由 D6 完成。V1–V12 由执行者亲跑并登记真实退出码，不采纳作者 precheck。
+
+### D22-C §22 禁令区（六条，随条款写入，覆盖卡面约束）
+
+1. **禁令 1**：不得把 `FP[anchor_miss] = 20%` 作总体假支持率外推；报告必须带作用域标签（P-4.4'）。
+2. **禁令 2**：聚合层级对齐前，M1 复算值不得表述为「复现（replication）」，只能表述为「收敛性重算（convergent recomputation）」，且不得替换已发表的历史值（M-7.1'/R-7.2）。
+3. **禁令 3**：不得用有锚子集出 PASS；门评估域恒为 `D_full`；子集值只作补充诊断（G-5.2）。
+4. **禁令 4**：`external_truth.py` 及其任何依赖禁止 import judge / rubric_v4 / independent_judge（含间接 import）；违反即硬门失败（C-4.1）。
+5. **禁令 5**：无沙箱 / 无环境哈希 / 随机性未过门时，M1 复算值只能标 `PROVISIONAL`，不得与历史值并列称「收敛」（X-7.3）。
+6. **禁令 6**：`UNJUDGEABLE` 不得默认判假或判真；必须排除并披露覆盖率（T\*-4.5 / D-4.5）。
+
+**工程纪律（不计入六禁令，同卡面约束）**：红区零触碰（D22-E `red_zone` 逐字全路径；写裸文件名会让 diff 检查假绿）；`external_truth.py` 及其依赖零判级器 import；产物落点 `out/` / `run-r15/` 走 custody 不入 repo；CI 为 py3.9，**禁 `write_text(newline=)`**，文本写入一律 `open(..., newline="")` 或二进制追加；不 push、不 merge、不写 verdict、不自评审；V1–V12 亲跑带真实退出码，任一未声明的 FAIL 不进入结论（V9 的 `PROVISIONAL` 降级路径为卡面已声明的预期路径，须显式登记而非掩盖）。
+
+### D22-D 冻结常量表（数据产生前写死）
+
+| 常量 | 冻结值 | 来源 / 用途 |
+|---|---|---|
+| 冻结样本集 | `out/r11-blind-samples.json` sha256 `6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9`，400 条，seed `20261111` | 轮十一封存；D3 输入，本轮不改样本 |
+| 冻结行集 | `out/r11-reliability-rows.json` sha256 `2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7`，400 行 | 轮十一封存；D3/V6 输入 |
+| V1 前缀 SHA（raw bytes，CRLF 口径） | `b1b32c49d33f814b2440bf60c4cde71ac4c842291959805d4e0a73ff11d4b226`，213278 bytes | 冻结前后须逐字节一致 |
+| V1 前缀 SHA（文本口径 universal newlines → LF） | `90a84f34cb1b5173f5936d29a76e13d4e42274035ba412e4484e88866c7d25a8`，119876 chars | §21 V1 同口径延续；两种口径都须一致 |
+| 冻结前全文 raw SHA | 同上（§22 追加前全文即 §0–§21 前缀） | 冻结 commit 前由执行者控制台核验，零落盘 |
+| 红区路径清单 | 见 D22-E `red_zone` | V12 逐字路径 |
+| 门状态 | `gate_result = not_evaluable`；`M_C` 与三档表冻结；`independence_satisfied = false` | 卡面「已冻结的门状态」 |
+| 层内条件率 | `FP[anchor_miss] = 30/150 = 20.0%`（R10_ANCHOR 层内，轮十四） | 只作并列登记，禁止外推 |
+| δ / σ 阈值 | `min_delta = 0.95`；`max_sigma = 0.10` | V4 / V5 |
+| 覆盖率阈值 | `coverage_gap_threshold = 0.70`；`coverage < 0.70 → truth_coverage_gap = true` | V6 / P-4.5' |
+| FP 区间方法 | Wilson 95% | 小分母、极端比例下仍稳健，冻结于数据前 |
+| provenance 期望 | `products = 180`；`condition_counts = {A:90, B:90}`；三件套哈希 | V8 |
+| X-7.3 门 | sandbox / env_manifest / hash_match；`max_nondeterministic_rate = 0.05` | V9 |
+| 历史 M1 | `5.8%`，95% CI `[1.7, 11.2]`（第 9 轮配对差，30 对）；本轮复算 `+6.15pp`（claim 级，n=390） | V10 / V11；「收敛性重算」，不替换历史值 |
+| 门域 | `D_full`（轮十三封存可比 118）；数值可随 ADV-6 另卡变更，域规则不变 | G-5.2 / 正面回答 Q6 |
+| 执行序 | `freeze(§22 commit) → D2 hard gate → D3 data → D5 X-7.3 gates → D6 report/seal` | 冻结 commit 早于一切产物 |
+
+### D22-E 机器可读冻结块（`independence_audit.py` / `external_truth.py` / `layer_sensitivity.py` / `fp_overall.py` / `m1_recompute.py` / `replay_guard.py` / `ci_align.py` / `provenance_check.py` 读回）
+
+<!-- R15-TRUTH-BEGIN -->
+```json
+{
+  "schema": "r15-truth-frozen-v1",
+  "frozen_in": "section 22 D22-E",
+  "card": "XJ-20261113-002",
+  "round": "r15",
+  "samples_path": "out/r11-blind-samples.json",
+  "samples_sha256": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9",
+  "rows_path": "out/r11-reliability-rows.json",
+  "rows_sha256": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7",
+  "sample_count": 400,
+  "prefix": {
+    "raw_sha256": "b1b32c49d33f814b2440bf60c4cde71ac4c842291959805d4e0a73ff11d4b226",
+    "raw_bytes": 213278,
+    "text_lf_sha256": "90a84f34cb1b5173f5936d29a76e13d4e42274035ba412e4484e88866c7d25a8",
+    "text_chars": 119876
+  },
+  "red_zone": [
+    "tools/eval/judge.py",
+    "tools/eval/extract.py",
+    "tools/eval/blind.py",
+    "tools/eval/report.py",
+    "tools/eval/stats.py",
+    "tools/eval/study_runner.py",
+    "tools/eval/seal_run.py",
+    "tools/gate.py",
+    "tools/lint_cards.py",
+    "verdicts/",
+    ".eval-sealed/"
+  ],
+  "forbidden_imports": [
+    "judge",
+    "rubric_v4",
+    "independent_judge"
+  ],
+  "truth_source_roots": [
+    "external_truth",
+    "layer_sensitivity",
+    "fp_overall",
+    "independence_audit"
+  ],
+  "legacy_readonly_importers": [
+    "controls.py",
+    "gate_metrics.py",
+    "probe_runner_r12.py",
+    "r12_reliability.py",
+    "r13_alignment.py",
+    "report.py",
+    "rubric_v3.py",
+    "run.py",
+    "attribution-round4.py",
+    "attribution-round5.py",
+    "m1_recompute.py"
+  ],
+  "tstar": {
+    "values": [
+      "true",
+      "false",
+      "unjudgeable"
+    ],
+    "claim_sentence_rule": "first line starting '- [已验证] ' up to first '。'",
+    "value_position_re": "为\\s*([0-9A-Za-z][0-9A-Za-z.\\-_+]*)\\s*[。]?",
+    "value_position_scope": "ASCII/digit-leading token only; Chinese numerals and existence/status assertions have no verifiable value position",
+    "evidence_surface": {
+      "cmd": "recorded out=`...` content plus the literal 'exit=N' token",
+      "ref": "fixtures_workspace[ref] content iff ref key present, else fixtures_root[ref] iff present",
+      "none": "no evidence line / incomplete fields / ref absent from both fixture maps"
+    },
+    "decision_order": [
+      "evidence surface unavailable -> unjudgeable (evidence_surface_unavailable)",
+      "no verifiable value position -> unjudgeable (no_verifiable_value_position)",
+      "value token verbatim in evidence surface -> true",
+      "value token absent from evidence surface -> false"
+    ],
+    "extractors": {
+      "anchor_v1": "frozen value_position_re applied to claim sentence (single capture)",
+      "token_v2": "enumerate ASCII/digit-leading tokens in claim sentence, drop task-id tokens matching ^T\\d+$, take the last remaining token"
+    },
+    "unjudgeable_disposition": "excluded_from_true_false_statistics; coverage_disclosed; never_defaulted_to_true_or_false",
+    "forbidden_imports": [
+      "judge",
+      "rubric_v4",
+      "independent_judge"
+    ],
+    "forbidden_import_policy": "direct AND transitive closure of every truth-source root; violation = hard gate failure"
+  },
+  "delta": {
+    "definition": "agreement rate between Tstar and layer-truth on Tstar-judgeable rows",
+    "min_delta": 0.95,
+    "scope": "Tstar_judgeable_rows_vs_frozen_layer_truth",
+    "layer_truth_table": {
+      "cmd_ok": "TRUE",
+      "ref_ok": "TRUE",
+      "goldset_text": "TRUE",
+      "cwd_probe": "TRUE",
+      "dotfile_claim": "TRUE",
+      "fallback_probe": "TRUE",
+      "anchor_miss": "FALSE",
+      "repro_fail": "FALSE",
+      "ref_missing": "FALSE",
+      "incomplete": "FALSE",
+      "no_evidence": "FALSE"
+    },
+    "layer_truth_source": "section 21 D21-E layer_truth (frozen, read back)"
+  },
+  "sigma": {
+    "definition": "fraction of all 400 cases whose three-valued Tstar differs between two extractor implementations",
+    "max_sigma": 0.1,
+    "scope": "all_400_cases",
+    "extractor_a": "anchor_v1",
+    "extractor_b": "token_v2"
+  },
+  "fp_overall": {
+    "denominator_basis_literal": "Tstar_false",
+    "numerator": "rows with Tstar=false whose main_level == E4",
+    "ci_method": "wilson_95",
+    "coverage_definition": "(true + false) / sample_count",
+    "coverage_gap_threshold": 0.7,
+    "truth_coverage_gap_literal": "truth_coverage_gap",
+    "layer_conditional_fp": {
+      "value": 0.2,
+      "scope": "FP[anchor_miss] = 30/150 within R10_ANCHOR (round-14 reading); layer-internal conditional rate only",
+      "policy": "never_extrapolate_as_overall_false_support_rate"
+    },
+    "denominator_prohibitions": [
+      "full_400",
+      "excluding_E0_E1_180"
+    ]
+  },
+  "gate_domain_clauses": {
+    "G-5.2": "gate evaluation domain is D_full (sealed r13 comparable=118); anchored subset is diagnostic only and can never issue PASS",
+    "V-5.5": "partition verdict: anchored / no_anchor / verified_absence reported separately; no subset substitution for the primary denominator",
+    "T-5.3": "frozen conclusion-text template: gate_result=not_evaluable, no capability-gain wording, dual readings with aggregation labels",
+    "P-5.4": "power floor: subset reads below the frozen floor are diagnostic_only, never a gate conclusion",
+    "implementation": "clauses_only_no_v2_code (ADV-5 phase1; v2 implementation deferred to a separate card)",
+    "domain_revision_note": "ADV-6 merge will change the numeric denominator; what is frozen is the domain RULE D_full, not the number 118; any numeric change requires a separate card"
+  },
+  "x_7_3": {
+    "gates": [
+      "sandbox",
+      "env_manifest",
+      "hash_match"
+    ],
+    "max_nondeterministic_rate": 0.05,
+    "provisional_label": "PROVISIONAL",
+    "downgrade_required": true,
+    "downgrade_policy": "any gate unsatisfied -> recompute value PROVISIONAL, report explicitly downgraded, never claim convergence",
+    "sandbox_evidence": "container/isolation proof manifest; Windows bare metal has none",
+    "env_manifest_evidence": "environment hash manifest (python version + dependency hashes + platform fingerprint)",
+    "hash_match_evidence": "product sha256 in sealed seal.json matches custody bytes"
+  },
+  "provenance": {
+    "metric": "M1",
+    "required": [
+      "key-json",
+      "seal-hash",
+      "b-arm-enforcement"
+    ],
+    "custody_arg": "../../round6-custody",
+    "custody_candidates": [
+      "../../round6-custody",
+      "../round6-custody",
+      "D:/15812/projects/round6-custody"
+    ],
+    "products_expected": 180,
+    "condition_counts_expected": {
+      "A": 90,
+      "B": 90
+    },
+    "key_json": "key-20261108T122436Z.json",
+    "seal_json": "run-dir-r6/seal.json",
+    "b_arm_candidates": [
+      "b-arm-enforcement.json",
+      "run-dir/b-arm-enforcement.json",
+      "../agent-covenant/run-dir/b-arm-enforcement.json",
+      "../round4-custody/run-dir/b-arm-enforcement.json"
+    ],
+    "gap_policy": "any required item not found inside resolved custody must be disclosed as provenance_gaps, never silently claimed as present"
+  },
+  "m1": {
+    "formula": "(E2+E3)/(E2+E3+E4)",
+    "historical": 5.8,
+    "historical_ci": [
+      1.7,
+      11.2
+    ],
+    "historical_source": "docs/eval-report-v9.md round-9 paired difference",
+    "aggregation": "claim",
+    "n_per_arm": 390,
+    "wording": "收敛性重算（convergent recomputation）",
+    "forbidden_wording": "复现（replication）",
+    "replace_historical": false
+  },
+  "ci_align": {
+    "historical": 5.8,
+    "ci": [
+      1.7,
+      11.2
+    ],
+    "require_within_ci": true
+  },
+  "independence": {
+    "satisfied": false,
+    "three_metrics_I_4_3": [
+      "I-4.3-a import_closure_independence (D2 audit, mechanical)",
+      "I-4.3-b truth_source_externality (Tstar reads generator text only, no grader concepts)",
+      "I-4.3-c human_annotator_and_model_family_independence (false: no independent human labels, no different model family)"
+    ],
+    "caliber": "directional_diagnostic_only"
+  },
+  "gate_result": "not_evaluable",
+  "gate_conclusion_issued": false,
+  "capability_gain_claim": false,
+  "ci_python": "3.9",
+  "write_rule": "open(..., newline='') or binary append; Path.write_text(newline=) forbidden"
+}
+```
+<!-- R15-TRUTH-END -->
+
+### D22-F 与卡面 Acceptance 的对应
+
+| 卡面 | 本节依据 |
+|---|---|
+| V1 | 条款 12 + D22-D 前缀 SHA（双口径） |
+| V2 | 条款 2 / 禁令 4 + D22-E `truth_source_roots` / `legacy_readonly_importers` |
+| V3 | 条款 1 / 禁令 6 + D22-E `tstar` |
+| V4 | 条款 3 + D22-E `delta` |
+| V5 | 条款 3 + D22-E `sigma` |
+| V6 | 条款 4/5 + D22-E `fp_overall` |
+| V7 | 条款 6/7/8/9（G-5.2 / V-5.5 / T-5.3 / P-5.4 四标记机械可读） |
+| V8 | 条款 11 + D22-E `provenance` |
+| V9 | 条款 10 / 禁令 5 + D22-E `x_7_3` |
+| V10 | 条款 11 + D22-E `ci_align` |
+| V11 | 条款 11 / 禁令 2 + D22-E `m1.wording` |
+| V12 | D22-C 工程纪律 + D22-E `red_zone` |
