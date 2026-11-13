@@ -77,3 +77,9 @@ run-r14/
 # disclosed in the report and handed to the reviewer for adjudication, following
 # the round-14 D1 precedent.
 run-r15/
+
+# Round-16 execution products (XJ-20261113-003 D5; card constraint "产物落点").
+# .gitignore is not in this card's Owned files either; the single added line is
+# disclosed in docs/eval-report-r16-erratum.md and the Agnes review request,
+# following the round-14/round-15 precedents.
+run-r16/

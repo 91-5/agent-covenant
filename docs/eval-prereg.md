@@ -1934,3 +1934,267 @@ triage 对象为轮十 90 条失配（decidable 且 `predicate_ok != main_suppor
 | V10 | 条款 11 + D22-E `ci_align` |
 | V11 | 条款 11 / 禁令 2 + D22-E `m1.wording` |
 | V12 | D22-C 工程纪律 + D22-E `red_zone` |
+
+
+## §23 变更记录（v2.4 → v2.5：轮十六 报告措辞勘误与 X-7.3' 拆分，2026-11-13，纯追加于轮十六任何 D2–D5 产物产生之前）
+
+### D23-0 合法性前提、本卡性质与冻结序
+
+本节为**文本与条款层勘误（P0-a）**，零新数据、零重算、零仪器执行。上游：轮十五卡 `XJ-20261113-002`（已 PASS、合入 master、归档 legacy）；dp 合并立项裁定 2026-11-13（第一·1.4 节、第二·2.6 节、第三·3.2–3.4 节）；sir 拍板 2026-11-13（X-7.3' 拆分 / L2 挂账 / ADV-3 phase1 允许先出 `FP_expanded`）。本节沿用 §16 D16-5 与 §22 D22-0 的 `freeze → hard gate → data` 三段序：**§23 冻结 commit 必须早于 `report_lint.py`、`eval-report-r15-truth.md` 勘误、`eval-report-r16-erratum.md`、seal 与 artifacts 台账**；§0–§22 为冻结文本，纯追加、零回写，由 V1 前缀哈希与删除列 0 机械核验。
+
+**本卡要修的两处违规（均为 dp 复核认定，均违反 §22）**：违规 1 是 `FP_overall` 标签越界——轮十五报告以 `FP_overall = 1.0` 命名并附 `coverage=0.415`、`truth_coverage_gap=true`，违反 §22 `P-4.5'`：覆盖率 < 70% 时不得点估计外推，结论须附 `truth_coverage_gap` 且不得以总体率呈现。责任归属照实登记：执行者写标签；Orchestrator 预审核了分母严格性（`Tstar_false=48`）但未检查「coverage<0.70 时能否用 `FP_overall` 之名」。违规 2 是预审 N1 关于负向判别读数的越界结论——T\* 仅覆盖 41.5%，而该结论指向 234 条 `unjudgeable` 样本；用覆盖不到的证据断言覆盖范围外的状态，正是本系统一直在防的错误。
+
+**数值零改动**：`48/48`、`coverage=0.415`、Wilson `[0.9259, 1.0]`、`M1=+6.153846pp`、`δ=1.000`、`σ=0.035`、T\* 三值 `118/48/234` 一字不改。任何一项改动即为重算，超出本卡范围，须另卡。`out/fp-overall.json` 是轮十五封存产物，**禁止删改、禁止重新盖章**；其字段名为历史名，正式表述见本报告 §0 勘误表。X-7.3' **只落条款、不实现**：`env_manifest.py` / `nondeterminism_probe.py` / `x73_gate.py` 属 P1/P2。L2 真沙箱本轮**不立项**，不得引入容器/VM 依赖。
+
+### D23-A 第一组条款 · `D-5.1` 负向判别允许表述（dp 裁定）
+
+1. **禁止任何总域判别力断言**。下列措辞及其同义改写一律不得出现在报告正文：`判别力为负`、`判别力 −`、`完全缺失`。理由：`−0.1525` 的比较对象是两个**不同层**的条件率——`T*=false` 的 48 条 **100% 来自 `anchor_miss`**（该层定义即「无锚 → 机械通过 → E4」，是构造性恒等），`T*=true` 的 18 条否决 **100% 来自 `cwd_probe`**；相减是**层构成伪影**，不是判别力。
+2. **唯一允许的关联表述**（逐字）：「在 T\* 可判子集上，主轨 E4 判定与 T\* 真值呈负向关联；该关联由层构成解释（…），**不构成总体判别力估计**」。必须同时带可判子集限定与「不构成总体判别力估计」。
+3. **能站住的更弱但更硬的三条结论**：(a) `anchor_miss` 层内，主轨对「claim 值与证据矛盾」样本**层内零否决 48/48**（层内确定事实，不外推）；(b) 主轨并非全域无判别力：`cwd_probe` 层否决了 18 条真 claim → 其敏感性存在于**非断言支撑维度**；(c) 对 234 条 `unjudgeable`，主轨的断言支撑判别力**不可评估**。
+4. **证据边界**：任何关于 234 条 `unjudgeable` 样本的全域断言，都不得由只覆盖 41.5% 的 T\* 推出；覆盖率缺口既是读数也是**结论范围限制**。
+
+### D23-B 第二组条款 · `P-4.5''` FP 标签强制规则（dp 条款，落实 §22 `P-4.5'`）
+
+1. 当 `coverage < 0.70` 时，**不得以 `FP_overall` 命名任何点估计**，不得把层内条件率写成总体率，不得把 `FP_overall = 1.0` 作为现行结论呈现。
+2. 强制写法（逐字）：`FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])` 作为**层内读数**；并必须并列 `FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)`。
+3. `FP[anchor_miss] = 30/150 = 20.0%`（轮十四 R10_ANCHOR 层内率）与本轮 48/48 分母不同、不可互相外推，二者均须带 scope 标签；`scope-tag` 为强制字段，缺失即不合规。
+4. 标签越界属**措辞违规**，不是数值违规：分母 `Tstar_false = 48`、分子 `k = 48`、Wilson 区间与 `truth_coverage_gap = true` 全部保持原值。本条款只改名字与结论形式，不改任何一个数。
+
+### D23-C 第三组条款 · `X-7.3'` a/b/c 三门拆分（dp 裁定 + sir 拍板）
+
+**原 X-7.3 永久 FAIL 属条款设计错误**：它把「可复现性」（manifest）与「安全性」（sandbox）绑定，导致 M1 复算永久 `PROVISIONAL`——而 PROVISIONAL 的唯一成因是**安全边界缺失**，不是数值不可信。拆分如下，三门独立判定、不得互相替代：
+
+| 门 | 内容 | 无沙箱可否 PASS | 状态映射 |
+|---|---|---|---|
+| **X-7.3a 环境可复现** | manifest 含 `python_version` / `platform_fingerprint` / `dependency_hashes`（pip freeze + 包文件哈希）/ `locale-timezone` / `env_whitelist` / `fixtures_sha256`，且与 `seal.json` 一致 | **可** | 全在位 → `a = PASS` |
+| **X-7.3b 隔离安全** | 容器/VM 边界证明 | 不可（须 L2） | L2 → `PASS`；L1 → **`CONDITIONAL`**（披露后可用于 `PROVISIONAL-L1`）；L0 → `FAIL` |
+| **X-7.3c 非确定性** | L0：判级器自身同输入 3 次逐字节相同；L1：命令 3 次比对（须注明未隔离） | **a. L0 可；b. L1 可** | `UNMEASURED` **不得**当 ≤0.05 |
+
+- `X-7.3b = CONDITIONAL` 是**披露项**，永远不是「已满足的门」；任何把 CONDITIONAL 读作 PASS 的推论均违反本条款（对应 review Q4、Q6）。
+- `UNMEASURED` 不得填 0.0 刷绿，不得替代 `c ≤ 0.05`。
+- **本卡只落条款**：`env_manifest.py`、`nondeterminism_probe.py`、`x73_gate.py` 均不实现；既有 `replay_guard.py` 的读数与 `PROVISIONAL` 状态一律不回改、不重跑。
+
+### D23-D 第四组条款 · M1 状态映射表
+
+| a（可复现） | b（隔离） | c（非确定性） | M1 状态 | 可否使用 |
+|---|---|---|---|---|
+| `PASS` | `CONDITIONAL` | `≤ 0.05` | **`PROVISIONAL-L1`** | 可用，**须披露**安全边界未隔离 |
+| 任意 | `FAIL` | 任意 | `PROVISIONAL`（维持） | 仅方向诊断，须显式降级 |
+| `FAIL` | 任意 | 任意 | `PROVISIONAL` | 不得升级 |
+| 任意 | 任意 | `UNMEASURED` | `PROVISIONAL` | 不得升级；`UNMEASURED ≠ ≤0.05` |
+
+- 状态映射是**文本层规则**，本卡不执行、不重算、不改变轮十五 M1 的 `PROVISIONAL` 读数；`+6.153846` 与历史 `+5.8` 双读数并报、聚合层级标签不变。
+- 「升级」只把「安全边界缺失」从**阻断项**降为**披露项**，不降低 `a` 与 `c` 的实测标准；是否构成实质降标准，交浮香裁定（review Q4）。
+
+### D23-E 第五组条款 · `E-0` 执行信任分级 L0–L1–L2 能力矩阵
+
+| 级别 | 定义 | 允许 | 禁止 |
+|---|---|---|---|
+| **L0** | 裸机、无隔离、无环境清单 | 文本勘误、只读扫描、机械 lint、纯追加冻结 | 新数据、判级重放、门值复算、非 PROVISIONAL 读数 |
+| **L1** | 环境可复现但无隔离边界 | 带披露的 `PROVISIONAL-L1` 读数、非恶意命令重放 | 宣称 `X-7.3b = PASS`、恶意命令执行 |
+| **L2** | 真容器/VM 隔离边界证明 | `X-7.3b = PASS`、非 PROVISIONAL 读数 | — |
+
+- **L2 挂账（sir 已拍板）**：L2 真沙箱（Windows Sandbox / VM）本轮不立项。理由（dp）：它只解锁 `X-7.3b` 与恶意命令安全，而当前所有结论均已被 `independence_satisfied = false` 降级为方向诊断；在方向诊断精度下为不改变任何读数符号的安全属性付容器成本，收益不成立。
+- 本环境当前为 **L0**；本卡全部动作均落在 L0 允许列内。若环境永远没有 L2，`X-7.3b` 将停在 `CONDITIONAL`，`PROVISIONAL-L1` 可能成为事实终态——此风险照实登记，交浮香裁定（review Q6），不以改名掩盖。
+
+### D23-F 第六组条款 · 勘误连续性规则
+
+1. 轮十五报告已 PASS 并合入 master，**不得静默改写**。回改必须同时具备：报告头部「勘误表（Erratum）」节（列 2 条：位置 / 原文 / 更正 / 依据条款 / 认定方 dp + sir）、正文对应段落的行内标记 `【勘误 2026-11-13：见 §0 勘误表第 N 条】`、**原句逐字保留不删除**、更正句紧随其后。
+2. 数值表格标签行改为 `FP[anchor_miss]`，表下加 `FP_overall = not_estimable (...)`，原 `FP_overall = 1.0` 行**保留并划注**（strikethrough / 作废标记），不得删除。
+3. **文件长度必须净增长**（LF 口径 > 13554），由 V6 机械证明是追加而非删改；`【勘误` 标记数 ≥ 2。
+4. **引述策略**：预审 N1 中被 `D-5.1` 禁止的措辞，在勘误表中以**转述 + 位置引用**（上游 commit / 卡面 Context）呈现，**不逐字复刻**，以免勘误后的报告重新引入一个被禁止的总域断言。可追溯性由位置引用保证，而非由复制禁词保证。
+5. 本卡把 `docs/eval-report-r15-truth.md` 列入 Owned files 与 artifacts，只登记**文本勘误**；不写 verdict、不覆盖轮十五 verdict 的结论，`gate` 的 `superseded by later verdict` 语义不得被用于改写已冻结读数（review Q3、Q5，交浮香裁定）。
+
+### D23-G 机器可读冻结块（`R16-ERRATUM`）
+
+D2 的 `report_lint.py` 从本块**读回**禁词表、阈值与 scope-tag 字面量，不得在代码里另写一套规则；V2/V7 的机械可读检查亦以本节为准。
+
+<!-- R16-ERRATUM-BEGIN -->
+```json
+{
+  "schema": "r16-erratum-frozen-v1",
+  "frozen_in": "section 23 D23-G",
+  "card": "XJ-20261113-003",
+  "round": "r16",
+  "phase": "P0-a_text_only_erratum",
+  "zero_new_data": true,
+  "zero_recomputation": true,
+  "zero_execution_of_instruments": true,
+  "prefix": {
+    "worktree_raw_sha256": "4c71623abea1f86aa997c20f221e0fa1614d05b8ffa7601ff30823e9e78b1c39",
+    "worktree_raw_bytes": 239185,
+    "blob_lf_sha256": "19c453c2a28bc55dcde98f3e34521de8ae577cc6976c962d8718c7d3cb8479bd",
+    "blob_lf_bytes": 237249,
+    "note": "section 0..22 frozen; section 23 is a byte-level pure append only"
+  },
+  "immutable_numerals": [
+    "48/48",
+    "0.415",
+    "[0.9259, 1.0]",
+    "+6.153846",
+    "delta=1.000",
+    "sigma=0.035",
+    "118/48/234"
+  ],
+  "immutable_numerals_policy": "verbatim_only_no_recomputation; any change is a recomputation and requires a new card",
+  "fp_label_rule": {
+    "clause": "P-4.5''",
+    "coverage_threshold": 0.7,
+    "when_coverage_lt_threshold": {
+      "forbidden": "FP_overall = <point estimate>",
+      "required": "FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)",
+      "layer_label_literal": "FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])"
+    },
+    "reason": "coverage below 0.70 forbids point-estimate extrapolation (upholds section 22 P-4.5')"
+  },
+  "negative_discrimination_rule": {
+    "clause": "D-5.1",
+    "forbidden_total_discrimination_phrases": [
+      "判别力为负",
+      "判别力 −",
+      "完全缺失"
+    ],
+    "allowed_phrases": [
+      "在 T* 可判子集上，主轨 E4 判定与 T* 真值呈负向关联；该关联由层构成解释，不构成总体判别力估计",
+      "层内零否决 48/48",
+      "对 234 条 unjudgeable，主轨的断言支撑判别力不可评估"
+    ],
+    "layer_construction_artifact": {
+      "Tstar_false_48": "100% from anchor_miss (constructive identity: no anchor -> mechanical pass -> E4)",
+      "Tstar_true_denied_18": "100% from cwd_probe",
+      "conclusion": "subtraction of two different layer conditional rates is a layer-composition artifact, not discrimination power"
+    },
+    "evidence_boundary": "a claim about the 234 unjudgeable samples cannot be asserted from T* which covers only 41.5%"
+  },
+  "x73_prime": {
+    "clause": "X-7.3'",
+    "split_rationale": "original X-7.3绑定 reproducibility (manifest) with security (sandbox); M1 was permanently PROVISIONAL only because of a missing security boundary, not because the number is untrustworthy",
+    "gates": {
+      "X-7.3a": {
+        "name": "environment_reproducibility",
+        "requires": [
+          "python_version",
+          "platform_fingerprint",
+          "dependency_hashes",
+          "locale-timezone",
+          "env_whitelist",
+          "fixtures_sha256"
+        ],
+        "consistency": "must agree with seal.json",
+        "pass_without_sandbox": true,
+        "state_when_all_present": "PASS"
+      },
+      "X-7.3b": {
+        "name": "isolation_security",
+        "requires": "container/VM boundary proof",
+        "pass_without_sandbox": false,
+        "state_map": {
+          "L2": "PASS",
+          "L1": "CONDITIONAL",
+          "L0": "FAIL"
+        },
+        "L2_ledger": "deferred_by_sir_2026-11-13; no container/VM dependency in this card"
+      },
+      "X-7.3c": {
+        "name": "nondeterminism",
+        "L0": "judge itself byte-identical over 3 same-input runs",
+        "L1": "command 3-run comparison (must state not isolated)",
+        "UNMEASURED_policy": "UNMEASURED must never be treated as <= 0.05"
+      }
+    }
+  },
+  "m1_status_map": {
+    "PROVISIONAL-L1": "a=PASS AND b=CONDITIONAL AND c<=0.05 -> usable, disclosure mandatory",
+    "PROVISIONAL": "b=FAIL -> unchanged PROVISIONAL",
+    "scope": "text-level clause only; no implementation, no change to any existing r15 readout"
+  },
+  "e0_trust_tiers": {
+    "clause": "E-0",
+    "L0": {
+      "label": "bare_metal_no_isolation",
+      "allows": [
+        "text erratum",
+        "readonly scan",
+        "mechanical lint",
+        "pure append freeze"
+      ],
+      "forbids": [
+        "new data",
+        "judge replay",
+        "gate value recomputation",
+        "non-PROVISIONAL readout"
+      ]
+    },
+    "L1": {
+      "label": "reproducible_env_no_isolation",
+      "allows": [
+        "PROVISIONAL-L1 readout with disclosure"
+      ],
+      "forbids": [
+        "X-7.3b PASS claim",
+        "malicious command execution"
+      ]
+    },
+    "L2": {
+      "label": "true_container_or_vm_boundary",
+      "allows": [
+        "X-7.3b PASS",
+        "non-PROVISIONAL readout"
+      ],
+      "status": "DEFERRED_this_round"
+    },
+    "note": "CONditional state of b is a disclosure item, never a satisfied gate"
+  },
+  "erratum_continuity": {
+    "clause": "erratum_continuity_rule",
+    "target": "docs/eval-report-r15-truth.md (already PASS and merged)",
+    "required_parts": [
+      "erratum_table_at_head",
+      "inline_marker_per_corrected_paragraph",
+      "original_sentence_preserved_verbatim",
+      "corrected_sentence_immediately_after"
+    ],
+    "inline_marker_literal": "【勘误 2026-11-13：见 §0 勘误表第 N 条】",
+    "erratum_count": 2,
+    "min_inline_markers": 2,
+    "length_rule": "file LF length must be strictly greater than 13554 (net growth proves append, not rewrite)",
+    "forbidden": "silent rewrite; deleting any original paragraph; changing any numeral",
+    "quote_policy": "forbidden phrases from review N1 are paraphrased with a location reference, NOT copied verbatim, so the corrected report never re-introduces a prohibited total-discrimination claim"
+  },
+  "protected_artifacts": [
+    "out/fp-overall.json"
+  ],
+  "protected_artifacts_policy": "never edit, delete or restamp; its field names are historical literals; formal wording is in section 0 erratum table",
+  "red_zone": [
+    "tools/eval/judge.py",
+    "tools/eval/extract.py",
+    "tools/eval/blind.py",
+    "tools/eval/report.py",
+    "tools/eval/stats.py",
+    "tools/eval/study_runner.py",
+    "tools/eval/seal_run.py",
+    "tools/gate.py",
+    "tools/lint_cards.py",
+    "verdicts/",
+    ".eval-sealed/"
+  ],
+  "x73_implementation": "clauses_only_no_v2_code; env_manifest.py / nondeterminism_probe.py / x73_gate.py belong to P1/P2, not this card",
+  "py39_discipline": "no Path.write_text(newline=); use open(..., newline='') or binary append"
+}
+```
+<!-- R16-ERRATUM-END -->
+
+### D23-H V1–V10 对应表
+
+| 验收 | 对应条款 |
+|---|---|
+| V1 | D23-0 冻结序 + D23-G `prefix`（纯追加、删除列 0、前缀双口径 sha 不变） |
+| V2 | D23-A/B/C/D/D23-E/F + D23-G 七标记机械可读 |
+| V3 | D23-B `P-4.5''` + D23-F 勘误连续性 + D23-G `report_lint` 规则读回 |
+| V4 | D23-A `D-5.1` + D23-F 引述策略 |
+| V5 | D23-0 数值零改动 + D23-G `immutable_numerals` |
+| V6 | D23-F 长度净增长 + `【勘误` 标记数 |
+| V7 | D23-C/D `X-7.3'` 三门 + M1 状态映射 + `PROVISIONAL-L1` / `CONDITIONAL` / L0–L2 |
+| V8 | D23-G `erratum_continuity` + `report_lint.py --self-test` 负向用例 |
+| V9 | D23-0 红区零触碰 + 回归单测 + lint_cards |
+| V10 | D23-0 `protected_artifacts`：`out/fp-overall.json` 原值 `point = 1.0` 未改 |

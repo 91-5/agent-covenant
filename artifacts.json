@@ -2298,20 +2298,373 @@
     "frozen_block_canonical_json_sha256": "7d7cf1a005699d0d4c670db7bbe5351085bd13150738fa65c9c0c43337aba2c6",
     "red_zone_count": 11,
     "custody_anchors": "D:/15812/projects/round15-custody/s22-freeze-anchors.json",
-    "gitignore_added": ["run-r15/"],
+    "gitignore_added": [
+      "run-r15/"
+    ],
     "gitignore_note": ".gitignore 不在本卡 Owned files；仅追加一行，照实披露交评审裁定，沿用轮十四 D1 先例。"
   },
   "_round15_final_XJ-20261113_002": {
     "_comment": "XJ-20261113-002 D2–D6 产物、seal 与 V1–V12 亲跑台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；out/ 与 run-r15/ 为执行产物不入 repo；不写 verdict、不 push、不 merge、不碰 master。",
     "custody_root": "D:/15812/projects/round15-custody",
     "custody_m1_source": "D:/15812/projects/round6-custody",
-    "d2_independence": {"commit": "54be340", "implementation": "tools/eval/independence_audit.py", "out": "out/independence-audit.json", "audited_modules": 49, "violations": 0, "unauditable_legacy_layers": 14, "roots_pending": [], "truth_source_closure": ["external_truth", "fp_overall", "independence_audit", "layer_sensitivity"], "self_test": "PASS", "fixes": ["KeyError 'path' in synthetic self-test", "phantom roots counted before existing on disk"]},
-    "d3_truth": {"commit": "80395b0", "implementations": ["tools/eval/external_truth.py", "tools/eval/layer_sensitivity.py", "tools/eval/fp_overall.py"], "tstar_counts": {"true": 118, "false": 48, "unjudgeable": 234, "total": 400}, "coverage": 0.415, "unjudgeable_reasons": {"evidence_surface_unavailable": 108, "no_verifiable_value_position": 126}, "delta": 1.0, "delta_comparable": 166, "sigma": 0.035, "sigma_differing": 14, "fp_overall": {"denominator_basis": "Tstar_false", "denominator": 48, "numerator": 48, "point": 1.0, "ci95_wilson": [0.9259, 1.0], "coverage": 0.415, "truth_coverage_gap": true, "denominator_layer_composition": {"anchor_miss": 48}}, "layer_conditional_fp_reference": {"value": 0.2, "scope": "FP[anchor_miss] layer-internal conditional rate only", "policy": "never_extrapolate_as_overall_false_support_rate"}, "v6_first_run_fix": "frozen numerator main_level == E4 unquoted; regex required quotes -> parse relaxed, rerun exit 0"},
-    "d4_gate_domain": {"clauses": ["G-5.2", "V-5.5", "T-5.3", "P-5.4"], "implementation": "clauses_only_no_v2_code", "clause_id_locations": [".tasks/XJ-20261113-002.md", "docs/eval-prereg.md section 22"], "v7_output": "True True True True"},
-    "d5_m1": {"commit": "0de51ec", "implementations": ["tools/eval/provenance_check.py", "tools/eval/replay_guard.py", "tools/eval/m1_recompute.py", "tools/eval/ci_align.py"], "custody_resolved": "D:/15812/projects/round6-custody", "products": 180, "condition_counts": {"A": 90, "B": 90}, "three_item_hashes": {"key-json": "649f62907440c5f3b603c2623536020f1a9eebfaaca6a54643d63378e24a1626", "seal-hash": "e153e3abf4415f2ba1c1082ff6280bdbf1c2d80274d50c15b81095e6c02733b0", "b-arm-enforcement": "6d11e805b21ff047044b9b58e93308c48e515c0f8e5ab29f33b4fd624b536de0"}, "provenance_gaps": ["b-arm-enforcement.json not found inside resolved custody; outside-custody copies hashed and labelled in_custody=false, never claimed as custody provenance"], "x73_gates": {"sandbox": "FAIL", "env_manifest": "FAIL", "hash_match": "PASS (180/180)", "nondeterminism": "UNMEASURED"}, "v9_exit": 1, "provisional": true, "downgrade_required": true, "convergence_claim_issued": false, "m1": {"A": "0.807692 = 315/390", "B": "0.746154 = 291/390", "diff_pp": 6.153846, "aggregation": "claim", "status": "PROVISIONAL", "wording": "收敛性重算（convergent recomputation）", "forbidden_wording": "复现（replication）"}, "historical_dual_reading": {"value": 5.8, "ci": [1.7, 11.2], "aggregation": "claim", "published": true, "replace_historical": false}, "recompute_mode": "arithmetic re-derivation from F4-recorded deterministic judge.py level counts; judge.py NOT re-executed on bare metal (no sandbox); same-implementation replay, not an independent recompute"},
-    "d6_report": {"path": "docs/eval-report-r15-truth.md", "sections": 9, "dual_readings_present": true, "aggregation_labels_present": true, "coverage_gap_disclosed": true, "provisional_downgrade_disclosed": true, "v11_output": "False"},
-    "d6_seal": {"bundle": "run-r15", "sealed_files": 32, "root_label": "run-r15", "seal_json_sha256": "3562e5b64877ffb05197eeb123213898d5fbd43d8292305906835c731e5205af", "custody_copy": "D:/15812/projects/round15-custody/sealed/run-r15", "superseded_custody_copies": ["D:/15812/projects/round15-custody/sealed/run-r15-v1", "D:/15812/projects/round15-custody/sealed/run-r15-v2"], "superseded_note": "both archived, never deleted; bundle rebuilt twice so the sealed copies of the report / review request stay byte-identical to the repo files", "seal_cmd_exit": 0, "verify_repo_exit": 0, "verify_custody_exit": 0, "verify_output": "VERIFY: OK (32 files match the seal)", "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)", "not_true_data": true},
-    "acceptance": {"runner": "executor WB, literal commands in Git Bash; COVENANT_BASH_HINT set for V12b", "ledger": "out/acceptance-r15.json", "log": "out/acceptance-r15.log", "no_author_precheck_adopted": true, "exit_codes": {"V1a": 0, "V1b": 0, "V2": 0, "V3": 0, "V4": 0, "V5": 0, "V6": 0, "V7": 0, "V8": 0, "V9": 1, "V10": 0, "V11": 0, "V12a": 0, "V12b": 0, "V12c": 0}, "nonzero": ["V9"], "V9_note": "exit 1 is the card-permitted X-7.3 downgrade path; not laundered into a pass", "V12b_output": "Ran 546 tests in 126.419s ... OK", "V12c_output": "LINT: PASS (1 warnings), 0 errors; VERDICT_WITHOUT_REVIEW pre-review expected", "post_delivery_observations": [{"kind": "non-card ad-hoc re-run of V12b after D6 commit", "result": "Ran 546 tests ... FAILED (failures=1), exit 1", "log_detail": "only the tail was retained; the failing case name was NOT captured, so no root cause is asserted", "immediate_reruns": ["out/unittest-rerun.log -> Ran 546 tests OK (exit 0)", "out/unittest-final.log -> Ran 546 tests OK (exit 0)"], "code_or_config_changed_between_runs": false, "assessment": "transient flake, not a round-15 regression; disclosed rather than laundered; card acceptance exit codes unchanged", "adjudication": "left to AgnesCode / Orchestrator"}]},
-    "discipline": {"red_zone_diff_empty": true, "no_push": true, "no_merge": true, "no_verdict": true, "no_master_touch": true, "py39_write_rule": "open(..., newline='') only; no Path.write_text(newline=)", "gate_result": "not_evaluable", "gate_conclusion_issued": false, "capability_gain_claim": false, "independence_satisfied": false}
+    "d2_independence": {
+      "commit": "54be340",
+      "implementation": "tools/eval/independence_audit.py",
+      "out": "out/independence-audit.json",
+      "audited_modules": 49,
+      "violations": 0,
+      "unauditable_legacy_layers": 14,
+      "roots_pending": [],
+      "truth_source_closure": [
+        "external_truth",
+        "fp_overall",
+        "independence_audit",
+        "layer_sensitivity"
+      ],
+      "self_test": "PASS",
+      "fixes": [
+        "KeyError 'path' in synthetic self-test",
+        "phantom roots counted before existing on disk"
+      ]
+    },
+    "d3_truth": {
+      "commit": "80395b0",
+      "implementations": [
+        "tools/eval/external_truth.py",
+        "tools/eval/layer_sensitivity.py",
+        "tools/eval/fp_overall.py"
+      ],
+      "tstar_counts": {
+        "true": 118,
+        "false": 48,
+        "unjudgeable": 234,
+        "total": 400
+      },
+      "coverage": 0.415,
+      "unjudgeable_reasons": {
+        "evidence_surface_unavailable": 108,
+        "no_verifiable_value_position": 126
+      },
+      "delta": 1.0,
+      "delta_comparable": 166,
+      "sigma": 0.035,
+      "sigma_differing": 14,
+      "fp_overall": {
+        "denominator_basis": "Tstar_false",
+        "denominator": 48,
+        "numerator": 48,
+        "point": 1.0,
+        "ci95_wilson": [
+          0.9259,
+          1.0
+        ],
+        "coverage": 0.415,
+        "truth_coverage_gap": true,
+        "denominator_layer_composition": {
+          "anchor_miss": 48
+        }
+      },
+      "layer_conditional_fp_reference": {
+        "value": 0.2,
+        "scope": "FP[anchor_miss] layer-internal conditional rate only",
+        "policy": "never_extrapolate_as_overall_false_support_rate"
+      },
+      "v6_first_run_fix": "frozen numerator main_level == E4 unquoted; regex required quotes -> parse relaxed, rerun exit 0"
+    },
+    "d4_gate_domain": {
+      "clauses": [
+        "G-5.2",
+        "V-5.5",
+        "T-5.3",
+        "P-5.4"
+      ],
+      "implementation": "clauses_only_no_v2_code",
+      "clause_id_locations": [
+        ".tasks/XJ-20261113-002.md",
+        "docs/eval-prereg.md section 22"
+      ],
+      "v7_output": "True True True True"
+    },
+    "d5_m1": {
+      "commit": "0de51ec",
+      "implementations": [
+        "tools/eval/provenance_check.py",
+        "tools/eval/replay_guard.py",
+        "tools/eval/m1_recompute.py",
+        "tools/eval/ci_align.py"
+      ],
+      "custody_resolved": "D:/15812/projects/round6-custody",
+      "products": 180,
+      "condition_counts": {
+        "A": 90,
+        "B": 90
+      },
+      "three_item_hashes": {
+        "key-json": "649f62907440c5f3b603c2623536020f1a9eebfaaca6a54643d63378e24a1626",
+        "seal-hash": "e153e3abf4415f2ba1c1082ff6280bdbf1c2d80274d50c15b81095e6c02733b0",
+        "b-arm-enforcement": "6d11e805b21ff047044b9b58e93308c48e515c0f8e5ab29f33b4fd624b536de0"
+      },
+      "provenance_gaps": [
+        "b-arm-enforcement.json not found inside resolved custody; outside-custody copies hashed and labelled in_custody=false, never claimed as custody provenance"
+      ],
+      "x73_gates": {
+        "sandbox": "FAIL",
+        "env_manifest": "FAIL",
+        "hash_match": "PASS (180/180)",
+        "nondeterminism": "UNMEASURED"
+      },
+      "v9_exit": 1,
+      "provisional": true,
+      "downgrade_required": true,
+      "convergence_claim_issued": false,
+      "m1": {
+        "A": "0.807692 = 315/390",
+        "B": "0.746154 = 291/390",
+        "diff_pp": 6.153846,
+        "aggregation": "claim",
+        "status": "PROVISIONAL",
+        "wording": "收敛性重算（convergent recomputation）",
+        "forbidden_wording": "复现（replication）"
+      },
+      "historical_dual_reading": {
+        "value": 5.8,
+        "ci": [
+          1.7,
+          11.2
+        ],
+        "aggregation": "claim",
+        "published": true,
+        "replace_historical": false
+      },
+      "recompute_mode": "arithmetic re-derivation from F4-recorded deterministic judge.py level counts; judge.py NOT re-executed on bare metal (no sandbox); same-implementation replay, not an independent recompute"
+    },
+    "d6_report": {
+      "path": "docs/eval-report-r15-truth.md",
+      "sections": 9,
+      "dual_readings_present": true,
+      "aggregation_labels_present": true,
+      "coverage_gap_disclosed": true,
+      "provisional_downgrade_disclosed": true,
+      "v11_output": "False"
+    },
+    "d6_seal": {
+      "bundle": "run-r15",
+      "sealed_files": 32,
+      "root_label": "run-r15",
+      "seal_json_sha256": "3562e5b64877ffb05197eeb123213898d5fbd43d8292305906835c731e5205af",
+      "custody_copy": "D:/15812/projects/round15-custody/sealed/run-r15",
+      "superseded_custody_copies": [
+        "D:/15812/projects/round15-custody/sealed/run-r15-v1",
+        "D:/15812/projects/round15-custody/sealed/run-r15-v2"
+      ],
+      "superseded_note": "both archived, never deleted; bundle rebuilt twice so the sealed copies of the report / review request stay byte-identical to the repo files",
+      "seal_cmd_exit": 0,
+      "verify_repo_exit": 0,
+      "verify_custody_exit": 0,
+      "verify_output": "VERIFY: OK (32 files match the seal)",
+      "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)",
+      "not_true_data": true
+    },
+    "acceptance": {
+      "runner": "executor WB, literal commands in Git Bash; COVENANT_BASH_HINT set for V12b",
+      "ledger": "out/acceptance-r15.json",
+      "log": "out/acceptance-r15.log",
+      "no_author_precheck_adopted": true,
+      "exit_codes": {
+        "V1a": 0,
+        "V1b": 0,
+        "V2": 0,
+        "V3": 0,
+        "V4": 0,
+        "V5": 0,
+        "V6": 0,
+        "V7": 0,
+        "V8": 0,
+        "V9": 1,
+        "V10": 0,
+        "V11": 0,
+        "V12a": 0,
+        "V12b": 0,
+        "V12c": 0
+      },
+      "nonzero": [
+        "V9"
+      ],
+      "V9_note": "exit 1 is the card-permitted X-7.3 downgrade path; not laundered into a pass",
+      "V12b_output": "Ran 546 tests in 126.419s ... OK",
+      "V12c_output": "LINT: PASS (1 warnings), 0 errors; VERDICT_WITHOUT_REVIEW pre-review expected",
+      "post_delivery_observations": [
+        {
+          "kind": "non-card ad-hoc re-run of V12b after D6 commit",
+          "result": "Ran 546 tests ... FAILED (failures=1), exit 1",
+          "log_detail": "only the tail was retained; the failing case name was NOT captured, so no root cause is asserted",
+          "immediate_reruns": [
+            "out/unittest-rerun.log -> Ran 546 tests OK (exit 0)",
+            "out/unittest-final.log -> Ran 546 tests OK (exit 0)"
+          ],
+          "code_or_config_changed_between_runs": false,
+          "assessment": "transient flake, not a round-15 regression; disclosed rather than laundered; card acceptance exit codes unchanged",
+          "adjudication": "left to AgnesCode / Orchestrator"
+        }
+      ]
+    },
+    "discipline": {
+      "red_zone_diff_empty": true,
+      "no_push": true,
+      "no_merge": true,
+      "no_verdict": true,
+      "no_master_touch": true,
+      "py39_write_rule": "open(..., newline='') only; no Path.write_text(newline=)",
+      "gate_result": "not_evaluable",
+      "gate_conclusion_issued": false,
+      "capability_gain_claim": false,
+      "independence_satisfied": false
+    }
+  },
+  "XJ-20261113-003": [
+    "docs/eval-prereg.md",
+    "tools/eval/report_lint.py",
+    "docs/eval-report-r15-truth.md",
+    "docs/eval-report-r16-erratum.md",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-003.md"
+  ],
+  "_s23_freeze_XJ-20261113_003": {
+    "_comment": "XJ-20261113-003 D1 §23 冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness；登记动作不改 §23 冻结文本、不写 verdict、不 push、不 merge。",
+    "phase": "D1_section23_freeze",
+    "card": "XJ-20261113-003",
+    "base": "0e06f23",
+    "acceptance_point": "efff6df",
+    "acceptance_commit": "f914001",
+    "freeze_commit": "c990b26",
+    "freeze_committed_at": "2026-11-13T22:22:14+08:00",
+    "freeze_before_any_r16_product": true,
+    "r16_products_before_freeze": [],
+    "newline_calibre_note": "core.autocrlf=true: git blob is LF, worktree is CRLF. Section 23 was appended as CRLF bytes with a binary append; V1 verifies BOTH calibres.",
+    "prefix_worktree_raw_bytes": 239185,
+    "prefix_worktree_raw_sha256": "4c71623abea1f86aa997c20f221e0fa1614d05b8ffa7601ff30823e9e78b1c39",
+    "prefix_blob_lf_bytes": 237249,
+    "prefix_blob_lf_sha256": "19c453c2a28bc55dcde98f3e34521de8ae577cc6976c962d8718c7d3cb8479bd",
+    "prereg_after_worktree_raw_bytes": 256516,
+    "prereg_after_worktree_raw_sha256": "7b6a475b43a0369d9b7bf7d6de851c9269f9e0dbfe466b3806ae20ad28e9a562",
+    "prereg_after_blob_lf_bytes": 254316,
+    "prereg_after_blob_lf_sha256": "e8ac6b03039c9eac8aa9688123116d559c967e21f730a39ff95a12ed3fe87e72",
+    "v1_numstat": "264 0 docs/eval-prereg.md",
+    "section23_worktree_bytes": 17331,
+    "section23_lines_lf": 263,
+    "clause_groups": 6,
+    "clause_group_ids": ["D-5.1", "P-4.5''", "X-7.3' a/b/c", "M1_status_map", "E-0 L0-L2", "erratum_continuity"],
+    "v2_keys_present": ["D-5.1", "P-4.5", "X-7.3a", "X-7.3b", "X-7.3c", "E-0", "PROVISIONAL-L1"],
+    "v7_keys_present": ["PROVISIONAL-L1", "CONDITIONAL", "L0", "L1", "L2"],
+    "frozen_block_sha256": "ad6bfa506e8ed3e6a2e41b9a5e3d46a44433f2dcc1a616807e7e2688602de7c2",
+    "frozen_block_schema": "r16-erratum-frozen-v1",
+    "x73_implementation": "clauses_only_no_v2_code; L2 sandbox deferred by sir; no container/VM dependency",
+    "red_zone_count": 11,
+    "gitignore_added": ["run-r16/"],
+    "gitignore_note": ".gitignore 不在本卡 Owned files；仅追加一行，已在报告 §6 与递评单 §6 照实披露交评审裁定，沿用轮十四/轮十五先例。",
+    "custody_anchors": "D:/15812/projects/round16-custody/s23-freeze-anchors.json"
+  },
+  "_round16_final_XJ-20261113_003": {
+    "_comment": "XJ-20261113-003 D2–D5 产物、seal 与 V1–V10 亲跑台账（机械追记）。下划线前缀，非 judged artifact，不参与 gate freshness；out/ 与 run-r16/ 为执行产物不入 repo；不写 verdict、不 push、不 merge、不碰 master。",
+    "custody_root": "D:/15812/projects/round16-custody",
+    "phase": "P0-a_text_only_erratum",
+    "zero_new_data": true,
+    "zero_recomputation": true,
+    "zero_execution_of_instruments": true,
+    "d2_report_lint": {
+      "implementation": "tools/eval/report_lint.py",
+      "rules_source": "section 23 D23-G R16-ERRATUM frozen block (read back, not hard-coded)",
+      "checks": 5,
+      "self_test": "PASS",
+      "self_test_negative_cases": 5,
+      "negative_cases_all_rejected": true,
+      "dryrun_on_unmodified_report": "LINT: FAIL | violations=8 (exit 1, proves the tool is not a no-op)",
+      "v3_output": "LINT: PASS | checks=5 | coverage_gap_guard=OK | erratum_markers=4 | lf_chars=16243",
+      "historical_line_guard": "struck-out labels or lines followed by an inline 【勘误 marker are guarded historical originals, not active claims",
+      "out": "out/r16-report-lint.json"
+    },
+    "d3_erratum": {
+      "target": "docs/eval-report-r15-truth.md",
+      "method": "per-line pure insertion by custody script; assert stripping inserted lines reproduces the original line list verbatim",
+      "diff_numstat": "19 0 docs/eval-report-r15-truth.md",
+      "deleted_lines": 0,
+      "original_lines_preserved": 189,
+      "inserted_lines": 19,
+      "lf_chars_before": 13554,
+      "lf_chars_after": 16243,
+      "net_growth_lf_chars": 2689,
+      "erratum_table_rows": 2,
+      "inline_erratum_markers": 4,
+      "report_raw_sha256_after": "9b209440333af4c4dcd56f6b33dfd8499707936de354f56500fd30a3c3fbb6d0",
+      "quote_policy": "forbidden review-N1 phrasing paraphrased with a location reference (14228a7), never copied verbatim, so V4 stays False/False/False",
+      "markdown_rendering_tradeoff": "inline markers inserted between ordered-list items interrupt list rendering; disclosed in report section 6 and handed to reviewer, original text intentionally not moved"
+    },
+    "d4_report": "docs/eval-report-r16-erratum.md",
+    "numerals_invariance_proof": {
+      "base_lines_subsequence_of_current": true,
+      "removed_numeric_tokens": {},
+      "note": "48/48 is the dp-mandated frozen notation added in the erratum (denominator 48 / numerator 48 were already separately present); no existing numeral was changed into another value",
+      "immutable_literals": ["48/48", "0.415", "[0.9259, 1.0]", "+6.153846", "delta=1.000", "sigma=0.035", "118/48/234"],
+      "fp_overall_before_sha256": "df8d2d0e7392e93ec134ca3141b6fea7e1deb1cb14f03f1cd0ea851b8e956a3c",
+      "fp_overall_after_sha256": "df8d2d0e7392e93ec134ca3141b6fea7e1deb1cb14f03f1cd0ea851b8e956a3c",
+      "fp_overall_point": 1.0,
+      "fp_overall_untouched": true
+    },
+    "d5_seal": {
+      "bundle": "run-r16",
+      "sealed_files": 13,
+      "root_label": "run-r16",
+      "seal_json_sha256": "86487d4a366872aa49b6b6d26131511983a65bf8e8ca06e96f761e12be752fce",
+      "custody_copy": "D:/15812/projects/round16-custody/sealed/run-r16",
+      "superseded_custody_copy": "D:/15812/projects/round16-custody/sealed/run-r16-v1 (archived, not deleted; rebuilt after disclosing an unrelated worktree change in the report and review request)",
+      "seal_cmd_exit": 0,
+      "verify_repo_exit": 0,
+      "verify_custody_exit": 0,
+      "verify_output": "VERIFY: OK (13 files match the seal)",
+      "seal_tool": "tools/eval/seal_run.py (red zone, invoked read-only, unmodified)",
+      "not_true_data": true
+    },
+    "card_status": "IN_REVIEW",
+    "review_request": "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-003.md",
+    "acceptance": {
+      "runner": "executor WB, executed literally in Git Bash (COVENANT_BASH_HINT set for V9b)",
+      "no_author_precheck_adopted": true,
+      "exit_codes": {
+        "V1a": 0, "V1b": 0, "V2": 0, "V3": 0, "V4": 0, "V5": 0,
+        "V6": 0, "V7": 0, "V8": 0, "V9a": 0, "V9b": 0, "V9c": 0, "V10": 0
+      },
+      "nonzero": [],
+      "V1_output": "264 0 docs/eval-prereg.md; PREFIX_UNCHANGED True (worktree CRLF raw 4c71623a... / blob LF 19c453c2...)",
+      "V2_output": "True",
+      "V3_output": "LINT: PASS | checks=5 | coverage_gap_guard=OK | erratum_markers=4",
+      "V4_output": "False False False",
+      "V5_output": "True True True True",
+      "V6_output": "True 4 16243",
+      "V7_output": "True True True",
+      "V8_output": "SELFTEST: PASS, SELFTEST_NEGATIVE_CASES=5",
+      "V9a_output": "empty red-zone diff over 11 full paths",
+      "V9b_output": "Ran 546 tests in 126.285s ... OK",
+      "V9c_output": "LINT: PASS (1 warnings), 0 errors; VERDICT_WITHOUT_REVIEW pre-review expected",
+      "V10_output": "git status --porcelain out/ empty; point 1.0",
+      "ledger_files": ["out/acceptance-r16.json", "out/acceptance-r16.log"]
+    },
+    "red_zone_untouched": true,
+    "no_push_no_merge_no_verdict": true,
+    "executor_does_not_declare_acceptance": true,
+    "unrelated_worktree_change": {
+      "path": "scripts/verdict_gate.ps1",
+      "detected_during": "V1-V10 full acceptance run (V9b unittest window)",
+      "mtime": "2026-11-13T22:29:13",
+      "diff_numstat": "4 3 scripts/verdict_gate.ps1",
+      "content": "PowerShell empty-array guard hardening ($all / $codeVerdicts null filtering and Count checks)",
+      "in_owned_files": false,
+      "in_red_zone": false,
+      "touched_by_executor": false,
+      "worktree_clean_at_acceptance_point": true,
+      "disposition": "NOT committed, NOT rolled back; exact git add of card files only, never git add -A; left as an unstaged M in the worktree for the owning session",
+      "acceptance_impact": "none: V1 prereg-only, V9a covers only the 11 red-zone paths, V9c lint_cards covers .tasks + artifacts.json",
+      "disclosed_in": ["docs/eval-report-r16-erratum.md section 6 item 7", "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-003.md section 6 item 5"],
+      "adjudication": "handed to reviewer; executor does not attribute it to any card"
+    }
   }
 }
