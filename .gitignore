@@ -70,3 +70,10 @@ shadow-r13/
 # Round-14 execution products (XJ-20261113-001 D1; card constraint "产物落点").
 # out/ already covered above; this exact name is not.
 run-r14/
+
+# Round-15 execution products (XJ-20261113-002 D6; card constraint "产物落点").
+# out/ already covered above; this exact name is not.
+# NOTE: .gitignore is not in this card's Owned files; the single added line is
+# disclosed in the report and handed to the reviewer for adjudication, following
+# the round-14 D1 precedent.
+run-r15/
