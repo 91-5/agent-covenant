@@ -83,13 +83,14 @@ if (-not $roots) {
 
 $all = @()
 foreach ($r in $roots) { $all += Get-LatestVerdict -Base $base -Root $r }
-if (-not $all) {
+$all = @($all | Where-Object { $_ -ne $null })
+if (-not $all -or $all.Count -eq 0) {
     Write-Host "[verdict_gate] no verdict on file for '$base' under: $($roots -join ', '). Gate FAILED."
     exit 1
 }
 
-$codeVerdicts = $all | Where-Object { -not $_.IsDesign }
-if (-not $codeVerdicts) {
+$codeVerdicts = @($all | Where-Object { -not $_.IsDesign })
+if (-not $codeVerdicts -or $codeVerdicts.Count -eq 0) {
     Write-Host "[verdict_gate] only design/spec-only verdicts on file for '$base' (not usable to authorize a code merge). Gate FAILED."
     exit 1
 }
