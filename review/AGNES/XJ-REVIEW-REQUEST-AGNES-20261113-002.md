@@ -85,3 +85,68 @@ V7  0     V8  0     V9  1(*)   V10 0     V11 0     V12 0
 ---
 
 *执行者：WB（WorkBuddy，ZCode 桌面会话）· 2026-11-13 · 本单不构成验收通过，等待 Orchestrator 预审 + 浮香 PASS gate。*
+
+---
+
+## 9. Orchestrator 预审（2026-11-13，亲跑复核，不采纳 precheck）
+
+预审者：Jarvis（OpenCode）/ 分支 `feature/xj-20261113-002-round15-truth-source` @ `5235fba`，基线 `a64c982`。本节仅追加，不改执行者任何原文。
+
+### 9.1 独立复现（全部亲跑）
+
+| 项 | 我的实测 | 结论 |
+|---|---|---|
+| 红区 11 完整路径 `git diff a64c982 --stat` | 空输出 | 零触碰 |
+| V2 import 审计 | `violations=0` `roots_pending=0` `audited_modules=49` | 硬门通过 |
+| V3 T* 三值 | `true=118 false=48 unjudgeable=234 total=400 coverage=0.415`；`UNJUDGEABLE_REASONS={"evidence_surface_unavailable":108,"no_verifiable_value_position":126}` | 复现 |
+| V6 FP_overall | `denominator_basis=Tstar_false n=48 k=48 point=1.0 ci95=[0.9259,1.0]`、`coverage=0.415`、`truth_coverage_gap=True`、`DENOMINATOR_LAYERS={"anchor_miss":48}` | 复现 |
+| V7 条款机械可读 | 12 个条款 ID 全部命中 §22；prereg diff `306/0` 纯追加 | 复现 |
+| V8 provenance | `products=180` `condition_counts={A:90,B:90}` 三件哈希齐全 | 复现 |
+| V9 X-7.3 | `sandbox=FAIL env_manifest=FAIL hash_match=PASS(180/180) nondeterminism=UNMEASURED -> FAIL`、`PROVISIONAL required=True`、`convergence_claim_issued=False`，exit 1 | 如实失败，未刷绿 |
+| V10 ci_align | `within_ci=True status=PROVISIONAL -> PASS`、`used=False replace_historical=False` | 复现 |
+| V11 措辞合规 | 报告内每处「复现」均在否定语境（「不得表述为复现」「不是复现」） | 合规 |
+| 单测 | 设 `COVENANT_BASH_HINT` → `Ran 546 tests OK` | 通过 |
+| lint | `LINT: PASS (1 warnings)`（VERDICT_WITHOUT_REVIEW 评审前瞬态） | 通过 |
+
+### 9.2 预审新增发现（三条）
+
+**N1 · T\* × 主轨交叉表显示「负向判别」（新，执行者报告未含此表）**
+
+我对 `out/truth-star.json`（400 条 per-case）与 `out/r11-reliability-rows.json` 做交叉：
+
+| T\* | 主轨判定 | 条数 |
+|---|---|---|
+| true | E4 | 100 |
+| true | E2 | 18 |
+| **false** | **E4** | **48** |
+| unjudgeable | E0/E1/E2/E4 | 30/30/96/78 |
+
+- `T*=true` 的 E4 率 = 100/118 = **84.7%**
+- `T*=false` 的 E4 率 = 48/48 = **100.0%**
+- **判别力（E4率差）= −0.1525（负向）**：主轨对「外部可判为假」的样本判 E4 的比率，**高于**对「外部可判为真」的样本
+
+**必须同时说明混杂**：`T*=false` 48 条 100% 来自 `anchor_miss` 层（由构造决定——只有「claim 值 与 证据面 矛盾」的样本才能被外部判假），而 `T*=true` 中的 18 条 E2 集中在 `cwd_probe` 层。因此该 −0.1525 **不能直接作为「判别力」结论**，必须有**分层版本**后才可解释。
+
+**请评审裁定**：报告是否应补这张交叉表 + 分层版本？我倾向「应补」——因为 `FP_overall=1.0` 单独看只说明「假支持率高」，而加上这张表才说明**主轨在可判子集上从未否决过任何一条假 claim，却否决了 18 条真 claim**，这是「断言支撑维度完全缺失」的直接证据，与 §22 的分层设计动机直接对应。
+
+**N2 · provenance gap 可解析（不是证据丢失，是 custody 根写错）**
+
+- 执行者登记 `b-arm-enforcement.json` `in_custody=false`、`provenance_gaps=1`
+- 我实测：该文件哈希 `6d11e805b21ff047044b9b58e93308c48e515c0f8e5ab29f33b4fd624b536de0` 与执行者记录**逐字相同**，且现存于两处：
+  - `D:\15812\projects\agent-covenant\run-dir\b-arm-enforcement.json`（仓内，被 .gitignore 覆盖）
+  - `D:\15812\projects\round4-custody\run-dir\b-arm-enforcement.json`
+- 判定：**证据未丢失，只是不在 `round6-custody` 根下**。执行者照实标 gap 是对的（未冒认），但正确的处置应是：在 §22 provenance 候选链里加入 `round4-custody/run-dir/` 与仓内 `run-dir/`，或把该文件复制进 `round6-custody` 并记录来源。
+- **请评审裁定**：这是「缺口」还是「路径配置问题」？我倾向后者，且不构成阻断。
+
+**N3 · 一次无日志的单测失败（执行者已披露，我认为必须留痕而非放手）**
+
+- 执行者自述：交付后一次非卡面单测复跑出现 `FAILED (failures=1)`，紧接两次全量重跑 OK，**首次未留完整日志、未抓到失败用例名**
+- 我亲跑一次：`Ran 546 tests OK`
+- 判定：**无法排除真实间歇性缺陷**。我认同执行者「不猜根因、交评审裁定」的处置（没有编造根因），但建议：
+  - 本轮不因此阻断（无证据、且两次复跑绿）
+  - **列入下轮强制项**：`python -m unittest -v` 全量日志落盘至 custody，并在 CI 开启 `-v`；若再次出现则按真实缺陷处理
+- **请评审裁定**是否同意该处置。
+
+### 9.3 一句总评（预审视角）
+
+本轮把「真值源」从循环依赖中拉出来（外部三值 T\*、δ=1.000、σ=0.035），并且**在 X-7.3 三门不过时如实让 V9 exit 1、把 M1 复算降级为 PROVISIONAL、明写「本轮价值是 provenance 可追溯性 + 可执行否定结论，不是数值复现」**——这是本项目到目前为止最克制的一次交付。N1 是我认为最需要在评审阶段补上的内容；N2/N3 不阻断。
