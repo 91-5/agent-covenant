@@ -2257,5 +2257,19 @@
       "design_error_class_not_used_as_truth": true,
       "r_main_denominator_unchanged": true
     }
-  }
+  },
+  "XJ-20261113-002": [
+    "tools/eval/independence_audit.py",
+    "tools/eval/external_truth.py",
+    "tools/eval/layer_sensitivity.py",
+    "tools/eval/fp_overall.py",
+    "tools/eval/m1_recompute.py",
+    "tools/eval/replay_guard.py",
+    "tools/eval/ci_align.py",
+    "tools/eval/provenance_check.py",
+    "docs/eval-prereg.md",
+    "docs/eval-report-r15-truth.md",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-002.md"
+  ]
 }
