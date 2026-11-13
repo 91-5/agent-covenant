@@ -58,6 +58,7 @@ V7  0     V8  0     V9  1(*)   V10 0     V11 0     V12 0
 - **V10**：`6.153846 ∈ [1.7,11.2]`，`aggregation=claim` 对齐，`replication_wording_used=false`、`replace_historical=false`。
 - **V11**：报告含「收敛性重算」并同时并报历史值与复算值 + 各自聚合层级标签，检查输出 `False`。
 - **V12**：红区 11 条**完整路径** `git diff a64c982 --stat` 为空；单测设 `COVENANT_BASH_HINT` 后 `Ran 546 tests ... OK`；`lint_cards.py` **0 errors**（评审前 `VERDICT_WITHOUT_REVIEW` 属预期 warning，不伪造 verdict）。终跑设 hint 时为 `PASS (1 warnings)`；封存后复核未设 hint 时为 `PASS (2 warnings)`（多出 `TEST_COUNT_UNVERIFIED`，为 lint 内部 discovery 的既有环境问题），两次均 0 errors，验收口径以设 hint 的终跑为准。
+- **交付后追加复跑的非零观察（非卡面验收项）**：D6 提交后额外重跑一次 V12b 同命令出现 `FAILED (failures=1)`（exit 1），该次未保留完整日志、未捕获失败用例名；紧接两次完整日志重跑均 `Ran 546 tests ... OK`（exit 0，日志已封存）。期间无代码/配置改动，判为瞬时抖动而非本卡回归，不改动上表任何卡面退出码，是否列条件项请评审裁定。
 
 开发中另有两次「命中即停、先修再往下」：D2 自检 `KeyError: 'path'` + phantom roots、V6 冻结分子正则引号，均已修复并重跑至 exit 0，未隐藏。
 
@@ -70,6 +71,7 @@ V7  0     V8  0     V9  1(*)   V10 0     V11 0     V12 0
 5. **独立性**：I-4.3-c=false，无独立人类标注、无异模型族判级；三指标只作方向诊断。
 6. **同实现重放**：仓内封存判级包与解盲 key 的任意组合都对不出 F4 的 E 级序列（已逐包机械比对），本轮复算基于 F4 记录计数 + 冻结公式，未在新沙箱中重判；是否要求补一次带沙箱重放待裁定。
 7. **门域数值**：`D_full=118` 在 ADV-6 归并后会变，本轮冻结的是规则而非数字；数值变更须另立卡。
+8. **交付后单测抖动**：一次非卡面追加复跑 `FAILED (failures=1)`，两次紧接重跑均 OK；首次失败未捕获用例名，无法归因，已照实登记并封存两份重跑日志，待评审裁定是否需列为条件项。
 
 ## 6. 卡面评审问题对照（执行者立场，供评审起点）
 

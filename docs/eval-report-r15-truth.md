@@ -168,7 +168,9 @@ PROVISIONAL: required=True label=PROVISIONAL downgrade_required=True convergence
 | V11 | 本报告表述合规检查 | 0 | `False`（`('复现' in t and '收敛性重算' not in t)`）；双读数 + 聚合层级标签齐备 |
 | V12 | 红区 `git diff <base> --stat` / `unittest discover` / `lint_cards.py` | 0 | 红区空、单测 OK（设 `COVENANT_BASH_HINT`）、lint 0 errors |
 
-**非零项只有 V9（exit 1），是卡面明文允许的降级路径，未被改写为通过。** 执行过程中另有两次「命中即停、先修再往下」的失败：D2 自检 `KeyError: 'path'` + phantom roots（已修并重跑 exit 0）、V6 冻结分子正则引号（已修并重跑 exit 0），均照实登记。
+**卡面 V1–V12 亲跑台账中，非零项只有 V9（exit 1），是卡面明文允许的降级路径，未被改写为通过。** 执行过程中另有两次「命中即停、先修再往下」的失败：D2 自检 `KeyError: 'path'` + phantom roots（已修并重跑 exit 0）、V6 冻结分子正则引号（已修并重跑 exit 0），均照实登记。
+
+**交付后追加复跑的一处非零观察（非卡面验收项，照实登记）**：D6 提交后，执行者为确认封存未漂移，额外重跑了一次 V12b 同一命令，出现 `Ran 546 tests ... FAILED (failures=1)`（exit 1）。该次仅保留了尾部输出，**未捕获失败用例名，故不猜测根因**。紧接两次完整日志重跑均为 `Ran 546 tests ... OK`（exit 0，见 `out/unittest-rerun.log` 与 `out/unittest-final.log`），期间无任何代码或配置改动，判定为瞬时抖动而非本卡回归；是否需列入条件项交浮香裁定。此观察不改动上表任何卡面验收退出码。
 
 ---
 
