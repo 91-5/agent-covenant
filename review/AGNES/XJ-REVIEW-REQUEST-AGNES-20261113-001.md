@@ -79,3 +79,55 @@ X   0(pointers) / 0(product hashes)
 ---
 
 *执行者：WB（WorkBuddy，ZCode 桌面会话，模型 GLM-5.3-Flash）· 2026-11-13 · 本单不构成验收通过，等待 Orchestrator 预审 + 浮香 PASS gate。*
+
+---
+
+## 7. Orchestrator 预审（2026-11-13，亲跑复核，不采纳执行者 precheck）
+
+预审者：Jarvis（OpenCode）/ 分支 `feature/xj-20261113-001-round14-strata` @ `c561dc8`，基线 `3126899`。本节仅追加，不改执行者任何原文。
+
+### 7.1 独立复现（全部亲跑，读数逐位命中）
+
+| 项 | 我的实测 | 结论 |
+|---|---|---|
+| 红区 11 路径 `git diff 3126899 --stat` | 空输出 | 零触碰（含 judge.py / extract.py，主轨未改） |
+| V2 真值源 | `holdout_labels_inert 133/133` / `contradictions 0` / `splits cmd=59 ref_present=59 ref_absent=15` | 复现 |
+| V3 假支持率 | `false_support 30` / `rate 0.2` / `anchor_miss_e4 30/30` / `fp_upper95 0.2667` / `severity high (source=frozen_table)` | 复现 |
+| V5 分层守恒 | `sum_strata==comparable_set True` / `primary_denominator_changed False` / `r_main 1.0 denominator 118 (sealed, read-only)` / `no_anchor_mapping_count 0` | 复现 |
+| V9 seal | `round14-custody/sealed/run-r14` 存在 | 待浮香独立 --verify 复核 |
+| lint | `LINT: PASS (1 warnings)`（唯一 warning = VERDICT_WITHOUT_REVIEW 评审前瞬态） | 通过 |
+| gate | `MISSING_VERDICT`（评审前预期） | 预期 |
+| 单测 | 设 `COVENANT_BASH_HINT` → `Ran 546 tests OK`；不设 → `1 failure + 1 error` | 环境依赖，见 7.3 |
+
+### 7.2 预审新增发现（三条，请评审员一并裁）
+
+**N1 · 「anchored」同名不同义（同一轮产物内两个定义，易误读）**
+
+- `out/strata.json` → `strata.anchored`：**118 条**，定义为「v4 判 SUPPORT 的条目」
+- `out/unanchored-fp.json` → `m1_impact.anchored_only.anchored_rows`：**30 条**，定义为「claim 文本可抽出锚点的条目」（源码 `measure_unanchored_fp.py` 中 `extract_anchors(claim)` 非空）
+- 两者都叫 anchored，量级差约 4 倍。建议评审要求执行者在报告与 JSON 中改名（如 `strata_support_118` / `claim_anchored_30`），或至少在报告显式并列两个定义。否则审计者极易把 `anchored_only.absolute_delta_pp = 0.0` 误读为「118 条有锚子集无影响」。
+
+**N2 · 语料锚点极稀疏（M1 的语义边界）**
+
+- R10_ANCHOR 240 条中，仅 **30 条（12.5%）**可抽出锚点，**210 条（87.5%）无锚**
+- 后果：主轨对 87.5% 的样本只能走「证据是否复现」，无法验证断言内容；故 M1 实质是**复现率**而非**断言真值率**
+- 假支持 30 条：占无锚 210 条的 **14.3%**，占全部「应不支持」150 条的 **20.0%** —— 两个分母口径须并列报告
+- 请评审确认：报告是否已明确「M1 在本语料上不可解释为断言真值率」；若未明确，建议列为条件项
+
+**N3 · A/B 研究臂标签在本语料不可恢复（执行者已主动披露，请评审确认披露充分性）**
+
+- `m1_impact.arm_note` 原文：`arms = judging arms (main / independent); original study A/B arm labels are not recoverable in this corpus, disclosed per clause 5`
+- 含义：M1 的 +5.3% 等历史 A−B 配对读数无法在本语料复算；本轮 M1 块只能给「主轨 vs 独立轨」的判级臂口径
+- 执行者已披露（主动加分），但请评审判断该披露是否足以支撑「M1 影响量化」这一交付项的完成度
+
+### 7.3 单测环境依赖（与轮十一/十二同形，照实登记）
+
+- 未设 `COVENANT_BASH_HINT`：`1 failure + 1 error`（Windows 无 Git-Bash 在 PATH，测试内子进程调用 bash 失败）
+- 设 `COVENANT_BASH_HINT=<Git>/bin/bash.exe`：`Ran 546 tests OK`
+- 判定：环境依赖，非本卡回归；与轮十一 V9_2、轮十二 V9_2 完全同形。执行者在 V10 已登记非零项、未刷绿——处置正确。
+
+### 7.4 预审结论
+
+- 交付物齐（D1–D6）、红区零触碰、主轨未改、主 R_main 分母未变、F1/F2 全部独立复现
+- N1–N3 为预审视角的补充质疑，不构成对执行者的指控；是否列为条件项由浮香裁定
+- 本预审不构成验收通过，评审权与裁定权仍在浮香
