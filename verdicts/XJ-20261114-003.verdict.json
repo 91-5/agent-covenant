@@ -8,8 +8,8 @@
   "conditions": 0,
   "independent": true,
   "verifier": "AgnesCode (agnes-3.0-flash)",
-  "ts": "2026-11-14T16:49:23Z",
-  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no semantic re-stamp of prior rounds",
+  "ts": "2026-11-14T16:57:16Z",
+  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no semantic re-stamp of prior rounds | re-signed 2026-11-14T16:49:23Z -> 2026-11-14T16:57:16Z post-merge 2026-11-15 (zero semantic change; merge checkout rewrote artifact mtimes; verdict content untouched)",
   "evidence": [
     "Freeze order independently confirmed: git merge-base --is-ancestor 2387c22 e7edefe = true; section 24 (2387c22, pure append 183/0) precedes all D2-D5 r17 products; e744d61 (acceptance point) is an ancestor of HEAD db8d81e.",
     "A1 prefix dual-calibre independently recomputed: raw CRLF prefix sha256 7b6a475b... (256516 B) / LF prefix e8ac6b03... (254316 B), both equal to the card/D24-F frozen values; the LF prefix is invariant at the freeze commit 2387c22 -> sections 0-23 frozen text untouched. A1 numstat = 183 0 (deletion column 0).",
