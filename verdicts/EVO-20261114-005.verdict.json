@@ -1,0 +1,22 @@
+{
+  "id": "EVO-20261114-005",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 3,
+  "evidence": [
+    "apply.py source independently read + DRY-RUN re-run (python -X utf8): exit 0, 8/8 self-checks True (clause_replaced, has_v011, no_v010_header, no_stale_wording, crlf_preserved, roundtrip_exact, six_canon_strings_present, changed); line-endings CRLF 102->102, lone-LF 148->148 (zero drift, both edits are in-line replacements, no insertions); target sha256 281E3CB9... unchanged after dry-run (v0.10 unpatched).",
+    "roundtrip_exact=True independently re-verified: reverting both the clause (OLD_A) and the version line reproduces the original file byte-for-byte; the patch is fully reversible at the byte layer.",
+    "Q1 anchor confirmed: git show 63e41cb = 'feat(lint): EVO_PROTECTED_ASSET_UNKNOWN WARN -> ERROR (EVO-20261114-004)', exactly 3 files (docs/lint-rules.md, tests/test_lint_cards.py, tools/lint_cards.py, +22/-8), merged to master via fef22be (HEAD 376716b). tools/lint_cards.py source now emits _finding(EVO_PROTECTED_ASSET_UNKNOWN, ERROR, ...) -> the ERROR semantics are live; attributing the clause to EVO-20261114-004 (63e41cb) is correct.",
+    "Q2 no hidden obligation: grep UNKNOWN in AGENTS.md hits only the single clause being replaced; the linter's only UNKNOWN emission point is ERROR (L1484's WARN is the separate ORPHAN_VERDICT rule, not UNKNOWN). Exit logic 'failed = errors>0 or (strict and warnings>0)' -> an ERROR fails in BOTH strict and non-strict modes, so '无论 strict 与否一律阻断' matches the shipped behavior exactly; no other lint path still emits UNKNOWN as WARN.",
+    "Q3 version attribution verified: current v0.10 line attributes to EVO-20261114-003 (canonical strings) + v0.9 <- EVO-20261114-002 (verdict_gate protected) + v0.8 <- EVO-20261113-001; the apply.py v0.11 line chains v0.10<-003 / v0.9<-002 / v0.8<-20261113-001, all consistent with the existing text. No mis-chaining.",
+    "Q4 diff scope = exactly 2 edited lines (section-5.3 clause line ~177 in-place replace + appendix version line ~246 replace), CRLF-stable, proven by roundtrip_exact; 'no other lines may move' boundary holds.",
+    "Q5: PROTECTED tuple in tools/lint_cards.py (6 items) is verbatim 6/6 equal to the AGENTS.md canonical declaration strings (independent comparison script). The only stale text in v0.10 caused by 004 is the single clause this card fixes; no other stale endpoint.",
+    "Post-artifact state: agent-covenant git clean at 376716b; gate.py --check-all-links PASS; gate.py --require XJ-20261114-001 GATE PASS (1 checked); AGENTS.md still 281E3CB9... (v0.10, unpatched, dry-run only).",
+    "Advisories (3): ADV-1 supersedes=[EVO-20261114-003] is clause-scoped-in-effect but card-scoped-in-field -- 003's canonical-strings core remains valid/GATED; recommend clause-scoped wording. ADV-2 index.json EVO-20261114-003 entry is bookkeeping-inconsistent (status=GATED but review_status=PENDING, closed_note 'awaiting verdict', yet 004 evidence + live v0.10 confirm 003 is GATED/applied). ADV-3 pre-push hook caliber now LINT FAIL (0 errors, 5 EVO_PROTECTED_ASSET_TOUCHED allowed WARNs, exit 1 under --strict) + non-strict repo PASS (1 ORPHAN_VERDICT WARN on 004); all pre-existing/allowed-class, not introduced by 005."
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261114-005.review.md",
+  "ts": "2026-11-14T14:41:58+00:00",
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)"
+}
