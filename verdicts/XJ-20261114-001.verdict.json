@@ -6,7 +6,7 @@
   "conditions": [],
   "independent": true,
   "verifier": "AgnesCode (agnes-3.0-flash)",
-  "ts": "2026-11-14T11:24:45Z",
+  "ts": "2026-11-14T14:19:24Z",
   "evidence": [
     "R1: python -m unittest tests.test_lint_cards -v -> Ran 162 tests, OK, exit 0 (two new cases test_sixth_asset_* both pass)",
     "R2: python -m unittest discover -s tests -> Ran 548 tests, OK, exit 0",
