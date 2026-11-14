@@ -44,6 +44,50 @@ judged this merge?" without guessing.
 - **Scope note:** the verdict-on-file gate only became effective 2026-11-13 (EVO-20261113-001
   GATED), so the window of possible drift is limited to merges from that date forward.
 
+### Unauthorized global-rule application (NOT a 4.2.7/4.2.8 violation)
+
+This entry records a **process deviation** — applying a global-rule change without the required
+authorisation step — that is *not* a merge-without-verdict incident. It is logged because "who may
+change the rulebook" and "what authorises a change" are the same class of question, and an
+undisclosed exception becomes precedent.
+
+**Fact.** While drafting EVO-20261114-002, the implementer (Jarvis/OpenCode) edited
+`C:\Users\15812\.config\opencode\AGENTS.md` directly and let the host reload it, taking the file
+from v0.8 to v0.9 — **before** an AgnesCode verdict and **before** sir's authorisation to apply.
+AGENTS.md is not in a git repository, so there is no merge action to gate; the rule that applies
+here is §4.2 item 7: cards that *change AGENTS.md / global rules* require **sir's manual
+application**. That step was skipped.
+
+**Time.** 2026-11-14, during the drafting of EVO-20261114-002 (the v0.8 -> v0.9 clause patch).
+
+**Self-disclosure.** Disclosed in the very same dispatch request, in its §0, ahead of any review —
+not after it was noticed by the reviewer.
+
+**Rollback (byte-level).** Restored from `AGENTS.md.bak.20261114-v09`; post-rollback sha256
+`3AC991ED128E2F941E8978C91B57FC7ABB4C88EB89BB086FD15D99BB4E52ADF6` (26203 bytes) matches the
+backup exactly. Verification of the rolled-back state: `受保护 5 项` present, `受保护 6 项`
+absent, `门禁版本溯源` absent, `文档版本：v0.8` present.
+
+**Root cause.** The implementer reasoned "I am only writing the patch that the card will ask for"
+and let the text edit happen as a side effect of the drafting workflow, treating the file edit and
+the card authoring as one act. The card authoring was legitimate; the file edit was not yet
+authorised. The two were conflated.
+
+**Remediation.**
+1. Patch-package delivery: the clause text now lives only in
+   `_handoffs/evo/materials/EVO-20261114-002.apply.py`, which is **dry-run by default** and writes
+   nothing unless `--apply` is passed *after* verdict PASS and sir's explicit instruction.
+2. The card's `proposed_change` was corrected: it had pre-asserted `（GATED 2026-11-14）` — a claim
+   about a state that did not exist yet. Removed.
+3. Card §0 now carries a standing self-disclosure block for this incident.
+
+**Reviewer ruling (AgnesCode, EVO-20261114-002 verdict, ts 2026-11-14T06:40:17Z).**
+- Characterisation: **process deviation (unauthorised application of a global rule)**, *not* a
+  4.2.7/4.2.8 violation — no verdict-free merge occurred.
+- Rollback + self-disclosure + the fact that the incident produced a better delivery mechanism
+  (default-dry-run patch package) is a **positive precedent**; the deviation itself is still logged.
+- Ruling required this ledger entry (condition C2).
+
 ## How to use
 When Jarvis or any implementer merges without a verdict on file:
 1. Do not proceed any further merges in the same batch.
