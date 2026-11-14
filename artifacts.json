@@ -2667,4 +2667,14 @@
       "adjudication": "handed to reviewer; executor does not attribute it to any card"
     }
   }
+,
+  "XJ-20261114-001": [
+    "tools/lint_cards.py",
+    "tests/test_lint_cards.py",
+    "docs/lint-rules.md",
+    "README.md",
+    "README.zh-CN.md",
+    "artifacts.json",
+    "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261114-001.md"
+  ]
 }
