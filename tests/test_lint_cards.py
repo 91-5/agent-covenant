@@ -1358,6 +1358,32 @@ class TestEvoProtectedAssets(unittest.TestCase):
         self._card("EVO-20990101-005", protected_assets_targeted=["gate.py 判定邏輯"])
         self.assertIn("EVO_PROTECTED_ASSET_UNKNOWN", self._codes())
 
+    def test_sixth_asset_without_declaration_is_an_error(self):
+        """EVO-20261114-002 added `scripts/verdict_gate.ps1` as a protected asset.
+
+        While the tuple still held five names, a card targeting only that
+        sixth asset fell through the `if not hit: continue` branch and produced
+        NO finding at all -- the boundary was fail-open for it. Targeting a
+        protected asset without both `protected_assets_changes` and
+        `sir_approval` must be an ERROR, not silence.
+        """
+        self._card("EVO-20990101-006",
+                   protected_assets_targeted=["scripts/verdict_gate.ps1 判定逻辑"])
+        findings = lint.check_evo_protected_assets(self.evo)
+        levels = {f["rule"]: f["level"] for f in findings}
+        self.assertEqual(levels.get("EVO_PROTECTED_ASSET_TOUCHED"), "ERROR")
+        # The name is known now, so it is no longer reported as a typo.
+        self.assertNotIn("EVO_PROTECTED_ASSET_UNKNOWN", self._codes())
+
+    def test_sixth_asset_with_changes_and_approval_downgrades_to_warn(self):
+        self._card("EVO-20990101-007",
+                   protected_assets_targeted=["scripts/verdict_gate.ps1 判定逻辑"],
+                   protected_assets_changes=["why"],
+                   sir_approval="sir 2026-11-14")
+        findings = lint.check_evo_protected_assets(self.evo)
+        levels = {f["rule"]: f["level"] for f in findings}
+        self.assertEqual(levels.get("EVO_PROTECTED_ASSET_TOUCHED"), "WARN")
+
     def test_unreadable_card_is_an_error_not_silence(self):
         (self.evo / "EVO-20990101-006.json").write_text("{not json", encoding="utf-8")
         self.assertIn("EVO_UNREADABLE", self._codes())
