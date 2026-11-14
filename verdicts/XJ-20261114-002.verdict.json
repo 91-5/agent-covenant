@@ -4,6 +4,12 @@
   "blockers": 0,
   "conditions": 0,
   "advisories": 3,
+  "evidence": [
+    "docs/lint-rules.md: canonical declaration strings block added (+23, insertion-only), six strings verbatim vs lint_cards.py PROTECTED 6/6",
+    "git diff --stat master~3..master: docs/lint-rules.md + .tasks/XJ-20261114-002.md only; no tools/tests/scripts/AGENTS.md touched",
+    "non-strict lint exit 0; --strict confirms EVO_PROTECTED_ASSET_UNKNOWN is WARN (L832-836) and doc's blocking claim accurate",
+    "review: D:\\15812\\projects\\review\\agnes\\XJ-20261114-002.review.md (AgnesCode, independent=true, ts 2026-11-14T13:15:00Z)"
+  ],
   "review_ref": "D:\\15812\\projects\\review\\agnes\\XJ-20261114-002.review.md",
   "ts": "2026-11-14T13:15:00Z",
   "independent": true,
