@@ -1,0 +1,82 @@
+{
+  "id": "XJ-20261114-003",
+  "artifact": "docs/eval-report-r17-evaluable-local.md (layer-internal evaluable readings + X-7.3c probe + X-7.3a manifest; M1 state PROVISIONAL-L1 derived)",
+  "commit": "db8d81e (feature/xj-20261114-003-round17, base e744d61; freeze commit 2387c22 precedes all r17 data products)",
+  "verdict": "PASS",
+  "acknowledged_by": "AgnesCode (fuxiang, blind adjudicator)",
+  "blockers": 0,
+  "conditions": 0,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-14T16:49:23Z",
+  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no semantic re-stamp of prior rounds",
+  "evidence": [
+    "Freeze order independently confirmed: git merge-base --is-ancestor 2387c22 e7edefe = true; section 24 (2387c22, pure append 183/0) precedes all D2-D5 r17 products; e744d61 (acceptance point) is an ancestor of HEAD db8d81e.",
+    "A1 prefix dual-calibre independently recomputed: raw CRLF prefix sha256 7b6a475b... (256516 B) / LF prefix e8ac6b03... (254316 B), both equal to the card/D24-F frozen values; the LF prefix is invariant at the freeze commit 2387c22 -> sections 0-23 frozen text untouched. A1 numstat = 183 0 (deletion column 0).",
+    "Red-zone zero-touch: git diff e744d61 db8d81e --stat across the 11 full red-zone paths + ledger/ + scripts/verdict_gate.ps1 + .github/ = empty (exit 0).",
+    "Seal three-source independently re-verified: seal_run.py --verify r15=32 files / r16=13 files / r17=6 files, all VERIFY: OK.",
+    "X-7.3c probe independently re-run in a fresh process: x73_probe_c.py --input <canonical out/r11-blind-samples.json> --runs 3 -> exit 0, T01-c00/c01/c07 x3 hash-equal, verdict=identical, case hashes byte-identical to sealed run-r17/x73-probe-c.json; observed nondeterminism 0/3=0.0 <= 0.05 (UNMEASURED replaced by a measured value). Sealed corpus sha256 6d61994c.../2b38e9ab... independently confirmed.",
+    "Numerics independently recomputed: T* true 118 / false 48 / unjudgeable 234 (coverage 0.415); anchor_miss layer T*-false=48 & main E4=48 -> FP[anchor_miss]=48/48; cwd_probe layer T*-true=18 & main E2(reject)=18 -> FP[cwd_probe]=0/18 with 18/18 rejection; Wilson z=1.959963984540054 -> 48/48=[0.9259,1.0], 0/18=[0.0,0.1759]; all digit-for-digit equal to frozen values.",
+    "M1 dual reading + frozen product intact: m1-recompute.json recompute=6.153846 (PROVISIONAL, convergent recomputation, replace_historical=False, forbidden 'replication' wording unused) vs historical 5.8 (CI[1.7,11.2]) reported in parallel; out/fp-overall.json sha256 df8d2d0e... unchanged (point=1.0, coverage=0.415).",
+    "r17 report independently checked: 7 sections; forbidden numeric FP_overall point-estimate 0 occurrences; D-5.1 words (discrimination-negative / total-absence) 0 occurrences; FP_overall=not_estimable / PROVISIONAL-L1 / independence_satisfied all present; scope-tag 'post-hoc layer subset' x2; single 'proof' occurrence is the meta-statement 'this round uses no proof-class assertions' (compliant). verify_artifact_pointers.py --root <wt> --report <r17> -> 7/7 conclusions with valid pointer, COVERAGE 100.0%, BAD_DIGEST 0, RESULT PASS; report_lint.py frozen-spec equivalent exit 0 (LINT: PASS checks=5), literal card command exit 2 (reproduced).",
+    "Gate sequencing: pre-verdict verdict_gate.ps1 -CardId XJ-20261114-003 = exit 1 (no verdict on file), as expected; should clear to exit 0 after this verdict lands."
+  ],
+  "rulings": [
+    {
+      "q": "Q1 layer-internal scope-tag vs D-5.1",
+      "ruling": "SUPPORTED. Report 0 pins the claim surface to two layer readings + three gate readings only; both FP[layer] readings carry mandatory scope-tags and forbid whole-domain extrapolation; FP_overall=not_estimable frozen literal retained side-by-side; D-5.1 forbidden words zero-occurrence (machine report_lint + independent grep)."
+    },
+    {
+      "q": "Q2 X-7.3c runs=3 vs C1>=5",
+      "ruling": "KEEP runs=3 as the card-literal frozen value THIS round; file a >=5-runs / wider-path-coverage promotion as a FORWARD C1 item (next round). 3/3 byte-identical is sufficient to convert UNMEASURED into a measured 0.0, but its power to reject p_drift~0.05 is limited -> that is the rationale for the follow-up, not an in-round scope change (which would break the zero-recompute/frozen boundary)."
+    },
+    {
+      "q": "Q3 PROVISIONAL-L1 terminal-state disclosure",
+      "ruling": "ADEQUATE, no extra condition. Report 4 explicitly registers 'if L2 never lands, PROVISIONAL-L1 is the de-facto terminal state' + double cap (independence_satisfied=false, T* non-independent human labeling I-4.3-c=false); upgrading only downgrades 'missing safety boundary' from blocker to disclosure without lowering a/c bars."
+    },
+    {
+      "q": "Q4 assertion wording = pre-registered layer-internal control evidence",
+      "ruling": "CONFORMS. No 'proof'-class assertions (the only occurrence is the meta 'no proof-class assertions' declaration); L0 probe boundary (byte-equality output only, zero new judging data, D24-0) and the X-7.3b clause tension (D24-D + report 4) are both registered."
+    }
+  ],
+  "precheck_rulings": [
+    {
+      "n": "N1 author-side A4 literal spec defect",
+      "ruling": "ADVISORY, not blocker. Card Acceptance #4 literal command mis-specified (--forbid-label FP_overall should be frozen FP_overall_when_coverage_lt_0.70; --require-scope-tag missing its required arg) -> exit 2. Executor honestly registered exit 2 without glossing, then ran the frozen-spec equivalent (exit 0, independently reproduced). Responsibility is with the card/dispatch author, not the executor. Suggest correcting the card literal or annotating 'equivalent command governs'."
+    },
+    {
+      "n": "N2 env_manifest cwd sensitivity",
+      "ruling": "ADVISORY. Running from the worktree yields a non-diagnostic MANIFEST ERROR FileNotFoundError (exit 2); from the canonical checkout exit 0. Executor registered the path calibre (worktree has no gitignored out/; corpus resolved from canonical checkout) -> A3 compliant. Recommend the tool resolve the corpus path or emit a diagnosable error."
+    },
+    {
+      "n": "N3 X-7.3c test power",
+      "ruling": "ADVISORY (forward C1), co-ruled with Q2: keep runs=3 this round; >=5-runs / wider path coverage as a follow-up promotion card, not in this card."
+    },
+    {
+      "n": "N4 X-7.3b clause tension (only governance-level item)",
+      "ruling": "THIS-ROUND b=CONDITIONAL is LEGITIMATE; the 25 formal amendment is deferred to round-18 as a forward governance ADVISORY, not a condition here. section-23 D23-C frozen mapping says L0->FAIL while sir's 2026-11-14 scope final says b stays CONDITIONAL. The executor followed sir's explicit scope-finalization (a valid per-round supersession authority) and honestly double-registered the discrepancy (D24-D + report 4). To prevent the frozen text from permanently diverging from the executed calibre, round-18 must formally amend the section-23 L0->FAIL mapping via section-25 to enshrine b=CONDITIONAL."
+    },
+    {
+      "n": "N5 PROVISIONAL-L1 terminal-state risk",
+      "ruling": "ADVISORY, disclosure adequate, no extra condition; consistent with Q3."
+    }
+  ],
+  "advisory_findings": [
+    "ADV-1 (N1): card Acceptance #4 literal command is spec-imperfect (frozen-spec equivalent governs). Suggest correcting the card literal or annotating it so future references are not misled; executor's honest exit-2 registration is the correct handling.",
+    "ADV-2 (N2): env_manifest.py cwd-dependency yields a non-diagnostic FileNotFoundError when run from the worktree; recommend corpus-path resolution or an explicit error message. A3 calibre (canonical checkout) is compliant as registered.",
+    "ADV-3 (N3/Q2): X-7.3c runs=3 has limited power to reject p_drift~0.05 and covers only 3 cascade paths; file a forward C1 promotion (>=5 runs / wider path coverage) for a next round; keep the frozen 3x3 as this round's reading.",
+    "ADV-4 (N4, governance): X-7.3b clause tension (section-23 L0->FAIL vs sir scope-final b=CONDITIONAL). This round b=CONDITIONAL is legitimate and honestly double-registered; REQUIRE round-18 to formally amend section-23's mapping via section-25 so the frozen text does not permanently diverge from the executed calibre.",
+    "ADV-5 (N5): PROVISIONAL-L1 may become a de-facto terminal state if L2 is never stood up; report discloses it with the double cap (independence_satisfied=false, T* non-independent human labeling). No extra condition; keep the cap visible."
+  ],
+  "not_verified_disclosed": [
+    "End-to-end first live merge under the verdict-on-file gate (post-verdict) is GATED/sir-dependent and not yet runnable at adjudication time; the acceptance regression (probe/manifest/report_lint/seal) is the in-round substitute used here.",
+    "X-7.3b isolation (L2 sandbox) remains unmeasured/out-of-scope by sir's 2026-11-14 scope final ('do not stand up'); M1 stays PROVISIONAL-L1, not a PASS."
+  ],
+  "honesty_flags": {
+    "gate_result": "not_evaluable",
+    "gate_conclusion_issued": false,
+    "capability_gain_claim": false,
+    "independence_satisfied": false
+  },
+  "subcard_note": "Round-17 is a claim-surface shrinkage + nondeterminism measurement round: it consumes round-15 sealed T*/layer data (zero model re-runs, zero re-judging, zero new victim data). The two layer readings and FP_overall=not_estimable are layer-internal / frozen-literal only; M1 is PROVISIONAL-L1 (derived via the D23-D frozen table on the measured triple, disclosed, not premised). Round-15 +6.153846 / +5.8 dual readings are carried in parallel, unmodified."
+}
