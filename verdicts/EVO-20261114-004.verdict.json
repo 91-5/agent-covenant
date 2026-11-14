@@ -1,0 +1,23 @@
+{
+  "id": "EVO-20261114-004",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 3,
+  "evidence": [
+    "Independent test run: python -m unittest discover -s tests -> Ran 548 tests in 73.2s, OK (exit 0)",
+    "Independent test run: python -m unittest tests.test_lint_cards -> Ran 162 tests in 23.8s, OK (exit 0); test_unknown_asset_name_errors_as_a_typo asserts level == ERROR",
+    "Independent corpus scan: 32 EVO cards in _handoffs/evo/EVO-*.json, 0 non-canonical protected_assets_targeted entries (all 6 canonical strings match AGENTS.md v0.10)",
+    "Independent negative probe: EVO-20990101-099.json with trailing-space asset name -> EVO_PROTECTED_ASSET_UNKNOWN/ERROR, LINT FAIL, exit 1 (both strict and non-strict modes)",
+    "Non-strict lint on real corpus: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --artifact-map artifacts.json --evo-dir ../_handoffs/evo -> exit 0, 4x EVO_PROTECTED_ASSET_TOUCHED WARN, 0 UNKNOWN",
+    "Diff scope: git diff a9eb0c2..63e41cb --name-only -> exactly 3 files (docs/lint-rules.md, tests/test_lint_cards.py, tools/lint_cards.py), no AGENTS.md change, no PROTECTED tuple change",
+    "PROTECTED tuple at tools/lint_cards.py L807-814: all 6 strings verbatim match AGENTS.md v0.10 canonical list",
+    "gate.py does not consume EVO_PROTECTED_ASSET_UNKNOWN findings; UNKNOWN level is read only by lint_cards.py main() exit-code logic (errors>0 -> exit 1 in all modes)",
+    "tools/pre-push-hook.sh runs gate.py, not lint_cards.py, so UNKNOWN level has no effect on pre-push path",
+    "Commit message 63e41cb 'feat(lint): EVO_PROTECTED_ASSET_UNKNOWN WARN -> ERROR (EVO-20261114-004)' is accurate: 548 tests green, corpus 0 non-canonical, 3-file scope"
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261114-004.review.md",
+  "ts": "2026-11-14T14:28:56+00:00",
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)"
+}
