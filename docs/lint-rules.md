@@ -427,10 +427,10 @@ scripts/verdict_gate.ps1 判定逻辑
 ```
 
 Only a canonical string constitutes a declaration; anything else is treated as
-a misspelling and reported as `EVO_PROTECTED_ASSET_UNKNOWN` (WARN). Locally
-that is non-blocking, but `--strict` (CI and pre-push) makes it equivalent to
-blocking — and even when not blocked, the error semantics are wrong ("typo",
-not "touching a protected asset"). The rule text in AGENTS.md §5.3 and the
+a misspelling and reported as `EVO_PROTECTED_ASSET_UNKNOWN`. Since
+2026-11-14 that is an **ERROR** (EVO-20261114-004; previously WARN, which
+non-strict local runs waved through — `--strict` already blocked it).
+The rule text in AGENTS.md §5.3 and the
 `PROTECTED` tuple in `tools/lint_cards.py` are one list by construction: any
 change to either side must land in the same card, or that asset becomes
 invisible to the linter (fail-open).
@@ -456,8 +456,11 @@ inversion is disqualifying: cards now declare `protected_assets_targeted`, and o
 that list is judged. A card remains free to discuss, cite or forbid `gate.py` in
 prose without being treated as touching it.
 
-`EVO_PROTECTED_ASSET_UNKNOWN` (WARN) catches a typo'd asset name, so a
-misspelling cannot silently opt a card out of the boundary.
+`EVO_PROTECTED_ASSET_UNKNOWN` (ERROR) catches a typo'd asset name, so a
+misspelling cannot silently opt a card out of the boundary. Until
+2026-11-14 it was a WARN (local non-strict runs let it through); EVO-20261114-004
+(AGENTS.md v0.10) raised it to ERROR, which is also why `--strict` and
+non-strict now agree.
 
 Enable with `--evo-dir <path>`; without the flag the check is off, like every
 other rule that needs an external file.

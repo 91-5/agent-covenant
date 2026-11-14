@@ -1354,9 +1354,18 @@ class TestEvoProtectedAssets(unittest.TestCase):
         self._card("EVO-20990101-004", proposed_change="加一条 lint 规则")
         self.assertEqual(self._codes(), set())
 
-    def test_unknown_asset_name_warns_as_a_typo(self):
+    def test_unknown_asset_name_errors_as_a_typo(self):
+        """EVO-20261114-004: a misspelled declaration string must be an ERROR.
+
+        AGENTS.md v0.10 states only the six canonical strings constitute a
+        declaration; weaker (WARN) enforcement let a typo opt a card out of the
+        protected-asset boundary in non-strict local runs.
+        """
         self._card("EVO-20990101-005", protected_assets_targeted=["gate.py 判定邏輯"])
+        findings = lint.check_evo_protected_assets(self.evo)
+        levels = {f["rule"]: f["level"] for f in findings}
         self.assertIn("EVO_PROTECTED_ASSET_UNKNOWN", self._codes())
+        self.assertEqual(levels.get("EVO_PROTECTED_ASSET_UNKNOWN"), "ERROR")
 
     def test_sixth_asset_without_declaration_is_an_error(self):
         """EVO-20261114-002 added `scripts/verdict_gate.ps1` as a protected asset.
