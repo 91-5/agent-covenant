@@ -389,14 +389,28 @@ admits only `training / rollback / promote`, where `rollback`/`promote` **must**
 carry a target id and `training` **must not**. A rule about what may not change
 belongs in a schema, not in a paragraph.
 
-`EVO-20261010-003` gives this repository the same shape. Five assets are protected
-(sir's list):
+`EVO-20261010-003` gives this repository the same shape. Six assets are protected
+(sir's list; the sixth added by `EVO-20261114-002`, AGENTS.md v0.9 §5.3):
 
 1. verdict 模板与字段语义
 2. EVO 状态机定义
 3. AgnesCode 评审员资格
 4. sir 终裁权
 5. `gate.py` 判定逻辑
+6. `scripts/verdict_gate.ps1` 判定逻辑
+
+Item 6 is the judgment logic of the merge gate itself — structurally the same
+kind of asset as item 5: one decides *whether a card is compliant*, the other
+decides *whether a merge may happen*, and neither may be rewritten by the card
+it judges. It is declared here without backticks, the same convention as item 5:
+a card writes `scripts/verdict_gate.ps1 判定逻辑` in `protected_assets_targeted`.
+
+> **The gap this closed (XJ-20261114-001).** While the tuple held five names, a
+> card targeting *only* item 6 produced `hit = []`, fell through the
+> `if not hit: continue` branch, and emitted **no finding at all** — the
+> boundary was fail-open for the sixth asset, and a card could have rewritten
+> the merge gate with only a "did you mean a typo?" warning against it. The
+> tuple and the rule text are now one list again.
 
 A card that **targets** one of them is an ERROR unless it also carries both
 `protected_assets_changes` (naming the asset and why) and `sir_approval` — that

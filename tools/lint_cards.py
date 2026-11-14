@@ -799,7 +799,10 @@ def check_evo_protected_assets(evo_dir):
     if not evo_dir or not Path(evo_dir).is_dir():
         return out
 
-    # The five assets sir approved (EVO-20261010-003). A card names them in
+    # The five assets sir approved (EVO-20261010-003) plus the sixth added by
+    # EVO-20261114-002 (AGENTS.md v0.9 section 5.3): the judgment logic of
+    # `scripts/verdict_gate.ps1`. Declared here without backticks, the same
+    # convention as `gate.py 判定逻辑`. A card names them in
     # `protected_assets_targeted`; anything else is not this rule's business.
     PROTECTED = (
         "verdict 模板与字段语义",
@@ -807,6 +810,7 @@ def check_evo_protected_assets(evo_dir):
         "AgnesCode 评审员资格",
         "sir 终裁权",
         "gate.py 判定逻辑",
+        "scripts/verdict_gate.ps1 判定逻辑",
     )
 
     for path in sorted(Path(evo_dir).glob("EVO-*.json")):
