@@ -830,8 +830,10 @@ def check_evo_protected_assets(evo_dir):
         unknown = [t for t in targeted if t not in PROTECTED]
         hit = [t for t in targeted if t in PROTECTED]
         if unknown:
+            # UNKNOWN 已升级为 ERROR（EVO-20261114-004, sir 2026-11-14「现在开张」）：
+            # 拼写偏差不得绕过受保护资产边界；条文（AGENTS.md v0.10）与强制口径同一。
             out.append(_finding(
-                "EVO_PROTECTED_ASSET_UNKNOWN", "WARN", path,
+                "EVO_PROTECTED_ASSET_UNKNOWN", "ERROR", path,
                 f"protected_assets_targeted names {unknown}, which is not one of the "
                 f"protected assets {list(PROTECTED)} -- check for a typo"))
         if not hit:
