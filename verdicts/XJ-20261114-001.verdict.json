@@ -1,0 +1,25 @@
+{
+  "id": "XJ-20261114-001",
+  "artifact": "tools/lint_cards.py",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": [],
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-14T11:21:42Z",
+  "evidence": [
+    "R1: python -m unittest tests.test_lint_cards -v -> Ran 162 tests, OK, exit 0 (two new cases test_sixth_asset_* both pass)",
+    "R2: python -m unittest discover -s tests -> Ran 548 tests, OK, exit 0",
+    "R3: python tools/lint_cards.py --dir .tasks --verdict-dir verdicts --evo-dir D:\\\\15812\\\\projects\\\\_handoffs\\\\evo --json -> exit 0, errors=0, warnings=5 (VERDICT_WITHOUT_REVIEW x1, EVO_PROTECTED_ASSET_TOUCHED x2 [gate.py asset, unchanged], UNMAPPED_CLAIM_SURFACE x2 [transient, self-reported])",
+    "R4 (negative probe, independent): out/agnes-xj-negative/EVO-20991114-001.json declares only [scripts/verdict_gate.ps1 判定逻辑] without protected_assets_changes/sir_approval; lint --evo-dir out/agnes-xj-negative -> EVO_PROTECTED_ASSET_TOUCHED/ERROR, exit 1 (pre-fix this input emitted NO TOUCHED finding, confirming the fail-open premise)",
+    "R5: git diff --name-only 7d38b9e ab4c90f -> only 6 owned paths; no scripts/verdict_gate.ps1, no tools/gate.py, no AGENTS.md, no verdicts/, no ledger/ (red-zone zero-touch)",
+    "fail-open premise independently confirmed: check_evo_protected_assets hit=[] falls through if-not-hit-continue; baseline log (5-asset tuple) shows no EVO_PROTECTED_ASSET_TOUCHED for a 6th-asset-only card"
+  ],
+  "advisories": [
+    "A1: AGENTS.md 5.3 body still uses backticked long-paren form vs linter no-backtick short name; machine-read and human-read lists are the same one-list but different carriers; if a canonical-declaration-string line is added to 5.3 it must go through a separate EVO card + sir approval, not this card",
+    "A2: three inputs not covered by the 548 tests (targeted as str not list; card declaring assets 5 AND 6 together; 6th-asset name with full-width chars) - current behaviour is correct but future regression surface; schedule a follow-up card to pin these",
+    "A3: typo on the 6th asset name lands in EVO_PROTECTED_ASSET_UNKNOWN (WARN) not ERROR, so a normal card is not blocked by a misspelling; an alias table is NOT recommended (it would become a new protected surface)",
+    "A4: Five-asset historical wording in README/PROTOCOL/postmortems is a historical snapshot, intentionally not edited by this card; verify in a separate card if needed",
+    "A5: this card does not modify a protected-asset body (verdict_gate.ps1 / gate.py untouched, red-zone zero), so it does not self-declare protected_assets_targeted; judgment recorded for audit"
+  ]
+}
