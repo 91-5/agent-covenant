@@ -83,3 +83,7 @@ run-r15/
 # disclosed in docs/eval-report-r16-erratum.md and the Agnes review request,
 # following the round-14/round-15 precedents.
 run-r16/
+
+# Round-17 execution products (XJ-20261114-003 D1; card Owned files run-r17/).
+# out/ already covered above; this exact name is not.
+run-r17/

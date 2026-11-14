@@ -2198,3 +2198,186 @@ D2 的 `report_lint.py` 从本块**读回**禁词表、阈值与 scope-tag 字�
 | V8 | D23-G `erratum_continuity` + `report_lint.py --self-test` 负向用例 |
 | V9 | D23-0 红区零触碰 + 回归单测 + lint_cards |
 | V10 | D23-0 `protected_artifacts`：`out/fp-overall.json` 原值 `point = 1.0` 未改 |
+## §24 变更记录（v2.5 → v2.6：轮十七 收缩主张面——层内 evaluable 判决 + X-7.3 非确定性探针，2026-11-14，冻结于轮十七任何 D2–D5 产物产生之前）
+
+### D24-0 合法性前提、冻结序与零重算边界
+
+本节在轮十七任何 `run-r17/`、`out/` 的 r17 产物产生之前冻结，沿用 `freeze → offline replay → data` 三段序：先冻结本协议与全部决策规则，再实现与机械验证，最后才允许产生任何执行读数。上游：XJ-20261113-002（轮十五，CLOSED，外部真值源 T\* 与 `FP_overall = not_estimable` 冻结）、XJ-20261113-003（轮十六，CLOSED，§23 措辞勘误与 X-7.3' a/b/c 拆分）；sir 2026-11-14 范围定稿（卡面「范围钉死」表）。
+
+**零重算边界**：本轮不改任何已冻结数值。`out/fp-overall.json`（protected artifact，§23 D23-G）原值 `point = 1.0` 不回改；`immutable_numerals`（`48/48`、`0.415`、`[0.9259, 1.0]`、`+6.153846`、`delta=1.000`、`sigma=0.035`、`118/48/234`）逐字沿用；全域 `FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)` 是冻结结论，轮十七无权重开。本轮只做三件事：①把 §23 已落条款的 X-7.3a / X-7.3c 实现为机械探针（P1/P2 落地卡）；②把层内可判读数（`FP[anchor_miss]` / `FP[cwd_probe]`）以冻结分母与方法落库；③M1 状态映射按 §23 D23-D 冻结表对实测三元组作**文本层套用**。`gate_result = not_evaluable`、`gate_conclusion_issued = false`、`capability_gain_claim = false`。
+
+**执行信任级（E-0）登记**：本环境为 L0。本轮全部动作落在 §23 D23-E L0 允许列的延伸解释内：只读扫描（T\* 与层判别数据消费）、机械 lint、纯追加冻结、以及 X-7.3c L0 行自身定义的「判级器同输入 3 次逐字节相同」探针。张力登记（review Q4）：§23 D23-E L0 禁止「判级重放」——该禁令指**产生新的判级读数产物**；本轮探针只输出字节等值判定（哈希），判级对象不落盘、不入任何读数、不产生第二个门计数，属 X-7.3c L0 行的显式授权范围（sir 2026-11-14 定稿）。此解释由浮香裁定。
+
+### D24-A 第一组条款 · 收缩主张面：层内 evaluable 判决（层内可判 / 全域禁词沿用 §23）
+
+**A-1 分母冻结规则**：层内假支持率读数 `FP[layer] := |{rows: T\*(row) = false ∧ main_level = E4}| / |{rows ∈ layer: T\* 可判}|`，Wilson 95% 区间（z = 1.959963984540054，与 §22/轮十五 `z_95` 同值），保留 4 位小数。本轮两个 scope 的 T\* 可判数与层大小相等（`anchor_miss` 48 = 48、`cwd_probe` 18 = 18），无分母歧义。
+
+**A-2 层内读数（冻结字面）**：
+
+| scope | n | T\* 构成 | 主轨构成 | 层内读数 | scope-tag（强制字段） |
+|---|---|---|---|---|---|
+| `anchor_miss` | 48 | false 48/48 | E4 48/48 | `FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])` | `post-hoc layer subset, T* coverage=100%` |
+| `cwd_probe` | 18 | true 18/18 | E2 18/18（否决 100%） | `FP[cwd_probe] = 0.000 (0/18, Wilson 95% [0.0, 0.1759])`，**必须并列**否决率 `18/18 = 1.000` | `post-hoc layer subset, T* coverage=100% (all true, zero E4)` |
+
+- `FP[anchor_miss]` 字面为 §23 `P-4.5''` 冻结字面**逐字沿用**（机械复算须与其逐位相等，等值即通过，不得改数）。
+- `FP[cwd_probe]` 的 0.000 是**以总否决为代价的读数**：18 条 T\*-true claim 被主轨 100% 否决（E2）——零假支持与全否决**成对呈现**，缺一即不合规；该层主轨误差形态是漏报（假否决），不是假支持。
+- 轮十四读数 `FP[anchor_miss] = 30/150 = 20.0%`（R10_ANCHOR 层内率）与本轮 `48/48` 分母不同、不可互相外推；二者各自带 scope 标签并列时必须写明分母差异。
+
+**A-3 全域禁词沿用 §23**：任何报告文本（D4 报告与本节）不得出现 `FP_overall` 后接数字的点估计（`FP_overall = <数字>`）；必须并列冻结字面 `FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)`；D-5.1 禁词（`判别力为负`、`判别力 −`、`完全缺失`）及其同义改写禁止；对 234 条 `unjudgeable` 只允许「不可评估」表述；「证明」类断言禁止，本轮一切读数定性为「预注册条件下的层内对照证据」。D4 报告必须通过 `tools/eval/report_lint.py`（规则自 §23 D23-G `R16-ERRATUM` 块读回）。
+
+### D24-B 第二组条款 · X-7.3c 探针（L0 判级器同输入 3 次逐字节相同）
+
+1. **输入**：封存判级语料 `out/r11-blind-samples.json`（sha256 `6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9`，§21/§22 冻结），抽取 **3 条**覆盖判级器三条级联路径的封存 case：`T01-c00`（`cmd_ok`，命令复现路径）、`T01-c01`（`anchor_miss`，零锚机械通过路径）、`T01-c07`（`no_evidence`，结构弃权路径）。选择该语料的理由：其 `fixtures_workspace` 内嵌于样本（hermetic），判级不依赖演进中的仓库树；每条 case 的判级环境由探针在临时目录逐字节重建。备选输入（`.eval-sealed/pkg-beecf4ed/products/` 盲化包）登记为备选，因依赖仓库根状态未被选用，交评审裁定（review Q2）。
+2. **口径**：`--runs 3`（卡面字面冻结值）。每次运行：新建临时目录 → 逐字节写入该 case 的 `fixtures_workspace` 全部文件 → 以 `judge.judge_markdown(markdown, root=ws, workspace=ws)` 判级（红区 `judge.py` 只读调用）→ 判级结果经规范序列化（`json.dumps(sort_keys=True, ensure_ascii=False)`，UTF-8 字节）取 sha256。三条 case 各自三次哈希全等 ⇔ identical。
+3. **退出码**：exit **0** = 全部 identical；exit **1** = 任一 drift（必须如实记账，不得重跑刷绿）；exit **2** = 探针错误（异常/输入缺失/语料 sha 不符）。
+4. **输出**：`run-r17/x73-probe-c.json`（逐 case 三次哈希、等值判定、语料与输入 sha 锚点），纳入 seal。判级对象本身**不落盘**——只记哈希与等值布尔，零新判级数据。
+5. **runs=3 与 C1≥5（review Q2 的正面登记）**：3 次是卡面字面冻结值；「至少 5 次」更稳的口径作为未闭合项登记交浮香裁定，本轮不自行加码。
+6. **c 读数语义（L0 二元探针）**：3/3 identical ⇒ 观测非确定率 `0/3 = 0.0 ≤ 0.05`；出现 drift ⇒ `c = k/3` 如实落库，M1 映射按 D23-D 冻结表套用（drift 使 c > 0.05 → 维持 `PROVISIONAL`）。`UNMEASURED` 不得当 ≤0.05（§23 延续）。
+
+### D24-C 第三组条款 · X-7.3a manifest 验收口径
+
+1. **必填字段**（全部非空才算完整）：`python_version` / `platform_fingerprint` / `dependency_hashes`（`pip freeze` 全量 + 可疑共享库枚举：`python3.dll`、`python314.dll`、`vcruntime*.dll` 等随解释器分发的本机库文件哈希）/ `locale_timezone` / `env_whitelist` / `fixtures_sha256`。
+2. **fixtures_sha256 冻结口径** = 本轮实际消费的封存判级语料文件：`out/r11-blind-samples.json`（`6d61994c…`）与 `out/r11-reliability-rows.json`（`2b38e9ab…`）。
+3. **与 `seal.json` 一致性核对**（`--seal <seal.json>`）：对 seal 覆盖文件清单与 manifest `fixtures_sha256` 声明文件的交集逐字节比对（同路径同 sha256）；manifest 必填字段齐备且核对无失配 ⇔ exit **0**（match）；任何失配或字段缺失 ⇔ exit **1**（mismatch，如实记账）；工具错误 ⇔ exit **2**。
+4. **输出**：`run-r17/env-manifest.json`，纳入 seal。`X-7.3a` 读数 = PASS ⇔ manifest 完整且一致性核对 exit 0（读数在 D4 报告落库，不由本条款预设）。
+
+### D24-D 第四组条款 · X-7.3 三门读数与 M1 状态映射（文本层套用）
+
+- `X-7.3a` = 按 D24-C 实测；`X-7.3c` = 按 D24-B 实测；`X-7.3b` = **保持 `CONDITIONAL`**（sir 2026-11-14 范围定稿「不动」，L2 挂账）。**条款间张力照实登记**：§23 D23-C 状态映射写 `L0 → FAIL`，本轮按 sir 显式范围表裁定 `b = CONDITIONAL` 维持——这不是本卡裁量，是 sir 定稿优先；该差异与「CONDITIONAL 是披露项、永远不是已满足的门」（§23）一并交浮香裁定（review Q4）。
+- **M1 状态映射按 §23 D23-D 冻结表对实测三元组套用**：若 `a = PASS ∧ b = CONDITIONAL ∧ c ≤ 0.05` → `PROVISIONAL-L1`（可用，**必须披露**安全边界未隔离）；任一条件不满足 → 维持 `PROVISIONAL`。轮十五 M1 读数 `+6.153846`（本轮收敛性重算）与历史 `+5.8` 双读数并报不变；`failed_gates`（sandbox / env_manifest / nondeterminism）中 `env_manifest` 与 `nondeterminism` 两项的本轮实测读数并列呈现，**不回改轮十五任何产物**。
+- `PROVISIONAL-L1` 若成为事实终态（永久 CONDITIONAL 的另一名字）必须显式披露（review Q3）：报告须写明「L2 挂账不立项的情况下，PROVISIONAL-L1 即终态，且其可信度上限受 `independence_satisfied = false` 与 T\* 非独立人类标注（I-4.3-c=false）双重封顶」。
+
+### D24-E 第五组条款 · 禁令区（随条款写入，覆盖卡面 Constraints）
+
+1. **零模型重跑、零重判级、零新 victim 数据**；`.eval-sealed/` 只读（探针与 manifest 对其零写入）；`out/fp-overall.json` 与全部 `immutable_numerals` 原值不回改。
+2. **红区零触碰**（完整路径）：`tools/eval/judge.py`、`tools/eval/extract.py`、`tools/eval/blind.py`、`tools/eval/report.py`、`tools/eval/stats.py`、`tools/eval/study_runner.py`、`tools/eval/seal_run.py`、`tools/gate.py`、`tools/lint_cards.py`、`verdicts/`、`.eval-sealed/`；另加本轮卡面约束：`AGENTS.md`（本仓不存在，空集约束照实登记）、`ledger/`、`scripts/verdict_gate.ps1`、`.github/`。
+3. **报告措辞禁令**：见 D24-A A-3；任何层内读数必须带 scope-tag；禁止把 `cwd_probe` 的零假支持表述为主轨能力（其成对事实是 100% 假否决）。
+4. **执行者纪律**：不宣布验收通过、不自行裁定合宪性；无合并权、无 push 权、不写 verdict；AgnesCode（浮香，盲化）唯一 adjudicator；CI py3.9 纪律（禁 `write_text(newline=)`，JSON 写入 `open(..., newline="")`）。
+
+### D24-F 冻结常量表（数据产生前写死）
+
+| 常量 | 冻结值 | 来源 / 用途 |
+|---|---|---|
+| V1 前缀（§0–§23）双口径 | 工作树 raw 256516 字节 / sha256 `7b6a475b43a0369d9b7bf7d6de851c9269f9e0dbfe466b3806ae20ad28e9a562`；blob LF 254316 字节 / sha256 `e8ac6b03039c9eac8aa9688123116d559c967e21f730a39ff95a12ed3fe87e72` | 冻结前后须一致（acceptance 1） |
+| T\* 冻结计数 | true 118 / false 48 / unjudgeable 234；coverage `0.415` | `run-r15/truth-star.json`（sha `3f24ec03…`），§22 冻结 |
+| 层内分母 | `anchor_miss` 48（T\*-false 48，主轨 E4 48）；`cwd_probe` 18（T\*-true 18，主轨 E2 18） | truth-star + `out/r11-reliability-rows.json`（sha `2b38e9ab…`） |
+| Wilson | z = `1.959963984540054`，method `wilson_95`，4 位小数 | §22/轮十五同值 |
+| FP 字面 | `FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])`；`FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)` | §23 `P-4.5''` 冻结字面 |
+| 探针规格 | 语料 sha `6d61994c…`；cases `T01-c00` / `T01-c01` / `T01-c07`；runs `3`；exit 0/1/2 | D24-B |
+| manifest 必填 | `python_version` / `platform_fingerprint` / `dependency_hashes` / `locale_timezone` / `env_whitelist` / `fixtures_sha256`（= samples + rows 两文件 sha） | D24-C |
+| 双 seal 源 | `run-r15/seal.json`（32 文件）+ `run-r16/seal.json`（13 文件），`--verify` 均 exit 0 | acceptance 7 |
+| M1 冻结读数 | `+6.153846`（收敛性重算）/ `+5.8`（历史第 9 轮配对差），轮十五 status `PROVISIONAL` | `run-r15/m1-recompute.json`（sha `c62f2fe1…`） |
+| D-5.1 禁词 | `判别力为负` / `判别力 −` / `完全缺失` | §23 D23-G 读回 |
+| gate_result | `not_evaluable`，`gate_conclusion_issued = false`，`capability_gain_claim = false` | D24-0 |
+
+### D24-G 机器可读冻结块（`x73_probe_c.py` / `env_manifest.py` 读回）
+
+<!-- R17-LOCAL-EVALUABLE-BEGIN -->
+```json
+{
+  "schema": "r17-local-evaluable-v1",
+  "frozen_in": "section 24 D24-G",
+  "card": "XJ-20261114-003",
+  "round": "r17",
+  "prefix": {
+    "worktree_raw_sha256": "7b6a475b43a0369d9b7bf7d6de851c9269f9e0dbfe466b3806ae20ad28e9a562",
+    "worktree_raw_bytes": 256516,
+    "blob_lf_sha256": "e8ac6b03039c9eac8aa9688123116d559c967e21f730a39ff95a12ed3fe87e72",
+    "blob_lf_bytes": 254316,
+    "note": "section 0..23 frozen; section 24 is a byte-level pure append only"
+  },
+  "sources": {
+    "run_r15_dir": "D:/15812/projects/agent-covenant/run-r15",
+    "run_r16_dir": "D:/15812/projects/agent-covenant/run-r16",
+    "truth_star": {"path": "run-r15/truth-star.json", "sha256": "3f24ec031b0f1858b87795e9bc1d3b5ec64fb87fb9c278263a5e999072bc4a68"},
+    "layer_truth": {"path": "run-r15/layer-truth.json", "sha256": "e54fbd7ec4b8b13991e8c99e3ed014b5f4982f5ed65cf260a9108fec716fed91"},
+    "fp_overall": {"path": "run-r15/fp-overall.json", "sha256": "df8d2d0e7392e93ec134ca3141b6fea7e1deb1cb14f03f1cd0ea851b8e956a3c", "protected": true},
+    "m1_recompute": {"path": "run-r15/m1-recompute.json", "sha256": "c62f2fe13b4377371aa53d7b283f317417344031880688cfd02bfe371e681622"},
+    "samples": {"path": "out/r11-blind-samples.json", "sha256": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9"},
+    "rows": {"path": "out/r11-reliability-rows.json", "sha256": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7"}
+  },
+  "layer_scopes": {
+    "anchor_miss": {
+      "n": 48, "tstar_false": 48, "tstar_true": 0, "main_e4": 48, "main_other": 0,
+      "fp_point": 1.0, "fp_literal": "FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])",
+      "ci95": [0.9259, 1.0],
+      "scope_tag": "post-hoc layer subset, T* coverage=100%"
+    },
+    "cwd_probe": {
+      "n": 18, "tstar_false": 0, "tstar_true": 18, "main_e4": 0, "main_e2": 18,
+      "fp_point": 0.0, "fp_literal": "FP[cwd_probe] = 0.000 (0/18, Wilson 95% [0.0, 0.1759])",
+      "ci95": [0.0, 0.1759],
+      "paired_rejection": "18/18 = 1.000 (zero FP is purchased by total rejection; report both or non-compliant)",
+      "scope_tag": "post-hoc layer subset, T* coverage=100% (all true, zero E4)"
+    }
+  },
+  "fp_overall": {
+    "value": "not_estimable",
+    "literal": "FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)",
+    "truth_counts": {"true": 118, "false": 48, "unjudgeable": 234},
+    "coverage": 0.415,
+    "coverage_gap_threshold": 0.7
+  },
+  "wilson": {"z": 1.959963984540054, "method": "wilson_95", "decimals": 4},
+  "forbidden_phrases": ["判别力为负", "判别力 −", "完全缺失"],
+  "probe": {
+    "tool": "tools/eval/x73_probe_c.py",
+    "corpus": "out/r11-blind-samples.json",
+    "corpus_sha256": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9",
+    "cases": [
+      {"case_id": "T01-c00", "layer": "cmd_ok", "path_covered": "command reproduction path"},
+      {"case_id": "T01-c01", "layer": "anchor_miss", "path_covered": "zero-anchor mechanical pass path"},
+      {"case_id": "T01-c07", "layer": "no_evidence", "path_covered": "structural abstention path"}
+    ],
+    "runs": 3,
+    "exit_codes": {"identical": 0, "drift": 1, "probe_error": 2},
+    "serialization": "json.dumps(sort_keys=True, ensure_ascii=False) utf-8 bytes, sha256 per run",
+    "output": "run-r17/x73-probe-c.json",
+    "zero_new_judged_data": "judgement objects hashed in memory only, never persisted"
+  },
+  "manifest": {
+    "tool": "tools/eval/env_manifest.py",
+    "required_fields": ["python_version", "platform_fingerprint", "dependency_hashes", "locale_timezone", "env_whitelist", "fixtures_sha256"],
+    "fixtures": [
+      {"path": "out/r11-blind-samples.json", "sha256": "6d61994c7104747a797658b72733898b5c833b07715155e3aba0c987b4b9fcc9"},
+      {"path": "out/r11-reliability-rows.json", "sha256": "2b38e9abf5fde4ba9b624311c107ced1498c6d286b601ba8aad8bfe845cd3fe7"}
+    ],
+    "consistency": "intersection of seal.json hashed file list and manifest fixture declarations must match byte-for-byte; all required fields non-empty",
+    "exit_codes": {"match": 0, "mismatch": 1, "error": 2},
+    "output": "run-r17/env-manifest.json"
+  },
+  "x73_gates": {
+    "a": "measured_by_manifest (D24-C); reading recorded in report, not premised",
+    "b": "CONDITIONAL (sir 2026-11-14 scope table keeps b unchanged, L2 deferred; section 23 state map L0->FAIL superseded by explicit sir decision, tension registered for AgnesCode)",
+    "c": "measured_by_probe (D24-B); 3/3 identical -> observed nondeterminism 0/3 = 0.0 <= 0.05; UNMEASURED never treated as <= 0.05"
+  },
+  "m1_application": {
+    "map_source": "section 23 D23-D",
+    "r15_status": "PROVISIONAL",
+    "r15_failed_gates": ["sandbox", "env_manifest", "nondeterminism"],
+    "expected": "PROVISIONAL-L1 only if a=PASS AND b=CONDITIONAL AND c<=0.05 (derived, not premised)",
+    "values_frozen": ["+6.153846", "+5.8"],
+    "terminal_state_disclosure": "if L2 never lands, PROVISIONAL-L1 is the terminal state and must be disclosed (review Q3)"
+  },
+  "red_zone_extra": ["AGENTS.md (absent in this repo, vacuous constraint)", "ledger/", "scripts/verdict_gate.ps1", ".github/"],
+  "gate_result": "not_evaluable",
+  "gate_conclusion_issued": false,
+  "capability_gain_claim": false,
+  "immutable_numerals_ref": "section 23 D23-G immutable_numerals (verbatim only)",
+  "py39_discipline": "no Path.write_text(newline=); use open(..., newline='') or binary append"
+}
+```
+<!-- R17-LOCAL-EVALUABLE-END -->
+
+### D24-H 卡面 Acceptance 对应表
+
+| 卡面 | 本节依据 |
+|---|---|
+| 1（纯追加 + 双口径前缀） | D24-0 + D24-F 前缀常量 + D24-G `prefix` |
+| 2（探针 exit 0/1/2） | D24-B + D24-G `probe` |
+| 3（manifest exit 0/1/2） | D24-C + D24-G `manifest` |
+| 4（report_lint 全过） | D24-A A-3 + §23 D23-G 读回；卡面字面 `--forbid-label FP_overall` / 裸 `--require-scope-tag` 与工具冻结 spec（`FP_overall_when_coverage_lt_0.70` / `FP_anchor_miss`）存在口径差，等价命令照实登记（轮十三 V2 路径口径差同形先例） |
+| 5（单测 exit 0，≥548） | D24-E 4；Windows 需 `COVENANT_BASH_HINT`（轮十至十六登记依赖） |
+| 6（红区空 diff + lint_cards 零 ERROR） | D24-E 2 |
+| 7（双 seal 源一致） | D24-F 双 seal 源 + D24-G `sources` |
+| 8（AgnesCode 独立裁决） | D24-E 4；执行者不自裁 |
