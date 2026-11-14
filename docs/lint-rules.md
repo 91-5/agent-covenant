@@ -412,6 +412,29 @@ a card writes `scripts/verdict_gate.ps1 判定逻辑` in `protected_assets_targe
 > the merge gate with only a "did you mean a typo?" warning against it. The
 > tuple and the rule text are now one list again.
 
+**Canonical declaration strings (EVO-20261114-003, AGENTS.md v0.10).** A card
+`protected_assets_targeted` entry must be copied verbatim from this list —
+no backticks, no parenthetical suffixes, no `§` references, traditional /
+fullwidth variants do not match:
+
+```
+verdict 模板与字段语义
+EVO 状态机定义
+AgnesCode 评审员资格
+sir 终裁权
+gate.py 判定逻辑
+scripts/verdict_gate.ps1 判定逻辑
+```
+
+Only a canonical string constitutes a declaration; anything else is treated as
+a misspelling and reported as `EVO_PROTECTED_ASSET_UNKNOWN` (WARN). Locally
+that is non-blocking, but `--strict` (CI and pre-push) makes it equivalent to
+blocking — and even when not blocked, the error semantics are wrong ("typo",
+not "touching a protected asset"). The rule text in AGENTS.md §5.3 and the
+`PROTECTED` tuple in `tools/lint_cards.py` are one list by construction: any
+change to either side must land in the same card, or that asset becomes
+invisible to the linter (fail-open).
+
 A card that **targets** one of them is an ERROR unless it also carries both
 `protected_assets_changes` (naming the asset and why) and `sir_approval` — that
 pair is the legitimate escalation path, because a discipline-level change is sir's
