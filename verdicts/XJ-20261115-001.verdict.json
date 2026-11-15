@@ -1,0 +1,63 @@
+{
+  "id": "XJ-20261115-001",
+  "artifact": "docs/eval-report-r18-decisive.md (decisive single-shot close; stop rule 2 triggered -> inconclusive_by_stop_rule; coverage 0.9725; M1 +6.0371pp CI crosses zero; D6 anchor-blindspot 48/48 both faces, isolated)",
+  "commit": "eb5b758 (feature/xj-20261115-001-decisive, base 5d8de6f; freeze commit fc3e77a precedes all r18 data products)",
+  "verdict": "PASS",
+  "acknowledged_by": "AgnesCode (fuxiang, blind adjudicator)",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 5,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-15T14:39:43Z",
+  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no re-stamp of prior rounds | re-signed 2026-11-15T11:46:50Z -> 2026-11-15T14:39:43Z post-merge 2026-11-15: (a) merge checkout rewrote artifact mtimes; (b) claim surface corrected - phantom 'out/r18-lint-report.log' (never existed) replaced by the three artifacts actually reviewed (r18-rejudge.json / r18-primary-analysis.json / r18-external-anchor.json); verdict substance (PASS 0B/0C/5A, all readings, all rulings) untouched",
+  "evidence": [
+    "D1 independently confirmed: git diff 5d8de6f eb5b758 --numstat -- docs/eval-prereg.md = 162/0 (pure append, deletion column 0); s0-s24 prefix dual-calibre sha recomputed = raw cd39e127... / LF c4b3be66... matching the frozen values and invariant at the freeze commit fc3e77a; freeze order verified (fc3e77a is an ancestor of the D2-D6 commit 5dda63a).",
+    "Red-zone zero-touch: git diff 5d8de6f eb5b758 --stat across the 11 full red-zone paths + ledger/ + scripts/verdict_gate.ps1 + .github/ = empty (exit 0).",
+    "D2 independent row-level recompute: 234 rows, dual-view agree 225 / disagree 9 (all 9 = pending_AgnesCode_blind_arbitration, conservatively single-listed); final true 97 / false 126 / still_unjudgeable 11 (2 agree-unjudgeable + 9 pending) -> coverage = (118+48+97+126)/400 = 389/400 = 0.9725 >= 0.70 (stop rule 1 NOT triggered). Blindness mechanics verified: sealed pack fields = case_id/claim/evidence_line/fixtures/seq only (no layer/arm/T* leakage); custody-ledger time anchor holds (view-A sealed 07:33:00Z before view-B opened 07:49:36Z); both result-file sha256 match the custody ledger.",
+    "D3 kappa independently recomputed from per_item_comparison: decided subset 24/24 identical (po=1.0, chance=0.53125, kappa=1.0000, almost_perfect band) matching the card digit-for-digit; 6 excluded rows disclosed (WB side 6 undecided incl. T14-c06 both-unjudgeable, agent side 1). sir_view.status=delegated_to_workbuddy: the card-literal 'sir blind-judges 30' was delegated to the WorkBuddy agent by user decision 2026-11-15 -- registered in the custody ledger and verified face-to-face by the Orchestrator with sir -> classified as a user-authorized registered deviation, NOT executor overreach, NOT a forged governance record.",
+    "D4 independent full-argument re-run (r18_primary_analysis.py, exit 0, deterministic bootstrap B=10000 seed 20261115): M1 paired diff +6.0371pp CI95 [-1.0181, +14.2290] crosses zero and <10pp (meets_criterion=false); M2 -5.1544pp CI95 [-12.7862, +2.1301] crosses zero; direction audit: section-5 literal-direction recompute +6.0371 vs published +5.8 differs by 0.24pp beyond rounding -> direction_unanchorable, both-direction readings disclosed (D25-D clause 3); bounds gate_worst -11.3733pp / gate_best +17.3819pp (disclosure-only, never substitutes the main estimate); dual-frame declaration intact (coverage frame denominator=400; two-arm frame 450/arm; frames not convertible); sensitivity block self-proves 'main estimate == exclusion estimate (identical_to_main)' (no exclusion-based gaming possible).",
+    "D5 report: report_lint.py exit 0 (LINT: PASS checks=5); verify_artifact_pointers 4/4 conclusions 100% coverage, BAD_DIGEST 0; caliber = inconclusive_by_stop_rule (within the 3-value whitelist; instrument_calibration_only forbidden and unused); gate_conclusion_issued=false (boolean literal), capability_gain_claim=false; explanation-ban declaration present in report 0 and 6 ('negative result registered as not-observed-enough-difference; NOT an instrument problem; round 19 NOT proposed'); stop-rule 5-row decision table complete (1 not triggered / 2 TRIGGERED / 3 not triggered (sir confirmed execution of s25 on the day) / 4 not triggered / 5 not triggered (s25-C permits partial)).",
+    "D6 isolated repro: 48 non-numeric-anchor samples pass mechanically on BOTH faces (judge E4 + gate zero-anchor), 48/48; isolation statement up top, not in the main analysis, not validity evidence.",
+    "Seal + post-state: seal_run.py --verify run-r18 = VERIFY OK (30 files); repo lint 0 ERROR / 6 WARN (2x ORPHAN_VERDICT, 1x VERDICT_WITHOUT_REVIEW, 3x UNMAPPED_CLAIM_SURFACE -- topology/historical, not introduced by this round); gate.py --check-all-links PASS; git clean at eb5b758; Acceptance nonzero = A4 literal unittest only (no COVENANT_BASH_HINT, Windows pre-existing dependency, rounds-10..16 same-shape precedent; with hint 548 tests OK, registered verbatim, not whitewashed)."
+  ],
+  "rulings": [
+    {
+      "q": "Q1 close-branch label overlap (stop rule 2 vs insufficient_evidence, card-author defect)",
+      "ruling": "KEEP inconclusive_by_stop_rule. The card's stop-rule table literally commands 'any trigger -> immediately switch to inconclusive_by_stop_rule, stop investment'; stop rule 2 fired, the executor took that branch and registered the ambiguity in report 0 -- correct handling. Substantive content (conclusion sentence + stop-investment + no round-19) is identical under both labels; the label changes nothing. Responsibility is with the card author (overlapping trigger conditions), NOT a blocker. Forward card-authoring discipline: branch trigger conditions must not overlap; when they do, the stop-rule branch takes priority (ADV-1)."
+    },
+    {
+      "q": "Q2 do the 9 disagreement rows require blind arbitration before closure?",
+      "ruling": "NO -- closure does not require it. M1/M2 criterion is computed on the round-6 two-arm frame (450/arm), independent of the 400-frame coverage; coverage is already 0.9725 >= 0.70 (stop rule 1 not triggered) and arbitration can at most raise it to 398/400 = 0.995 -> the close branch (stop rule 2) is invariant to the 9 rows. The arbitration inputs are sealed and blind-readable (pack has no layer/arm/T* fields; view-A time-anchor precedes view-B), so per s25 D25-B clause 4 the AgnesCode arbitration is an OPTIONAL completion, not a closure precondition. Carried as a post-closure non-blocking addendum (ADV-2), disclosed as NOT changing this round's close branch."
+    },
+    {
+      "q": "Q3 is the direction-unanchorable argument sound?",
+      "ruling": "SOUND. Section-5 literal-direction recompute (+6.0371) vs published +5.8 exceeds rounding tolerance -> direction unanchorable, criterion still executes on the section-5 literal direction with both-direction readings disclosed (D25-D clause 3, compliant). Both directions (A-B=+6.04 / B-A=-6.04) are <10pp with zero-crossing CIs -> the close branch is ROBUST to the direction ambiguity."
+    },
+    {
+      "q": "Q4 does kappa=1.0 support the 'partial' independence wording or must it drop to exploratory?",
+      "ruling": "PARTIAL STANDS, no drop to exploratory. kappa=1.0000 (decided subset 24/24) >= 0.61, so s25-C clause 3's wording lock does NOT force exploratory. But (a) the anchor is non-human (sir anchor delegated to the WorkBuddy agent -- a user-authorized registered deviation, verified face-to-face by the Orchestrator), and (b) the agent view has prior exposure (disclosed) -> independence = partial (NOT satisfied, NOT a human anchor) is the ceiling, and the card's independence_wording already locks that verbatim. The delegation is classified as authorized + registered, not overreach or a forged record."
+    },
+    {
+      "q": "Q5 is D6's 48/48 both-faces result enough to label a shared structural blindspot, and must the fix be a separate card?",
+      "ruling": "SUFFICIENT as a structural-blindspot characterization (48/48 on BOTH the judge face and the gate face, independently reproduced; isolation declared, not in the main analysis). The fix PATH (non-numeric anchors must not take the zero-anchor mechanical pass -> independent ref re-check or human criterion; benchmark versioning + full re-run) MUST be a separate new card -- this round is a closing card with 'no new instrument features / sample frame frozen / last measurement' constraints; the fix is a new decision (sir sign-off + independent pre-registration + benchmark versioning + full re-run), consistent with dp's 'A only once' (ADV-4)."
+    },
+    {
+      "q": "Q6 is this card the project's terminal point?",
+      "ruling": "YES as 'no round-19 project': inconclusive_by_stop_rule (stop rule 2 triggered) is the formal close of the 17-round instrument-calibration cycle (card constraint 'no round-18 instrument_calibration_only' + explanation ban 'no round 19' + s25 stop-rule 'trigger => stop investment', triple-locked). ONE exit is retained: if the D6 structural blindspot is fixed, re-benchmarking must precede any new decision (new card + sir sign-off + independent pre-registration + benchmark versioning + full re-run) -- that exit is a NEW project/gate decision, not a 'round 19' of the same cycle (disclosed with ADV-4)."
+    }
+  ],
+  "advisory_findings": [
+    "ADV-1 (Q1 card-authoring discipline): stop rule 2's trigger condition overlaps the insufficient_evidence branch verbatim (card-author defect; executor correctly took the stop-rule branch and registered the ambiguity). Future cards: branch trigger conditions must not overlap; when they do, the stop-rule branch takes priority, or rewrite stop rule 2 as exclusive to 'M1 <10pp with coverage already met'.",
+    "ADV-2 (Q2 nine-row arbitration, post-closure non-blocking addendum): blind-adjudicate the 9 pending rows (T03-c06/T04-c06/T07-c06/T17-c06/T18-c06/T24-c06/T26-c06/T27-c06/T30-c06) from the sealed packs (no layer/arm/T* leakage; view-A time-anchor precedes view-B), write back out/r18-rejudge.json arbitration fields + append a custody record; MUST disclose that the arbitration does NOT change this round's close branch (coverage at most 398/400; M1 criterion untouched).",
+    "ADV-3 (kappa small-sample property): kappa=1.0 rests on a 24/30 decided subset (6 rows excluded: 5 WB-still-unjudgeable + T14-c06 both-unjudgeable; WB side 6 / agent side 1 undecided); on small samples the kappa upper bound is sensitive -- add one sentence to the close report noting 'kappa decided-subset n=24, small sample' so the ceiling is visible.",
+    "ADV-4 (Q5/Q6 fix exit): the D6 fix (non-numeric anchors must not take the zero-anchor mechanical pass; independent ref re-check or human criterion + benchmark versioning + full re-run) is a separate new card requiring sir sign-off + independent pre-registration + benchmark versioning; when stood up, cite this round's D6 isolated reproduction and the 're-benchmarking before any new decision' exit. That exit is NOT a round-19 of the same cycle.",
+    "ADV-5 (external-anchor humanity dilution): the WorkBuddy delegation is a user-authorized + registered deviation (not overreach, not forgery), but the 'external anchor should be human' design intent is diluted; independence_wording already notes non-human anchor / NOT satisfied. Any future external-anchor collection should restore a human anchor or explicitly register a re-delegation."
+  ],
+  "honesty_flags": {
+    "gate_conclusion_issued": false,
+    "capability_gain_claim": false,
+    "independence": "partial (non-human anchor: sir anchor delegated to WorkBuddy agent by user decision 2026-11-15, deviation registered; NOT satisfied)"
+  },
+  "subcard_note": "Round-18 is the dp-adjudicated decisive single-shot close of the 17-round instrument-calibration cycle (A last-chance data completion + amendment + forced close; B honest-close default exit; C rejected). All numerals independently recomputed: coverage 389/400=0.9725 (stop rule 1 not triggered), M1 +6.0371pp CI crosses zero (stop rule 2 TRIGGERED), close branch inconclusive_by_stop_rule, substance 'existing evidence is insufficient to support the claim that the gate reduces false verification'. D6's 48/48 both-faces mechanical pass is an isolated product-defect repro, not validity evidence; its fix is a separate future card after re-benchmarking. Prior-round numerals (round-15 +6.153846/+5.8, T* 118/48/234, FP literals) are carried as immutable references, not re-derived."
+}

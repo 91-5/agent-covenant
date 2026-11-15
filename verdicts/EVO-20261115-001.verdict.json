@@ -1,0 +1,52 @@
+{
+  "id": "EVO-20261115-001",
+  "round": 2,
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 0,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-15T06:30:44+00:00",
+  "supersedes_round1": "EVO-20261115-001 round-1 verdict (CONDITIONAL 0B/3C/5A) at the same path verdicts/EVO-20261115-001.verdict.json is superseded in-place by this round-2 PASS per the dispatch's explicit overwrite instruction; round-1's three findings and their closure proof are preserved below in conditions_closures (audit not lost). round-1 review 正本 (EVO-20261115-001.review.md) is kept as-is.",
+  "conditions_closures": [
+    {
+      "id": "C1",
+      "status": "CLOSED",
+      "checked_at": "2026-11-15T06:30:44+00:00",
+      "independent_method": "my own whole-document full-width paren count, not the executor's self-check",
+      "evidence": "Independent recount: original AGENTS.md 156 open / 156 close (balanced); replaying r2's two edits -> 164/164 balanced (net +8 open / +8 close, the round-1 dangling '（' eliminated). r2 added a whole-doc paren_balanced self-check so this defect class is now mechanically gated."
+    },
+    {
+      "id": "C2",
+      "status": "CLOSED",
+      "checked_at": "2026-11-15T06:30:44+00:00",
+      "independent_method": "my own section-skeleton parse",
+      "evidence": "ANCHOR_A is now '- **ZCode（余念安）**：**可选实现副手（测评专项）**' located at line 194, strictly inside section 5.6 (### 5.5 at L185 < ### 5.6 at L191 < anchor L194 < ### 5.7 at L198); the old section-4.5 'Trae/ZCode 挂' bullet is no longer the anchor (grep confirms). r2 added anchor_a_in_section56 self-check to pin the placement."
+    },
+    {
+      "id": "C3",
+      "status": "CLOSED",
+      "checked_at": "2026-11-15T06:30:44+00:00",
+      "independent_method": "clause text inspection",
+      "evidence": "Clause item ② now names the custody authority: 'frozen amendment hash must sit at the seal/custody boundary where the run executor cannot rewrite it (same caliber as seal.json)' -- aligns with the existing section-24 D24-0 custody regime; the blind-state freeze is no longer movable by the round executor. six_items self-check now includes the 'custody' keyword."
+    }
+  ],
+  "advisories_addressed": [
+    "ADV-1 (Q4 negative-result guard): clause item ④ now ends with '阴性或 insufficient_evidence 结论不构成对门禁能力的反向证明' -- the time-box can no longer be weaponized to force premature negatives; six_items self-check includes the string.",
+    "ADV-4 (self-check blind spot): r2 grew the self-check suite from 8 to 10 items (added anchor_a_in_section56 + paren_balanced), so the root causes of C1/C2 (section-placement / text well-formedness) are now mechanically intercepted.",
+    "ADV-2/ADV-3 carried (no new action this round, non-blocking): ADV-2 custody same-source is covered for item ② by C3's reference (item ⑤ same-reference suggested as follow-up); ADV-3 forward note (future cards modifying this clause must declare it a protected item) remains a standing reminder."
+  ],
+  "evidence": [
+    "r2 apply.py source independently read (111 lines): ANCHOR_A re-pointed to the section-5.6 ZCode evaluation-role bullet; B-attribution rewritten with balanced outer parens; clause ② names the seal/custody boundary; clause ④ adds the negative-result guard; required self-checks list = 10 items (anchor_a_found, anchor_a_in_section56, anchor_b_found, clause_inserted, has_v012, no_v011_header, six_items, paren_balanced, crlf_preserved, roundtrip_exact).",
+    "Independent dry-run re-run (python -X utf8, not the executor's): exit 0, 10/10 self-checks True; paren_balance 156/156 -> 164/164; CRLF 102->103 (exactly +1 line), lone-LF 148->148 (structure unchanged).",
+    "C1 whole-doc paren recount (my own, independent of the executor's check): original 156/156 balanced; after replaying r2's two edits 164/164 balanced (net +8/+8) -- round-1's dangling-open defect is gone.",
+    "C2 section membership (my own skeleton parse): anchor at L194 sits strictly within section 5.6 (### 5.5 L185 < ### 5.6 L191 < L194 < ### 5.7 L198); the old section-4.5 'Trae/ZCode 挂' bullet is no longer referenced as the anchor.",
+    "C3 custody authority now named in clause ② (seal/custody boundary, executor-unwritable, same caliber as seal.json).",
+    "Round-trip independently recomputed: removing the inserted clause and restoring the original version attribution reproduces the original file byte-for-byte (True).",
+    "Target AGENTS.md sha256 = cd2c36d2413ee37b (28387 B) unchanged after the dry-run (v0.11 unpatched, not applied); executor correctly did NOT self-apply (4.2 item 7: AGENTS.md high-risk global rule -> sir manual application).",
+    "Post-artifact state: agent-covenant git clean except the (intended) verdict-file overwrite at verdicts/EVO-20261115-001.verdict.json; repo-scope lint PASS (4 pre-existing structural WARNs: 3x ORPHAN_VERDICT + 1x VERDICT_WITHOUT_REVIEW, topology-induced, unrelated to this card); gate.py --check-all-links PASS."
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261115-001.round2.review.md",
+  "merge_gate": "PASS 0B/0C/0A. All three round-1 conditions independently closed on r2 (C1 paren balance, C2 anchor into section 5.6, C3 custody authority) plus ADV-1/ADV-4 addressed; dry-run 10/10 green, target unpatched, roundtrip reversible. Card is GATABLE: backfill status GATED + index.json, then sir-explicit --apply per 4.2 item 7. Executor must not self-apply. This verdict neither re-opens EVO-20261114-004/005 nor touches in-repo detectors / verdict template / state machine / qualification / sir veto."
+}

@@ -2553,14 +2553,37 @@
     "section23_worktree_bytes": 17331,
     "section23_lines_lf": 263,
     "clause_groups": 6,
-    "clause_group_ids": ["D-5.1", "P-4.5''", "X-7.3' a/b/c", "M1_status_map", "E-0 L0-L2", "erratum_continuity"],
-    "v2_keys_present": ["D-5.1", "P-4.5", "X-7.3a", "X-7.3b", "X-7.3c", "E-0", "PROVISIONAL-L1"],
-    "v7_keys_present": ["PROVISIONAL-L1", "CONDITIONAL", "L0", "L1", "L2"],
+    "clause_group_ids": [
+      "D-5.1",
+      "P-4.5''",
+      "X-7.3' a/b/c",
+      "M1_status_map",
+      "E-0 L0-L2",
+      "erratum_continuity"
+    ],
+    "v2_keys_present": [
+      "D-5.1",
+      "P-4.5",
+      "X-7.3a",
+      "X-7.3b",
+      "X-7.3c",
+      "E-0",
+      "PROVISIONAL-L1"
+    ],
+    "v7_keys_present": [
+      "PROVISIONAL-L1",
+      "CONDITIONAL",
+      "L0",
+      "L1",
+      "L2"
+    ],
     "frozen_block_sha256": "ad6bfa506e8ed3e6a2e41b9a5e3d46a44433f2dcc1a616807e7e2688602de7c2",
     "frozen_block_schema": "r16-erratum-frozen-v1",
     "x73_implementation": "clauses_only_no_v2_code; L2 sandbox deferred by sir; no container/VM dependency",
     "red_zone_count": 11,
-    "gitignore_added": ["run-r16/"],
+    "gitignore_added": [
+      "run-r16/"
+    ],
     "gitignore_note": ".gitignore 不在本卡 Owned files；仅追加一行，已在报告 §6 与递评单 §6 照实披露交评审裁定，沿用轮十四/轮十五先例。",
     "custody_anchors": "D:/15812/projects/round16-custody/s23-freeze-anchors.json"
   },
@@ -2604,7 +2627,15 @@
       "base_lines_subsequence_of_current": true,
       "removed_numeric_tokens": {},
       "note": "48/48 is the dp-mandated frozen notation added in the erratum (denominator 48 / numerator 48 were already separately present); no existing numeral was changed into another value",
-      "immutable_literals": ["48/48", "0.415", "[0.9259, 1.0]", "+6.153846", "delta=1.000", "sigma=0.035", "118/48/234"],
+      "immutable_literals": [
+        "48/48",
+        "0.415",
+        "[0.9259, 1.0]",
+        "+6.153846",
+        "delta=1.000",
+        "sigma=0.035",
+        "118/48/234"
+      ],
       "fp_overall_before_sha256": "df8d2d0e7392e93ec134ca3141b6fea7e1deb1cb14f03f1cd0ea851b8e956a3c",
       "fp_overall_after_sha256": "df8d2d0e7392e93ec134ca3141b6fea7e1deb1cb14f03f1cd0ea851b8e956a3c",
       "fp_overall_point": 1.0,
@@ -2630,8 +2661,19 @@
       "runner": "executor WB, executed literally in Git Bash (COVENANT_BASH_HINT set for V9b)",
       "no_author_precheck_adopted": true,
       "exit_codes": {
-        "V1a": 0, "V1b": 0, "V2": 0, "V3": 0, "V4": 0, "V5": 0,
-        "V6": 0, "V7": 0, "V8": 0, "V9a": 0, "V9b": 0, "V9c": 0, "V10": 0
+        "V1a": 0,
+        "V1b": 0,
+        "V2": 0,
+        "V3": 0,
+        "V4": 0,
+        "V5": 0,
+        "V6": 0,
+        "V7": 0,
+        "V8": 0,
+        "V9a": 0,
+        "V9b": 0,
+        "V9c": 0,
+        "V10": 0
       },
       "nonzero": [],
       "V1_output": "264 0 docs/eval-prereg.md; PREFIX_UNCHANGED True (worktree CRLF raw 4c71623a... / blob LF 19c453c2...)",
@@ -2646,7 +2688,10 @@
       "V9b_output": "Ran 546 tests in 126.285s ... OK",
       "V9c_output": "LINT: PASS (1 warnings), 0 errors; VERDICT_WITHOUT_REVIEW pre-review expected",
       "V10_output": "git status --porcelain out/ empty; point 1.0",
-      "ledger_files": ["out/acceptance-r16.json", "out/acceptance-r16.log"]
+      "ledger_files": [
+        "out/acceptance-r16.json",
+        "out/acceptance-r16.log"
+      ]
     },
     "red_zone_untouched": true,
     "no_push_no_merge_no_verdict": true,
@@ -2663,11 +2708,13 @@
       "worktree_clean_at_acceptance_point": true,
       "disposition": "NOT committed, NOT rolled back; exact git add of card files only, never git add -A; left as an unstaged M in the worktree for the owning session",
       "acceptance_impact": "none: V1 prereg-only, V9a covers only the 11 red-zone paths, V9c lint_cards covers .tasks + artifacts.json",
-      "disclosed_in": ["docs/eval-report-r16-erratum.md section 6 item 7", "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-003.md section 6 item 5"],
+      "disclosed_in": [
+        "docs/eval-report-r16-erratum.md section 6 item 7",
+        "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261113-003.md section 6 item 5"
+      ],
       "adjudication": "handed to reviewer; executor does not attribute it to any card"
     }
-  }
-,
+  },
   "XJ-20261114-001": [
     "tools/lint_cards.py",
     "tests/test_lint_cards.py",
@@ -2676,8 +2723,7 @@
     "README.zh-CN.md",
     "artifacts.json",
     "review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261114-001.md"
-  ]
-,
+  ],
   "XJ-20261114-003": [
     "tools/eval/x73_probe_c.py",
     "tools/eval/env_manifest.py",
@@ -2703,7 +2749,9 @@
     "prereg_after_sha256": "cd39e1272de7bfd94227cb8879fa1bce59bd36f240359a4e4a7dd16f76921faf",
     "numstat_vs_master": "183 0 docs/eval-prereg.md",
     "clauses": "D24-0 legality + L0 boundary / D24-A scoped-claim-surface (frozen denominators, dual scope literals, paired cwd_probe disclosure) / D24-B x73c probe spec / D24-C manifest spec / D24-D three-gate readings + M1 map application / D24-E prohibitions / D24-F frozen constants / D24-G R17-LOCAL-EVALUABLE machine-readable block / D24-H acceptance mapping",
-    "gitignore_added": ["run-r17/"],
+    "gitignore_added": [
+      "run-r17/"
+    ],
     "gitignore_note": "card Owned files lists run-r17/; .gitignore not in Owned files, disclosed for adjudication (round-13/14 D0 same form)",
     "agents_md_note": "AGENTS.md does not exist in this repo (external governance file, never committed); the do-not-touch constraint is vacuous in-repo, registered verbatim"
   },
@@ -2715,7 +2763,13 @@
       "implementation_sha256": "8baa7752e55e4c4d24667ac67e260c2e21ca2547d1d998355bec22c894e9fbfb",
       "out": "run-r17/x73-probe-c.json",
       "out_sha256": "335c62f732545a6fc691e04f6303f413b4d168bd8c5e0596c7dae3ddade7c7e1",
-      "readings": {"verdict": "identical", "cases": "T01-c00 / T01-c01 / T01-c07 (3 cascade paths)", "runs": 3, "exit": 0, "zero_new_judged_data": true},
+      "readings": {
+        "verdict": "identical",
+        "cases": "T01-c00 / T01-c01 / T01-c07 (3 cascade paths)",
+        "runs": 3,
+        "exit": 0,
+        "zero_new_judged_data": true
+      },
       "py39_ast_ok": true
     },
     "d3_env_manifest": {
@@ -2724,7 +2778,19 @@
       "implementation_sha256": "d63d4836bdb3744da5d7a43d5f75bf6110c645e77228a9f98886e1351b4ad363",
       "out": "run-r17/env-manifest.json",
       "out_sha256": "f05ca4bdd7dcdf0e30c4d3bee81e83d48cacbbcf7becd8c46e5f080e8aa6d8f1",
-      "readings": {"verdict": "match", "exit": 0, "required_fields": "6/6", "fixture_intersection": "2/2 sealed byte-identical", "pip_freeze_entries": 276, "native_shared_libs": ["python3.dll", "python314.dll", "vcruntime140.dll", "vcruntime140_1.dll"]},
+      "readings": {
+        "verdict": "match",
+        "exit": 0,
+        "required_fields": "6/6",
+        "fixture_intersection": "2/2 sealed byte-identical",
+        "pip_freeze_entries": 276,
+        "native_shared_libs": [
+          "python3.dll",
+          "python314.dll",
+          "vcruntime140.dll",
+          "vcruntime140_1.dll"
+        ]
+      },
       "py39_ast_ok": true
     },
     "d4_report": {
@@ -2739,7 +2805,11 @@
         "fp_cwd_probe": "0.000 (0/18, Wilson 95% [0.0, 0.1759]) paired with rejection 18/18 = 1.000",
         "fp_overall": "not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70) preserved verbatim"
       },
-      "x73_gates": {"a": "PASS (manifest match)", "b": "CONDITIONAL (sir scope table; section-23 L0->FAIL tension registered)", "c": "measured 3/3 byte-identical -> 0/3 = 0.0 <= 0.05"},
+      "x73_gates": {
+        "a": "PASS (manifest match)",
+        "b": "CONDITIONAL (sir scope table; section-23 L0->FAIL tension registered)",
+        "c": "measured 3/3 byte-identical -> 0/3 = 0.0 <= 0.05"
+      },
       "m1_status_derived": "PROVISIONAL-L1 (a=PASS AND b=CONDITIONAL AND c<=0.05; derived per section 23 D23-D frozen map, not premised); r15 values +6.153846 / +5.8 unchanged; terminal-state risk disclosed"
     },
     "d5_seal_and_handoff": {
@@ -2760,18 +2830,36 @@
       "log": "out/acceptance-r17.log",
       "commands": 18,
       "exit_table": {
-        "A1_numstat_base": 0, "A1_numstat_worktree": 0, "A1_prefix_check": 0,
-        "A2_probe_rerun": 0, "A2_probe_bytes_stable": 0,
-        "A3_manifest_rerun": 0, "A3_manifest_sealed_copy_check": 0,
-        "A4_report_lint_literal": 2, "A4_report_lint_equiv": 0, "A4_report_lint_selftest": 0,
-        "A5_unittest_literal": 1, "A5_unittest_hint": 0,
-        "A6_redzone": 0, "A6_lint_cards": 0,
-        "A7_verify_r15": 0, "A7_verify_r16": 0, "A7_verify_r17": 0,
+        "A1_numstat_base": 0,
+        "A1_numstat_worktree": 0,
+        "A1_prefix_check": 0,
+        "A2_probe_rerun": 0,
+        "A2_probe_bytes_stable": 0,
+        "A3_manifest_rerun": 0,
+        "A3_manifest_sealed_copy_check": 0,
+        "A4_report_lint_literal": 2,
+        "A4_report_lint_equiv": 0,
+        "A4_report_lint_selftest": 0,
+        "A5_unittest_literal": 1,
+        "A5_unittest_hint": 0,
+        "A6_redzone": 0,
+        "A6_lint_cards": 0,
+        "A7_verify_r15": 0,
+        "A7_verify_r16": 0,
+        "A7_verify_r17": 0,
         "A8_agies_adjudication": null
       },
       "nonzero_registered": [
-        {"id": "A4_report_lint_literal", "exit": 2, "detail": "card literal --forbid-label FP_overall / bare --require-scope-tag vs frozen spec FP_overall_when_coverage_lt_0.70 / FP_anchor_miss (argparse expected one argument); equivalent frozen-spec command exit 0 LINT: PASS"},
-        {"id": "A5_unittest_literal", "exit": 1, "detail": "no COVENANT_BASH_HINT -> FAILED (failures=2, errors=3), round-10..16 registered Windows dependency; with hint Ran 548 tests OK (>=548 met)"}
+        {
+          "id": "A4_report_lint_literal",
+          "exit": 2,
+          "detail": "card literal --forbid-label FP_overall / bare --require-scope-tag vs frozen spec FP_overall_when_coverage_lt_0.70 / FP_anchor_miss (argparse expected one argument); equivalent frozen-spec command exit 0 LINT: PASS"
+        },
+        {
+          "id": "A5_unittest_literal",
+          "exit": 1,
+          "detail": "no COVENANT_BASH_HINT -> FAILED (failures=2, errors=3), round-10..16 registered Windows dependency; with hint Ran 548 tests OK (>=548 met)"
+        }
       ],
       "determinism": "probe and manifest reruns byte-identical to sealed copies (case hashes and fixtures identical)",
       "red_zone": "git diff master --stat over 11 card paths + ledger/ + scripts/verdict_gate.ps1 + .github/ -> empty, exit 0",
@@ -2785,23 +2873,30 @@
       "probe input choice: hermetic sealed corpus vs .eval-sealed/pkg-* blind package (review Q2 appendix)"
     ],
     "discipline": {
-      "no_push": true, "no_merge": true, "no_verdict": true, "no_self_review": true,
-      "master_untouched": true, "redzone_zero_touch": true,
-      "zero_model_rerun": true, "zero_rejudgement": true, "zero_new_victim_data": true,
+      "no_push": true,
+      "no_merge": true,
+      "no_verdict": true,
+      "no_self_review": true,
+      "master_untouched": true,
+      "redzone_zero_touch": true,
+      "zero_model_rerun": true,
+      "zero_rejudgement": true,
+      "zero_new_victim_data": true,
       "fp_overall_not_estimable_preserved": true,
       "immutable_numerals_verbatim": true,
       "capability_gain_claim": false
     }
-  }
-,
+  },
   "XJ-20261115-001": [
     "docs/eval-prereg.md",
     "docs/eval-report-r18-decisive.md",
     "docs/r18-anchor-blindspot-repro.md",
     "tools/eval/r18_primary_analysis.py",
     "out/acceptance-r18.json",
-    "out/r18-lint-report.log",
-    "artifacts.json"
+    "artifacts.json",
+    "out/r18-rejudge.json",
+    "out/r18-primary-analysis.json",
+    "out/r18-external-anchor.json"
   ],
   "_s25_freeze_XJ-20261115_001": {
     "_comment": "XJ-20261115-001 D1 §25 修正案冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness。",
@@ -2811,7 +2906,11 @@
     "freeze_commit": "fc3e77a",
     "worktree": "D:/15812/projects/agent-covenant-r18",
     "branch": "feature/xj-20261115-001-decisive",
-    "timebox": {"accept": "2026-11-15", "data_deadline": "2026-11-29", "close": "2026-12-06"},
+    "timebox": {
+      "accept": "2026-11-15",
+      "data_deadline": "2026-11-29",
+      "close": "2026-12-06"
+    },
     "freeze_before_any_r18_data": true,
     "prereg_before_bytes_raw": 275348,
     "prereg_before_sha256_raw": "cd39e1272de7bfd94227cb8879fa1bce59bd36f240359a4e4a7dd16f76921faf",
@@ -2827,9 +2926,16 @@
     "d2_rejudge": {
       "out": "out/r18-rejudge.json",
       "sha256": "8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb",
-      "readings": {"views_agree": "225/234 (96.2%)", "final_counts": {"true": 97, "false": 126, "still_unjudgeable": 11},
+      "readings": {
+        "views_agree": "225/234 (96.2%)",
+        "final_counts": {
+          "true": 97,
+          "false": 126,
+          "still_unjudgeable": 11
+        },
         "coverage_r18": "389/400 = 0.9725 (threshold 0.70 met; stop rule 1 NOT triggered)",
-        "disagreements": "9 (all goldset-text family) -> conservative still_unjudgeable, pending AgnesCode blind arbitration; arbitration can only raise coverage"},
+        "disagreements": "9 (all goldset-text family) -> conservative still_unjudgeable, pending AgnesCode blind arbitration; arbitration can only raise coverage"
+      },
       "blinding": "two isolated fresh-context subagent views per arm-shuffle seeds 20261115/20261116; view A sealed before view B started; no layer/arm/tstar/prior-judgment fields in packs; custody ledger timestamps",
       "honesty": "two_human_independent=false; single-executor dual isolated views + external arbitration (ADV-5 same form)"
     },
@@ -2839,22 +2945,30 @@
       "draw": "seed 20261115 stratified 12/8/10 (tstar-true/tstar-false/former-unjudgeable), pack sha 1ebd99e7..., key isolated in run-r18/anchor-key.json",
       "agent_view": "sealed BEFORE wb judgment (sha e9760df7...); first-view self-navigation caveat registered (29/30 corroboration)",
       "deviation": "card names sir as anchor judge; sir delegated the 30-item batch to WorkBuddy (user decision 2026-11-15); registered for AgnesCode adjudication",
-      "kappa": {"value": 1.0, "band": "almost_perfect", "decided_n": 24, "observed": "24/24",
+      "kappa": {
+        "value": 1.0,
+        "band": "almost_perfect",
+        "decided_n": 24,
+        "observed": "24/24",
         "excluded_still_unjudgeable": "WB 6 / agent 1 (asymmetry disclosed per-item)",
-        "wording": "independence = partial (WorkBuddy agent + ZCode agent; NOT a human anchor; NOT satisfied); kappa>=0.81 so no forced exploratory downgrade; whether non-human anchor forces exploratory is AgnesCode's call"}
+        "wording": "independence = partial (WorkBuddy agent + ZCode agent; NOT a human anchor; NOT satisfied); kappa>=0.81 so no forced exploratory downgrade; whether non-human anchor forces exploratory is AgnesCode's call"
+      }
     },
     "d4_primary_analysis": {
       "tool": "tools/eval/r18_primary_analysis.py",
       "tool_sha256": "c350296d7cb0c36b3e95347e32b36c3419394dc5ea0c40a64f3c607d1042eee0",
       "out": "out/r18-primary-analysis.json",
       "sha256": "76cc271f028796d2bd16a6b8b38b6b0c1932e529ecfb03e8342fe8b7766b35f2",
-      "readings": {"coverage_frame": "denominator 400, coverage 0.9725, threshold met",
+      "readings": {
+        "coverage_frame": "denominator 400, coverage 0.9725, threshold met",
         "m1_paired_diff": "+6.0371pp CI95 [-1.0181, +14.2290] (crosses zero) -> criterion NOT met",
         "m2_paired_diff": "-5.1544pp CI95 [-12.7862, +2.1301] (crosses zero) -> NOT met",
         "direction_audit": "direction_unanchorable (+6.0371 vs published +5.8, gap 0.24pp > rounding); both directions disclosed, NEITHER meets the criterion -> branch decision robust",
         "bounds": "gate_worst -11.3733pp / gate_best +17.3819pp (disclosure only)",
         "sensitivity": "exclusion identity recorded; coverage-exclusion forbidden_for_passing",
-        "zero_rejudge": true, "self_check": "PASS (four sections + denominator==400 + booleans)"},
+        "zero_rejudge": true,
+        "self_check": "PASS (four sections + denominator==400 + booleans)"
+      },
       "stop_rule_2": "TRIGGERED (m1 diff <10pp AND CI crosses zero)"
     },
     "d5_closing_report": {
@@ -2871,19 +2985,37 @@
       "sha256_head": "a8f824a108445f22",
       "verification": "run-r18/anchor-blindspot-verification.json: instrument 48/48 E4; gate-body zero-anchor 48/48 -> product-level blindspot confirmed (isolated; never referenced by D4/D5)"
     },
-    "seal": {"bundle": "run-r18", "files": 30, "root_label": "r18-decisive-execution",
+    "seal": {
+      "bundle": "run-r18",
+      "files": 30,
+      "root_label": "r18-decisive-execution",
       "seal_json_sha256_head": "bb4e97e545c471bf",
       "verify": "VERIFY: OK (30 files match the seal), exit 0",
-      "note": "deterministic re-seal twice (manifest additions; r12 precedent), contents registered"},
+      "note": "deterministic re-seal twice (manifest additions; r12 precedent), contents registered"
+    },
     "acceptance": {
       "runner": "out/acceptance-r18.py",
       "ledger": "out/acceptance-r18.json",
-      "exit_table": {"A1_numstat": 0, "A1_prefix_check": 0, "A2_report_lint": 0, "A3_seal_verify": 0,
-        "A4_unittest_literal": 1, "A4_unittest_hint": 0, "A5_primary_selfcheck": 0,
-        "A6_caliber_check": 0, "A7_redzone": 0, "A7_lint_cards": 0,
-        "A8_kappa_reported": 0, "A8_agies_adjudication": null},
+      "exit_table": {
+        "A1_numstat": 0,
+        "A1_prefix_check": 0,
+        "A2_report_lint": 0,
+        "A3_seal_verify": 0,
+        "A4_unittest_literal": 1,
+        "A4_unittest_hint": 0,
+        "A5_primary_selfcheck": 0,
+        "A6_caliber_check": 0,
+        "A7_redzone": 0,
+        "A7_lint_cards": 0,
+        "A8_kappa_reported": 0,
+        "A8_agies_adjudication": null
+      },
       "nonzero_registered": [
-        {"id": "A4_unittest_literal", "exit": 1, "detail": "no COVENANT_BASH_HINT -> FAILED (round-10..18 registered Windows dependency); with hint Ran 548 tests OK (>=548 met)"}
+        {
+          "id": "A4_unittest_literal",
+          "exit": 1,
+          "detail": "no COVENANT_BASH_HINT -> FAILED (round-10..18 registered Windows dependency); with hint Ran 548 tests OK (>=548 met)"
+        }
       ],
       "unittest_with_hint": "Ran 548 tests ... OK",
       "lint_cards": "exit 0, zero ERROR",
@@ -2898,10 +3030,18 @@
       "direction audit unanchorable (+6.04 vs +5.8): whether an evaluative-exclusion reproduction attempt is worth a follow-up card",
       "D6 product-defect disposition (fix requires instrument change -> sir + independent prereg + versioned full rerun)"
     ],
-    "discipline": {"no_push": true, "no_merge": true, "no_verdict": true, "no_self_review": true,
-      "master_untouched": true, "redzone_zero_touch": true,
+    "discipline": {
+      "no_push": true,
+      "no_merge": true,
+      "no_verdict": true,
+      "no_self_review": true,
+      "master_untouched": true,
+      "redzone_zero_touch": true,
       "no_new_instrument_features": "judge untouched; estimator = frozen section-5 method first faithful execution",
-      "no_sample_frame_expansion": true, "endpoint_locked": true, "caliber_not_calibration": true,
-      "timebox": "closing on 2026-11-15, well before the 2026-12-06 deadline"}
+      "no_sample_frame_expansion": true,
+      "endpoint_locked": true,
+      "caliber_not_calibration": true,
+      "timebox": "closing on 2026-11-15, well before the 2026-12-06 deadline"
+    }
   }
 }
