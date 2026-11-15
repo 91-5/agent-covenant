@@ -30,7 +30,7 @@
 
 全域假支持率维持轮十五冻结结论原样：`FP_overall = not_estimable (truth_coverage_gap, coverage = 0.415 < 0.70)`（历史字面；本轮 coverage 补全不回改该冻结读数）。轮十五层内读数历史字面（scope-tag: FP_anchor_miss → `FP[anchor_miss]`，post-hoc layer subset，禁止外推）：`FP[anchor_miss] = 1.000 (48/48, Wilson 95% [0.9259, 1.0])`。在 T\* 可判子集上，主轨 E4 判定与 T\* 真值呈负向关联；该关联由层构成解释，不构成总体判别力估计。
 
-- **结论 C2**：二次盲判使 coverage 达 0.9725（全分母 400），stop rule ① 未触发；双视图一致性 225/234，9 条分歧保守单列待仲裁。 [artifact: out/r18-rejudge.json sha256=8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb]（out/r18-rejudge.json）8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb [artifact: run-r18/custody-ledger.json sha256=656a5700df4e601f9de371e2cc1d30ed5fb79cc1713ccc4d4c10b2f49baffd61]（run-r18/custody-ledger.json）656a5700df4e601f9de371e2cc1d30ed5fb79cc1713ccc4d4c10b2f49baffd61
+- **结论 C2**：二次盲判使 coverage 达 0.9725（全分母 400），stop rule ① 未触发；双视图一致性 225/234，9 条分歧保守单列待仲裁。 [artifact: out/r18-rejudge.json sha256=8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb]（out/r18-rejudge.json）8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb [artifact: run-r18/custody-ledger.json sha256=c89a277664de839b1415ecd38b30a85feb3bd18147b1bb740aec70099dbe743b]（run-r18/custody-ledger.json）c89a277664de839b1415ecd38b30a85feb3bd18147b1bb740aec70099dbe743b
 
 ## 3. 两臂框（M1/M2，§5 字面）：判据未达 → stop rule ②
 
@@ -58,11 +58,20 @@
 | ④ | 补数据后仍无法归因、只能再修仪器 | 未触发（归因清楚：差异未达判据，不是仪器不可归因） |
 | ⑤ | 独立性仍只能 false 且预注册不允许 partial | 未触发（§25-C 许可 partial，独立性问题不阻断结案） |
 
-## 5. 独立性：partial（κ 待 sir 回传，措辞规则已锁）
+## 5. 独立性：partial（κ = 1.00 almost-perfect；外部锚经改派，偏差登记）
 
-30 条外部锚盲判包已按冻结种子分层抽取（12 T\*-true / 8 T\*-false / 10 前 unjudgeable）并交付 sir（盲字段、无 key 文件）；**agent 视图已在 sir 判定之前封存**（sha `e9760df7…`，30/30；首视图 29/30 旁证，自导航瑕疵照实登记）。Cohen κ 将在 sir 回传后按 §25-C 冻结口径计算（二值化、still_unjudgeable 单列）；**无论 κ 为何值，独立性一律写 `partial`、不写 satisfied**；κ <0.61 时所有依赖独立性的措辞自动降为探索性。agent 视图的存在性暴露（执行者历史轮次接触层语义）已登记为 κ 上限。
+30 条外部锚盲判包按冻结种子分层抽取（12 T\*-true / 8 T\*-false / 10 前 unjudgeable），盲字段交付；**agent 视图（ZCode）在对方判定之前封存**（sha `e9760df7…`，30/30；首视图 29/30 旁证，自导航瑕疵照实登记）。**判定者改派登记（偏差，交浮香裁定）**：卡面写「sir 盲判 30 条」；sir 于 2026-11-15 决定将该批盲判委托给 **WorkBuddy**（另一 agent harness）执行——判定者 = WorkBuddy agent + ZCode agent，**非人类锚**。Cohen κ 按 §25-C 冻结口径计算（二值化、still_unjudgeable 排除分母并单列）：
 
-- **结论 C4**：外部锚协议机械在位（包已交付、agent 视图先封、key 隔离），κ 待 sir 回传后按冻结口径补报；独立性措辞 = partial（永非 satisfied）。 [artifact: out/r18-external-anchor.json sha256=775fd68af04af4570598e5989e63831f6a48bc12314b8c3af5774471cac23c90]（out/r18-external-anchor.json）775fd68af04af4570598e5989e63831f6a48bc12314b8c3af5774471cac23c90
+| 项 | 值 |
+|---|---|
+| 判定子集 | 24 条（WB 与 agent 均给出 true/false） |
+| 观察一致率 | **24/24 = 1.000** |
+| Cohen κ | **1.0000（almost_perfect 带）** |
+| κ 分母外单列 | WB 6 条 still_unjudgeable / agent 1 条（不对称已逐条披露） |
+
+**措辞（锁死口径）**：独立性 = **`partial`**——外部锚经改派为 WorkBuddy agent + ZCode agent，非人类锚，不构成 satisfied；两个 AI agent 间的 κ 上限是跨 harness 一致性，不等于人类独立性（执行者历史轮次接触层语义的暴露同样登记为上限）。κ ≥0.81 未触发 exploratory 强制降级；是否因「非人类锚」进一步降为探索性，由浮香裁定。
+
+- **结论 C4**：外部锚协议机械在位（包交付、agent 视图先封、key 隔离）；κ = 1.0000（24/24 判定子集，almost_perfect）；判定者改派为 WorkBuddy（用户决定）已登记为偏差交裁定；独立性措辞 = partial（永非 satisfied）。 [artifact: out/r18-external-anchor.json sha256=030a5284256bcef07a510ccb57f99e2c1fad995586054d433414392d27ba262f]（out/r18-external-anchor.json）030a5284256bcef07a510ccb57f99e2c1fad995586054d433414392d27ba262f
 
 ## 6. 解释禁令执行声明
 
@@ -72,7 +81,7 @@
 
 1. 9 条二次盲判分歧的盲仲裁（保守计 still_unjudgeable；仲裁可抬升 coverage 至多至 398/400，不改变本结案分支——M1 未达与 coverage 无关）。
 2. 分支措辞优先级（§0 登记的 ②≡insufficient_evidence 重叠）。
-3. κ 数值与 final 措辞（sir 回传后补报；若 κ<0.61 全篇独立性措辞降为探索性）。
+3. 判定者改派（sir → WorkBuddy）与 κ=1.0 的效力评估：两个 AI agent 间的一致性能否支撑 partial 措辞，或须降为探索性。
 4. D6 副产品（`docs/r18-anchor-blindspot-repro.md`，与主分析物理隔离）的产品缺陷判定的处置：修复须改判级器 = 改测量基准，按既有纪律须 sir + 独立预注册 + 基准版本化全量重跑。
 
 ## 附：产物哈希（生成时实时计算）
