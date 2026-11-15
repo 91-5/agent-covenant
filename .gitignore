@@ -87,3 +87,7 @@ run-r16/
 # Round-17 execution products (XJ-20261114-003 D1; card Owned files run-r17/).
 # out/ already covered above; this exact name is not.
 run-r17/
+
+# Round-18 execution products (XJ-20261115-001 D1; card Owned files run-r18/).
+# out/ already covered above; this exact name is not.
+run-r18/

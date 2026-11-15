@@ -2793,4 +2793,115 @@
       "capability_gain_claim": false
     }
   }
+,
+  "XJ-20261115-001": [
+    "docs/eval-prereg.md",
+    "docs/eval-report-r18-decisive.md",
+    "docs/r18-anchor-blindspot-repro.md",
+    "tools/eval/r18_primary_analysis.py",
+    "out/acceptance-r18.json",
+    "out/r18-lint-report.log",
+    "artifacts.json"
+  ],
+  "_s25_freeze_XJ-20261115_001": {
+    "_comment": "XJ-20261115-001 D1 §25 修正案冻结锚点（机械追记）。下划线前缀台账，非 judged artifact，不参与 gate freshness。",
+    "phase": "D1_section25_freeze",
+    "acceptance_point": "5d8de6f",
+    "acceptance_commit": "aeffcf4",
+    "freeze_commit": "fc3e77a",
+    "worktree": "D:/15812/projects/agent-covenant-r18",
+    "branch": "feature/xj-20261115-001-decisive",
+    "timebox": {"accept": "2026-11-15", "data_deadline": "2026-11-29", "close": "2026-12-06"},
+    "freeze_before_any_r18_data": true,
+    "prereg_before_bytes_raw": 275348,
+    "prereg_before_sha256_raw": "cd39e1272de7bfd94227cb8879fa1bce59bd36f240359a4e4a7dd16f76921faf",
+    "prereg_before_sha256_blob_lf": "c4b3be669a5283de5726bf4a80e05661fcc0b10e11e35dbaa8382f70f8339f56",
+    "prefix_intact_dual_calibre": true,
+    "numstat_vs_master": "162 0 docs/eval-prereg.md",
+    "clauses": "D25-0 timebox+caliber whitelist / D25-A full-denominator coverage / D25-B rejudge protocol / D25-C partial independence rules / D25-D dual-frame estimation + direction audit / D25-E bounds+sensitivity / D25-F five stop rules / D25-G R18-DECISIVE block / D25-H D6 isolation / D25-I acceptance mapping",
+    "sir_confirmation": "2026-11-15 按 §25 执行 (governance confirmation; stop rule 3 disarmed)",
+    "dual_frame_interpretation": "registered per card Status; coverage frame = 400 full denominator; M1/M2 two-arm frame = sealed round-6 corpus (zero rejudge, sealed join)"
+  },
+  "_round18_final_XJ-20261115_001": {
+    "_comment": "XJ-20261115-001 D2–D5 产物与 Acceptance 1–8 亲跑台账（机械追记）。下划线前缀，非 judged artifact；不写 verdict、不 push、不 merge。",
+    "d2_rejudge": {
+      "out": "out/r18-rejudge.json",
+      "sha256": "8851c1fb2b712f4c01578baa91d1a905de978eacc9f654e8023ca544da5f77eb",
+      "readings": {"views_agree": "225/234 (96.2%)", "final_counts": {"true": 97, "false": 126, "still_unjudgeable": 11},
+        "coverage_r18": "389/400 = 0.9725 (threshold 0.70 met; stop rule 1 NOT triggered)",
+        "disagreements": "9 (all goldset-text family) -> conservative still_unjudgeable, pending AgnesCode blind arbitration; arbitration can only raise coverage"},
+      "blinding": "two isolated fresh-context subagent views per arm-shuffle seeds 20261115/20261116; view A sealed before view B started; no layer/arm/tstar/prior-judgment fields in packs; custody ledger timestamps",
+      "honesty": "two_human_independent=false; single-executor dual isolated views + external arbitration (ADV-5 same form)"
+    },
+    "d3_external_anchor": {
+      "out": "out/r18-external-anchor.json",
+      "sha256": "030a5284256bcef07a510ccb57f99e2c1fad995586054d433414392d27ba262f",
+      "draw": "seed 20261115 stratified 12/8/10 (tstar-true/tstar-false/former-unjudgeable), pack sha 1ebd99e7..., key isolated in run-r18/anchor-key.json",
+      "agent_view": "sealed BEFORE wb judgment (sha e9760df7...); first-view self-navigation caveat registered (29/30 corroboration)",
+      "deviation": "card names sir as anchor judge; sir delegated the 30-item batch to WorkBuddy (user decision 2026-11-15); registered for AgnesCode adjudication",
+      "kappa": {"value": 1.0, "band": "almost_perfect", "decided_n": 24, "observed": "24/24",
+        "excluded_still_unjudgeable": "WB 6 / agent 1 (asymmetry disclosed per-item)",
+        "wording": "independence = partial (WorkBuddy agent + ZCode agent; NOT a human anchor; NOT satisfied); kappa>=0.81 so no forced exploratory downgrade; whether non-human anchor forces exploratory is AgnesCode's call"}
+    },
+    "d4_primary_analysis": {
+      "tool": "tools/eval/r18_primary_analysis.py",
+      "tool_sha256": "c350296d7cb0c36b3e95347e32b36c3419394dc5ea0c40a64f3c607d1042eee0",
+      "out": "out/r18-primary-analysis.json",
+      "sha256": "76cc271f028796d2bd16a6b8b38b6b0c1932e529ecfb03e8342fe8b7766b35f2",
+      "readings": {"coverage_frame": "denominator 400, coverage 0.9725, threshold met",
+        "m1_paired_diff": "+6.0371pp CI95 [-1.0181, +14.2290] (crosses zero) -> criterion NOT met",
+        "m2_paired_diff": "-5.1544pp CI95 [-12.7862, +2.1301] (crosses zero) -> NOT met",
+        "direction_audit": "direction_unanchorable (+6.0371 vs published +5.8, gap 0.24pp > rounding); both directions disclosed, NEITHER meets the criterion -> branch decision robust",
+        "bounds": "gate_worst -11.3733pp / gate_best +17.3819pp (disclosure only)",
+        "sensitivity": "exclusion identity recorded; coverage-exclusion forbidden_for_passing",
+        "zero_rejudge": true, "self_check": "PASS (four sections + denominator==400 + booleans)"},
+      "stop_rule_2": "TRIGGERED (m1 diff <10pp AND CI crosses zero)"
+    },
+    "d5_closing_report": {
+      "path": "docs/eval-report-r18-decisive.md",
+      "sha256_full": "see pointer in report; hash noted at closing commit",
+      "branch": "inconclusive_by_stop_rule (trigger item 2, verbatim); insufficient_evidence template sentence present verbatim; branch-precedence ambiguity (2 == insufficient_evidence trigger) registered for AgnesCode",
+      "caliber": "inconclusive_by_stop_rule",
+      "gate_conclusion_issued": false,
+      "report_lint": "exit 0 LINT: PASS checks=5",
+      "pointer_verify": "4/4 COVERAGE 100.0% BAD_DIGEST 0 RESULT PASS"
+    },
+    "d6_anchor_blindspot": {
+      "path": "docs/r18-anchor-blindspot-repro.md",
+      "sha256_head": "a8f824a108445f22",
+      "verification": "run-r18/anchor-blindspot-verification.json: instrument 48/48 E4; gate-body zero-anchor 48/48 -> product-level blindspot confirmed (isolated; never referenced by D4/D5)"
+    },
+    "seal": {"bundle": "run-r18", "files": 30, "root_label": "r18-decisive-execution",
+      "seal_json_sha256_head": "bb4e97e545c471bf",
+      "verify": "VERIFY: OK (30 files match the seal), exit 0",
+      "note": "deterministic re-seal twice (manifest additions; r12 precedent), contents registered"},
+    "acceptance": {
+      "runner": "out/acceptance-r18.py",
+      "ledger": "out/acceptance-r18.json",
+      "exit_table": {"A1_numstat": 0, "A1_prefix_check": 0, "A2_report_lint": 0, "A3_seal_verify": 0,
+        "A4_unittest_literal": 1, "A4_unittest_hint": 0, "A5_primary_selfcheck": 0,
+        "A6_caliber_check": 0, "A7_redzone": 0, "A7_lint_cards": 0,
+        "A8_kappa_reported": 0, "A8_agies_adjudication": null},
+      "nonzero_registered": [
+        {"id": "A4_unittest_literal", "exit": 1, "detail": "no COVENANT_BASH_HINT -> FAILED (round-10..18 registered Windows dependency); with hint Ran 548 tests OK (>=548 met)"}
+      ],
+      "unittest_with_hint": "Ran 548 tests ... OK",
+      "lint_cards": "exit 0, zero ERROR",
+      "redzone": "git diff master --stat over card paths + gate trio + ledger/ + .github/ + .eval-sealed/ -> empty, exit 0"
+    },
+    "card_status": "IN_REVIEW",
+    "review_request": "D:/15812/projects/review/AGNES/XJ-REVIEW-REQUEST-AGNES-20261115-001.md",
+    "unresolved_for_review": [
+      "branch-precedence: stop rule 2 trigger == insufficient_evidence trigger (literal reading chosen: inconclusive_by_stop_rule)",
+      "9 rejudge disagreements pending AgnesCode blind arbitration (cannot change the branch)",
+      "WorkBuddy substitution for sir anchor + kappa=1.0 evidence weight (two-agent kappa vs human independence)",
+      "direction audit unanchorable (+6.04 vs +5.8): whether an evaluative-exclusion reproduction attempt is worth a follow-up card",
+      "D6 product-defect disposition (fix requires instrument change -> sir + independent prereg + versioned full rerun)"
+    ],
+    "discipline": {"no_push": true, "no_merge": true, "no_verdict": true, "no_self_review": true,
+      "master_untouched": true, "redzone_zero_touch": true,
+      "no_new_instrument_features": "judge untouched; estimator = frozen section-5 method first faithful execution",
+      "no_sample_frame_expansion": true, "endpoint_locked": true, "caliber_not_calibration": true,
+      "timebox": "closing on 2026-11-15, well before the 2026-12-06 deadline"}
+  }
 }

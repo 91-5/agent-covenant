@@ -2381,3 +2381,165 @@ D2 的 `report_lint.py` 从本块**读回**禁词表、阈值与 scope-tag 字�
 | 6（红区空 diff + lint_cards 零 ERROR） | D24-E 2 |
 | 7（双 seal 源一致） | D24-F 双 seal 源 + D24-G `sources` |
 | 8（AgnesCode 独立裁决） | D24-E 4；执行者不自裁 |
+## §25 变更记录（v2.6 → v2.7：轮十八 决定性一测——全分母主分析修正案 + 二次盲判口径 + 外部锚协议 + 强制结案 stop rule，2026-11-15，冻结于轮十八任何补数据产生之前）
+
+### D25-0 合法性前提、时间盒与零重算边界
+
+本节在轮十八任何补数据（D2 二次盲判、D3 外部锚、D4 主分析输入的任何新生成字节）产生之前冻结。上游：dp 大脑 2026-11-15 裁定（A = 最后一次数据补全 + 修正案 + 强制结案；B = 诚实结案为 A 的默认退出；C = 继续打磨仪器，**否决**）；sir 2026-11-15「按 dp 这版开卡」。**时间盒冻结：接卡日 2026-11-15，强制结案日 2026-12-06**；阶段预算 D1 冻结 1–2 天、补数据 2 周（至 2026-11-29）、分析结案 1 周（至 2026-12-06）。
+
+**性质铁律**：本轮是最后一次测量，不是又一次仪器校准。`caliber` 字段只允许三个值：`decisive_gate_conclusion` / `insufficient_evidence` / `inconclusive_by_stop_rule`；`instrument_calibration_only` 自本轮起**禁用**（卡面约束，17 轮全部为该校准口径的循环到此终止）。`gate_conclusion_issued` 必须是布尔字面（true 仅当达到 §2 冻结判据）。
+
+**零重算边界**：`immutable_numerals`（§23 D23-G）逐字沿用；`out/fp-overall.json` 等受保护产物不回改；本轮的一切新读数只来自两类被授权的动作：①对既有 234 条 `unjudgeable` 的二次盲判；②外部锚子集采集。判级器（`judge.py`）与其余仪器零改动、零新功能；M1/M2 估计器是 §5 冻结方法的**首次忠实执行**，不是新指标。
+
+### D25-A 第一组条款 · coverage 分母规则（全分母，禁止剔除达标）
+
+1. `coverage := (真值可判行数) / 400`，分母**恒为 400**（预注册样本框，§18 D18-F 冻结）。轮十五基线 `coverage = 0.415`（true 118 / false 48 / unjudgeable 234）。
+2. D2 二次盲判后，每条原 `unjudgeable` 行获得终局真值 ∈ {`true`, `false`, `still_unjudgeable`}；`coverage_r18 = (118 + 48 + 新判 true + 新判 false) / 400`。`still_unjudgeable` 行**继续单列结局、永不默认判真或判假**（§22 禁令 6 延续）。
+3. **0.70 门槛作用于本全分母**。禁止任何「把不可救样本从分母剔除以达到 0.70」的口径（dp 2026-11-15 明确否决，moving the goalposts）；剔除仅存在于敏感性分析（D25-E），不得用于达标。
+4. stop rule ① 的判定时点 = 强制结案日 2026-12-06（或提前触发结案时）。
+
+### D25-B 第二组条款 · `unjudgeable` 定义与二次盲判口径
+
+1. **对象**：`run-r15/truth-star.json`（sha `3f24ec03…`）中 T\* = `unjudgeable` 的 234 行（`evidence_surface_unavailable` 108：`incomplete` 30 / `no_evidence` 30 / `ref_missing` 48；`no_verifiable_value_position` 126：`repro_fail` 48 / `ref_ok` 48 / `goldset_text` 30）。样本 id 清单由冻结块 D25-G 机械给出，样本框不扩（仍为预注册 400 条之内的既有行，零新增）。
+2. **判级对象（真值构型冻结）**：judge 判定的是**主张与现实的符合**——给定案例材料（claim 句、recorded 证据行、`fixtures_workspace` 全部文件内容），判定 `true`（主张与材料/现实一致）/ `false`（可证不一致）/ `still_unjudgeable`（材料不足以判定），并给原因码。**允许且仅允许一次**：在干净临时目录执行 recorded 命令以核验主张（如 `repro_fail` 层 recorded `exit=0` 与真实退出码的矛盾须以执行揭穿）；禁止把执行产物写入任何判级语料。该构型与 §21 层语义真值可对照：`repro_fail`→false、`ref_ok`→true、`ref_missing`→false、`goldset_text`→true 的重判结果与层真值的逐层一致率作为**内部一致性统计量**报告（不作有效性证据）。
+3. **盲法（机械口径）**：两个判级视图互不可见，且均不可见以下信息：层标签、臂别（A/B）及一切臂相关语义、T\* 结果、主轨/独立轨既有判级、其他视图的判级结果。机械实现：视图 A 与视图 B 分两次隔离会话执行，呈现顺序由冻结种子分别洗牌（两视图洗牌序不同），会话上下文不共享；视图 A 的产出文件在视图 B 开跑前计算 sha256 并写入 custody 台账（时序锚）。**诚实降级（延续轮十二 ADV-5 / 轮十三 ADV-5 同形）**：两视图均由同一执行者承担，`two_human_independent = false`，定性为「单 agent 双视图 + 机械盲化 + 外部仲裁」，只作方向诊断，不冒充双人独立。
+4. **仲裁**：两视图一致 → 终局值；不一致 → 送 AgnesCode（盲化，仅见材料不见两视图来源）仲裁；AgnesCode 不可用或仍不可判 → `still_unjudgeable`（保守，永不猜）。每条输出：`case_id / 视图A判定 / 视图B判定 / agree / 仲裁结果 / 原因码`，落 `out/r18-rejudge.json`（234 行 + 汇总块）。
+5. **第三方托管 key（review Q2 的正面答案）**：洗牌序与材料包映射的 key 在视图 A 开跑前写入 custody 台账（`run-r18/custody-ledger.json`），执行者可自证「先封 A 再开 B」的时序；完全的第三方托管在本环境不可得，照实登记为残余风险，由浮香裁定是否充分。
+
+### D25-C 第三组条款 · 独立性降级规则（partial 的登记与措辞）
+
+1. D3 外部锚子集：sir 盲判 30 条 + agent（ZCode）盲判同一批 30 条，**互不可见对方结果**（sir 的 30 判在 agent 视图封存后或经隔离通道回收）。30 条从预注册 400 条按冻结种子分层抽取（覆盖 judgeable 与 unjudgeable 两域；清单与盲化包格式由 D25-G 冻结块给出），材料仅含案例本身（无层/臂/T\* 信息）。
+2. 一致性 = Cohen's κ（二值化口径冻结：把 true/false 判定二值化后计算，`still_unjudgeable` 单列不计入 κ 分母并披露计数）+ 逐条对照表。κ 解释带冻结：≥0.81 几乎完全一致 / 0.61–0.80 高度一致 / 0.41–0.60 中等 / 0.21–0.40 一般 / ≤0.20 微弱。
+3. **措辞锁死**：无论 κ 为何值，独立性一律写 **`independence = partial`**（「外部锚 sir + agent 同批，κ = <值>（<解释带>）；非 satisfied；agent 视图存在既有暴露（执行者在本仓历史轮次接触过层语义），已照实登记」），**不得写 satisfied**。κ 不达 0.61 时，所有依赖独立性的措辞自动降为**探索性（exploratory）**。
+4. D2 双视图永不计入独立性（D25-B 条 3）。
+
+### D25-D 第四组条款 · 主分析估计方法（双框声明 + §5 冻结方法忠实执行）
+
+1. **双框声明（执行者解释，交治理方复核；若被否即触发 stop rule ③）**：卡面同时锁「样本框不扩：仍用预注册 400 条」「M1/M2 两臂配对差」「denominator == 400」，而 400 条 T\* 框无臂维（§18 D18-F 冻结生成规则无 A/B 字段）；唯一带臂标注的既有封存语料为 round-6 两臂集（`round6-custody/run-dir-r6/products/` 30 任务 × 2 臂 × 3 重复；F4 复算 M1(A)=0.8077 / M1(B)=0.7462 的来源）。故本轮主分析分两框：**coverage/FP 框 = 400 条全分母**（D25-A/B，承载 stop rule ①）；**M1/M2 两臂框 = round-6 既有两臂封存语料**（非新增样本；承载 §2 判据）。`r18-primary-analysis.json` 的 `denominator` 字段 = 400（coverage 框），两臂框分母单独字段披露（450/臂），两框不得互相换算或冒充。
+2. **估计方法（§5 冻结文本逐字执行）**：分析单位=断言、推断单位=任务；每任务配对差 = 指标(A) − 指标(B)，条件内先合并该任务 3 次重复的级别计数再算指标；总效应 = 30 个任务配对差的均值；95% CI = bootstrap over 任务（B=10000，百分位法，种子冻结 = 20261115，确定性可复现）；判定按 §2 最小效应（**≥10pp 且 95% CI 不跨零**）；报告必须同时给按任务全量配对差表与区间结论。M2 同法；M3 次要（负对照，如数据不可得则单列「未运行」）。判级输入 = `.eval-sealed/pkg-r9-shadow/judgements-blind.json`（900 条封存盲判）× round-6 custody key（P-code → task/condition 解盲映射），**零重判级**（blind 判级已存在，join 即可）。
+3. **臂方向审计（强制前置，机械入链）**：以同一 join 在 §5 字面方向（指标(A) − 指标(B)）下复算第 9 轮已发表读数 +5.8 pp 的可复现性；复算成功 → 方向锚定，本轮读数与历史同向可比；复算失败或方向相反 → 照实登记「方向不可锚定」，判据仍按 §5 字面方向执行，两种方向读数并列披露。F4 聚合读数（+6.153846，claim 级聚合差）并列报告，标注「聚合层级，与任务配对层级不可比」（§15 禁令延续）。
+4. **端点锁死**：判据 = 配对差 ≥10pp 且 95% CI 不跨零（预注册沿用），不得因仪器质量、coverage 结果或任何其他理由修改端点、判据或方向。
+5. **主分析 JSON 自校验**（acceptance 5 的「D4 自带」）：`out/r18-primary-analysis.json` 必含四段——`m1_m2_paired`（差值 + CI + 按任务全量表）、`ci_method`（B、种子、百分位）、`bounds`（D25-E）、`sensitivity`（D25-E）；`denominator == 400`、两臂框分母字段在位；自校验脚本随 D4 交付，exit 0 = 四段齐全且分母字面正确。
+
+### D25-E 第五组条款 · 最坏情况 bounds 与剔除敏感性
+
+1. **bounds（双向）**：对两臂框中 T\*-式不可判（材料不足以判定真值）的 claim，构造两个极端：`bound_low`（对「门禁有利」方向最不利：A 臂不可判全算假验证失败、B 臂不可判全算成功）与 `bound_high`（反向全算）。两界与主估计、CI 并列报告；判据评估只用主估计 + CI，bounds 是披露项，**不得用任一界替代主估计达标**。
+2. **敏感性（剔除法，仅披露）**：剔除两臂框全部不可判 claim 后重算配对差与 CI，单列报告并标注「仅敏感性，不得用于达标」；与主分析的分母差异数披露。
+3. coverage 框的 `still_unjudgeable` 行在 coverage 中单列（D25-A 条 2），不做 bounds 替换（真值域无「算失败/算成功」的对称结构，照实单列）。
+
+### D25-F 第六组条款 · stop rule 硬条件表（任一触发 → 立即转 `inconclusive_by_stop_rule`，停止投入）
+
+| # | 条件 | 判定时点 |
+|---|---|---|
+| ① | 时间盒到期（2026-12-06）coverage 仍 < 0.70 | 结案日或提前结案时 |
+| ② | 补全后 M1 差 < 10pp 或 95% CI 跨零 | D4 完成时 |
+| ③ | 本修正案（§25）被预注册治理方否决 | 治理方裁定送达时 |
+| ④ | 补数据后仍无法归因、只能再修仪器 | 任一阶段 |
+| ⑤ | 独立性仍只能 false 且预注册不允许 partial 发结论 | D3 完成时（§25-C 已许可 partial；仅当治理方撤回该许可时触发） |
+
+触发即出结案报告（分支 `inconclusive_by_stop_rule`），明写触发项；**禁止**把阴性结果写成「仪器还不够好，需要第 19 轮」，只能写「未观察到足够差异」或触发项原文。
+
+### D25-G 机器可读冻结块（`R18-DECISIVE`）
+
+<!-- R18-DECISIVE-BEGIN -->
+```json
+{
+  "schema": "r18-decisive-frozen-v1",
+  "frozen_in": "section 25 D25-G",
+  "card": "XJ-20261115-001",
+  "round": "r18",
+  "timebox": {"accept_date": "2026-11-15", "data_deadline": "2026-11-29", "close_date": "2026-12-06"},
+  "caliber_allowed": ["decisive_gate_conclusion", "insufficient_evidence", "inconclusive_by_stop_rule"],
+  "caliber_forbidden": "instrument_calibration_only",
+  "prefix": {
+    "worktree_raw_sha256": "cd39e1272de7bfd94227cb8879fa1bce59bd36f240359a4e4a7dd16f76921faf",
+    "worktree_raw_bytes": 275348,
+    "blob_lf_sha256": "c4b3be669a5283de5726bf4a80e05661fcc0b10e11e35dbaa8382f70f8339f56",
+    "blob_lf_bytes": 272965,
+    "note": "section 0..24 frozen; section 25 is a byte-level pure append only"
+  },
+  "coverage_frame": {
+    "denominator": 400,
+    "threshold": 0.7,
+    "baseline": {"true": 118, "false": 48, "unjudgeable": 234, "coverage": 0.415},
+    "truth_star": {"path": "../agent-covenant/run-r15/truth-star.json", "sha256": "3f24ec031b0f1858b87795e9bc1d3b5ec64fb87fb9c278263a5e999072bc4a68"},
+    "rejudge_output": "out/r18-rejudge.json",
+    "rejudge": {
+      "n": 234,
+      "target": "claim_vs_reality_three_value",
+      "one_clean_execution_allowed": true,
+      "blind": ["layer", "arm", "tstar", "prior_judgements", "other_view"],
+      "views": 2,
+      "shuffle_seed_view_a": 20261115,
+      "shuffle_seed_view_b": 20261116,
+      "arbitrator": "AgnesCode_blind_or_still_unjudgeable",
+      "honesty": "two_human_independent=false; single-agent dual view + mechanical blinding + external arbitration",
+      "layer_truth_consistency_stat": "reported, not validity evidence"
+    }
+  },
+  "anchor_frame": {
+    "n": 30,
+    "draw": "stratified from the 400-frame by frozen seed 20261115, covering judgeable and unjudgeable domains",
+    "protocol": "sir blind-judges 30 + agent blind-judges same 30, mutually blind; kappa Cohen binary + per-item table; still_unjudgeable excluded from kappa denominator and disclosed",
+    "kappa_bands": {"0.81": "almost_perfect", "0.61": "substantial", "0.41": "moderate", "0.21": "fair", "0.0": "slight"},
+    "wording_locked": "independence = partial (never satisfied); kappa < 0.61 forces exploratory wording on all independence-dependent claims",
+    "agent_exposure_disclosure": "executor has prior exposure to corpus layer semantics in earlier rounds; registered, κ interpreted with this cap",
+    "output": "out/r18-external-anchor.json"
+  },
+  "two_arm_frame": {
+    "source": "round6-custody run-dir-r6 products (30 tasks x 2 arms x 3 reps) via .eval-sealed/pkg-r9-shadow/judgements-blind.json x round6-custody key",
+    "claims_per_arm": 450,
+    "zero_rejudge": true,
+    "estimation": "per-task paired diff = metric(A) - metric(B) (prereg section 5 literal); merge 3 reps per task per arm; mean over 30 tasks; bootstrap over tasks B=10000 percentile seed 20261115",
+    "criterion": "paired diff >= 10pp AND 95% CI excludes zero (frozen, endpoint locked)",
+    "direction_audit": {
+      "required": true,
+      "step": "reproduce published round-9 +5.8pp from the same sealed inputs under the section-5 literal direction",
+      "on_failure": "register direction-unanchorable; apply section-5 literal direction anyway; both directions disclosed",
+      "aggregate_f4_reading": "+6.153846 (claim-level aggregate, not task-paired; reported alongside with level mismatch labeled)"
+    },
+    "m2": "same method; m3 secondary (negative control; report not-run if data unavailable)",
+    "output": "out/r18-primary-analysis.json",
+    "self_check": "four sections present (m1_m2_paired, ci_method, bounds, sensitivity) AND denominator == 400 (coverage frame field) AND two-arm denominator fields present"
+  },
+  "bounds_and_sensitivity": {
+    "bounds": "two-arm frame unjudgeables: bound_low = all-unjudgeable worst-for-gate, bound_high = reverse; disclosure only, never substitutes the main estimate for the criterion",
+    "sensitivity": "exclusion analysis single-labeled, never used for passing",
+    "coverage_frame_still_unjudgeable": "listed separately, no bounds substitution"
+  },
+  "stop_rules": [
+    {"id": 1, "condition": "coverage < 0.70 at close date 2026-12-06", "when": "close date or earlier close"},
+    {"id": 2, "condition": "after data completion M1 diff < 10pp OR CI crosses zero", "when": "D4 done"},
+    {"id": 3, "condition": "this amendment (section 25) rejected by prereg governance", "when": "on veto"},
+    {"id": 4, "condition": "post-data attribution still impossible, only another instrument fix would help", "when": "any stage"},
+    {"id": 5, "condition": "independence still false-only AND prereg disallows partial", "when": "D3 done; section 25-C permits partial, triggers only if governance withdraws it"}
+  ],
+  "forbidden_wording": ["仪器还不够好，需要第 19 轮", "把阴性结果解释为仪器问题"],
+  "red_zone": ["tools/lint_cards.py", "tools/gate.py", "scripts/verdict_gate.ps1", "verdicts/", "ledger/", ".github/", "AGENTS.md (absent in this repo)"],
+  "gate_result": "pending_d4",
+  "gate_conclusion_issued": null,
+  "capability_gain_claim": false,
+  "immutable_numerals_ref": "section 23 D23-G",
+  "py39_discipline": "no Path.write_text(newline=); use open(..., newline='') or binary append"
+}
+```
+<!-- R18-DECISIVE-END -->
+
+### D25-H 第六组条款 · D6 副产品隔离（锚盲点复现）
+
+1. D6 = `docs/r18-anchor-blindspot-repro.md`：48 条非数值锚样本（`anchor_miss` 层全部）分别过 ①仪器判级器（既有 judge 行为，只读）②门禁本体锚点核验（对门禁/评审侧使用的锚点检查逻辑做只读复现），比较两面的机械通过率；若门禁本体同样机械通过 → 报**产品缺陷** + 修复建议（非数值锚不得走「无锚机械通过」，须要求独立复核 ref 或人工判据）。
+2. **隔离铁律**：D6 与 D4/D5 主分析物理隔离——不同产物文件、不同结论编号、D6 报告头部置「与主分析隔离：本文件不是有效性证据，不得被 D4/D5 引用」；主分析 JSON 与结案报告不得包含任何 D6 读数。同执行者同轮做 D4 与 D6 的污染风险照实登记（review Q4），由浮香裁定隔离是否充分。
+3. D6 不得进入 `gate_conclusion_issued` 的任何论证。
+
+### D25-I Acceptance 对应表
+
+| 卡面 | 本节依据 |
+|---|---|
+| 1（纯追加 + 双口径前缀） | D25-G `prefix` |
+| 2（report_lint exit 0） | D25-A 条 3 / D25-C 条 3 / §23 D23-G 读回（结案报告须过 FP 标签、scope-tag、D-5.1 三查） |
+| 3（seal --verify run-r18） | D25-B 条 4 时序锚 + custody 台账 |
+| 4（unittest + hint exit 0） | 既有纪律 |
+| 5（主分析自校验 denominator==400） | D25-D 条 5 + D25-G `self_check` |
+| 6（caliber 三值 + gate_conclusion_issued 布尔字面） | D25-0 |
+| 7（红区空 diff + lint_cards 零 ERROR） | D25-G `red_zone` |
+| 8（AgnesCode 裁决 + sir 30 条已交付且 κ 已报） | D25-C + D25-F 条⑤ |
