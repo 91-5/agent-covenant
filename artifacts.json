@@ -3043,5 +3043,9 @@
       "caliber_not_calibration": true,
       "timebox": "closing on 2026-11-15, well before the 2026-12-06 deadline"
     }
-  }
+  },
+  "XJ-20261116-001": [
+    "docs/eval-report-r18-decisive.md",
+    "artifacts.json"
+  ]
 }

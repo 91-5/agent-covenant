@@ -9,8 +9,8 @@
   "advisories": 5,
   "independent": true,
   "verifier": "AgnesCode (agnes-3.0-flash)",
-  "ts": "2026-11-15T14:39:43Z",
-  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no re-stamp of prior rounds | re-signed 2026-11-15T11:46:50Z -> 2026-11-15T14:39:43Z post-merge 2026-11-15: (a) merge checkout rewrote artifact mtimes; (b) claim surface corrected - phantom 'out/r18-lint-report.log' (never existed) replaced by the three artifacts actually reviewed (r18-rejudge.json / r18-primary-analysis.json / r18-external-anchor.json); verdict substance (PASS 0B/0C/5A, all readings, all rulings) untouched",
+  "ts": "2026-11-16T14:03:12Z",
+  "ts_note": "real UTC, not ahead of system clock; written post-delivery, no re-stamp of prior rounds | re-signed 2026-11-15T11:46:50Z -> 2026-11-15T14:39:43Z post-merge 2026-11-15: (a) merge checkout rewrote artifact mtimes; (b) claim surface corrected - phantom 'out/r18-lint-report.log' (never existed) replaced by the three artifacts actually reviewed (r18-rejudge.json / r18-primary-analysis.json / r18-external-anchor.json); verdict substance (PASS 0B/0C/5A, all readings, all rulings) untouched | re-signed 2026-11-15T14:39:43Z -> 2026-11-16T14:03:12Z 2026-11-16: disclosure-only append of section 8 (Limitation) to docs/eval-report-r18-decisive.md under XJ-20261116-001, itself authorized by, and citing, the AgnesCode post-hoc addendum verdict (PASS 0B/0C/6A, Q-A); verdict substance (PASS 0B/0C/5A, all readings, all rulings) untouched; no frozen reading, close branch, or capability claim changed",
   "evidence": [
     "D1 independently confirmed: git diff 5d8de6f eb5b758 --numstat -- docs/eval-prereg.md = 162/0 (pure append, deletion column 0); s0-s24 prefix dual-calibre sha recomputed = raw cd39e127... / LF c4b3be66... matching the frozen values and invariant at the freeze commit fc3e77a; freeze order verified (fc3e77a is an ancestor of the D2-D6 commit 5dda63a).",
     "Red-zone zero-touch: git diff 5d8de6f eb5b758 --stat across the 11 full red-zone paths + ledger/ + scripts/verdict_gate.ps1 + .github/ = empty (exit 0).",
