@@ -1,0 +1,51 @@
+{
+  "id": "EVO-20261116-001",
+  "round": 2,
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 2,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-16T14:23:41+00:00",
+  "ts_note": "real UTC, not ahead of system clock",
+  "supersedes_round1": "EVO-20261116-001 round-1 verdict (CONDITIONAL 0B/1C/6A, ts 2026-11-16T13:45:37Z) at the same path verdicts/EVO-20261116-001.verdict.json is superseded in-place by this round-2 PASS per the dispatch's explicit overwrite instruction; round-1's C1 text and its closure proof are preserved below in conditions_closures (audit not lost). round-1 review 正本 (EVO-20261116-001.review.md) is kept as-is.",
+  "conditions_closures": [
+    {
+      "id": "C1",
+      "status": "CLOSED",
+      "checked_at": "2026-11-16T14:23:41+00:00",
+      "independent_method": "my own recursive census of all 10 live verdict roots (agent-covenant, agent-covenant-evo2026, agent-covenant-r17/r18, coldstore, deepfreeze, glassdesk, glasspill, glasssuite, _handoffs/evo), every class fed to the r2 rule set myself; NOT the executor's suffix_regex_check2.py",
+      "evidence": "152 live verdict files, 15 suffix classes (canonical + 14 non-canonical: -A -B -C -P2 -P2-B1 -P3 -P3-C1 -P4 -P6 -P7 -PR4-Afollow1 .glassdesk .glasspill .round2), 0 nonstandard names: ALL accepted by the r2 four-rule set (rule 2 ^-(?:P|PR)\\d+(?:-[A-Z]\\w*)*(?:-C\\d+)?$ covers the PR4 compound head via its repeated (?:-[A-Z]\\w*)* segment); live file coldstore/verdicts/OC-20261113-002-PR4-Afollow1.verdict.json confirmed on disk. All 7 counter-examples (-posthoc-power-addendum, .posthoc-power-addendum, -round2, -r2, -ex, -B1, .foo-bar) REJECTED. Zero live suffix lands in the unknown class, so the fail-closed default cannot block any existing card and regression-matrix scenario 5 holds."
+    }
+  ],
+  "corrections_to_record": [
+    "EXECUTOR CLAIM 'new 1' DISPROVEN: the r1 draft regex ^-(P\\d+|PR\\d+|P\\d+-[A-Z]\\w*|P\\d+-C\\d+|[A-C])$ tested by me returns TRUE for -A/-B/-C (the [A-C] branch), so the claim that the draft 'judged -A/-B/-C False' is wrong. r2 rule 3 (^-[A-Z]$) is still correct and kept; only the card JSON c1_closure.independently_reproduced text needs correction (record hygiene, no behavior change).",
+    "EXECUTOR CLAIM 'new 2' CONFIRMED: the draft topic rule (as written ^\\.[a-z0-9-]+$) does ACCEPT .posthoc-power-addendum (independently re-tested True); r2's hyphen-forbidden ^\\.[a-z0-9]+$ correctly rejects it. This is the substantive hardening directly against the incident suffix.",
+    "Census regression in the card's 14-item table: the card lists 13 non-canonical classes + canonical, but the LIVE census has 14 non-canonical classes -- .round2 (2 live files in _handoffs/evo: EVO-20261113-001.round2, EVO-20261114-002.round2) was dropped from the table. Rule 4 still covers it (no accept/reject difference); A-census gate enumeration is the authoritative source and the card table should record the class."
+  ],
+  "rulings_qr2": [
+    "Q-r2-1: YES -- the 4-rule whitelist fully covers live semantics (15/15 classes, 152 files, 0 gaps in my independent recursive census); carried into ADV-R2-1 as a record correction (.round2 census entry + new-1 text fix), NOT a new condition.",
+    "Q-r2-2: ACCEPTABLE -- the hyphen-forbidden topic rule ^\\.[a-z0-9]+$ is exactly the fail-closed spirit: existing topic suffixes (.glasspill .glassdesk .round2) stay covered; new hyphenated topic suffixes require an EXPLICIT whitelist entry, which is precisely the intended reject surface (the incident suffix .posthoc-power-addendum must stay rejected).",
+    "Q-r2-3: KEEP -A/-B/-C (rule 3) -- three live files require it (OC-20261030-003-B/-C, OC-20261031-001-A). Non-blocking guard: letter suffixes are stage-context semantics only; ad-hoc letter suffixes on non-stage cards are a lint-surface anomaly (ADV-R2-2).",
+    "Q-r2-4: the 8 acceptance items SUFFICE to close this card; two non-blocking enhancements folded into ADV-R2-2 (gate script's own sha256 in the A-audit print for forensics; pre/post snapshots stored under out/ custody per round-1 ADV-5)."
+  ],
+  "r1_advisory_closures": [
+    "ADV-4 (card JSON must carry the protected-asset fields or hit EVO_PROTECTED_ASSET lint): the in-place r2 card JSON now carries protected_assets_targeted=[\"scripts/verdict_gate.ps1 判定逻辑\"] (the canonical 6th item string) + protected_assets_changes + sir_approval -- CLOSED.",
+    "Q2/Q3/Q4/Q6 rulings adopted verbatim into card rulings_adopted with no drift from the round-1 machine-readable ruling."
+  ],
+  "advisory_findings": [
+    "ADV-R2-1 (record correction, non-blocking): fix two record items in the card JSON / 递评单 before implementation -- (a) 'new 1' claim disproven (r1 draft accepted -A/-B/-C via the [A-C] branch; my independent re-test), (b) census table dropped the live .round2 class (2 files, evo root; rule 4 covers it, A-census gate is authoritative). Neither changes any accept/reject behavior.",
+    "ADV-R2-2 (forensics + custody, non-blocking): (a) include the gate script's OWN sha256 (not just the selected verdict file's) in the A-audit print so any post-incident trace names the exact gate binary; (b) store out/gate-snapshot-pre.json / -post.json under out/ custody (gitignored, not red zone) per round-1 ADV-5; (c) single-letter suffixes stay stage-context-only (lint-surface anomaly if used on non-stage cards)."
+  ],
+  "evidence": [
+    "Target asset pre-implementation state independently confirmed: scripts/verdict_gate.ps1 sha256[:16]=b9e12cc903a7fd00, 4762 B -- UNCHANGED (matches the dispatch's declaration).",
+    "git topology: HEAD 195d9b4; c5d7336..HEAD diff = 4 files only (.tasks/XJ-20261116-001.md, artifacts.json, docs/eval-report-r18-decisive.md, verdicts/XJ-20261115-001.verdict.json -- all XJ-20261116-001 implementation artifacts); ZERO red-zone full-path hits (11-item list). Working tree: 2 untracked verdicts (this card + XJ-20261116-001) only.",
+    "Card JSON r2 (in-place) now carries protected_assets_targeted/protected_assets_changes/sir_approval (r1 ADV-4 closure confirmed) plus c1_closure + rulings_adopted (Q2/Q3/Q4/Q6).",
+    "My independent recursive census: 10 live verdict roots, 152 files, 15 suffix classes, 0 nonstandard names; every class accepted by the r2 rule set; all 7 counter-examples rejected (my own regex run, not the executor's script).",
+    "Executor repro script C:\\Users\\15812\\AppData\\Local\\Temp\\opencode\\suffix_regex_check2.py exists; its assertion groups (14 live accept / 7 reject) agree with my independent run, except the 'new 1' -A/-B/-C misdiagnosis in the card text (its live list accepts them under the r2 rules, which is behaviorally correct).",
+    "round-1 CONDITIONAL audit preserved: C1 original text and merge_gate wording embedded via supersedes_round1 + conditions_closures; round-1 正本 EVO-20261116-001.review.md (6797 B) untouched."
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261116-001.round2.review.md",
+  "merge_gate": "PASS 0B/0C/2A. The sole round-1 condition C1 is independently closed on the r2 rule set (full 10-root recursive census: 15/15 live classes accepted, 7/7 counter-examples rejected, -PR4-Afollow1 now covered by rule 2, incident suffix .posthoc-power-addendum now rejected on BOTH hyphenated forms). Card is GATABLE: executor implements per the 8 acceptance items (census hard-gate, per-card regression incl. OC-20261113-002, pre/post out/ snapshots with diff limited to the documented incident case, incident WARNING-not-silent, conflict fail-closed, unknown exit-1 with absolute paths, ts-tie canonical-priority, always-printed audit) after recording the two ADV-R2-1/2 items; actual --apply/merge of protected asset 6 still requires sir's explicit instruction (AGENTS.md 4.2 item 7); executor must not self-apply. 4.2-item-8 wording alignment stays a separate v0.13 card."
+}

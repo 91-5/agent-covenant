@@ -1,0 +1,50 @@
+{
+  "id": "XJ-20261116-001",
+  "artifact": "docs/eval-report-r18-decisive.md section 8 'Limitation (post-hoc, not_for_passing)' append-only + re-sign of verdicts/XJ-20261115-001.verdict.json ts",
+  "commit": "n/a -- card at OPEN on master c5d7336; section 8 not yet appended (report still sha 26dd75c4..., no section 8); this verdict adjudicates the DRAFT",
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 5,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-16T13:45:37Z",
+  "ts_note": "real UTC, not ahead of system clock",
+  "rulings": [
+    {
+      "q": "Q1 is append-only + deletion-column=0 sufficient mechanical evidence to protect the closed bytes?",
+      "ruling": "YES as the core evidence: any in-place modification registers as 1 deletion + 1 addition, so deletion-column=0 excludes changes to sections 0-7 and the appendix; jointly with A2 report_lint exit 0 + A3 verify_artifact_pointers exit 0 (pointer sha must hit existing frozen products) it closes."
+    },
+    {
+      "q": "Q2 is the re-sign of XJ-20261115-001 ts compliant; is an amended_by field needed or is ts_note + commit message sufficient?",
+      "ruling": "COMPLIANT and ts_note + commit message are SUFFICIENT (no amended_by field required). This is an authorized disclosure-only append (section 8 already independently ruled by the post-hoc addendum; it changes no frozen reading, close branch, M-reading, gate conclusion, or capability claim), so a ts re-stamp (the 25-precedent zero-semantic class) is correct, not a new verdict. The author's drafted ts_note ('XJ-20261116-001 authorized section-8 limitation append, verdict substance unchanged') already carries the two required elements (authorizing card + substance-unchanged). ADV-2 suggests also citing the post-hoc addendum verdict for a complete trace."
+    },
+    {
+      "q": "Q3 does the draft wording conflict with section 22 wording iron-rule / section 0 freeze declaration (the three phrases)?",
+      "ruling": "NO CONFLICT, all three phrases compliant: 'critical under-power' is a design-sensitivity statement (not a capability claim); '10pp-scale not excludable' is an honest negative (power 0.719 -> ~28% miss); '>=14pp exclusion holds only in the analytic caliber' is exactly the Q-C compliant dual-caliber rewrite (frozen bootstrap upper 14.229>14 at the boundary; analytic 13.76<14 excludes). Section 0 freeze declaration is untouched (section 8 states it does not change the inconclusive_by_stop_rule branch; criterion/endpoint unchanged)."
+    },
+    {
+      "q": "Q4 does the order of the dual-caliber presentation matter; must the frozen endpoint be explicitly labeled?",
+      "ruling": "Order is not substantive; the requirement is that the FROZEN endpoint be explicitly labeled (the draft does: bootstrap = frozen-endpoint, normal = diagnostic). ADV-3: keep frozen-first (the pre-registered value leads) so readers do not mistake the diagnostic caliber for the authoritative one."
+    },
+    {
+      "q": "Q5 does AGENTS.md / any global rule need syncing?",
+      "ruling": "NO (author correct) -- this card is a pure in-repo report append + in-repo verdict re-sign; it touches no protected-asset list; the verdict_gate.ps1 hardening is strictly EVO-20261116-001's scope."
+    }
+  ],
+  "advisory_findings": [
+    "ADV-1 (Q1 evidence chain): deletion-column=0 must be read JOINTLY with A2 report_lint + A3 verify_artifact_pointers + gate --require XJ-20261115-001 re-run; if section 8 adds artifact pointers, their sha must hit existing frozen products.",
+    "ADV-2 (Q2 trace): ts_note should additionally cite the AgnesCode post-hoc addendum verdict (on top of 'authorized + substance-unchanged') so the authorization source is machine/human-traceable (soft-trace -> explicit trace).",
+    "ADV-3 (Q4 calibers): keep the frozen-endpoint label (bootstrap +14.229) explicit; state verbatim that '>=14pp exclusivity rests on the analytic-normal caliber (upper 13.76<14); the frozen bootstrap caliber sits at the boundary (14.229>14)' -- consistent with the post-hoc addendum ADV-3 dual-caliber disclosure.",
+    "ADV-4 (Q5 boundary): no AGENTS.md / global-rule change; the verdict_gate.ps1 hardening is EVO-20261116-001's scope, no cross-card smuggling.",
+    "ADV-5 (closure path): after section-8 lands + re-sign, BOTH gate --require XJ-20261115-001 AND --require XJ-20261116-001 must exit 0; commit message discloses 'section-8 append + XJ-20261115-001 re-sign'"
+  ],
+  "evidence": [
+    "Target state independently verified: docs/eval-report-r18-decisive.md sha256 = 26dd75c4... (11468 B), CRLF 94 / lone-LF 0, NO section 8 yet, git clean at master c5d7336 -> section-8 is a prospective pure-append (deletion-column=0 precondition holds).",
+    "Section-8 draft body independently checked against the 22 wording iron-rule and my post-hoc addendum rulings: property statement (post_hoc_sensitivity / not_for_passing=true / read-only frozen input / zero new criteria / does not change the section-0 close branch) present; dual-CI readout (frozen percentile-bootstrap [-1.02,+14.23] labeled frozen-endpoint + analytic-normal [-1.02,+13.76] labeled diagnostic); sensitivity MDE(80%)~11.04pp / power(10pp)~0.719 / ~36.5 tasks; conclusion 'no >=14pp effect observed, 10pp-scale not excludable' + caliber note 'pre-registered-conditioned frozen two-arm frame layer-internal control evidence, not a gate-capability proof, no whole-domain extrapolation' -- all three Q-A guards verbatim present; no 22/0 conflict.",
+    "Re-sign mechanical surface: the report is inside XJ-20261115-001's claim surface -> the append trips STALE_VERDICT; re-signing the verdict ts + gate --require XJ-20261115-001 exit 0 is the closure. 25 re-sign precedents found (most recent c83eb75 zero-semantic re-stamp, same shape); this is an AUTHORIZED disclosure-only append (section 8 already independently ruled by the post-hoc addendum), so a ts re-stamp (not a new verdict) is correct.",
+    "Red-zone zero-touch precondition holds (card not yet implemented; master c5d7336 shows no diff on the protected-asset files; the verdict_gate.ps1 hardening is a separate EVO-20261116-001 card)."
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\XJ-20261116-001.review.md",
+  "merge_gate": "PASS 0B/0C/5A. Section-8 draft is compliant and may be appended (deletion-column=0 + report_lint + pointer + gate re-run); the XJ-20261115-001 ts re-sign is compliant and its drafted ts_note is sufficient (ts_note + commit message, no amended_by field required; ADV-2 suggests also citing the addendum verdict). No AGENTS.md / global-rule sync needed; the verdict_gate.ps1 hardening is EVO-20261116-001. Merge precondition: this PASS verdict + verdict_gate.ps1 -CardId XJ-20261116-001 exit 0 + sir instruction."
+}
