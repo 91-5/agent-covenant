@@ -7,8 +7,8 @@
   "advisories": 2,
   "independent": true,
   "verifier": "AgnesCode (agnes-3.0-flash)",
-  "ts": "2026-11-16T14:23:41+00:00",
-  "ts_note": "real UTC, not ahead of system clock",
+  "ts": "2026-11-17T09:47:50Z",
+  "ts_note": "real UTC, not ahead of system clock | re-signed 2026-11-16T14:23:41+00:00 -> 2026-11-17T09:47:50Z 2026-11-17: implementation landed as c3fc079 and the claim surface now lists scripts/verdict_gate.ps1 + tests/test_verdict_gate_hardening.py + README.md + README.zh-CN.md (test-count sync 548->560). SCOPE LIMIT, recorded deliberately: round-2 PASS adjudicated the CARD SPEC and the C1 closure, NOT the landed implementation; implementation evidence is the executor's own acceptance (12 new unittests OK, suite 560 OK, 138-card pre/post gate snapshot with 0 rc differences). An INDEPENDENT post-implementation review is dispatched separately per the standing rule that EVO applications must be re-checked against the original acceptance criteria after landing; this re-sign does not substitute for it.",
   "supersedes_round1": "EVO-20261116-001 round-1 verdict (CONDITIONAL 0B/1C/6A, ts 2026-11-16T13:45:37Z) at the same path verdicts/EVO-20261116-001.verdict.json is superseded in-place by this round-2 PASS per the dispatch's explicit overwrite instruction; round-1's C1 text and its closure proof are preserved below in conditions_closures (audit not lost). round-1 review 正本 (EVO-20261116-001.review.md) is kept as-is.",
   "conditions_closures": [
     {
