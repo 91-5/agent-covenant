@@ -1,0 +1,49 @@
+{
+  "id": "EVO-20261117-001",
+  "round": 2,
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 0,
+  "advisories": 3,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-17T13:49:13+00:00",
+  "ts_note": "real UTC, not ahead of system clock; round-2 closure re-review of the same design card",
+  "supersedes_round1": "EVO-20261117-001 round-1 verdict (CONDITIONAL 0B/2C/5A, ts 2026-11-17T13:03:26Z) at the same path verdicts/EVO-20261117-001.verdict.json is superseded in-place by this round-2 PASS per the dispatch's explicit canonical-suffix overwrite instruction; round-1's C1/C2 and their closure proof are preserved below in conditions_closures (audit not lost). round-1 review 正本 (EVO-20261117-001.review.md) is kept as-is.",
+  "conditions_closures": [
+    {
+      "id": "C1",
+      "status": "CLOSED",
+      "checked_at": "2026-11-17T13:49:13+00:00",
+      "independent_method": "my own per-class + id-shape census of all live D:\\15812\\projects\\*\\verdicts roots (309 files), NOT the author's wider-scoped table; closure property matches class-by-class",
+      "evidence": "stage class 10/10 id=full-stem (my 'other' entry was -PR4-Afollow1 mis-classified by a narrow probe regex; corrected to stage, matching the card's 10/10); agent-covenant in-repo = 92 files ALL canonical, ZERO stage -> the corpus-trap is confirmed (a repo-scoped blanket id=base test passes green but breaks on coldstore's 10 stage files). r2 fixed_rule branches the contract (canonical/single/topic -> id=base, stage -> id=full-stem, 'sub-verdict' excludes stage) and adds 4 acceptance lines incl. A-id-zero-edit (git diff -- verdicts/ must be empty) which locks '0 live files need editing'. CLOSED."
+    },
+    {
+      "id": "C2",
+      "status": "CLOSED",
+      "checked_at": "2026-11-17T13:49:13+00:00",
+      "independent_method": "grep of the lint PROTECTED 6-item tuple for the exact string",
+      "evidence": "protected_assets_targeted is now [\"verdict 模板与字段语义\", \"scripts/verdict_gate.ps1 判定逻辑\"] -- I confirmed 'verdict 模板与字段语义' is a CANONICAL string inside the lint PROTECTED tuple (one of the 6), so implementation hits EVO_PROTECTED_ASSET_TOUCHED (allowed pass-through), NOT EVO_PROTECTED_ASSET_UNKNOWN (ERROR). protected_assets_changes is split into two labeled segments; sir_approval now states implementation/merge touches items 1+6 and requires separate sir approval under 4.2 item 7. CLOSED."
+    }
+  ],
+  "rulings_qr2": [
+    "Q-r2-1 (14 missing-id files out-of-scope): AGREE -- all 14 (13 canonical + 1 topic) live in glasssuite and other repos, editing them would trip their own freshness chains; the cross-repo readonly acceptance only scans coldstore (12 files, 0 missing id) so it does not touch them. Kept as a follow-up in open_followups (ADV-R2-3).",
+    "Q-r2-2 (cross-repo readonly vs permanent CI test): the one-time read-only coldstore scan + the synthetic stage fixture (A-id-stage) are SUFFICIENT as this card's acceptance evidence; do NOT add a permanent CI test that depends on an external path CI lacks (it would red/skip). Re-consider only if coldstore is ever brought under this repo (ADV-R2-2).",
+    "Q-r2-3 (-AllowSubVerdict still docs-only): CONFIRMED -- same conclusion as r1 Q5; the gate cannot read the git merge message, so disclosure stays a process/sir control. No change in r2, correct.",
+    "Q-r2-4 (phase-2 'lint and gate select the same file' acceptance can it false-red?): YES it can false-red unless the design-only exclusion is ALSO made same-source. gate's design-only test matches a fixed pattern set on the raw JSON; if lint re-implements that check independently the two can disagree on which file is design-only, so the 'same file' assertion fires on existing cards. Fix (non-blocking, must be resolved before commit-2): put the design-only pattern set into the SAME single source (tools/verdict_suffixes.json) or have lint import gate's helper -- same-source in the design-only dimension too, not just the whitelist (ADV-R2-1)."
+  ],
+  "advisory_findings": [
+    "ADV-R2-1 (design-only must be same-source, non-blocking): the single-source discipline must extend to the design-only exclusion pattern, not just the suffix whitelist. Otherwise phase-2 item 6's 'lint-selected file == gate-selected file' acceptance can false-red on existing cards where the two design-only implementations diverge. Put the design-only pattern set in tools/verdict_suffixes.json (or import gate's helper) before the 6 commit.",
+    "ADV-R2-2 (cross-repo readonly scoping): keep A-id-cross-repo readonly as a one-time acceptance proof (not a CI-permanent test, since CI has no D:\\15812\\projects\\coldstore). Re-promote to a permanent test only if coldstore is ever brought under agent-covenant's tree.",
+    "ADV-R2-3 (14 missing-id live files): the 14 verdict files lacking the required 'id' field (13 canonical + 1 topic, all in glasssuite/other repos) stay OUT of this card (editing live files trips their freshness chains); register as a separate follow-up card if/when they are to be remediated. Not a blocker for this design card."
+  ],
+  "evidence": [
+    "Pre-implementation state independently confirmed: lint_cards.py sha256[:16]=6f1d833a8247565c (78789 B) and verdict_gate.ps1 sha256[:16]=b87d7f17c1b776a0 (10304 B) UNCHANGED; agent-covenant git clean at e9f43b4; card is a DESIGN card (no code changed).",
+    "My independent per-class census (309 live verdict files across D:\\15812\\projects\\*\\verdicts): canonical 288 (275 id=base + 13 id-missing), stage 9+1=10 (ALL id=full-stem), single 3 (all id=base), topic 8 (7 id=base + 1 id-missing). Closure property of the classed id contract matches the card's wider-scoped table (387/10/3/10) class-by-class; the deltas are census-root scope, not contract semantics.",
+    "Corpus-trap confirmed by my in-repo scan: agent-covenant verdicts/ = 92 files, ALL canonical, ZERO stage-class. A repo-scoped blanket 'id=base' test would pass green here and fail on coldstore's 10 stage files -- the exact hazard C1 exists to prevent, now closed by the branched contract + A-id-zero-edit.",
+    "C2 string check: 'verdict 模板与字段语义' is a member of the lint PROTECTED 6-item tuple (grep-confirmed alongside EVO 状态机定义 / AgnesCode 评审员资格 / sir 终裁权 / gate.py 判定逻辑 / scripts/verdict_gate.ps1 判定逻辑) -> pass-through TOUCHED, not UNKNOWN.",
+    "card JSON r2 now carries protected_assets_targeted=[item1+item6] + two-segment protected_assets_changes + strengthened sir_approval + c1_closure (fixed_rule + 4 acceptance lines) + advisories_adopted (ADV-1 $PSScriptRoot / ADV-2 registration-entry error text / ADV-3 same-card-isolated-commit + same-window 138 baseline)."
+  ],
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261117-001.round2.review.md",
+  "merge_gate": "PASS 0B/0C/3A. Both round-1 conditions independently closed on the r2 spec (C1: per-class id contract -- canonical/single/topic=base, stage=full-stem, 'sub-verdict' excludes stage, + A-id-zero-edit; C2: protected item 1 declared alongside item 6, changes split, sir_approval strengthened). Q-r2-4 surfaces a non-blocking refinement (design-only exclusion must also be same-source, else the phase-2 'same-file' acceptance false-reds). Card is GATABLE: after sir's explicit approval of protected items 1+6 (AGENTS.md 4.2 item 7), implement per the acceptance lines (single-source registry holding whitelist + design-only patterns, gate read via $PSScriptRoot + missing-file fail-closed, lint branched id contract, isolated phase-2 commit with same-window 138 baseline and lint==gate same-file assertion). Executor must not self-apply. 4.2-item-8 wording stays a separate v0.13 card."
+}
