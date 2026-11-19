@@ -3054,5 +3054,14 @@
     "README.md",
     "README.zh-CN.md",
     "artifacts.json"
+  ],
+  "EVO-20261117-001": [
+    "tools/verdict_suffixes.json",
+    "tools/lint_cards.py",
+    "scripts/verdict_gate.ps1",
+    "tests/test_verdict_suffixes.py",
+    "tests/test_pre_push_hook.py",
+    "README.md",
+    "README.zh-CN.md"
   ]
 }

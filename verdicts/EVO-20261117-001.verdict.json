@@ -7,8 +7,8 @@
   "advisories": 3,
   "independent": true,
   "verifier": "AgnesCode (agnes-3.0-flash)",
-  "ts": "2026-11-17T13:49:13+00:00",
-  "ts_note": "real UTC, not ahead of system clock; round-2 closure re-review of the same design card",
+  "ts": "2026-11-19T04:11:47Z",
+  "ts_note": "real UTC, not ahead of system clock; round-2 closure re-review of the same design card | re-signed from 2026-11-17T13:49:13+00:00 to 2026-11-19T04:11:47Z (zero semantic change) after c27b021 landed the implementation and bumped README test-count 560->574 (mtime 2026-11-18T09:50:13Z) — the re-sign gives a current PASS signature for the README claim surface (project memory #91 merge-induced STALE_VERDICT pattern). SCOPE LIMIT: this PASS covers the card spec + r2 C1/C2 closure only; the landed implementation is independently covered by the EVO-20261117-001.impl-review (AgnesCode).",
   "supersedes_round1": "EVO-20261117-001 round-1 verdict (CONDITIONAL 0B/2C/5A, ts 2026-11-17T13:03:26Z) at the same path verdicts/EVO-20261117-001.verdict.json is superseded in-place by this round-2 PASS per the dispatch's explicit canonical-suffix overwrite instruction; round-1's C1/C2 and their closure proof are preserved below in conditions_closures (audit not lost). round-1 review 正本 (EVO-20261117-001.review.md) is kept as-is.",
   "conditions_closures": [
     {
