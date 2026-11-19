@@ -77,6 +77,15 @@ ID_IN_NAME_RE = re.compile(r"([A-Z]{2,6}-\d{8}-\d{3})")
 BARE_TASK_RE = re.compile(r"TASK-\d+")
 ABS_PATH_RE = re.compile(r"[A-Za-z]:\\|/")
 VERDICT_SUFFIX = ".verdict.json"
+# Verdict file-name semantics live in ONE data file, consumed by both this
+# linter and scripts/verdict_gate.ps1 (EVO-20261117-001). A second inline copy
+# is exactly how the PROTECTED 5->6 drift happened; do not reintroduce one.
+VERDICT_CONTRACT_REL = "tools/verdict_suffixes.json"
+_VERDICT_CONTRACT_CACHE = {}
+# Base card id at the start of a verdict stem, e.g. `OC-20261110-001` in
+# `OC-20261110-001-P3`. Wider than the OC-/EVO-/XJ-/DFB- namespaces on purpose:
+# GLASSSUITE-YYYYMMDD-NNN verdicts exist too.
+VERDICT_BASE_RE = re.compile(r"^([A-Z]{2,10}-\d{8}-\d{3})")
 # The snapshot-link facility the traceability contract writes into. `link_card.py`
 # owns the prefix/suffix; kept local so lint does not import a writer tool just to
 # name a file (the shape is a data contract, not logic).
@@ -89,6 +98,136 @@ LINK_PREFIX = "link-"
 # check_verdict_schema was exactly this kind of trap - a local copy of a
 # gate constant that looked like a check but changed nothing.
 LINT_MAX_CLOCK_SKEW = 300
+
+
+def load_verdict_contract(repo_root=None):
+    """Return the shared verdict-name contract: {'suffixes': [...], 'design_only': regex}.
+
+    Loaded from `tools/verdict_suffixes.json` -- the same file
+    scripts/verdict_gate.ps1 reads. Returns {'error': str} instead of raising so
+    every caller can report it as a finding rather than crash the linter.
+    """
+    root = Path(repo_root) if repo_root else Path(__file__).resolve().parents[1]
+    path = root / VERDICT_CONTRACT_REL
+    key = str(path)
+    if key in _VERDICT_CONTRACT_CACHE:
+        return _VERDICT_CONTRACT_CACHE[key]
+    result = {}
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        entries = raw.get("suffixes") or []
+        patterns = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            cls = str(entry.get("class") or "").strip()
+            pat = str(entry.get("pattern") or "")
+            if not cls or not pat:
+                continue
+            patterns.append((cls, re.compile(pat)))
+        design_only = raw.get("design_only_pattern")
+        if not patterns or not isinstance(design_only, str) or not design_only:
+            result = {"error": f"{VERDICT_CONTRACT_REL}: needs non-empty suffixes[] and design_only_pattern"}
+        else:
+            result = {
+                "path": path,
+                "patterns": patterns,
+                "design_only": re.compile(design_only),
+                "design_only_raw": design_only,
+            }
+    except FileNotFoundError:
+        result = {"error": f"{VERDICT_CONTRACT_REL} not found at {path} (single source for suffix + design-only semantics)"}
+    except (OSError, ValueError) as exc:
+        result = {"error": f"{VERDICT_CONTRACT_REL} unreadable at {path}: {exc}"}
+    _VERDICT_CONTRACT_CACHE[key] = result
+    return result
+
+
+def split_verdict_stem(stem):
+    """`OC-20261110-001-P3` -> ('OC-20261110-001', '-P3'); no base -> (stem, '')."""
+    match = VERDICT_BASE_RE.match(stem)
+    if not match:
+        return stem, ""
+    base = match.group(1)
+    return base, stem[len(base):]
+
+
+def classify_verdict_suffix(suffix, contract):
+    """'canonical' | 'stage' | 'single' | 'topic' | 'unknown' for one suffix."""
+    for cls, pattern in contract.get("patterns", ()):
+        if pattern.match(suffix):
+            return cls
+    return "unknown"
+
+
+def expected_verdict_id(stem, base, suffix_class):
+    """The `id` field a verdict file must carry, per suffix class.
+
+    canonical / single / topic carry the BASE card id (live corpus: 374 + 3 + 9
+    files). stage carries the FULL stem (live corpus: all 10 stage files, e.g.
+    coldstore/OC-20261113-002-PR4-Afollow1). Blanket "always the base id" would
+    have fired 10 false ID_MISMATCH findings and forced edits to live verdicts.
+    """
+    return base if suffix_class in ("canonical", "single", "topic") else stem
+
+
+def verdict_files(verdict_dir):
+    """[(path, stem, base, suffix, class)] for every verdict file, sorted.
+
+    Returns (rows, error). Unknown suffixes are included (class == 'unknown') so
+    the caller can report them; error is set only when the contract is unusable.
+    """
+    contract = load_verdict_contract()
+    if contract.get("error"):
+        return [], contract["error"]
+    rows = []
+    for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
+        stem = path.name[: -len(VERDICT_SUFFIX)]
+        base, suffix = split_verdict_stem(stem)
+        rows.append((path, stem, base, suffix, classify_verdict_suffix(suffix, contract)))
+    return rows, None
+
+
+def select_verdict(rows):
+    """(path, record, class, stem) for the file the gate would use, else None.
+
+    Exposed so a test can assert THAT the linter and the gate pick the same
+    file -- the whole point of a single contract (EVO-20261117-001).
+    """
+    grouped = {}
+    for path, stem, base, suffix, cls in rows:
+        if cls == "unknown":
+            continue
+        try:
+            record = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(record, dict):
+            continue
+        grouped.setdefault(base, []).append((path, record, cls, stem))
+
+    def sort_key(item):
+        stamp = _signed_at(item[1])
+        return (stamp is not None,
+                stamp or datetime.min.replace(tzinfo=timezone.utc),
+                item[2] == "canonical")
+
+    selected = {}
+    for base, entries in grouped.items():
+        selected[base] = max(entries, key=sort_key)
+    return selected
+
+
+def select_verdict_record(rows):
+    """{base_id: record} built from select_verdict (gate-consistent choice).
+
+    A base whose only files are design-only still resolves (to its newest
+    record) so freshness keeps the signal it has today -- design-only filtering
+    is deliberately NOT applied here, because that would silently drop
+    claim-surface coverage for cards whose only verdict is a spec verdict.
+    """
+    return {base: item[1] for base, item in select_verdict(rows).items()}
+
 
 TASK_SECTIONS = ("context", "deliverables", "constraints", "acceptance", "status")
 TASK_SECTION_ALIASES = {
@@ -505,7 +644,22 @@ def check_verdict_pairs(card_ids, verdict_dir, extra_known_ids=None, allow_orpha
     out = []
     if not verdict_dir or not verdict_dir.is_dir():
         return out
-    verdict_ids = {p.name[: -len(VERDICT_SUFFIX)] for p in verdict_dir.glob(f"*{VERDICT_SUFFIX}")}
+    rows, contract_error = verdict_files(verdict_dir)
+    if contract_error:
+        out.append(_finding("VERDICT_SUFFIX_CONTRACT", "ERROR", Path(VERDICT_CONTRACT_REL),
+                            f"{contract_error}; verdict pairing skipped because the suffix "
+                            "semantics that decide what counts as a card are unavailable"))
+        return out
+    unknown = [row for row in rows if row[4] == "unknown"]
+    for path, stem, base, suffix, _cls in unknown:
+        out.append(_finding("VERDICT_SUFFIX_UNKNOWN", "ERROR", path,
+                            f"unrecognized verdict suffix {suffix!r} (class unknown). The suffix "
+                            f"whitelist lives in {VERDICT_CONTRACT_REL}: register the narrowest "
+                            "pattern there, then re-run the suffix and gate tests. Until then the "
+                            "file is neither paired with a card nor ignored -- a silently accepted "
+                            "suffix is how a sub-verdict shadows its canonical verdict."))
+    known_rows = [row for row in rows if row[4] != "unknown"]
+    verdict_ids = {row[2] for row in known_rows}
     known_ids = card_ids | set(extra_known_ids or ())
     allowed = set(allow_orphan_ids or ())
     for vid in sorted(verdict_ids - known_ids):
@@ -695,18 +849,20 @@ def load_artifact_map(path):
 
 
 def _verdict_index(verdict_dir):
-    """`{id: record}` for every readable verdict file; unreadable ones stay absent."""
+    """`{base_card_id: record}` for every readable verdict file; unreadable ones stay absent.
+
+    Keyed by the BASE card id and selected with the gate's rule (newest ts, tie ->
+    canonical) so lint and gate look at the same file (EVO-20261117-001). A card
+    with a stage verdict and a canonical verdict therefore resolves to whatever
+    the gate would use, instead of the lexicographically last file name.
+    """
     records = {}
     if not verdict_dir or not Path(verdict_dir).is_dir():
         return records
-    for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
-        try:
-            record = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        if isinstance(record, dict):
-            records[path.name[: -len(VERDICT_SUFFIX)]] = record
-    return records
+    rows, contract_error = verdict_files(verdict_dir)
+    if contract_error:
+        return records
+    return select_verdict_record(rows)
 
 
 def _signed_at(record):
@@ -1082,12 +1238,9 @@ def check_status_drift(card_dir, verdict_dir):
         return out
     verdicts = {}
     if verdict_dir and verdict_dir.is_dir():
-        for path in verdict_dir.glob(f"*{VERDICT_SUFFIX}"):
-            try:
-                data = json.loads(path.read_text(encoding="utf-8-sig"))
-            except Exception:  # noqa: BLE001 - schema check reports unreadable verdicts
-                continue
-            verdicts[path.name[:-len(VERDICT_SUFFIX)]] = data
+        # Base-id keyed, gate-consistent selection (EVO-20261117-001): a card
+        # whose PASS sits in a stage or topic verdict must not look unverdicted.
+        verdicts = _verdict_index(verdict_dir)
     for path in sorted(card_dir.glob("*.md")):
         text = path.read_text(encoding="utf-8", errors="replace")
         if not _is_active(text):
@@ -1392,15 +1545,25 @@ def check_verdict_schema(verdict_dir, skipped=False):
         return out
     for path in sorted(Path(verdict_dir).glob(f"*{VERDICT_SUFFIX}")):
         vid = path.name[: -len(VERDICT_SUFFIX)]
+        base, suffix = split_verdict_stem(vid)
+        contract = load_verdict_contract()
+        suffix_cls = classify_verdict_suffix(suffix, contract) if not contract.get("error") else "canonical"
+        if suffix_cls == "unknown":
+            # Reported by check_verdict_pairs as ERROR; do not double-report here.
+            continue
+        expected_id = expected_verdict_id(vid, base, suffix_cls)
         data, err_code, err_detail = load_verdict(Path(verdict_dir), vid)
         if err_code:
             out.append(_finding("VERDICT_SCHEMA_NONCOMPLIANT", "ERROR",
                                 path, f"{err_code}: {err_detail}"))
             continue
         # Reuse gate's per-field validators; accumulate all violations so
-        # one bad verdict does not hide another.
+        # one bad verdict does not hide another. The expected `id` is passed in
+        # because it depends on the suffix class (EVO-20261117-001): canonical /
+        # single-letter / topic verdicts carry the BASE card id, stage verdicts
+        # carry the FULL stem -- the live corpus splits exactly that way.
         problems = []
-        for code, msg in _check_fields(vid, data):
+        for code, msg in _check_fields(expected_id, data):
             problems.append(f"field: {msg}")
         norm_v, v_problems = _check_verdict_value(data)
         problems.extend(f"verdict: {m}" for _, m in v_problems)

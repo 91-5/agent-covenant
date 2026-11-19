@@ -234,6 +234,12 @@ class SeededRepoMixin:
         (repo / "tools").mkdir()
         for tool in ("lint_cards.py", "gate.py"):
             shutil.copy2(REPO_ROOT / "tools" / tool, repo / "tools" / tool)
+        # EVO-20261117-001: tools/verdict_suffixes.json is part of the toolchain,
+        # not of the linted project. lint_cards.py fails closed without it because
+        # the suffix whitelist decides what counts as a card, so a seeded round
+        # must ship it or the hook's own green path would be unreachable.
+        shutil.copy2(REPO_ROOT / "tools" / "verdict_suffixes.json",
+                     repo / "tools" / "verdict_suffixes.json")
         (repo / ".tasks" / "legacy").mkdir(parents=True)
         (repo / ".tasks" / "legacy" / f"{CARD_ID}.md").write_text(CARD_TEXT, encoding="utf-8")
         (repo / "artifacts.json").write_text(

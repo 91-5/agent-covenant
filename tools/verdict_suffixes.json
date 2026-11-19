@@ -1,0 +1,18 @@
+{
+  "_purpose": "Single source of truth for verdict file-name semantics (EVO-20261117-001). Consumed by BOTH scripts/verdict_gate.ps1 (PowerShell) and tools/lint_cards.py (Python). Do not inline a second copy of either pattern anywhere: a second copy is exactly how the PROTECTED 5->6 drift happened (EVO-20261114-002 / XJ-20261114-001).",
+  "_how_to_register_a_new_suffix": "Add an entry to suffixes[] with the narrowest pattern that matches your file names, then re-run: python -m unittest tests.test_verdict_suffixes tests.test_verdict_gate_hardening (and the 138-card gate snapshot). Never widen a pattern to cover multiple styles at once.",
+  "_classes": {
+    "canonical": "the card's own verdict file, id MUST equal the base card id",
+    "stage": "per-stage verdict (P3 / P4 / P6 / PR4-Afollow1 / P3-C1 ...), id MUST equal the full filename stem",
+    "single": "single-letter stage shorthand (-A / -B / -C), id MUST equal the base card id",
+    "topic": "thematic sub-verdict (.glasspill / .glassdesk / .round2 / .main-merge), id MUST equal the base card id"
+  },
+  "suffixes": [
+    { "class": "canonical", "pattern": "^$" },
+    { "class": "stage", "pattern": "^-(?:P|PR)\\d+(?:-[A-Z]\\w*)*(?:-C\\d+)?$" },
+    { "class": "single", "pattern": "^-[A-Z]$" },
+    { "class": "topic", "pattern": "^\\.[a-z0-9]+$" },
+    { "class": "topic", "pattern": "^\\.(?:main-merge)$" }
+  ],
+  "design_only_pattern": "\\u89C4\\u683C\\u7EA7|\\u8BBE\\u8BA1\\u95E8\\u7981|\\u4E0D\\u5BF9\\u5DF2\\u843D\\u5730|design gate|spec-level"
+}

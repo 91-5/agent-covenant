@@ -7,31 +7,29 @@
     Exit 0  = gate PASS (most recent non-design stage verdict is PASS with 0 blockers)
     Exit 1  = gate FAILED; merge without sir's "sir direct: merge without verdict" in the merge message is a process violation.
 
-    Verdict discovery (EVO-20261116-001 hardening):
-      - Optional -VerdictDir override; otherwise scans:
-          D:\15812\projects\<project>\verdicts   (all projects)
-          D:\15812\projects\_handoffs\evo
-          <current dir>\verdicts
-      - Candidate suffixes for <BASE><suffix>.verdict.json must match one of:
-            (canonical)  <BASE>.verdict.json
-            stage        -P<n> / -PR<n> / -P<n>-<TAG> / -P<n>-C<n> / -P<n>-<TAG>-... / single letter -A|-B|-C
-            topic        .<lowercase alnum>       (no hyphen, by design: prevents incident-style names)
+    Verdict discovery (EVO-20261116-001 hardening, EVO-20261117-001 single source):
+      - Optional -VerdictDir override; otherwise scans every project verdicts dir,
+        the shared EVO handoff dir, and <current dir>\verdicts
+      - Candidate suffixes for <BASE><suffix>.verdict.json must match one entry of
+        tools/verdict_suffixes.json (canonical / stage / single-letter / topic).
+        That file is the SINGLE source: it also carries the design-only pattern.
       - Any OTHER suffix is FAIL-CLOSED (exit 1) unless explicitly allowed via
         -AllowSubVerdict <glob> (merge message must disclose it).
       - Selection: latest ts among non-design candidates; on identical ts the
-        canonical filename wins (deterministic tie-break).
-      - Always audits: chosen path, sha256, ts, ts source, provenance, and this
-        script's own sha256 (4.2 item 8 provenance).
-      - If the chosen candidate is a topic-style sub-verdict while a canonical
-        exists and is NOT PASS, the gate fails closed unless that suffix is
-        explicitly allowed via -AllowSubVerdict.
+        canonical filename wins (deterministic tie-break). A disagreement between
+        the canonical verdict and a newer sub-verdict is audited loudly, not
+        blocked: the dangerous direction (canonical PASS, newer sub FAIL) is
+        already fail-closed by newest-wins.
+      - Always audits: chosen path, sha256, ts, ts source, provenance, this
+        script's own sha256, and the contract file it read (4.2 item 8 provenance).
 
     -RequireExact: only canonical <BASE>.verdict.json may authorize. Effective
     only when -AllowSubVerdict is absent; release-level merges only, must be
     registered in the merge message.
 
-    Design/spec-only verdicts are EXCLUDED: a verdict is design-only iff its raw JSON
-    contains \u89C4\u683C\u7EA7|\u8BBE\u8BA1\u95E8\u7981|\u4E0D\u5BF9\u5DF2\u843D\u5730|design gate|spec-level
+    Design/spec-only verdicts are EXCLUDED: a verdict is design-only iff its raw
+    JSON matches the design_only_pattern in tools/verdict_suffixes.json (the
+    pattern is deliberately NOT repeated here -- see the 5->6 PROTECTED drift).
     Stage verdicts with a non-empty 'checkpoint' are code verdicts.
 
     Blockers schema: int (0) or array (length 0). Fail-closed otherwise.
@@ -45,18 +43,29 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$designPattern = '\u89C4\u683C\u7EA7|\u8BBE\u8BA1\u95E8\u7981|\u4E0D\u5BF9\u5DF2\u843D\u5730|design gate|spec-level'
 
-# Suffix whitelist (EVO-20261116-001). Validated against the live census:
-# 15 classes / 0 unknown; incident suffixes (-posthoc-power-addendum,
-# .posthoc-power-addendum) are rejected.
-$allowedSuffixPatterns = @(
-    '^$',
-    '^-(?:P|PR)\d+(?:-[A-Z]\w*)*(?:-C\d+)?$',
-    '^-[A-Z]$',
-    '^\.[a-z0-9]+$',
-    '^\.(?:main-merge)$'
-)
+# Single source of truth for verdict file-name semantics (EVO-20261117-001).
+# Resolved from $PSScriptRoot, never the current working directory: this gate is
+# documented as runnable from any repo. A missing or unreadable contract is
+# fail-closed -- a gate that cannot tell which verdicts count must not pass.
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$contractPath = Join-Path $repoRoot 'tools\verdict_suffixes.json'
+if (-not (Test-Path $contractPath)) {
+    Write-Host "[verdict_gate] FAIL-CLOSED: verdict contract not found at $contractPath (tools/verdict_suffixes.json is the single source for suffix + design-only semantics)."
+    exit 1
+}
+try {
+    $contract = (Get-Content -Raw -Encoding UTF8 $contractPath) | ConvertFrom-Json
+} catch {
+    Write-Host "[verdict_gate] FAIL-CLOSED: verdict contract at $contractPath is unreadable ($($_.Exception.Message))."
+    exit 1
+}
+$allowedSuffixPatterns = @($contract.suffixes | ForEach-Object { $_.pattern } | Where-Object { $_ })
+$designPattern = $contract.design_only_pattern
+if (-not $allowedSuffixPatterns -or $allowedSuffixPatterns.Count -eq 0 -or -not $designPattern) {
+    Write-Host "[verdict_gate] FAIL-CLOSED: verdict contract at $contractPath is incomplete (need suffixes[] and design_only_pattern)."
+    exit 1
+}
 $topicSuffixPattern = '^\.[a-z0-9]+$'
 $verdictSuffix = '.verdict.json'
 
