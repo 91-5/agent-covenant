@@ -3063,5 +3063,14 @@
     "tests/test_pre_push_hook.py",
     "README.md",
     "README.zh-CN.md"
+  ],
+  "EVO-20261121-001": [
+    "tools/verdict_suffixes.json",
+    "tools/lint_cards.py",
+    "scripts/verdict_gate.ps1",
+    "tests/test_design_only_dualtrack.py",
+    "README.md",
+    "README.zh-CN.md",
+    "artifacts.json"
   ]
 }
