@@ -62,10 +62,19 @@ try {
 }
 $allowedSuffixPatterns = @($contract.suffixes | ForEach-Object { $_.pattern } | Where-Object { $_ })
 $designPattern = $contract.design_only_pattern
+$designCaseSensitive = $contract.design_only_case_sensitive
 if (-not $allowedSuffixPatterns -or $allowedSuffixPatterns.Count -eq 0 -or -not $designPattern) {
     Write-Host "[verdict_gate] FAIL-CLOSED: verdict contract at $contractPath is incomplete (need suffixes[] and design_only_pattern)."
     exit 1
 }
+# EVO-20261121-001 A2/A5: the case switch is required and must be a bool. A
+# missing/non-bool key is fail-closed, never silently defaulted (co-versioned
+# with both consumers). -cmatch is case-sensitive; -match is case-insensitive.
+if ($null -eq $designCaseSensitive -or ($designCaseSensitive -isnot [bool])) {
+    Write-Host "[verdict_gate] FAIL-CLOSED: verdict contract at $contractPath needs boolean design_only_case_sensitive (EVO-20261121-001)."
+    exit 1
+}
+$designMatchScript = if ($designCaseSensitive) { { param($s) $s -cmatch $designPattern } } else { { param($s) $s -match $designPattern } }
 $topicSuffixPattern = '^\.[a-z0-9]+$'
 $verdictSuffix = '.verdict.json'
 
@@ -114,9 +123,23 @@ function Get-Candidates([string]$Base, [string]$Root) {
         $suffix = $name.Substring($Base.Length, $name.Length - $Base.Length - $verdictSuffix.Length)
         $raw = $null
         try { $raw = [System.IO.File]::ReadAllText($f.FullName, [System.Text.Encoding]::UTF8) } catch { continue }
-        $isDesign = $raw -match $designPattern
         $j = $null
         try { $j = $raw | ConvertFrom-Json } catch { continue }
+        # EVO-20261121-001: design-only is dual-track. An explicit boolean
+        # `design_only` field on the verdict is AUTHORITATIVE (present => wins);
+        # only when the field is absent do we fall back to the content scan.
+        # This breaks the self-deadlock where a verdict that merely DISCUSSES
+        # design-only concepts was itself marked design-only by the scan.
+        $designProp = $j.PSObject.Properties['design_only']
+        if ($null -ne $designProp) {
+            if ($designProp.Value -isnot [bool]) {
+                Write-Host "[verdict_gate] FAIL-CLOSED: explicit design_only on $($f.Name) must be a bool (true/false)."
+                exit 1
+            }
+            $isDesign = [bool]$designProp.Value
+        } else {
+            $isDesign = & $designMatchScript $raw
+        }
         $ts = $null
         $tsSource = 'json'
         $tsParsed = [DateTimeOffset]::MinValue

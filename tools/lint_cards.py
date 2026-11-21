@@ -114,7 +114,7 @@ def load_verdict_contract(repo_root=None):
         return _VERDICT_CONTRACT_CACHE[key]
     result = {}
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
         entries = raw.get("suffixes") or []
         patterns = []
         for entry in entries:
@@ -126,14 +126,24 @@ def load_verdict_contract(repo_root=None):
                 continue
             patterns.append((cls, re.compile(pat)))
         design_only = raw.get("design_only_pattern")
+        case_sensitive = raw.get("design_only_case_sensitive")
         if not patterns or not isinstance(design_only, str) or not design_only:
             result = {"error": f"{VERDICT_CONTRACT_REL}: needs non-empty suffixes[] and design_only_pattern"}
+        elif not isinstance(case_sensitive, bool):
+            # EVO-20261121-001 A2: missing/non-bool switch is fail-closed, never
+            # silently defaulted -- the switch and both consumers are co-versioned.
+            result = {"error": f"{VERDICT_CONTRACT_REL}: design_only_case_sensitive must be a bool (true/false); missing key is fail-closed"}
         else:
+            # EVO-20261121-001: compile with an explicit case flag so the Python
+            # engine agrees with gate's -match (false) / -cmatch (true), instead
+            # of relying on re's case-sensitive default (the old N1 divergence).
+            flags = 0 if case_sensitive else re.IGNORECASE
             result = {
                 "path": path,
                 "patterns": patterns,
-                "design_only": re.compile(design_only),
+                "design_only": re.compile(design_only, flags),
                 "design_only_raw": design_only,
+                "design_only_case_sensitive": case_sensitive,
             }
     except FileNotFoundError:
         result = {"error": f"{VERDICT_CONTRACT_REL} not found at {path} (single source for suffix + design-only semantics)"}

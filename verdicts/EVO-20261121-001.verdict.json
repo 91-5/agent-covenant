@@ -1,0 +1,64 @@
+{
+  "id": "EVO-20261121-001",
+  "round": 3,
+  "verdict": "PASS",
+  "blockers": 0,
+  "conditions": 1,
+  "advisories": 3,
+  "independent": true,
+  "verifier": "AgnesCode (agnes-3.0-flash)",
+  "ts": "2026-11-21T08:08:00Z",
+  "ts_note": "real UTC. Round-3 closure re-review of the design card after sir extended the scope to the design-only self-deadlock fix. Target files verified untouched (4 files + verdicts zero-change; the only new file is the in-repo canonical copy of the r2 verdict, byte-identical to the out-of-repo original, SHA 81F4B005). SCOPE LIMIT: this PASS covers the r3 spec + deadlock-fix rulings (D-1/D-2) only; any landed implementation is separately covered by a post-implementation review under this same card id.",
+  "design_only": false,
+  "design_only_note": "EXPLICIT DECLARATION (reviewer-authored, per dispatch r3 section 3.3 - not tampered by the implementer): this verdict is a genuine merge-authorization deliverable. Its prose merely DISCUSSES design-only concepts, which the content-scan pattern at verdict_gate.ps1:117 mis-fires on; it is NOT itself a design-only verdict. Added to break the self-referential deadlock (gate content-match would otherwise mark this very verdict design-only and block this card's own merge forever). Under the proposed dual-track rule this field is authoritative when present; content-match is the fallback for files lacking it.",
+  "supersedes_round2": "EVO-20261121-001 round-2 verdict (PASS 0B/0C/3A, 2026-11-21, ts 2026-11-21T05:05:00Z) is superseded in-place by this round-3 PASS, which carries the extended scope (design-only self-deadlock fix). Round-2's 7/7 fix-landing closure and Q-r2-1/Q-r2-2 rulings are preserved in review_round2_closures below. The r2 verdict's own content-scan false-positive is the reason this round adds the explicit design_only:false field.",
+  "review_round2_closures": [
+    "All 7 round-1 findings (C-1..C-4, A-1..A-3) confirmed landed in the r2 card text; 0 new errors.",
+    "Q-r2-1 (engine-layer-only boundary) AGREE - backed by 0/143 selection-divergence census.",
+    "Q-r2-2 (missing-key default) FAIL-CLOSED CORRECT under co-versioning."
+  ],
+  "selfdeadlock_rulings": [
+    "D-1 (fix shape): ACCEPT 'dual-track, explicit-first, content-fallback' as the minimal fix; REJECT 'pure filename suffix' as this card's fix. Grounds: (1) filename track hits=0 - the 3 real design cards are ALL canonical-named (OC-20261110-001/002, EVO-20261113-001), so pure-suffix would require RENAMING 3 verdict files + registering a new suffix class in the contract, violating this card's 'zero verdict-file edits' constraint - it is a separate card; (2) dual-track is the unique minimal path that is zero-regression, zero-verdict-edit, and un-sticks the deadlock (independently simulated); (3) GOVERNANCE GAP advisory: once design_only is a gate-authoritative field, 'presence-is-authoritative' is a fail-open surface (a wrong design_only:false on a real design card would silently authorize its merge) - safe today (sole writer = trusted reviewer) but needs a separate card for a 'field-vs-content-match contradiction -> WARN/audit' channel; (4) contract _purpose self-describes as 'file-name semantics' but design_only_pattern is actually a CONTENT-scan string - a c27b021-time semantic mismatch; after the dual-track fix, add one contract comment line clarifying 'design_only decision = explicit field first, content pattern is a fallback heuristic'.",
+    "D-2 (protected-asset declaration): RULING = the design_only:false field written into a verdict DOES touch protected item 1 'verdict 模板与字段语义'. Grounds: (1) it is a NEW verdict field that the gate treats as authoritative for the design-only decision = a DECISION field, not inert metadata - the dispatch's 'review-artifact metadata, not a decision field' reading does NOT hold, precisely because it un-sticks the gate; (2) lint will NOT trip: check_verdict_schema (L1496-1620) validates a closed known-field set (id/verdict/blockers/evidence/ts/independent/self_signed/unblocks) with NO unknown-field rejection, so the new field causes no VERDICT_SCHEMA_NONCOMPLIANT - but protected-asset attribution is a semantic/process ruling, not a lint-trip; (3) house style from 1117 C2 = 'in doubt -> declare + split + sir explicit', conservative ruling beats being later found under-declaring."
+  ],
+  "conditions_r3": [
+    {
+      "id": "C-r3-1",
+      "must_close_before": "GATE",
+      "text": "Card face must add protected item 1 'verdict 模板与字段语义' to protected_assets_targeted; split protected_assets_changes into item-1 (new design_only verdict field semantics) and item-6 (gate :117 dual-track read + :135 contract read + BOM) segments; restate sir_approval to cover item 1. Without this the card understates its protected-asset touch. This is the ONLY condition; 0 blockers."
+    }
+  ],
+  "independent_new_dimensions": [
+    {
+      "id": "N-7a",
+      "title": "where the 3 real design cards' marking actually lives (deeper than the dispatch's ask)",
+      "finding": "The design-only marking of the 3 real cards sits in STABLE prose fields - OC-20261110-001 in scope_note; OC-20261110-002 in scope_note + prereq_check + 4 prose arrays; EVO-20261113-001 in conditions[0]+evidence[0] - and in NONE of them in ts_note (the field a ts re-sign rewrites). Therefore zero-regression is robust to future ts re-signing (a re-sign touches only ts/ts_note), not just true for today's snapshot. This empirically excludes the 'most likely to break' failure mode the dispatch flagged."
+    },
+    {
+      "id": "N-7b",
+      "title": "residual fail-open in the content fallback",
+      "finding": "Content-scan is a keyword-fragile heuristic. Today's zero-regression is robust, but a future edit that removes the trigger word from scope_note/evidence prose would SILENTLY demote that design card to merge-usable = fail-open. Fully robust requires giving the 3 real cards an explicit design_only:true (a SEPARATE card, since this card's scope forbids verdict-file edits). The dual-track explicit field is the migration toward that."
+    },
+    {
+      "id": "N-7c",
+      "title": "explicit-field governance",
+      "finding": "Once design_only is gate-authoritative, 'presence-is-authoritative' is a fail-open surface. Safe today because the only writer is the trusted reviewer; add a separate-card rule: 'design_only field contradicts content-match -> WARN/audit' (aligned with the existing EVO_PROTECTED_ASSET_TOUCHED audit discipline)."
+    }
+  ],
+  "evidence": [
+    "Self-deadlock independently reproduced: verdict_gate.ps1 -CardId EVO-20261121-001 -> exit 1, verbatim 'only design/spec-only verdicts on file ... not usable to authorize a code merge'. Root cause confirmed at :117 content match; r2 verdict text hits 4/5 trigger terms (规格级, 设计门禁, design gate, spec-level; NOT 不对已落地); verdict keys contain no explicit design_only field.",
+    "In-repo r2 verdict copy verified: git status shows only '?? verdicts/EVO-20261121-001.verdict.json' (untracked); SHA256[:8]=81F4B005 matches dispatch claim; byte-identical to out-of-repo original (11092 B).",
+    "Independent dual-track census over 423 verdict files: filename track (.design/.design-only) = 0 hits; content track (current pattern) = 4 hits (3 real design cards + this card's false-positive). 423 vs dispatch 422: the +1 is the in-repo r2 verdict copy (post-probe landing).",
+    "Dual-track zero-regression simulation: all 4 files explicit=None; adding design_only:false ONLY to this card's verdict un-sticks it (decision=False) while the 3 real cards stay content-fallback design-only=True. Zero regression holds.",
+    "N-7 field-location probe: markings live in scope_note/prereq_check/conditions/evidence (stable), never in ts_note -> robust to ts re-sign.",
+    "lint schema audit: check_verdict_schema (L1496-1620) validates a closed known-field set, no unknown-field rejection -> a new design_only field does not trigger VERDICT_SCHEMA_NONCOMPLIANT (technical corroboration for D-2; not the ruling basis).",
+    "Contract semantic mismatch independently confirmed: _purpose claims 'file-name semantics' but design_only_pattern is a content-scan string; memory #228's .design(-only)?$ was never in the contract."
+  ],
+  "protected_assets": [
+    "verdict 模板与字段语义",
+    "scripts/verdict_gate.ps1 判定逻辑"
+  ],
+  "protected_assets_note": "This round-3 verdict itself carries a new verdict field (design_only), so the card must declare BOTH protected item 1 and item 6 (C-r3-1). The card face's protected_assets_targeted currently lists only item 6 - closing C-r3-1 updates it to both.",
+  "review_ref": "D:\\15812\\projects\\review\\agnes\\EVO-20261121-001.round3.review.md",
+  "merge_gate": "PASS 0B/1C/3A (round 3). Self-deadlock independently reproduced; dual-track zero-regression independently confirmed (0 regression across the 3 real design cards, robust to ts re-sign per N-7a). D-1 RULING: accept dual-track (explicit-first + content-fallback) as the minimal fix; pure filename suffix is NOT viable in this card (would rename 3 verdict files, violating zero-verdict-edit scope). D-2 RULING: the design_only:false field DOES touch protected item 1 'verdict 模板与字段语义' - the card must add item 1, split the changes declaration, and restate sir approval (this is the single blocking CONDITION C-r3-1, not a blocker). 3 advisories: N-7a (marking-field location, evidence record), N-7b (give the 3 real cards explicit design_only:true in a SEPARATE card), N-7c (add field-vs-content contradiction audit in a SEPARATE card). GATE is WITHHELD until C-r3-1 closes and sir explicitly approves protected items 1+6 under AGENTS.md 4.2 item 7; executor must not self-apply."
+}
